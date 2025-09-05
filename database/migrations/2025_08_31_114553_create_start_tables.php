@@ -24,7 +24,7 @@ return new class extends Migration
         });
 
         // Tabela para bolsistas
-        Schema::create('scholarshipholders', function (Blueprint $table) {
+        Schema::create('scholarship_holders', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('cpf')->unique();
@@ -49,15 +49,16 @@ return new class extends Migration
         // Tabela para registro de frequência
         Schema::create('attendance_records', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('scholarshipholder_id');
+            $table->unsignedBigInteger('scholarship_holder_id');
             $table->unsignedBigInteger('unit_id');
             $table->date('date');
             $table->time('entry_time');
             $table->time('exit_time');
             $table->text('observation')->nullable();
+            $table->boolean('approved')->default(false); // para homologação
             $table->timestamps();
         });
-
+        
         // Tabela para notificações
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
@@ -76,9 +77,9 @@ return new class extends Migration
         });
 
         // Tabela para o vínculo entre bolsistas e unidades (M:N)
-        Schema::create('scholarshipholder_unit', function (Blueprint $table) {
+        Schema::create('scholarship_holder_unit', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('scholarshipholder_id');
+            $table->unsignedBigInteger('scholarship_holder_id');
             $table->unsignedBigInteger('unit_id');
             $table->float('monthly_workload');
             $table->date('start_date');
@@ -92,12 +93,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('scholarshipholder_unit');
+        Schema::dropIfExists('scholarship_holder_unit');
         Schema::dropIfExists('positions');
         Schema::dropIfExists('notifications');
         Schema::dropIfExists('attendance_records');
         Schema::dropIfExists('units');
-        Schema::dropIfExists('scholarshipholders');
+        Schema::dropIfExists('scholarship_holders');
         Schema::dropIfExists('users');
     }
 };

@@ -1,70 +1,88 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ScholarshipHolderController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\PositionController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ScholarshipHolderController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use Illuminate\Support\Facades\Route;
 
+// Rotas de Autenticação (Laravel Breeze)
+require __DIR__.'/auth.php';
+
+// Página de boas-vindas
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+// Área do Usuário (Bolsista)
+// Rotas protegidas por autenticação e que só podem ser acessadas por bolsistas
+Route::middleware(['auth', 'verified', 'role:bolsista'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+    // Módulo de Frequência para o Bolsista
+    Route::prefix('frequencia')->name('frequencia.')->group(function () {
+        Route::get('/registrar', [AttendanceController::class, 'create'])->name('create');
+        Route::post('/registrar', [AttendanceController::class, 'store'])->name('store');
+        Route::get('/historico', [AttendanceController::class, 'index'])->name('historico');
+    });
+
+    // Módulo de Notificações para o Bolsista
+    Route::prefix('notificacoes')->name('notificacoes.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::post('/{notification}/marcar-lida', [NotificationController::class, 'markAsRead'])->name('marcarLida');
+    });
+
+    // Rotas de Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-    // Módulo Administrativo (requer permissão de administrador)
-    Route::middleware(['can:access-admin'])->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+// Área Administrativa (Coordenadores e Coordenadores Adjuntos)
+// Rotas protegidas por autenticação e permissões do Spatie
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Rota para o dashboard administrativo, acessível por ambos os tipos de coordenadores
+    Route::get('/', [AdminDashboardController::class, 'index'])
+        ->middleware('permission:acessar dashboard coordenador')
+        ->name('dashboard');
+
+    // Módulo de Homologação de Frequência (apenas para Coordenadores Adjuntos)
+    Route::prefix('frequencia')->name('frequencia.')->middleware('permission:homologar frequencia')->group(function () {
+        Route::get('/homologar', [AttendanceController::class, 'homologarIndex'])->name('homologar.index');
+        Route::post('/{attendanceRecord}/homologar', [AttendanceController::class, 'homologar'])->name('homologar');
     });
 
-    // Rotas de recurso para Cargos (CRUD completo)
-    Route::resource('cargos', PositionController::class);
-
-// Rotas para o Módulo de Bolsistas
-    Route::prefix('scholarship-holders')->name('bolsistas.')->group(function () {
-        Route::get('/', [ScholarshipHolderController::class, 'index'])->name('index');
-        Route::get('/criar', [ScholarshipHolderController::class, 'create'])->name('create');
-        Route::post('/', [ScholarshipHolderController::class, 'store'])->name('store');
-        // ... outras rotas de CRUD
-    });
-
-    // Rotas para o Módulo de Unidades
-    Route::prefix('units')->name('unidades.')->group(function () {
-        Route::get('/', [UnitController::class, 'index'])->name('index');
-        Route::get('/criar', [UnitController::class, 'create'])->name('create');
-        Route::post('/', [UnitController::class, 'store'])->name('store');
-        // ... outras rotas de CRUD
-    });
-
-    // Rotas para o Módulo de Frequência
-    Route::prefix('frequencia')->name('frequencia.')->group(function () {
-        Route::get('/registrar', [AttendanceController::class, 'create'])->name('create');
-        Route::post('/registrar', [AttendanceController::class, 'store'])->name('store');
-        // ... rotas para visualização de histórico
-    });
-
-    // Rotas para o Módulo de Relatórios
-    Route::prefix('relatorios')->name('relatorios.')->group(function () {
+    // Módulo de Relatórios (apenas para a Coordenacao Geral)
+    Route::prefix('relatorios')->name('relatorios.')->middleware('permission:gerar relatorios')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::post('/gerar', [ReportController::class, 'gerarRelatorio'])->name('gerar');
         Route::get('/download/{filename}', [ReportController::class, 'download'])->name('download');
     });
 
-    // Rotas para o Módulo de Notificações
-    Route::prefix('notificacoes')->name('notificacoes.')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('index');
-        Route::post('/{notificacao}/marcar-lida', [NotificationController::class, 'marcarLida'])->name('marcarLida');
-    });
+    // Módulo de Gerenciamento de Usuários (apenas para a Coordenacao Geral)
+    Route::resource('users', UserController::class)->except(['show'])
+        ->middleware('permission:gerenciar usuarios');
 
-require __DIR__.'/auth.php';
+    // Módulo de Bolsistas (apenas para Coordenadores Adjuntos e Gerais)
+    Route::resource('bolsistas', ScholarshipHolderController::class)
+        ->except(['show'])
+        ->middleware('permission:gerenciar bolsistas');
+        
+    // Módulo de Unidades (apenas para Coordenadores Adjuntos e Gerais)
+    Route::resource('unidades', UnitController::class)
+        ->except(['show'])
+        ->middleware('permission:gerenciar unidades');
+        
+    // Módulo de Cargos (apenas para Coordenadores Adjuntos e Gerais)
+    Route::resource('cargos', PositionController::class)
+        ->except(['show'])
+        ->middleware('permission:gerenciar cargos');
+});

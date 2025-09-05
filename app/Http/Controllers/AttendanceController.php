@@ -32,4 +32,29 @@ class AttendanceController extends Controller
 
         return back()->with('success', 'Registro de frequência salvo com sucesso!');
     }
+
+    /**
+     * Exibe a listagem de registros de frequência para homologação.
+     * Apenas para coordenadores.
+     */
+    public function homologarIndex(): View
+    {
+        // Pega todos os registros de frequência que ainda não foram homologados
+        $registros = AttendanceRecord::with(['scholarshipHolder', 'unit'])
+            ->where('approved', false) // Supondo que você adicione uma coluna 'approved'
+            ->latest()
+            ->paginate(20);
+
+        return view('admin.frequencia.homologar', compact('registros'));
+    }
+
+    /**
+     * Homologa um registro de frequência.
+     */
+    public function homologar(AttendanceRecord $attendanceRecord)
+    {
+        $attendanceRecord->update(['approved' => true]);
+        // Você pode adicionar mais lógica aqui, como criar uma notificação para o bolsista.
+        return back()->with('success', 'Registro homologado com sucesso!');
+    }
 }
