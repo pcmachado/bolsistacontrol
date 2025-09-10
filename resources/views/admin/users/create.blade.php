@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title', 'Adicionar Usuário')
+
 @section('content')
     <div class="p-6">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -24,8 +26,9 @@
                 <div class="mb-3">
                     <label for="role" class="form-label">Papel</label>
                     <select class="form-control" id="role" name="role" required>
-                        <option value="usuario">Usuário</option>
-                        <option value="coordenador">Coordenador</option>
+                        <option value="bolsista">Bolsista</option>
+                        <option value="coordenador_adjunto">Coordenador Adjunto</option>
+                        <option value="coordenador_geral">Coordenador Geral</option>
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Salvar</button>

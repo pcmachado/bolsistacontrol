@@ -69,4 +69,64 @@ class ReportController extends Controller
         }
         return response()->download($path);
     }
+
+    public function monthlyReport(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year  = $request->get('year', now()->year);
+
+        $units = \App\Models\Unit::with(['scholarshipHolders.attendances' => function ($q) use ($month, $year) {
+            $q->whereMonth('date', $month)->whereYear('date', $year);
+        }])->get();
+
+        $report = $units->map(function ($unit) use ($month, $year) {
+            $totalHours = 0;
+            $totalValue = 0;
+
+            foreach ($unit->scholarshipHolders as $holder) {
+                foreach ($holder->attendances as $attendance) {
+                    $totalHours += $attendance->hours;
+                    $totalValue += $attendance->calculated_value ?? 0;
+                }
+            }
+
+            return [
+                'unit'       => $unit->name,
+                'month'      => $month,
+                'year'       => $year,
+                'totalHours' => $totalHours,
+                'totalValue' => $totalValue,
+            ];
+        });
+
+        return view('admin.reports.monthly', compact('report', 'month', 'year'));
+    }
+
+    public function unitDetail(Request $request, \App\Models\Unit $unit)
+    {
+        $month = $request->get('month', now()->month);
+        $year  = $request->get('year', now()->year);
+
+        $holders = $unit->scholarshipHolders()
+            ->with(['user', 'scholarship', 'attendances' => function ($q) use ($month, $year) {
+                $q->whereMonth('date', $month)->whereYear('date', $year);
+            }])
+            ->get();
+
+        $report = $holders->map(function ($holder) use ($month, $year) {
+            $totalHours = $holder->attendances->sum('hours');
+            $valuePerHour = $holder->scholarship->value_per_hour;
+            $totalValue = $totalHours * $valuePerHour;
+
+            return [
+                'holder'      => $holder->user->name,
+                'scholarship' => $holder->scholarship->name,
+                'totalHours'  => $totalHours,
+                'valuePerHour'=> $valuePerHour,
+                'totalValue'  => $totalValue,
+            ];
+        });
+
+        return view('admin.reports.unit_detail', compact('unit', 'report', 'month', 'year'));
+    }
 }

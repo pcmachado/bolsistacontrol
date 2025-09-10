@@ -1,5 +1,6 @@
-<!-- resources/views/frequencia/create.blade.php -->
 @extends('layouts.app')
+
+@section('title', 'Registrar Frequência')
 
 @section('content')
 <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-3xl mx-auto">
@@ -9,10 +10,12 @@
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
             <span class="block sm:inline">{{ session('success') }}</span>
         </div>
-    @endif
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
 
     <form action="{{ route('frequencia.store') }}" method="POST" class="space-y-6">
-        @csrf
+                @csrf
         
         <!-- Campo para Bolsista -->
         <div>
@@ -24,7 +27,7 @@
                     <option value="{{ $bolsista->id }}">{{ $bolsista->nome }}</option>
                 @endforeach
             </select>
-        </div>
+                </div>
 
         <!-- Campo para Unidade -->
         <div>
@@ -36,20 +39,20 @@
                     <option value="{{ $unidade->id }}">{{ $unidade->nome }}</option>
                 @endforeach
             </select>
-        </div>
+                </div>
         
         <!-- Campo para Data -->
         <div>
             <label for="data" class="block text-sm font-medium text-gray-700">Data</label>
             <input type="date" name="data" id="data" value="{{ date('Y-m-d') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500" required>
-        </div>
+                </div>
 
         <!-- Campos de Hora -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label for="hora_entrada" class="block text-sm font-medium text-gray-700">Hora de Entrada</label>
                 <input type="time" name="hora_entrada" id="hora_entrada" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500" required>
-            </div>
+                </div>
             <div>
                 <label for="hora_saida" class="block text-sm font-medium text-gray-700">Hora de Saída</label>
                 <input type="time" name="hora_saida" id="hora_saida" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-50 focus:border-indigo-500 focus:ring-indigo-500">
@@ -69,5 +72,5 @@
             </button>
         </div>
     </form>
-</div>
+    </div>
 @endsection

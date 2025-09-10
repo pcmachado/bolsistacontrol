@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -17,6 +18,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'acessar dashboard coordenador']);
         Permission::create(['name' => 'homologar frequencia']);
         Permission::create(['name' => 'gerar relatorios']);
+        Permission::create(['name' => 'acessar dashboard bolsista']);
 
         // Criar papéis e atribuir permissões
         $coordenadorGeralRole = Role::create(['name' => 'coordenador_geral']);
@@ -28,6 +30,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $coordenadorAdjuntoRole->givePermissionTo('homologar frequencia');
 
         $bolsistaRole = Role::create(['name' => 'bolsista']);
+        $bolsistaRole->givePermissionTo('acessar dashboard bolsista');
 
         // Exemplo de atribuição de papel a um usuário (em outro seeder ou no Tinker)
         // $user = \App\Models\User::find(1);

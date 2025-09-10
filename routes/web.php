@@ -47,8 +47,8 @@ Route::middleware(['auth', 'verified', 'role:bolsista'])->group(function () {
 
 // Área Administrativa (Coordenadores e Coordenadores Adjuntos)
 // Rotas protegidas por autenticação e permissões do Spatie
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    
+Route::middleware(['auth', 'verified', 'role:coordenador_geral'])->prefix('admin')->name('admin.')->group(function () {
+
     // Rota para o dashboard administrativo, acessível por ambos os tipos de coordenadores
     Route::get('/', [AdminDashboardController::class, 'index'])
         ->middleware('permission:acessar dashboard coordenador')

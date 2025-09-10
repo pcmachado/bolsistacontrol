@@ -23,6 +23,19 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Tabela para cadastro das bolsas - contratos
+        Schema::create('scholarships', function (Blueprint $table) {
+            $table->id();
+            $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
+            $table->string('role')->nullable(); // Cargo ou função do bolsista
+            $table->integer('max_hours_per_day')->default(6); // limite diário
+            $table->integer('max_hours_per_month')->nullable(); // opcional, limite mensal
+            $table->decimal('hourly_rate', 10, 2)->nullable(); // valor da hora, varia por cargo
+            $table->date('start_date')->nullable(); // início da vigência do contrato
+            $table->date('end_date')->nullable();   // fim da vigência
+            $table->timestamps();
+        });
+
         // Tabela para bolsistas
         Schema::create('scholarship_holders', function (Blueprint $table) {
             $table->id();
@@ -34,6 +47,11 @@ return new class extends Migration
             $table->string('agency')->nullable();
             $table->string('account')->nullable();
             $table->unsignedBigInteger('position_id')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('scholarship_id')->constrained()->onDelete('cascade');
+            $table->foreignId('unit_id')->constrained()->onDelete('cascade');
+            $table->date('start_date')->nullable(); // quando o bolsista iniciou
+            $table->date('end_date')->nullable();   // fim do vínculo
             $table->timestamps();
         });
 
@@ -52,9 +70,11 @@ return new class extends Migration
             $table->unsignedBigInteger('scholarship_holder_id');
             $table->unsignedBigInteger('unit_id');
             $table->date('date');
-            $table->time('entry_time');
-            $table->time('exit_time');
+            $table->time('entry_time')->nullable();
+            $table->time('exit_time')->nullable();
             $table->text('observation')->nullable();
+            $table->integer('hours');
+            $table->decimal('calculated_value', 10, 2)->nullable(); // valor calculado
             $table->boolean('approved')->default(false); // para homologação
             $table->timestamps();
         });

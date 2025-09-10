@@ -1,5 +1,6 @@
-<!-- resources/views/frequencia/index.blade.php -->
 @extends('layouts.app')
+
+@section('title', 'Meu Histórico de Frequência')
 
 @section('content')
 <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-5xl mx-auto">
@@ -22,27 +23,23 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Horas</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observação</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {{-- O controller deve passar a variável $frequencias para esta view --}}
-                {{-- @foreach ($frequencias as $frequencia)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $frequencia->bolsista->nome }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $frequencia->unidade->nome }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $frequencia->data->format('d/m/Y') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $frequencia->hora_entrada->format('H:i') }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $frequencia->hora_saida ? $frequencia->hora_saida->format('H:i') : 'N/A' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($frequencia->hora_entrada && $frequencia->hora_saida)
-                                {{ Carbon\Carbon::parse($frequencia->hora_entrada)->diffInMinutes(Carbon\Carbon::parse($frequencia->hora_saida)) / 60 }}h
-                            @else
-                                Pendente
-                            @endif
-                        </td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($attendanceRecords as $record)
+                            <tr>
+                                <td>{{ $record->date }}</td>
+                                <td>{{ $record->entry_time }}</td>
+                                <td>{{ $record->exit_time }}</td>
+                                <td>{{ $record->activity }}</td>
+                                <td>
+                                    <span class="badge {{ $record->status == 'homologado_geral' ? 'bg-success' : 'bg-warning' }}">
+                                        {{ ucfirst(str_replace('_', ' ', $record->status)) }}
+                                    </span>
+                                </td>
                         <td class="px-6 py-4">{{ $frequencia->observacao }}</td>
-                    </tr>
-                @endforeach --}}
+                            </tr>
+                @endforeach
                 
                 {{-- Exemplo de linha para visualização --}}
                 <tr>
@@ -54,8 +51,8 @@
                     <td class="px-6 py-4 whitespace-nowrap">4h</td>
                     <td class="px-6 py-4">Reunião interna</td>
                 </tr>
-            </tbody>
-        </table>
+                    </tbody>
+                </table>
+        </div>
     </div>
-</div>
 @endsection

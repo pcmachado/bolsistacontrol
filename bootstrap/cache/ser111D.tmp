@@ -1,0 +1,86 @@
+<?php return array (
+  'providers' => 
+  array (
+    0 => 'Illuminate\\Filesystem\\FilesystemServiceProvider',
+    1 => 'Illuminate\\Foundation\\Providers\\FoundationServiceProvider',
+    2 => 'Illuminate\\Hashing\\HashServiceProvider',
+    3 => 'Andyabih\\JsonToLaravelMigrations\\JsonToLaravelMigrationsServiceProvider',
+    4 => 'Barryvdh\\Debugbar\\ServiceProvider',
+    5 => 'Barryvdh\\DomPDF\\ServiceProvider',
+    6 => 'Laravel\\Boost\\BoostServiceProvider',
+    7 => 'Laravel\\Breeze\\BreezeServiceProvider',
+    8 => 'Laravel\\Mcp\\Server\\McpServiceProvider',
+    9 => 'Laravel\\Pail\\PailServiceProvider',
+    10 => 'Laravel\\Passport\\PassportServiceProvider',
+    11 => 'Laravel\\Roster\\RosterServiceProvider',
+    12 => 'Laravel\\Sail\\SailServiceProvider',
+    13 => 'Laravel\\Sanctum\\SanctumServiceProvider',
+    14 => 'Laravel\\Telescope\\TelescopeServiceProvider',
+    15 => 'Laravel\\Tinker\\TinkerServiceProvider',
+    16 => 'Laravel\\Ui\\UiServiceProvider',
+    17 => 'Maatwebsite\\Excel\\ExcelServiceProvider',
+    18 => 'Mews\\Purifier\\PurifierServiceProvider',
+    19 => 'Carbon\\Laravel\\ServiceProvider',
+    20 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
+    21 => 'Termwind\\Laravel\\TermwindServiceProvider',
+    22 => 'Orangehill\\Iseed\\IseedServiceProvider',
+    23 => 'Spatie\\Html\\HtmlServiceProvider',
+    24 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
+    25 => 'Spatie\\Permission\\PermissionServiceProvider',
+    26 => 'Yajra\\DataTables\\DataTablesServiceProvider',
+    27 => 'Yajra\\DataTables\\DataTablesServiceProvider',
+    28 => 'App\\Providers\\AppServiceProvider',
+  ),
+  'eager' => 
+  array (
+    0 => 'Illuminate\\Filesystem\\FilesystemServiceProvider',
+    1 => 'Illuminate\\Foundation\\Providers\\FoundationServiceProvider',
+    2 => 'Andyabih\\JsonToLaravelMigrations\\JsonToLaravelMigrationsServiceProvider',
+    3 => 'Barryvdh\\Debugbar\\ServiceProvider',
+    4 => 'Barryvdh\\DomPDF\\ServiceProvider',
+    5 => 'Laravel\\Boost\\BoostServiceProvider',
+    6 => 'Laravel\\Mcp\\Server\\McpServiceProvider',
+    7 => 'Laravel\\Pail\\PailServiceProvider',
+    8 => 'Laravel\\Passport\\PassportServiceProvider',
+    9 => 'Laravel\\Roster\\RosterServiceProvider',
+    10 => 'Laravel\\Sanctum\\SanctumServiceProvider',
+    11 => 'Laravel\\Telescope\\TelescopeServiceProvider',
+    12 => 'Laravel\\Ui\\UiServiceProvider',
+    13 => 'Maatwebsite\\Excel\\ExcelServiceProvider',
+    14 => 'Mews\\Purifier\\PurifierServiceProvider',
+    15 => 'Carbon\\Laravel\\ServiceProvider',
+    16 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
+    17 => 'Termwind\\Laravel\\TermwindServiceProvider',
+    18 => 'Orangehill\\Iseed\\IseedServiceProvider',
+    19 => 'Spatie\\Html\\HtmlServiceProvider',
+    20 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
+    21 => 'Spatie\\Permission\\PermissionServiceProvider',
+    22 => 'Yajra\\DataTables\\DataTablesServiceProvider',
+    23 => 'Yajra\\DataTables\\DataTablesServiceProvider',
+    24 => 'App\\Providers\\AppServiceProvider',
+  ),
+  'deferred' => 
+  array (
+    'hash' => 'Illuminate\\Hashing\\HashServiceProvider',
+    'hash.driver' => 'Illuminate\\Hashing\\HashServiceProvider',
+    'Laravel\\Breeze\\Console\\InstallCommand' => 'Laravel\\Breeze\\BreezeServiceProvider',
+    'Laravel\\Sail\\Console\\InstallCommand' => 'Laravel\\Sail\\SailServiceProvider',
+    'Laravel\\Sail\\Console\\PublishCommand' => 'Laravel\\Sail\\SailServiceProvider',
+    'command.tinker' => 'Laravel\\Tinker\\TinkerServiceProvider',
+  ),
+  'when' => 
+  array (
+    'Illuminate\\Hashing\\HashServiceProvider' => 
+    array (
+    ),
+    'Laravel\\Breeze\\BreezeServiceProvider' => 
+    array (
+    ),
+    'Laravel\\Sail\\SailServiceProvider' => 
+    array (
+    ),
+    'Laravel\\Tinker\\TinkerServiceProvider' => 
+    array (
+    ),
+  ),
+);
