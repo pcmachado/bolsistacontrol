@@ -160,6 +160,13 @@
       0 => 'Orangehill\\Iseed\\IseedServiceProvider',
     ),
   ),
+  'pestphp/pest-plugin-laravel' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Pest\\Laravel\\PestServiceProvider',
+    ),
+  ),
   'spatie/laravel-html' => 
   array (
     'aliases' => 

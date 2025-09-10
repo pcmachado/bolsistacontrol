@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 
 // Rotas de Autenticação (Laravel Breeze)
 require __DIR__.'/auth.php';
+require __DIR__.'/admin.php';
 
 // Página de boas-vindas
 Route::get('/', function () {
@@ -70,6 +71,8 @@ Route::middleware(['auth', 'verified', 'role:coordenador_geral'])->prefix('admin
     // Módulo de Gerenciamento de Usuários (apenas para a Coordenacao Geral)
     Route::resource('users', UserController::class)->except(['show'])
         ->middleware('permission:gerenciar usuarios');
+    Route::get('/users', [UserController::class, 'index'])->name('usuarios');
+    Route::get('/users/data', [UserController::class, 'getData'])->name('usuarios.data');
 
     // Módulo de Bolsistas (apenas para Coordenadores Adjuntos e Gerais)
     Route::resource('bolsistas', ScholarshipHolderController::class)
