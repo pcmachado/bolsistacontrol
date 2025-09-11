@@ -5,7 +5,7 @@
 <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Bolsistas</h4>
-        <a href="{{ route('bolsistas.create') }}" class="btn btn-primary">Adicionar Novo Bolsista</a>
+        <a href="{{ route('admin.scholarship_holders.create') }}" class="btn btn-primary">Adicionar Novo Bolsista</a>
     </div>
     <div class="card-body">
         @if (session('success'))
@@ -34,8 +34,8 @@
                             @endforeach
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('bolsistas.edit', $bolsista) }}" class="btn btn-sm btn-outline-info">Editar</a>
-                            <form action="{{ route('bolsistas.destroy', $bolsista) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este bolsista?');">
+                            <a href="{{ route('admin.scholarship_holders.edit', $bolsista) }}" class="btn btn-sm btn-outline-info">Editar</a>
+                            <form action="{{ route('admin.scholarship_holders.destroy', $bolsista) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este bolsista?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>

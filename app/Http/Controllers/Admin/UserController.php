@@ -25,7 +25,7 @@ class UserController extends Controller
      */
     public function index(UsersDataTable $dataTable)
     {
-        return $dataTable->render('admin.users.index');
+        return $dataTable->render('admin.users.users');
     }
 
     /**
@@ -45,12 +45,12 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:usuario,coordenador',
+            'role' => 'required|in:usuario,coordenador_geral,coordenador_adjunto',
         ]);
 
         $this->userService->createUser($request->all());
 
-        return redirect()->route('admin.usuarios.index')->with('success', 'Usuário criado com sucesso!');
+        return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
     }
 
     /**
@@ -69,7 +69,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|in:usuario,coordenador',
+            'role' => 'required|in:bolsista,coordenador_geral,coordenador_adjunto',
         ]);
 
         $user->update([
@@ -78,7 +78,7 @@ class UserController extends Controller
             'role' => $request->role,
         ]);
 
-        return redirect()->route('admin.usuarios.index')->with('success', 'Usuário atualizado com sucesso!');
+        return redirect()->route('admin.users.index')->with('success', 'Usuário atualizado com sucesso!');
     }
 
     /**
@@ -88,12 +88,17 @@ class UserController extends Controller
     {
         $user->delete();
 
-        return redirect()->route('admin.usuarios.index')->with('success', 'Usuário removido com sucesso!');
+        return redirect()->route('admin.users.index')->with('success', 'Usuário removido com sucesso!');
     }
 
-    public function getData(Request $request)
-    {
-        $usuarios = User::select(['name', 'email', 'unit_id', 'created_at'])->with('unit');
-        return DataTables::of($usuarios)->make(true);
-    }
+public function getData(Request $request)
+{
+    $usuarios = User::with('unit')->select(['id', 'name', 'email', 'unit_id', 'created_at']);
+
+    return DataTables::of($usuarios)
+        ->addColumn('unit', function ($user) {
+            return $user->unit ? $user->unit->name : '-';
+        })
+        ->make(true);
+}
 }
