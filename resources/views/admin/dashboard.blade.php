@@ -1,48 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
-
 @section('content')
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-semibold mb-4">Bolsistas por Unidade</h2>
-        <canvas id="graficoBolsistas" class="w-full h-64"></canvas>
-    </div>
-    <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-semibold mb-4">Filtros</h2>
-        <div x-data="{ unidade: '' }">
-            <select x-model="unidade" class="border rounded px-4 py-2 w-full">
-                <option value="">Todas as Unidades</option>
-                @foreach($unidades as $unidade)
-                    <option value="{{ $unidade->id }}">{{ $unidade->nome }}</option>
-                @endforeach
-            </select>
-        </div>
-    </div>
+<div class="mb-4">
+    <label for="unidade" class="block text-sm font-medium text-gray-700">Filtrar por Unidade:</label>
+    <select id="unidade" x-model="unidadeSelecionada" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+        <option value="">Todas</option>
+        <template x-for="unidade in unidades" :key="unidade">
+            <option :value="unidade" x-text="unidade"></option>
+        </template>
+    </select>
 </div>
-@endsection
 
-@push('scripts')
+<canvas id="graficoBolsistas" class="w-full h-64"></canvas>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    new Chart(document.getElementById('graficoBolsistas'), {
-        type: 'bar',
-        data: {
-            labels: {!! json_encode($labels) !!},
-            datasets: [{
-                label: 'Bolsistas por Unidade',
-                data: {!! json_encode($data) !!},
-                backgroundColor: '#3b82f6',
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('graficoDashboard', () => ({
+            unidadeSelecionada: '',
+            unidades: @json($unidades),
+            labels: @json($labels),
+            data: @json($data),
+            init() {
+                const ctx = document.getElementById('graficoBolsistas').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: this.labels,
+                        datasets: [{
+                            label: 'Bolsistas',
+                            data: this.data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        }]
+                    },
+                    options: { responsive: true }
+                });
             }
-        }
+        }))
     });
-});
 </script>
-@endpush
+@endsection

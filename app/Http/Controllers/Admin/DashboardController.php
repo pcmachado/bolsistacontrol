@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\AttendanceRecord;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {

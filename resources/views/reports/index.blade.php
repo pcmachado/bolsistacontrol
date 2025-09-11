@@ -30,7 +30,7 @@
         document.getElementById('gerar-relatorio-btn').addEventListener('click', async () => {
             const form = document.getElementById('relatorio-form');
             const formData = new FormData(form);
-            const response = await fetch('{{ route('relatorios.gerar') }}', {
+            const response = await fetch('{{ route('admin.relatorios.gerar') }}', {
                 method: 'POST',
                 body: formData
             });

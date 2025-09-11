@@ -3,13 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Unit;
+use App\Models\AttendanceRecord;
+use Illuminate\View\View;
+use PDF;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
     public function index(): View
     {
-        $units = Unit::all();
-        return view('reports.index', compact('units'));
+        $unidades = Unit::all();
+        return view('reports.index', compact('unidades'));
     }
 
     public function gerarRelatorio(Request $request)
@@ -27,7 +33,7 @@ class ReportController extends Controller
         $startOfDay = Carbon::createFromDate($year, $month, 1)->startOfDay();
         $endOfDay = Carbon::createFromDate($year, $month, 1)->endOfMonth()->endOfDay();
 
-        $registros = RegistroFrequencia::where('unit_id', $unitId)
+        $registros = AttendanceRecord::where('unit_id', $unitId)
             ->whereBetween('date', [$startOfDay, $endOfDay])
             ->with('scholarshipHolder')
             ->get();

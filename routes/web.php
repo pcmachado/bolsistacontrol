@@ -6,7 +6,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\UnitController;
-use App\Http\Controllers\PositionController;
+use App\Http\Controllers\Admin\PositionController;
 use App\Http\Controllers\ScholarshipHolderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 
 // Rotas de Autenticação (Laravel Breeze)
 require __DIR__.'/auth.php';
-require __DIR__.'/admin.php';
+//require __DIR__.'/admin.php';
 
 // Página de boas-vindas
 Route::get('/', function () {
@@ -88,4 +88,5 @@ Route::middleware(['auth', 'verified', 'role:coordenador_geral'])->prefix('admin
     Route::resource('cargos', PositionController::class)
         ->except(['show'])
         ->middleware('permission:gerenciar cargos');
+        
 });

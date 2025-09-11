@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use App\DataTables\UsersDataTable;
 use App\Services\UserService;
+use Yajra\DataTables\DataTables;
 
 class UserController extends Controller
 {
@@ -49,7 +50,7 @@ class UserController extends Controller
 
         $this->userService->createUser($request->all());
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Usuário criado com sucesso!');
     }
 
     /**
@@ -77,7 +78,7 @@ class UserController extends Controller
             'role' => $request->role,
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuário atualizado com sucesso!');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Usuário atualizado com sucesso!');
     }
 
     /**
@@ -87,6 +88,12 @@ class UserController extends Controller
     {
         $user->delete();
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuário removido com sucesso!');
+        return redirect()->route('admin.usuarios.index')->with('success', 'Usuário removido com sucesso!');
+    }
+
+    public function getData(Request $request)
+    {
+        $usuarios = User::select(['name', 'email', 'unit_id', 'created_at'])->with('unit');
+        return DataTables::of($usuarios)->make(true);
     }
 }
