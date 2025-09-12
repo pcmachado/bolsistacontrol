@@ -23,10 +23,10 @@
             Acompanhe a frequência, gere relatórios e gerencie o seu tempo de forma eficiente.
         </p>
         <div class="space-x-4">
-            <a href="{{ route('frequencia.create') }}" class="inline-block px-8 py-3 bg-white text-indigo-600 rounded-full font-bold shadow-lg transform hover:scale-105 transition duration-300">
+            <a href="{{ route('attendance.create') }}" class="inline-block px-8 py-3 bg-white text-indigo-600 rounded-full font-bold shadow-lg transform hover:scale-105 transition duration-300">
                 Registrar Frequência
             </a>
-            <a href="{{ route('notificacoes.index') }}" class="inline-block px-8 py-3 bg-indigo-700 text-white rounded-full font-bold shadow-lg transform hover:scale-105 transition duration-300">
+            <a href="{{ route('notifications.index') }}" class="inline-block px-8 py-3 bg-indigo-700 text-white rounded-full font-bold shadow-lg transform hover:scale-105 transition duration-300">
                 Ver Notificações
             </a>
         </div>

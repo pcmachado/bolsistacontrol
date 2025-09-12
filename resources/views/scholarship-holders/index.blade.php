@@ -1,52 +1,65 @@
-<!-- resources/views/scholarship-holders/index.blade.php -->
+{{-- resources/views/scholarship-holders/index.blade.php (Convertido para Tailwind) --}}
 @extends('layouts.app')
 
+@section('title', 'Gerenciamento de Bolsistas')
+
 @section('content')
-<div class="card shadow-sm">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">Bolsistas</h4>
-        <a href="{{ route('admin.scholarship_holders.create') }}" class="btn btn-primary">Adicionar Novo Bolsista</a>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Bolsistas</h1>
+        <a href="{{ route('admin.bolsistas.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300">
+            Adicionar Novo Bolsista
+        </a>
     </div>
-    <div class="card-body">
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
+
+    @if (session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Cargo</th>
-                        <th>Unidade</th>
-                        <th class="text-end">Ações</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nome</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cargo</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unidade(s)</th>
+                        <th scope="col" class="relative px-6 py-3">
+                            <span class="sr-only">Ações</span>
+                        </th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach ($bolsistas as $bolsista)
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    @forelse ($bolsistas as $bolsista)
                     <tr>
-                        <td>{{ $bolsista->nome }}</td>
-                        <td>{{ $bolsista->email }}</td>
-                        <td>{{ $bolsista->cargo->nome ?? 'N/A' }}</td>
-                        <td>
-                            @foreach($bolsista->unidades as $unidade)
-                                {{ $unidade->nome }}@if(!$loop->last), @endif
-                            @endforeach
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ $bolsista->nome ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $bolsista->email ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ $bolsista->cargo->nome ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                            {{ $bolsista->unidades->pluck('nome')->implode(', ') }}
                         </td>
-                        <td class="text-end">
-                            <a href="{{ route('admin.scholarship_holders.edit', $bolsista) }}" class="btn btn-sm btn-outline-info">Editar</a>
-                            <form action="{{ route('admin.scholarship_holders.destroy', $bolsista) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este bolsista?');">
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{{ route('admin.bolsistas.edit', $bolsista) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-600 mr-3">Editar</a>
+                            <form action="{{ route('admin.bolsistas.destroy', $bolsista) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+                                <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-600">Excluir</button>
                             </form>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Nenhum bolsista encontrado.</td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
-        {{ $bolsistas->links() }}
+        
+        <div class="p-4">
+            {{ $bolsistas->links() }}
+        </div>
     </div>
-</div>
 @endsection

@@ -14,30 +14,24 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 
 // Rotas de Autenticação (Laravel Breeze)
 require __DIR__.'/auth.php';
-//require __DIR__.'/admin.php';
 
 // Página de boas-vindas
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Área do Usuário (Bolsista)
-// Rotas protegidas por autenticação e que só podem ser acessadas por bolsistas
-Route::middleware(['auth', 'verified', 'role_or_permission:bolsista'])->group(function () {
+// Área do Utilizador (Bolsista) - Rotas para utilizadores autenticados
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Módulo de Frequência para o Bolsista
-    Route::prefix('frequencia')->name('frequencia.')->group(function () {
-        Route::get('/registrar', [AttendanceController::class, 'create'])->name('create');
-        Route::post('/registrar', [AttendanceController::class, 'store'])->name('store');
-        Route::get('/historico', [AttendanceController::class, 'index'])->name('historico');
-    });
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/registrar', [AttendanceController::class, 'create'])->name('attendance.create');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
 
     // Módulo de Notificações para o Bolsista
-    Route::prefix('notificacoes')->name('notificacoes.')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('index');
-        Route::post('/{notification}/marcar-lida', [NotificationController::class, 'markAsRead'])->name('marcarLida');
-    });
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
 
     // Rotas de Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -46,50 +40,31 @@ Route::middleware(['auth', 'verified', 'role_or_permission:bolsista'])->group(fu
 });
 
 
-// Área Administrativa (Coordenadores e Coordenadores Adjuntos)
-// Rotas protegidas por autenticação e permissões do Spatie
-Route::middleware(['auth', 'verified', 'role_or_permission:coordenador_geral'])
-    ->prefix('admin')
-    ->name('admin.')
-    ->group(function () {
+// Área Administrativa - Rotas protegidas por autenticação e pelo role de 'admin'
+Route::middleware(['auth', 'verified', 'role_or_permission:admin|coordenador_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dashboard
-    Route::get('/', [AdminDashboardController::class, 'index'])
-        ->name('dashboard');
+    // Dashboard Administrativo
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Frequência
-    Route::prefix('frequencia')
-        ->name('frequencia.')
+    Route::prefix('attendance')
+        ->name('attendance.')
         ->group(function () {
             Route::get('/homologar', [AttendanceController::class, 'homologarIndex'])->name('homologar.index');
             Route::post('/{attendanceRecord}/homologar', [AttendanceController::class, 'homologar'])->name('homologar');
         });
 
-    // Relatórios
-    Route::prefix('reports')
-        ->name('reports.')
-        ->group(function () {
-            Route::get('/', [ReportController::class, 'index'])->name('index');
-            Route::post('/gerar', [ReportController::class, 'gerarRelatorio'])->name('gerar');
-            Route::get('/download/{filename}', [ReportController::class, 'download'])->name('download');
-        });
+    // Módulo de Relatórios
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::post('/gerar', [ReportController::class, 'gerarRelatorio'])->name('gerar');
+        Route::get('/download/{filename}', [ReportController::class, 'download'])->name('download');
+    });
 
-    // Usuários
-    Route::get('/users/data', [UserController::class, 'getData'])
-        ->name('users.data');
+    // Módulos de Gerenciamento (RESTful Resources)
+    Route::resource('users', UserController::class)->except(['show']);
+    Route::resource('scholarship-holders', ScholarshipHolderController::class)->except(['show']);
+    Route::resource('units', UnitController::class)->except(['show'])->names('units'); // Usando 'units' para corresponder à sidebar
+    Route::resource('positions', PositionController::class)->except(['show'])->names('positions'); // Usando 'positions' para corresponder à sidebar
 
-    Route::resource('users', UserController::class)
-        ->except(['show']);
-
-    // Bolsistas
-    Route::resource('scholarship_holders', ScholarshipHolderController::class)
-        ->except(['show']);
-
-    // Unidades
-    Route::resource('units', UnitController::class)
-        ->except(['show']);
-
-    // Cargos
-    Route::resource('positions', PositionController::class)
-        ->except(['show']);
 });
