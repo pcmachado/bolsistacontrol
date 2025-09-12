@@ -6,7 +6,7 @@
 @section('content')
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Bolsistas</h1>
-        <a href="{{ route('admin.bolsistas.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300">
+        <a href="{{ route('admin.scholarship_holders.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300">
             Adicionar Novo Bolsista
         </a>
     </div>
@@ -41,8 +41,8 @@
                             {{ $bolsista->unidades->pluck('nome')->implode(', ') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('admin.bolsistas.edit', $bolsista) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-600 mr-3">Editar</a>
-                            <form action="{{ route('admin.bolsistas.destroy', $bolsista) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
+                            <a href="{{ route('admin.scholarship_holders.edit', $bolsista) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-600 mr-3">Editar</a>
+                            <form action="{{ route('admin.scholarship_holders.destroy', $bolsista) }}" method="POST" class="inline" onsubmit="return confirm('Tem certeza?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-600">Excluir</button>

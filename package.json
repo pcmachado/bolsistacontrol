@@ -1,4 +1,7 @@
 {
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
     "name": "bolsistacontrol",
     "version": "1.0.0",
     "description": "<p align=\"center\"><a href=\"https://laravel.com\" target=\"_blank\"><img src=\"https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg\" width=\"400\" alt=\"Laravel Logo\"></a></p>",
@@ -24,9 +27,11 @@
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
         "alpinejs": "^3.15.0",
         "autoprefixer": "^10.4.21",
         "postcss": "^8.5.6",
-        "tailwindcss": "^3.4.17"
+        "tailwindcss": "^4.1.13"
     }
 }

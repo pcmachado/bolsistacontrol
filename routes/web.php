@@ -63,7 +63,9 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|coordenador_ger
 
     // Módulos de Gerenciamento (RESTful Resources)
     Route::resource('users', UserController::class)->except(['show']);
-    Route::resource('scholarship-holders', ScholarshipHolderController::class)->except(['show']);
+    Route::get('/users/data', [UserController::class, 'getData'])->name('users.data');
+    
+    Route::resource('scholarship_holders', ScholarshipHolderController::class)->except(['show']);
     Route::resource('units', UnitController::class)->except(['show'])->names('units'); // Usando 'units' para corresponder à sidebar
     Route::resource('positions', PositionController::class)->except(['show'])->names('positions'); // Usando 'positions' para corresponder à sidebar
 

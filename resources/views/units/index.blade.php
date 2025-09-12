@@ -5,7 +5,7 @@
 <div class="card shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Unidades</h4>
-        <a href="{{ route('unidades.create') }}" class="btn btn-primary">Adicionar Nova Unidade</a>
+        <a href="{{ route('admin.units.create') }}" class="btn btn-primary">Adicionar Nova Unidade</a>
     </div>
     <div class="card-body">
         @if (session('success'))
@@ -28,8 +28,8 @@
                         <td>{{ $unidade->cidade }}</td>
                         <td>{{ $unidade->endereco }}</td>
                         <td class="text-end">
-                            <a href="{{ route('unidades.edit', $unidade) }}" class="btn btn-sm btn-outline-info">Editar</a>
-                            <form action="{{ route('unidades.destroy', $unidade) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta unidade?');">
+                            <a href="{{ route('admin.units.edit', $unidade) }}" class="btn btn-sm btn-outline-info">Editar</a>
+                            <form action="{{ route('admin.units.destroy', $unidade) }}" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta unidade?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
