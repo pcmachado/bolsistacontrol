@@ -1,52 +1,42 @@
-<x-authentication-layout>
-    <h1 class="text-3xl text-gray-800 dark:text-gray-100 font-bold mb-6">{{ __('Welcome back!') }}</h1>
-    @if (session('status'))
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ session('status') }}
+@extends('layouts.app')
+
+@section('title','Login')
+
+@section('content')
+<div class="d-flex align-items-center justify-content-center" style="min-height:75vh;">
+  <div class="card w-100" style="max-width:420px;">
+    <div class="card-body">
+      <h4 class="card-title mb-3">Login</h4>
+
+      @if($errors->any())
+        <div class="alert alert-danger">
+          <ul class="mb-0">
+            @foreach($errors->all() as $err)
+              <li>{{ $err }}</li>
+            @endforeach
+          </ul>
         </div>
-    @endif   
-    <!-- Form -->
-    <form method="POST" action="{{ route('login') }}">
+      @endif
+
+      <form method="POST" action="{{ route('login') }}">
         @csrf
-        <div class="space-y-4">
-            <div>
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" type="email" name="email" :value="old('email')" required autofocus />                
-            </div>
-            <div>
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" type="password" name="password" required autocomplete="current-password" />                
-            </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" value="{{ old('email') }}" class="form-control" required autofocus>
         </div>
-        <div class="flex items-center justify-between mt-6">
-            @if (Route::has('password.request'))
-                <div class="mr-1">
-                    <a class="text-sm underline hover:no-underline" href="{{ route('password.request') }}">
-                        {{ __('Forgot Password?') }}
-                    </a>
-                </div>
-            @endif            
-            <x-button class="ml-3">
-                {{ __('Sign in') }}
-            </x-button>            
+        <div class="mb-3">
+          <label class="form-label">Senha</label>
+          <input type="password" name="password" class="form-control" required>
         </div>
-    </form>
-    <x-validation-errors class="mt-4" />   
-    <!-- Footer -->
-    <div class="pt-5 mt-6 border-t border-gray-100 dark:border-gray-700/60">
-        <div class="text-sm">
-            {{ __('Don\'t you have an account?') }} <a class="font-medium text-violet-500 hover:text-violet-600 dark:hover:text-violet-400" href="{{ route('register') }}">{{ __('Sign Up') }}</a>
+
+        <div class="mb-3 form-check">
+          <input type="checkbox" name="remember" id="remember" class="form-check-input">
+          <label for="remember" class="form-check-label">Lembrar-me</label>
         </div>
-        <!-- Warning -->
-        <div class="mt-5">
-            <div class="bg-yellow-500/20 text-yellow-700 px-3 py-2 rounded-lg">
-                <svg class="inline w-3 h-3 shrink-0 fill-current" viewBox="0 0 12 12">
-                    <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                </svg>
-                <span class="text-sm">
-                    To support you during the pandemic super pro features are free until March 31st.
-                </span>
-            </div>
-        </div>
+
+        <button class="btn btn-primary w-100" type="submit">Entrar</button>
+      </form>
     </div>
-</x-authentication-layout>
+  </div>
+</div>
+@endsection
