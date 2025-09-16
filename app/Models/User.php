@@ -20,10 +20,10 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     // Relacionamento: um usuário pertence a uma unidade
-    public function unit(): BelongsTo
+    /*public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
-    }
+    }*/
 
     /**
      * The attributes that are mass assignable.
@@ -69,11 +69,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Verifica se o usuário tem o papel de administrador de unidade.
+     * Verifica se o usuário tem o papel de coordenador geral.
      */
-    public function isUnitAdmin(): bool
+    public function isCoordenadorGeral(): bool
     {
-        return $this->role === 'unitAdmin';
+        return $this->role === 'coordenador_geral';
     }
 
     /**

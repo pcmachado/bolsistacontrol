@@ -66,7 +66,8 @@
     62 => 'Barryvdh\\DomPDF\\ServiceProvider',
     63 => 'Spatie\\Html\\HtmlServiceProvider',
     64 => 'Barryvdh\\Debugbar\\ServiceProvider',
-    65 => 'App\\Providers\\AppServiceProvider',
+    65 => 'Andyabih\\JsonToLaravelMigrations\\JsonToLaravelMigrationsServiceProvider',
+    66 => 'App\\Providers\\AppServiceProvider',
   ),
   'eager' => 
   array (
@@ -120,7 +121,8 @@
     47 => 'Barryvdh\\DomPDF\\ServiceProvider',
     48 => 'Spatie\\Html\\HtmlServiceProvider',
     49 => 'Barryvdh\\Debugbar\\ServiceProvider',
-    50 => 'App\\Providers\\AppServiceProvider',
+    50 => 'Andyabih\\JsonToLaravelMigrations\\JsonToLaravelMigrationsServiceProvider',
+    51 => 'App\\Providers\\AppServiceProvider',
   ),
   'deferred' => 
   array (

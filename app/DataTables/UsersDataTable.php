@@ -2,42 +2,45 @@
 namespace App\DataTables;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder as QueryBuilder;
-use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
 class UsersDataTable extends DataTable
 {
-    public function dataTable(QueryBuilder $query): EloquentDataTable
+    public function dataTable($query)
     {
-        return (new EloquentDataTable($query))->setRowId('id');
+        return datatables()
+            ->eloquent($query)
+            ->addColumn('role', function ($user) {
+                // Assumindo que você está a usar o pacote Spatie/Permission
+                return $user->getRoleNames()->first() ?? 'N/A';
+            })
+            ->addColumn('actions', 'admin.users.partials.actions') // Usando uma view para as ações
+            ->rawColumns(['actions']);
     }
 
-    public function query(User $model): QueryBuilder
+    public function query(User $model)
     {
         return $model->newQuery();
     }
 
-    public function html(): HtmlBuilder
+    public function html()
     {
         return $this->builder()
-            ->setTableId('users')
+            ->setTableId('users-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->dom('Bfrtip')
-            ->orderBy(0)
-            ->selectStyleSingle()
+            ->orderBy(0, 'asc')
             ->buttons([
-                Button::make('add'),
-                Button::make('excel'),
-                Button::make('csv'),
-                Button::make('pdf'),
-                Button::make('print'),
-                Button::make('reset'),
-                Button::make('reload'),
+                Button::make('excel')->title('Exportar para Excel'),
+                Button::make('csv')->title('Exportar para CSV'),
+                Button::make('print')->title('Imprimir'),
+                Button::make('reload')->title('Recarregar'),
+            ])
+            ->parameters([
+                'language' => ['url' => '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json']
             ]);
     }
 
@@ -45,10 +48,17 @@ class UsersDataTable extends DataTable
     {
         return [
             Column::make('id'),
-            Column::make('name'),
-            Column::make('email'),
-            Column::make('created_at'),
-            Column::make('updated_at'),
+            Column::make('name')->title('Nome'),
+            Column::make('email')->title('E-mail'),
+            Column::make('role')->title('Papel')->orderable(false)->searchable(false),
+            Column::make('created_at')->title('Criado Em'),
+            Column::make('updated_at')->title('Atualizado Em'),
+            Column::computed('actions')
+                ->exportable(false)
+                ->printable(false)
+                ->width(150)
+                ->addClass('text-center')
+                ->title('Ações'),
         ];
     }
 

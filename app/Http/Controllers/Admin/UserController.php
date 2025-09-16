@@ -9,7 +9,6 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use App\DataTables\UsersDataTable;
 use App\Services\UserService;
-use Yajra\DataTables\DataTables;
 
 class UserController extends Controller
 {
@@ -90,15 +89,4 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário removido com sucesso!');
     }
-
-public function getData(Request $request)
-{
-    $usuarios = User::with('unit')->select(['id', 'name', 'email', 'role', 'created_at']);
-
-    return DataTables::of($usuarios)
-        //->addColumn('unit', function ($user) {
-        //    return $user->unit ? $user->unit->name : '-';
-        //})
-        ->make(true);
-}
 }
