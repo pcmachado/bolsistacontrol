@@ -1,34 +1,26 @@
 @extends('layouts.app')
 
-@section('title', 'Lista de Usuários')
+@section('title', 'Usuários')
 
 @section('content')
-<table id="usuarios" class="min-w-full divide-y divide-gray-200">
-    <thead>
-        <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Unidade</th>
-        </tr>
-    </thead>
-</table>
+<div class="container-fluid">
+    <h1 class="mb-4">Usuários</h1>
+
+    <div class="card">
+        <div class="card-header">Manage Users</div>
+        <div class="card-body">
+            {!! $dataTable->table(['class' => 'table table-bordered table-striped']) !!}
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#usuarios').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: '{{ route('admin.users.data') }}',
-        columns: [
-            { data: 'name', name: 'name' },       // Ajuste conforme o retorno do controller
-            { data: 'email', name: 'email' },
-            { data: 'unit', name: 'unit' }        // Ajuste conforme o retorno do controller
-        ],
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json' }
-    });
-});
-</script>
+        <script>
+        // O código do seu arquivo "users" que chama .DataTable()
+        $(document).ready(function() {
+            $('#users').DataTable(); // Agora esta função existirá
+        });
+    </script>
+    {!! $dataTable->scripts() !!}  
 @endpush

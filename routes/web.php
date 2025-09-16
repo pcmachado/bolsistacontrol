@@ -11,12 +11,19 @@ use App\Http\Controllers\ScholarshipHolderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use Barryvdh\Debugbar\Facades\Debugbar;
 
 // Rotas de Autenticação (Laravel Breeze)
 require __DIR__.'/auth.php';
 
 // Página de boas-vindas
 Route::get('/', function () {
+
+    Debugbar::info('INFO');
+    Debugbar::error('ERROR');
+    Debugbar::warning('WARNING');
+    Debugbar::addMessage('NEW MESSAGE');
+
     return view('welcome');
 });
 
@@ -53,6 +60,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|coordenador_ger
             Route::get('/homologar', [AttendanceController::class, 'homologarIndex'])->name('homologar.index');
             Route::post('/{attendanceRecord}/homologar', [AttendanceController::class, 'homologar'])->name('homologar');
         });
+    Route::resource('attendance', AttendanceController::class)->except(['show']);
+
 
     // Módulo de Relatórios
     Route::prefix('reports')->name('reports.')->group(function () {

@@ -93,12 +93,12 @@ class UserController extends Controller
 
 public function getData(Request $request)
 {
-    $usuarios = User::with('unit')->select(['id', 'name', 'email', 'unit_id', 'created_at']);
+    $usuarios = User::with('unit')->select(['id', 'name', 'email', 'role', 'created_at']);
 
     return DataTables::of($usuarios)
-        ->addColumn('unit', function ($user) {
-            return $user->unit ? $user->unit->name : '-';
-        })
+        //->addColumn('unit', function ($user) {
+        //    return $user->unit ? $user->unit->name : '-';
+        //})
         ->make(true);
 }
 }

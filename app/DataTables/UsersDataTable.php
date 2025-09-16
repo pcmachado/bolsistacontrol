@@ -2,26 +2,26 @@
 namespace App\DataTables;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Button;
+use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
 class UsersDataTable extends DataTable
 {
-    public function dataTable($query)
+    public function dataTable(QueryBuilder $query): EloquentDataTable
     {
-        return datatables()
-            ->eloquent($query)
-            ->addColumn('actions', function ($user) {
-                return view('admin.partials.actions', compact('user'))->render();
-            });
+        return (new EloquentDataTable($query))->setRowId('id');
     }
 
-    public function query(User $model)
+    public function query(User $model): QueryBuilder
     {
         return $model->newQuery();
     }
 
-    public function html()
+    public function html(): HtmlBuilder
     {
         return $this->builder()
             ->setTableId('users')
@@ -29,21 +29,26 @@ class UsersDataTable extends DataTable
             ->minifiedAjax()
             ->dom('Bfrtip')
             ->orderBy(0)
+            ->selectStyleSingle()
             ->buttons([
+                Button::make('add'),
                 Button::make('excel'),
                 Button::make('csv'),
+                Button::make('pdf'),
                 Button::make('print'),
                 Button::make('reset'),
-                Button::make('reload')
+                Button::make('reload'),
             ]);
     }
 
-    protected function getColumns()
+    protected function getColumns(): array
     {
         return [
-            'name',
-            'email',
-            'actions'
+            Column::make('id'),
+            Column::make('name'),
+            Column::make('email'),
+            Column::make('created_at'),
+            Column::make('updated_at'),
         ];
     }
 
