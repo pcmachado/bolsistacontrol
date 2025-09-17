@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1); // Adicione esta linha
+error_reporting(E_ALL); // Adicione esta linha
+
+use Illuminate\Contracts\Http\Kernel;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;

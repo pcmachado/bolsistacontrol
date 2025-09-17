@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -21,7 +22,22 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/dashboard';
+    //public const HOME = '/dashboard';
+
+    public static function home()
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('admin|coordenador_geral|coordenador_adjunto')) {
+            return route('admin.dashboard');
+        }
+
+        if ($user->hasRole('bolsista')) {
+            return route('bolsista.dashboard');
+        }
+
+        return '/'; // fallback
+    }
 
     /**
      * Define your route model bindings, pattern filters, etc.

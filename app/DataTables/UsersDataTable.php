@@ -38,9 +38,6 @@ class UsersDataTable extends DataTable
                 Button::make('csv')->title('Exportar para CSV'),
                 Button::make('print')->title('Imprimir'),
                 Button::make('reload')->title('Recarregar'),
-            ])
-            ->parameters([
-                'language' => ['url' => '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json']
             ]);
     }
 

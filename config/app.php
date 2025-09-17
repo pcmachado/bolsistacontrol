@@ -178,19 +178,11 @@ return [
 
     ],
 
-    'aliases' => [
-        // ... outros aliases
-
-        'DataTables' => Yajra\DataTables\Facades\DataTables::class,
-        'Debugbar' => Barryvdh\Debugbar\Facade::class,
-        
-    ], 
-
     'aliases' => Facade::defaultAliases()->merge([
-        // 'Example' => App\Facades\Example::class,
-
-        // Adicione a linha abaixo se ela não existir
+        'DataTables' => Yajra\DataTables\Facades\DataTables::class,
         'Config' => Illuminate\Support\Facades\Config::class,
-
+        'Excel' => Maatwebsite\Excel\Facades\Excel::class, // Alias para o pacote de Excel
+        'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,      // Alias para o pacote de PDF
+        'Html' => Spatie\Html\Facades\Html::class,         // Alias para o Spatie/Html
     ])->toArray(),
 ];
