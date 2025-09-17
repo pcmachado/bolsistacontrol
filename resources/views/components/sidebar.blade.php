@@ -11,6 +11,33 @@
                 Usuários
             </a>
         </li>
-        {{-- Adicione outros links aqui --}}
+        <li class="nav-item mb-2">
+            <a class="nav-link {{ request()->routeIs('admin.units.*') ? 'active' : '' }}" href="{{ route('admin.units.index') }}">
+                Unidades
+            </a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link {{ request()->routeIs('admin.scholarship_holders.*') ? 'active' : '' }}" href="{{ route('admin.scholarship_holders.index') }}">
+                Bolsistas
+            </a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">
+                Relatórios
+            </a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}" href="{{ route('admin.attendance.index') }}">
+                Frequências
+            </a>
+        </li>
+        <li class="nav-item mt-auto">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-link nav-link p-0">
+                    Sair
+                </button>
+            </form>
+        </li>
     </ul>
 </div>

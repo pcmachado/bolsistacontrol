@@ -174,6 +174,7 @@ return [
         Barryvdh\DomPDF\ServiceProvider::class,
         Spatie\Html\HtmlServiceProvider::class,
         Barryvdh\Debugbar\ServiceProvider::class,
+        Spatie\Permission\PermissionServiceProvider::class,
         Andyabih\JsonToLaravelMigrations\JsonToLaravelMigrationsServiceProvider::class,
 
     ],
@@ -184,5 +185,6 @@ return [
         'Excel' => Maatwebsite\Excel\Facades\Excel::class, // Alias para o pacote de Excel
         'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,      // Alias para o pacote de PDF
         'Html' => Spatie\Html\Facades\Html::class,         // Alias para o Spatie/Html
+        'Debugbar' => Barryvdh\Debugbar\Facade::class,
     ])->toArray(),
 ];
