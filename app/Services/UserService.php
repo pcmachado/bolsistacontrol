@@ -26,6 +26,44 @@ class UserService
             'role' => $data['role'],
         ]);
 
+        // Associa as unidades se elas forem enviadas
+        if (!empty($data['units'])) {
+            $user->units()->sync($data['units']);
+        }
+
+        // Associa o papel (role) se estiver a usar o Spatie/Permission
+        if (!empty($data['role'])) {
+             $user->assignRole($data['role']);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Atualiza um utilizador existente e sincroniza as suas unidades.
+     *
+     * @param User $user O utilizador a ser atualizado.
+     * @param array $data Os novos dados do formulário.
+     * @return User O utilizador atualizado.
+     */
+    public function updateUser(User $user, array $data): User
+    {
+        // 1. Atualiza os dados básicos do utilizador
+        $user->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ]);
+
+        // 2. Sincroniza as unidades (a sua lógica)
+        // O segundo argumento [] garante que se 'units' não for enviado,
+        // todas as associações são removidas.
+        $user->units()->sync($data['units'] ?? []);
+
+        // 3. Opcional: Sincroniza o papel (role)
+        if (isset($data['role'])) {
+            $user->syncRoles([$data['role']]);
+        }
+
         return $user;
     }
     
@@ -41,6 +79,19 @@ class UserService
         $user->setRole($role);
         $user->save();
 
+        return $user;
+    }
+
+    /**
+     * Atualiza as unidades de um usuário existente.
+     *
+     * @param User $user
+     * @param array $units
+     * @return User
+     */
+    public function updateUserUnits(User $user, array $units): User
+    {
+        $user->units()->sync($units);
         return $user;
     }
 }

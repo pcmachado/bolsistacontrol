@@ -20,10 +20,10 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     // Relacionamento: um usuário pertence a uma unidade
-    /*public function unit(): BelongsTo
+    public function units(): BelongsToMany
     {
-        return $this->belongsTo(Unit::class);
-    }*/
+        return $this->belongsToMany(Unit::class, 'user_unit', 'user_id', 'unit_id');
+    }
 
     /**
      * The attributes that are mass assignable.

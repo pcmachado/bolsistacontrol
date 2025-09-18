@@ -24,4 +24,9 @@ class Unit extends Model
     {
         return $this->hasMany(AttendanceRecord::class);
     }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_unit', 'unit_id', 'user_id');
+    }
 }

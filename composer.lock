@@ -2362,16 +2362,16 @@
         },
         {
             "name": "laravel/telescope",
-            "version": "v5.11.3",
+            "version": "v5.11.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/telescope.git",
-                "reference": "7684604e104e7755b70dcacfeee06888e2470689"
+                "reference": "8b7bd77857d6b1b8c9362560cde74911cee68ab8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/telescope/zipball/7684604e104e7755b70dcacfeee06888e2470689",
-                "reference": "7684604e104e7755b70dcacfeee06888e2470689",
+                "url": "https://api.github.com/repos/laravel/telescope/zipball/8b7bd77857d6b1b8c9362560cde74911cee68ab8",
+                "reference": "8b7bd77857d6b1b8c9362560cde74911cee68ab8",
                 "shasum": ""
             },
             "require": {
@@ -2425,9 +2425,9 @@
             ],
             "support": {
                 "issues": "https://github.com/laravel/telescope/issues",
-                "source": "https://github.com/laravel/telescope/tree/v5.11.3"
+                "source": "https://github.com/laravel/telescope/tree/v5.11.4"
             },
-            "time": "2025-08-21T14:25:40+00:00"
+            "time": "2025-09-12T14:36:07+00:00"
         },
         {
             "name": "laravel/tinker",
@@ -9738,6 +9738,52 @@
             "time": "2025-04-30T06:54:44+00:00"
         },
         {
+            "name": "illuminate/json-schema",
+            "version": "v12.30.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/json-schema.git",
+                "reference": "1f0c1ff160d660f1d799a7dcf7b2dc4b1a96705d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/json-schema/zipball/1f0c1ff160d660f1d799a7dcf7b2dc4b1a96705d",
+                "reference": "1f0c1ff160d660f1d799a7dcf7b2dc4b1a96705d",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.1"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "12.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\JsonSchema\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "The Illuminate Json Schema package.",
+            "homepage": "https://laravel.com",
+            "support": {
+                "issues": "https://github.com/laravel/framework/issues",
+                "source": "https://github.com/laravel/framework"
+            },
+            "time": "2025-09-03T16:59:32+00:00"
+        },
+        {
             "name": "jean85/pretty-package-versions",
             "version": "2.1.1",
             "source": {
@@ -9799,35 +9845,35 @@
         },
         {
             "name": "laravel/boost",
-            "version": "v1.1.4",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/boost.git",
-                "reference": "70f909465bf73dad7e791fad8b7716b3b2712076"
+                "reference": "85f7de54a6b60f684fc9f7f6df5ad94f4f7d0d24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/boost/zipball/70f909465bf73dad7e791fad8b7716b3b2712076",
-                "reference": "70f909465bf73dad7e791fad8b7716b3b2712076",
+                "url": "https://api.github.com/repos/laravel/boost/zipball/85f7de54a6b60f684fc9f7f6df5ad94f4f7d0d24",
+                "reference": "85f7de54a6b60f684fc9f7f6df5ad94f4f7d0d24",
                 "shasum": ""
             },
             "require": {
-                "guzzlehttp/guzzle": "^7.9",
-                "illuminate/console": "^10.0|^11.0|^12.0",
-                "illuminate/contracts": "^10.0|^11.0|^12.0",
-                "illuminate/routing": "^10.0|^11.0|^12.0",
-                "illuminate/support": "^10.0|^11.0|^12.0",
-                "laravel/mcp": "^0.1.1",
-                "laravel/prompts": "^0.1.9|^0.3",
-                "laravel/roster": "^0.2.5",
+                "guzzlehttp/guzzle": "^7.10",
+                "illuminate/console": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/contracts": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/routing": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/support": "^10.49.0|^11.45.3|^12.28.1",
+                "laravel/mcp": "^0.2.0",
+                "laravel/prompts": "0.1.25|^0.3.6",
+                "laravel/roster": "^0.2.6",
                 "php": "^8.1"
             },
             "require-dev": {
-                "laravel/pint": "^1.14",
-                "mockery/mockery": "^1.6",
-                "orchestra/testbench": "^8.22.0|^9.0|^10.0",
-                "pestphp/pest": "^2.0|^3.0",
-                "phpstan/phpstan": "^2.0"
+                "laravel/pint": "1.20",
+                "mockery/mockery": "^1.6.12",
+                "orchestra/testbench": "^8.36.0|^9.15.0|^10.6",
+                "pestphp/pest": "^2.36.0|^3.8.4",
+                "phpstan/phpstan": "^2.1.27"
             },
             "type": "library",
             "extra": {
@@ -9849,7 +9895,7 @@
             "license": [
                 "MIT"
             ],
-            "description": "Laravel Boost accelerates AI-assisted development to generate high-quality, Laravel-specific code.",
+            "description": "Laravel Boost accelerates AI-assisted development by providing the essential context and structure that AI needs to generate high-quality, Laravel-specific code.",
             "homepage": "https://github.com/laravel/boost",
             "keywords": [
                 "ai",
@@ -9860,7 +9906,7 @@
                 "issues": "https://github.com/laravel/boost/issues",
                 "source": "https://github.com/laravel/boost"
             },
-            "time": "2025-09-04T12:16:09+00:00"
+            "time": "2025-09-18T13:05:07+00:00"
         },
         {
             "name": "laravel/breeze",
@@ -9925,31 +9971,37 @@
         },
         {
             "name": "laravel/mcp",
-            "version": "v0.1.1",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/mcp.git",
-                "reference": "6d6284a491f07c74d34f48dfd999ed52c567c713"
+                "reference": "56fade6882756d5828cc90b86611d29616c2d754"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/mcp/zipball/6d6284a491f07c74d34f48dfd999ed52c567c713",
-                "reference": "6d6284a491f07c74d34f48dfd999ed52c567c713",
+                "url": "https://api.github.com/repos/laravel/mcp/zipball/56fade6882756d5828cc90b86611d29616c2d754",
+                "reference": "56fade6882756d5828cc90b86611d29616c2d754",
                 "shasum": ""
             },
             "require": {
-                "illuminate/console": "^10.0|^11.0|^12.0",
-                "illuminate/contracts": "^10.0|^11.0|^12.0",
-                "illuminate/http": "^10.0|^11.0|^12.0",
-                "illuminate/routing": "^10.0|^11.0|^12.0",
-                "illuminate/support": "^10.0|^11.0|^12.0",
-                "illuminate/validation": "^10.0|^11.0|^12.0",
-                "php": "^8.1|^8.2"
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "illuminate/console": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/container": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/contracts": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/http": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/json-schema": "^12.28.1",
+                "illuminate/routing": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/support": "^10.49.0|^11.45.3|^12.28.1",
+                "illuminate/validation": "^10.49.0|^11.45.3|^12.28.1",
+                "php": "^8.1"
             },
             "require-dev": {
-                "laravel/pint": "^1.14",
-                "orchestra/testbench": "^8.22.0|^9.0|^10.0",
-                "phpstan/phpstan": "^2.0"
+                "laravel/pint": "1.20.0",
+                "orchestra/testbench": "^8.36.0|^9.15.0|^10.6.0",
+                "pestphp/pest": "^2.36.0|^3.8.4|^4.1.0",
+                "phpstan/phpstan": "^2.1.27",
+                "rector/rector": "^2.1.7"
             },
             "type": "library",
             "extra": {
@@ -9965,8 +10017,6 @@
             "autoload": {
                 "psr-4": {
                     "Laravel\\Mcp\\": "src/",
-                    "Workbench\\App\\": "workbench/app/",
-                    "Laravel\\Mcp\\Tests\\": "tests/",
                     "Laravel\\Mcp\\Server\\": "src/Server/"
                 }
             },
@@ -9974,10 +10024,15 @@
             "license": [
                 "MIT"
             ],
-            "description": "The easiest way to add MCP servers to your Laravel app.",
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
+                }
+            ],
+            "description": "Rapidly build MCP servers for your Laravel applications.",
             "homepage": "https://github.com/laravel/mcp",
             "keywords": [
-                "dev",
                 "laravel",
                 "mcp"
             ],
@@ -9985,7 +10040,7 @@
                 "issues": "https://github.com/laravel/mcp/issues",
                 "source": "https://github.com/laravel/mcp"
             },
-            "time": "2025-08-16T09:50:43+00:00"
+            "time": "2025-09-18T12:58:47+00:00"
         },
         {
             "name": "laravel/pail",
@@ -10068,16 +10123,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.24.0",
+            "version": "v1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a"
+                "reference": "595de38458c6b0ab4cae4bcc769c2e5c5d5b8e96"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/0345f3b05f136801af8c339f9d16ef29e6b4df8a",
-                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/595de38458c6b0ab4cae4bcc769c2e5c5d5b8e96",
+                "reference": "595de38458c6b0ab4cae4bcc769c2e5c5d5b8e96",
                 "shasum": ""
             },
             "require": {
@@ -10088,9 +10143,9 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.82.2",
-                "illuminate/view": "^11.45.1",
-                "larastan/larastan": "^3.5.0",
+                "friendsofphp/php-cs-fixer": "^3.87.2",
+                "illuminate/view": "^11.46.0",
+                "larastan/larastan": "^3.7.1",
                 "laravel-zero/framework": "^11.45.0",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.3.1",
@@ -10101,9 +10156,6 @@
             ],
             "type": "project",
             "autoload": {
-                "files": [
-                    "overrides/Runner/Parallel/ProcessFactory.php"
-                ],
                 "psr-4": {
                     "App\\": "app/",
                     "Database\\Seeders\\": "database/seeders/",
@@ -10133,20 +10185,20 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-07-10T18:09:32+00:00"
+            "time": "2025-09-17T01:36:44+00:00"
         },
         {
             "name": "laravel/roster",
-            "version": "v0.2.6",
+            "version": "v0.2.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/roster.git",
-                "reference": "5615acdf860c5a5c61d04aba44f2d3312550c514"
+                "reference": "9de07bfb52cfe4e5a1fec10b8a446d6add8376cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/roster/zipball/5615acdf860c5a5c61d04aba44f2d3312550c514",
-                "reference": "5615acdf860c5a5c61d04aba44f2d3312550c514",
+                "url": "https://api.github.com/repos/laravel/roster/zipball/9de07bfb52cfe4e5a1fec10b8a446d6add8376cd",
+                "reference": "9de07bfb52cfe4e5a1fec10b8a446d6add8376cd",
                 "shasum": ""
             },
             "require": {
@@ -10194,7 +10246,7 @@
                 "issues": "https://github.com/laravel/roster/issues",
                 "source": "https://github.com/laravel/roster"
             },
-            "time": "2025-09-04T07:31:39+00:00"
+            "time": "2025-09-18T13:53:41+00:00"
         },
         {
             "name": "laravel/sail",

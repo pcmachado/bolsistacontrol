@@ -16,6 +16,10 @@ class UsersDataTable extends DataTable
                 // Assumindo que você está a usar o pacote Spatie/Permission
                 return $user->getRoleNames()->first() ?? 'N/A';
             })
+            ->addColumn('units', function ($user) {
+                // Pega os nomes das unidades e junta-os com uma vírgula
+                return $user->units->pluck('nome')->implode(', ');
+            })
             ->addColumn('actions', 'admin.users.partials.actions') // Usando uma view para as ações
             ->rawColumns(['actions']);
     }
@@ -48,6 +52,7 @@ class UsersDataTable extends DataTable
             Column::make('name')->title('Nome'),
             Column::make('email')->title('E-mail'),
             Column::make('role')->title('Papel')->orderable(false)->searchable(false),
+            Column::make('units')->title('Unidades')->orderable(false)->searchable(false), // Adiciona a coluna de unidades
             Column::make('created_at')->title('Criado Em'),
             Column::make('updated_at')->title('Atualizado Em'),
             Column::computed('actions')

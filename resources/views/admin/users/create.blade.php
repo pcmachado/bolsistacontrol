@@ -19,6 +19,14 @@
                     <label for="email" class="form-label">Email</label>
                     <input type="email" class="form-control" id="email" name="email" required>
                 </div>
+                <div class="mt-4">
+                    <x-input-label for="units" :value="__('Unidades')" />
+                    <select name="units[]" id="units" multiple class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Senha</label>
                     <input type="password" class="form-control" id="password" name="password" required>

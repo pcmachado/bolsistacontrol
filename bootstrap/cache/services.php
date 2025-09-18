@@ -67,8 +67,7 @@
     63 => 'Spatie\\Html\\HtmlServiceProvider',
     64 => 'Barryvdh\\Debugbar\\ServiceProvider',
     65 => 'Spatie\\Permission\\PermissionServiceProvider',
-    66 => 'Andyabih\\JsonToLaravelMigrations\\JsonToLaravelMigrationsServiceProvider',
-    67 => 'App\\Providers\\AppServiceProvider',
+    66 => 'App\\Providers\\AppServiceProvider',
   ),
   'eager' => 
   array (
@@ -123,8 +122,7 @@
     48 => 'Spatie\\Html\\HtmlServiceProvider',
     49 => 'Barryvdh\\Debugbar\\ServiceProvider',
     50 => 'Spatie\\Permission\\PermissionServiceProvider',
-    51 => 'Andyabih\\JsonToLaravelMigrations\\JsonToLaravelMigrationsServiceProvider',
-    52 => 'App\\Providers\\AppServiceProvider',
+    51 => 'App\\Providers\\AppServiceProvider',
   ),
   'deferred' => 
   array (

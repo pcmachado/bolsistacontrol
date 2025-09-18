@@ -175,7 +175,7 @@ return [
         Spatie\Html\HtmlServiceProvider::class,
         Barryvdh\Debugbar\ServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
-        Andyabih\JsonToLaravelMigrations\JsonToLaravelMigrationsServiceProvider::class,
+        //Andyabih\JsonToLaravelMigrations\JsonToLaravelMigrationsServiceProvider::class,
 
     ],
 

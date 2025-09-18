@@ -31,13 +31,5 @@
                 Frequências
             </a>
         </li>
-        <li class="nav-item mt-auto">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="btn btn-link nav-link p-0">
-                    Sair
-                </button>
-            </form>
-        </li>
     </ul>
 </div>

@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
-            $table->string('role')->comment('Papel do usuário na unidade: bolsista, coordenador_adjunto');
             $table->timestamps();
         });
     }
