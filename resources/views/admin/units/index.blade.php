@@ -30,43 +30,5 @@
 
     {{-- O método scripts() renderiza o JS de inicialização --}}
     {!! $dataTable->scripts() !!}
-
-
-    {{-- ADICIONE ESTE SCRIPT --}}
-    <script>
-        // Quando o documento estiver pronto
-        $(document).ready(function() {
-            // Escuta o evento de submissão em qualquer formulário DENTRO da tabela
-            $('#units-table').on('submit', 'form', function(e) {
-                // Previne o comportamento padrão do formulário (que é recarregar a página)
-                e.preventDefault();
-
-                var form = $(this);
-                var url = form.attr('action');
-
-                // Pede uma última confirmação ao utilizador
-                if (confirm('Tem a certeza que deseja excluir este item?')) {
-                    // Envia o pedido AJAX
-                    $.ajax({
-                        type: 'POST', // O Laravel entende POST com _method=DELETE
-                        url: url,
-                        data: form.serialize(), // Envia os dados do formulário (inclui o token CSRF e o _method)
-                        success: function(response) {
-                            // Se o pedido for bem-sucedido, atualiza a tabela
-                            // O window.LaravelDataTables['units-table'] é a instância da sua tabela
-                            window.LaravelDataTables['units-table'].draw();
-
-                            // Opcional: mostrar uma notificação de sucesso
-                            // alert(response.message);
-                        },
-                        error: function(xhr) {
-                            // Opcional: mostrar uma notificação de erro
-                            alert('Ocorreu um erro ao tentar excluir o item.');
-                        }
-                    });
-                }
-            });
-        });
-    </script>
 @endpush
 @endsection

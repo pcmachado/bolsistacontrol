@@ -11,18 +11,12 @@ use App\Http\Controllers\ScholarshipHolderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use Barryvdh\Debugbar\Facades\Debugbar;
 
 // Rotas de Autenticação (Laravel Breeze)
 require __DIR__.'/auth.php';
 
 // Página de boas-vindas
 Route::get('/', function () {
-
-    Debugbar::info('INFO');
-    Debugbar::error('ERROR');
-    Debugbar::warning('WARNING');
-    Debugbar::addMessage('NEW MESSAGE');
 
     return view('welcome');
 });

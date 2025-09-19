@@ -23,6 +23,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'manage_scholarship_holders']);
         Permission::create(['name' => 'manage_units']);
         Permission::create(['name' => 'manage_positions']);
+        Permission::create(['name' => 'manage_projects']);
 
         // Criar papéis e atribuir permissões
         $coordenadorGeralRole = Role::create(['name' => 'coordenador_geral']);
@@ -34,6 +35,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $coordenadorGeralRole->givePermissionTo('manage_scholarship_holders');
         $coordenadorGeralRole->givePermissionTo('manage_units');
         $coordenadorGeralRole->givePermissionTo('manage_positions');
+        $coordenadorGeralRole->givePermissionTo('manage_projects');
 
         $coordenadorAdjuntoRole = Role::create(['name' => 'coordenador_adjunto']);
         $coordenadorAdjuntoRole->givePermissionTo('admin_dashboard');
@@ -44,6 +46,8 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $bolsistaRole = Role::create(['name' => 'bolsista']);
         $bolsistaRole->givePermissionTo('scholarship_holder_dashboard');
+        $bolsistaRole->givePermissionTo('manage_attendances');
+
 
 
         // Exemplo de atribuição de papel a um usuário (em outro seeder ou no Tinker)

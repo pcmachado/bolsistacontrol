@@ -19,7 +19,7 @@
 
     <div class="card-body">
         {{-- O método table() vai renderizar a tag <table> com o ID e classes corretas --}}
-        {!! $dataTable->table(['class' => 'table table-bordered table-striped', 'width' => '100%']) !!}
+        {!! $dataTable->table(['class' => 'stripe hover w-full text-sm text-left text-gray-500'], true) !!}
     </div>
 </div>
 

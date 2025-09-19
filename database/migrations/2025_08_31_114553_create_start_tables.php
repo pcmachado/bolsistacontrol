@@ -21,19 +21,19 @@ return new class extends Migration
             $table->string('role')->default('user'); // papel do usuário
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
-        // Tabela para cadastro das bolsas - contratos
-        Schema::create('scholarships', function (Blueprint $table) {
+        // Tabela para cadastro dos projetos - contratos
+        Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
-            $table->string('role')->nullable(); // Cargo ou função do bolsista
-            $table->integer('max_hours_per_day')->default(6); // limite diário
-            $table->integer('max_hours_per_month')->nullable(); // opcional, limite mensal
-            $table->decimal('hourly_rate', 10, 2)->nullable(); // valor da hora, varia por cargo
+            $table->text('description')->nullable();
+            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
             $table->date('start_date')->nullable(); // início da vigência do contrato
             $table->date('end_date')->nullable();   // fim da vigência
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela para bolsistas
@@ -46,6 +46,7 @@ return new class extends Migration
             $table->string('bank')->nullable();
             $table->string('agency')->nullable();
             $table->string('account')->nullable();
+            $table->string('institution_link')->nullable();
             $table->unsignedBigInteger('position_id')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('scholarship_id')->constrained()->onDelete('cascade');
@@ -53,22 +54,24 @@ return new class extends Migration
             $table->date('start_date')->nullable(); // quando o bolsista iniciou
             $table->date('end_date')->nullable();   // fim do vínculo
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela de unidades
         Schema::create('units', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('city');
             $table->string('address')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela para registro de frequência
         Schema::create('attendance_records', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('scholarship_holder_id');
-            $table->unsignedBigInteger('unit_id');
             $table->date('date');
             $table->time('entry_time')->nullable();
             $table->time('exit_time')->nullable();
@@ -77,6 +80,7 @@ return new class extends Migration
             $table->decimal('calculated_value', 10, 2)->nullable(); // valor calculado
             $table->boolean('approved')->default(false); // para homologação
             $table->timestamps();
+            $table->softDeletes();
         });
         
         // Tabela para notificações
@@ -87,6 +91,7 @@ return new class extends Migration
             $table->text('message');
             $table->boolean('read')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela para cargos
@@ -94,17 +99,38 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->timestamps();
+            $table->softDeletes();
         });
 
-        // Tabela para o vínculo entre bolsistas e unidades (M:N)
-        Schema::create('scholarship_holder_unit', function (Blueprint $table) {
+        // Tabela para o vínculo entre bolsistas e projetos (M:N)
+        Schema::create('project_scholarship_holders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('scholarship_holder_id');
-            $table->unsignedBigInteger('unit_id');
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->foreignId('position_id')->constrained()->onDelete('cascade');
             $table->float('monthly_workload');
             $table->date('start_date');
-            $table->date('end_date')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('user_unit', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('unit_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('institutions', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('city');
+            $table->string('state');
+            $table->string('address')->nullable();
+            $table->string('phone')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -113,12 +139,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('scholarship_holder_unit');
+        Schema::dropIfExists('project_scholarship_holders');
         Schema::dropIfExists('positions');
         Schema::dropIfExists('notifications');
         Schema::dropIfExists('attendance_records');
         Schema::dropIfExists('units');
         Schema::dropIfExists('scholarship_holders');
         Schema::dropIfExists('users');
+        Schema::dropIfExists('projects');
+        Schema::dropIfExists('user_unit');
+        Schema::dropIfExists('institutions');
     }
 };

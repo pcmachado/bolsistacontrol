@@ -17,7 +17,7 @@ use Spatie\Permission\Traits\HasRoles; // Importante
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, CanResetPassword, SoftDeletes;
 
     // Relacionamento: um usuário pertence a uma unidade
     public function units(): BelongsToMany
@@ -34,6 +34,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -45,6 +46,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+        public function scholarshipHolder()
+    {
+        return $this->hasOne(ScholarshipHolder::class);
+    }
 
     /**
      * Get the attributes that should be cast.

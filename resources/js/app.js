@@ -1,12 +1,10 @@
-import 'bootstrap';
-
-import Alpine from 'alpinejs';
-
+import './bootstrap';
 import $ from 'jquery';
-import 'datatables.net-bs5';
+
+// DataTables núcleo + tema Tailwind
+import DataTable from 'datatables.net';
+import 'datatables.net-responsive-dt';
 
 window.$ = window.jQuery = $;
-
-window.Alpine = Alpine;
-
-Alpine.start();
+// Disponibiliza globalmente
+window.DataTable = DataTable;
