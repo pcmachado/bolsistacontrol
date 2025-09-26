@@ -1,35 +1,30 @@
-<div class="sidebar p-3 vh-100" style="width: 220px;">
-    <h4 class="text-center mb-4">Menu</h4>
-    <ul class="nav flex-column">
-        <li class="nav-item mb-2">
-            <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
-                Dashboard
-            </a>
-        </li>
-        <li class="nav-item mb-2">
-            <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
-                Usuários
-            </a>
-        </li>
-        <li class="nav-item mb-2">
-            <a class="nav-link {{ request()->routeIs('admin.units.*') ? 'active' : '' }}" href="{{ route('admin.units.index') }}">
-                Unidades
-            </a>
-        </li>
-        <li class="nav-item mb-2">
-            <a class="nav-link {{ request()->routeIs('admin.scholarship_holders.*') ? 'active' : '' }}" href="{{ route('admin.scholarship_holders.index') }}">
-                Bolsistas
-            </a>
-        </li>
-        <li class="nav-item mb-2">
-            <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">
-                Relatórios
-            </a>
-        </li>
-        <li class="nav-item mb-2">
-            <a class="nav-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}" href="{{ route('admin.attendance.index') }}">
-                Frequências
-            </a>
-        </li>
-    </ul>
+<div class="bg-light border-end sidebar p-3" style="width: 250px;">
+  <h6 class="text-muted">Menu</h6>
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <a href="{{ route('admin.dashboard') }}" class="nav-link">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('admin.users.index') }}" class="nav-link">
+        <i class="bi bi-people"></i> Usuários
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('admin.scholarship_holders.index') }}" class="nav-link">
+        <i class="bi bi-mortarboard"></i> Bolsistas
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('admin.projects.index') }}" class="nav-link">
+        <i class="bi bi-folder"></i> Projetos
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('attendance.index') }}" class="nav-link">
+        <i class="bi bi-calendar-check"></i> Frequência
+      </a>
+    </li>
+  </ul>
 </div>

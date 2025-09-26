@@ -23,7 +23,7 @@ class UserService
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => $data['role'],
+            'role'     => $data['role'] ?? 'bolsista'
         ]);
 
         // Associa as unidades se elas forem enviadas
@@ -31,10 +31,7 @@ class UserService
             $user->units()->sync($data['units']);
         }
 
-        // Associa o papel (role) se estiver a usar o Spatie/Permission
-        if (!empty($data['role'])) {
-             $user->assignRole($data['role']);
-        }
+        $user->assignRole($user->role);
 
         return $user;
     }
@@ -59,25 +56,9 @@ class UserService
         // todas as associações são removidas.
         $user->units()->sync($data['units'] ?? []);
 
-        // 3. Opcional: Sincroniza o papel (role)
-        if (isset($data['role'])) {
+        if (!empty($data['role'])) {
             $user->syncRoles([$data['role']]);
         }
-
-        return $user;
-    }
-    
-    /**
-     * Atualiza o papel de um usuário existente.
-     *
-     * @param User $user
-     * @param string $role
-     * @return User
-     */
-    public function updateUserRole(User $user, string $role): User
-    {
-        $user->setRole($role);
-        $user->save();
 
         return $user;
     }

@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -14,41 +13,60 @@ class RolesAndPermissionsSeeder extends Seeder
         // Limpar cache de permissões
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Criar permissões
-        Permission::create(['name' => 'admin_dashboard']);
-        Permission::create(['name' => 'manage_attendances']);
-        Permission::create(['name' => 'manage_reports']);
-        Permission::create(['name' => 'scholarship_holder_dashboard']);
-        Permission::create(['name' => 'manage_users']);
-        Permission::create(['name' => 'manage_scholarship_holders']);
-        Permission::create(['name' => 'manage_units']);
-        Permission::create(['name' => 'manage_positions']);
-        Permission::create(['name' => 'manage_projects']);
+        // Lista de permissões
+        $permissions = [
+            'admin_dashboard',
+            'manage_attendances',
+            'manage_reports',
+            'scholarship_holder_dashboard',
+            'manage_users',
+            'manage_scholarship_holders',
+            'manage_units',
+            'manage_positions',
+            'manage_projects',
+            'manage_instituitions',
+        ];
 
-        // Criar papéis e atribuir permissões
-        $coordenadorGeralRole = Role::create(['name' => 'coordenador_geral']);
-        $coordenadorGeralRole->givePermissionTo('admin_dashboard');
-        $coordenadorGeralRole->givePermissionTo('manage_attendances');
-        $coordenadorGeralRole->givePermissionTo('manage_reports');
-        $coordenadorGeralRole->givePermissionTo('scholarship_holder_dashboard');
-        $coordenadorGeralRole->givePermissionTo('manage_users');
-        $coordenadorGeralRole->givePermissionTo('manage_scholarship_holders');
-        $coordenadorGeralRole->givePermissionTo('manage_units');
-        $coordenadorGeralRole->givePermissionTo('manage_positions');
-        $coordenadorGeralRole->givePermissionTo('manage_projects');
-
-        $coordenadorAdjuntoRole = Role::create(['name' => 'coordenador_adjunto']);
-        $coordenadorAdjuntoRole->givePermissionTo('admin_dashboard');
-        $coordenadorAdjuntoRole->givePermissionTo('manage_attendances');
-        $coordenadorAdjuntoRole->givePermissionTo('manage_reports');
-        $coordenadorAdjuntoRole->givePermissionTo('scholarship_holder_dashboard');
+        // Criar permissões se não existirem
+        foreach ($permissions as $perm) {
+            Permission::firstOrCreate(['name' => $perm]);
+        }
+    
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
 
-        $bolsistaRole = Role::create(['name' => 'bolsista']);
-        $bolsistaRole->givePermissionTo('scholarship_holder_dashboard');
-        $bolsistaRole->givePermissionTo('manage_attendances');
+        // Criar papéis
+        $coordenadorGeralRole = Role::firstOrCreate(['name' => 'coordenador_geral', 'guard_name' => 'web']);
+        $coordenadorAdjuntoRole = Role::firstOrCreate(['name' => 'coordenador_adjunto', 'guard_name' => 'web']);
+        $bolsistaRole          = Role::firstOrCreate(['name' => 'bolsista', 'guard_name' => 'web']);
+        $adminRole        = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
 
+        // Atribuir permissões
+        $coordenadorGeralRole->syncPermissions([
+            'admin_dashboard',
+            'manage_attendances',
+            'manage_reports',
+            'scholarship_holder_dashboard',
+            'manage_users',
+            'manage_scholarship_holders',
+            'manage_units',
+            'manage_positions',
+            'manage_projects',
+        ]);
 
+        $coordenadorAdjuntoRole->syncPermissions([
+            'admin_dashboard',
+            'manage_attendances',
+            'manage_reports',
+            'scholarship_holder_dashboard',
+        ]);
+
+        $bolsistaRole->syncPermissions([
+            'scholarship_holder_dashboard',
+            'manage_attendances',
+        ]);
+
+        $adminRole->syncPermissions(Permission::all());
 
         // Exemplo de atribuição de papel a um usuário (em outro seeder ou no Tinker)
         // $user = \App\Models\User::find(1);

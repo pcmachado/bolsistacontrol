@@ -4,18 +4,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Project extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'description', 'institution_id', 'start_date', 'end_date'
+        'name', 'description', 'instituition_id', 'start_date', 'end_date'
     ];
 
-    public function institution()
+    public function instituitions()
     {
-        return $this->belongsTo(Institution::class);
+        return $this->hasOne(Instituition::class);
     }
 
     public function scholarshipHolders()

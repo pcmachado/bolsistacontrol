@@ -2,9 +2,11 @@
 namespace App\DataTables;
 
 use App\Models\User;
-use Yajra\DataTables\Html\Button;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
+use Yajra\DataTables\Html\Button;
 
 class UsersDataTable extends DataTable
 {
@@ -13,8 +15,7 @@ class UsersDataTable extends DataTable
         return datatables()
             ->eloquent($query)
             ->addColumn('role', function ($user) {
-                // Assumindo que você está a usar o pacote Spatie/Permission
-                return $user->getRoleNames()->first() ?? 'N/A';
+                return $user->getRoleNames()->implode(', ');
             })
             ->addColumn('units', function ($user) {
                 // Pega os nomes das unidades e junta-os com uma vírgula
@@ -37,12 +38,19 @@ class UsersDataTable extends DataTable
             ->minifiedAjax()
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
-            ->buttons([
-                Button::make('excel')->title('Exportar para Excel'),
-                Button::make('csv')->title('Exportar para CSV'),
-                Button::make('print')->title('Imprimir'),
-                Button::make('reload')->title('Recarregar'),
-            ]);
+            ->parameters([
+            'responsive' => true,
+            'autoWidth' => false,
+            'language' => [
+                'url' => '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+            ],
+        ])
+        ->buttons([
+            Button::make('excel')->className('btn btn-success')->text('📊 Excel'),
+            Button::make('csv')->className('btn btn-info')->text('📝 CSV'),
+            Button::make('print')->className('btn btn-secondary')->text('🖨️ Imprimir'),
+            Button::make('reload')->className('btn btn-dark')->text('🔄 Recarregar'),
+        ]);
     }
 
     protected function getColumns(): array
@@ -51,7 +59,7 @@ class UsersDataTable extends DataTable
             Column::make('id'),
             Column::make('name')->title('Nome'),
             Column::make('email')->title('E-mail'),
-            Column::make('role')->title('Papel')->orderable(false)->searchable(false),
+            Column::make('roles')->title('Papeis')->orderable(false)->searchable(false),
             Column::make('units')->title('Unidades')->orderable(false)->searchable(false), // Adiciona a coluna de unidades
             Column::make('created_at')->title('Criado Em'),
             Column::make('updated_at')->title('Atualizado Em'),

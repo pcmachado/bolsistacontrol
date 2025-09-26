@@ -15,7 +15,7 @@ class Notification extends Model
 
     protected $fillable = ['scholarship_holder_id', 'type', 'message', 'read'];
 
-    public function scholarshipHolder(): BelongsTo
+    public function scholarshipHolders(): BelongsTo
     {
         return $this->belongsTo(ScholarshipHolder::class);
     }

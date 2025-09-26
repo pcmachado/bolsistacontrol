@@ -19,6 +19,7 @@ class UserController extends Controller
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
+        $this->middleware('role:admin|coordenador_geral');
     }
 
     /**
@@ -26,6 +27,9 @@ class UserController extends Controller
      */
     public function index(UsersDataTable $dataTable)
     {
+        if (!auth()->user()->hasAnyRole(['admin', 'coordenador_geral'])) {
+            abort(403, 'Acesso negado.');
+        }
         return $dataTable->render('admin.users.index');
     }
 
@@ -47,7 +51,6 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:usuario,coordenador_geral,coordenador_adjunto',
             'units' => 'array|exists:units,id',
         ]);
 
@@ -73,11 +76,10 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|in:bolsista,coordenador_geral,coordenador_adjunto',
             'units' => 'nullable|array'
         ]);
 
-        Sthis->userService->updateUser($user, $request->all());
+        $this->userService->updateUser($user, $request->all());
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário atualizado com sucesso!');
     }

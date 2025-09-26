@@ -23,19 +23,21 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         // Verifica se o usuário tem o papel de coordenador e o redireciona para a view do admin
-        if ($user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto')) {
+        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto'])) {
             // Pega dados de resumo para o dashboard do admin, se necessário
             $totalBolsistas = User::role('bolsista')->count();
             //$registrosPendentes = AttendanceRecord::where('status', 'pendente')->count();
             $totalUnidades = Unit::count();
             $unidades = Unit::all();
 
+            $usersCount = User::count();
+            $scholarshipHoldersCount = ScholarshipHolder::count();
+
             $labels = Unit::pluck('name');
-            $data = Unit::withCount('scholarshipHolders')->pluck('scholarship_holders_count');
             $notificacoesPendentes = Notification::where('read', false)->count();
 
             // Passa os dados para a view
-            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes', 'unidades', 'labels', 'data'));
+            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes', 'unidades', 'labels', 'usersCount', 'scholarshipHoldersCount'));
         }
 
         // Se não for um coordenador, retorna o dashboard padrão para o bolsista

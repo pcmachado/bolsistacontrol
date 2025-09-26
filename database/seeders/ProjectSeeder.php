@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Project;
-use App\Models\Institution;
+use App\Models\Instituition;
 use Faker\Factory as Faker;
 
 class ProjectSeeder extends Seeder
@@ -12,14 +12,14 @@ class ProjectSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('pt_BR');
-        $institutions = Institution::all();
+        $instituitions = Instituition::all();
 
-        foreach ($institutions as $institution) {
+        foreach ($instituitions as $instituition) {
             for ($i = 0; $i < 3; $i++) {
                 Project::create([
-                    'name' => $faker->catchPhrase(),
+                    'name' => $faker->word(),
                     'description' => $faker->paragraph(),
-                    'institution_id' => $institution->id,
+                    'instituition_id' => $instituition->id,
                     'start_date' => $faker->dateTimeBetween('-1 year', 'now'),
                     'end_date' => $faker->dateTimeBetween('now', '+1 year'),
                 ]);

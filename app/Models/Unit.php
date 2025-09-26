@@ -14,16 +14,16 @@ class Unit extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['institution_id', 'name', 'city', 'address'];
+    protected $fillable = ['instituition_id', 'name', 'city', 'address'];
 
-    public function institution(): BelongsTo
+    public function instituitions(): BelongsTo
     {
-        return $this->belongsTo(Institution::class);
+        return $this->belongsTo(Instituition::class);
     }  
 
-    public function scholarshipHolders(): BelongsToMany
+    public function scholarshipHolders(): HasMany
     {
-        return $this->belongsToMany(ScholarshipHolder::class, 'scholarship_holder_units');
+        return $this->hasMany(ScholarshipHolder::class, 'unit_id');
     }
 
     public function users(): BelongsToMany

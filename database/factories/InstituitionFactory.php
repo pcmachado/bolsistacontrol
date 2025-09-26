@@ -1,10 +1,10 @@
 <?php
 
-namespace Database\Factories;
+namespace database\factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class InstitutionFactory extends Factory
+class InstituitionFactory extends Factory
 {
     public function definition(): array
     {

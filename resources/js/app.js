@@ -1,10 +1,9 @@
 import './bootstrap';
 import $ from 'jquery';
-
-// DataTables núcleo + tema Tailwind
-import DataTable from 'datatables.net';
-import 'datatables.net-responsive-dt';
-
 window.$ = window.jQuery = $;
-// Disponibiliza globalmente
-window.DataTable = DataTable;
+
+// DataTables + Bootstrap 5
+import 'datatables.net-bs5';
+import 'datatables.net-buttons-bs5';
+import 'datatables.net-buttons/js/buttons.html5';
+import 'datatables.net-buttons/js/buttons.print';

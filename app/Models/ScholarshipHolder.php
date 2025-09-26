@@ -16,8 +16,7 @@ class ScholarshipHolder extends Model
 
     protected $fillable = [
         'name', 'cpf', 'email', 'phone', 'bank', 'agency', 'account',
-        'institution_link', 'position_id', 'user_id', 'scholarship_id',
-        'unit_id', 'start_date', 'end_date'
+        'instituition_link', 'user_id', 'unit_id', 'start_date', 'end_date',    
     ];
     
     // Criptografa os dados bancários antes de salvar no banco
@@ -31,20 +30,16 @@ class ScholarshipHolder extends Model
     public function getAccountAttribute($value): string { return Crypt::decryptString($value); }
 
     // Relacionamento: um bolsista pertence a um usuário (para autenticação)
-    public function user(): BelongsTo
+    public function users(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function unit()
+    public function units()
     {
         return $this->belongsTo(Unit::class);
     }
 
-    public function position()
-    {
-        return $this->belongsTo(Position::class);
-    }
 
     // Relacionamento: um bolsista pode ter muitos registros de frequência
     public function attendanceRecords(): HasMany

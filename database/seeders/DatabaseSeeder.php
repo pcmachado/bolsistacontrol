@@ -23,12 +23,13 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             UserSeeder::class,
-            InstitutionSeeder::class,
+            InstituitionSeeder::class,
             UnitSeeder::class,
             PositionSeeder::class,
             ScholarshipHolderSeeder::class,
             ProjectSeeder::class,
             ProjectScholarshipHolderSeeder::class,
+            CreateAdminUserSeeder::class,
         ]);
     }
 }

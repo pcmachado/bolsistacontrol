@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Unit;
-use App\Models\Institution;
+use App\Models\Instituition;
 use Faker\Factory as Faker;
 
 class UnitSeeder extends Seeder
@@ -12,13 +12,13 @@ class UnitSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create('pt_BR');
-        $institutions = Institution::all();
+        $instituitions = Instituition::all();
 
-        foreach ($institutions as $institution) {
+        foreach ($instituitions as $instituition) {
             for ($i = 0; $i < 2; $i++) {
                 Unit::create([
-                    'institution_id' => $institution->id,
-                    'name' => $faker->bs(),
+                    'instituition_id' => $instituition->id,
+                    'name' => $faker->word(),
                     'city' => $faker->city(),
                     'address' => $faker->address(),
                 ]);
