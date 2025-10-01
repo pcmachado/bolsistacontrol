@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Unit;
+use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,6 @@ class UserController extends Controller
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
-        $this->middleware('role:admin|coordenador_geral');
     }
 
     /**
@@ -27,9 +27,6 @@ class UserController extends Controller
      */
     public function index(UsersDataTable $dataTable)
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'coordenador_geral'])) {
-            abort(403, 'Acesso negado.');
-        }
         return $dataTable->render('admin.users.index');
     }
 
@@ -39,7 +36,8 @@ class UserController extends Controller
     public function create(): View
     {
         $units = Unit::all();
-        return view('admin.users.create', compact('units'));
+        $roles = Role::all();
+        return view('admin.users.create', compact('units', 'roles'));
     }
 
     /**
@@ -52,11 +50,18 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'units' => 'array|exists:units,id',
+            'role' => 'required|string'
         ]);
 
         $this->userService->createUser($request->all());
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
+    }
+
+    public function show(User $user): View
+    {
+        $user = $this->userService->getUsersWithUnits($user);
+        return view('admin.users.show', compact('user'));
     }
 
     /**
@@ -65,7 +70,8 @@ class UserController extends Controller
     public function edit(User $user): View
     {
         $units = Unit::all();
-        return view('admin.users.edit', compact('user', 'units'));
+        $roles = Role::all()->pluck('name', 'id');
+        return view('admin.users.edit', compact('user', 'units', 'roles'));
     }
 
     /**
@@ -76,7 +82,8 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'units' => 'nullable|array'
+            'units' => 'nullable|array',
+            'role' => 'required|string'
         ]);
 
         $this->userService->updateUser($user, $request->all());

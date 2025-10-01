@@ -34,12 +34,27 @@ class RolesAndPermissionsSeeder extends Seeder
     
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        // Criação de Permissões
+        Permission::firstOrCreate(['name' => ' view_users']);
+        
+        Permission::firstOrCreate(['name' => 'manage_units']);
+        Permission::firstOrCreate(['name' => 'manage_positions']);
+        Permission::firstOrCreate(['name' => 'manage_scholarship_holders']);
+        Permission::firstOrCreate(['name' => 'manage_projects']);
+        Permission::firstOrCreate(['name' => 'manage_attendances']);
+        Permission::firstOrCreate(['name' => 'manage_reports']);
+        Permission::firstOrCreate(['name' => 'admin_dashboard']);
+        Permission::firstOrCreate(['name' => 'scholarship_holder_dashboard']);
+        Permission::firstOrCreate(['name' => 'manage_instituitions']);
+        Permission::firstOrCreate(['name' => 'manage_users']);
+
 
         // Criar papéis
         $coordenadorGeralRole = Role::firstOrCreate(['name' => 'coordenador_geral', 'guard_name' => 'web']);
         $coordenadorAdjuntoRole = Role::firstOrCreate(['name' => 'coordenador_adjunto', 'guard_name' => 'web']);
         $bolsistaRole          = Role::firstOrCreate(['name' => 'bolsista', 'guard_name' => 'web']);
         $adminRole        = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $adminRole->givePermissionTo(Permission::all());
 
         // Atribuir permissões
         $coordenadorGeralRole->syncPermissions([
@@ -67,8 +82,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         $adminRole->syncPermissions(Permission::all());
-
-        // Exemplo de atribuição de papel a um usuário (em outro seeder ou no Tinker)
+        // Exemplo de atribuição de papel a um usuário específico (opcional)
         // $user = \App\Models\User::find(1);
         // $user->assignRole('bolsista');
     }

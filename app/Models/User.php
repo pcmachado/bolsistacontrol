@@ -18,7 +18,7 @@ class User extends Authenticatable
     // Relacionamento: um usuário pertence a uma unidade
     public function units(): BelongsToMany
     {
-        return $this->belongsToMany(Unit::class, 'user_unit', 'user_id', 'unit_id');
+        return $this->belongsToMany(Unit::class, 'user_unit');
     }
 
     /**
@@ -60,7 +60,7 @@ class User extends Authenticatable
      */
     public function isCoordenadorGeral(): bool
     {
-        return $this->role === 'coordenador_geral';
+        return $this->hasRole('coordenador_geral');
     }
 
     /**
@@ -68,6 +68,6 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('Admin');
     }
 }

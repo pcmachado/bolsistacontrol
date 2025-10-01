@@ -4,17 +4,17 @@
 <div class="row">
     <div class="col-lg-12 margin-tb">
         <div class="pull-left">
-            <h2>Edit User</h2>
+            <h2>Editar Usuário</h2>
         </div>
         <div class="pull-right">
-            <a class="btn btn-primary btn-sm mb-2" href="{{ route('users.index') }}"><i class="fa fa-arrow-left"></i> Back</a>
+            <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.users.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
         </div>
     </div>
 </div>
 
 @if (count($errors) > 0)
     <div class="alert alert-danger">
-      <strong>Whoops!</strong> There were some problems with your input.<br><br>
+      <strong>Whoops!</strong> Ocorreu um problema com sua entrada.<br><br>
       <ul>
          @foreach ($errors->all() as $error)
            <li>{{ $error }}</li>
@@ -23,15 +23,15 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('users.update', $user->id) }}">
+<form method="POST" action="{{ route('admin.users.update', $user->id) }}">
     @csrf
     @method('PUT')
 
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Name:</strong>
-                <input type="text" name="name" placeholder="Name" class="form-control" value="{{ $user->name }}">
+                <strong>Nome:</strong>
+                <input type="text" name="name" placeholder="Nome" class="form-control" value="{{ $user->name }}">
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
@@ -41,34 +41,47 @@
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Password:</strong>
-                <input type="password" name="password" placeholder="Password" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Confirm Password:</strong>
-                <input type="password" name="confirm-password" placeholder="Confirm Password" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Role:</strong>
-                <select name="roles[]" class="form-control" multiple="multiple">
-                    @foreach ($roles as $value => $label)
-                        <option value="{{ $value }}" {{ isset($userRole[$value]) ? 'selected' : ''}}>
-                            {{ $label }}
+            <div class="mb-3">
+                <label for="role" class="form-label"><strong>Papel</strong></label>
+                <select name="role" id="role" class="form-select">
+                    @foreach($roles as $role)
+                        <option value="{{ $role }}" 
+                            {{ $user->hasRole($role) ? 'selected' : '' }}>
+                            {{ ucfirst($role) }}
                         </option>
-                     @endforeach
+                    @endforeach
                 </select>
             </div>
         </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="mb-3">
+                <label for="unit" class="form-label"> <strong>Unidade</strong></label>
+                <select name="unit_id" id="unit" class="form-select">
+                    @foreach($units as $unit)
+                        <option value="{{ $unit->id }}" 
+                            {{ $user->units->contains($unit->id) ? 'selected' : '' }}>
+                            {{ $unit->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Senha:</strong>
+                <input type="password" name="password" placeholder="Senha" class="form-control">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Confirmar Senha:</strong>
+                <input type="password" name="confirm-password" placeholder="Confirmar Senha" class="form-control">
+            </div>
+        </div>
         <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Submit</button>
+            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Salvar alterações</button>
         </div>
     </div>
 </form>
 
-<p class="text-center text-primary"><small>Tutorial by ItSolutionStuff.com</small></p>
 @endsection

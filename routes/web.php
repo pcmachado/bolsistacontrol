@@ -38,17 +38,13 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::middleware(['auth', 'verified', 'role_or_permission:admin|coordenador_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
     Route::group(['middleware' => ['auth']], function() {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-        Route::get('/users', function (UsersDataTable $dataTable) {
-            return $dataTable->render('users.index');
-        })->name('users.index');
 
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);
@@ -59,5 +55,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:admin|coordenador_ger
         Route::resource('notifications', NotificationController::class);
         Route::resource('attendance_records', AttendanceRecordController::class);
         Route::resource('instituitions', InstitutionController::class);
+        Route::resource('reports', ReportController::class);
+        Route::resource('homologations', HomologationController::class);
         });
 });

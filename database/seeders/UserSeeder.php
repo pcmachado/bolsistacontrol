@@ -34,5 +34,11 @@ class UserSeeder extends Seeder
             'email' => 'coordenador@example.com'
         ]);
         $coordenadorGeral->assignRole('coordenador_geral');
+
+        $user = User::factory()->create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+        ]);
+        $user->assignRole('Admin');
     }
 }

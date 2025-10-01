@@ -29,7 +29,6 @@ class DatabaseSeeder extends Seeder
             ScholarshipHolderSeeder::class,
             ProjectSeeder::class,
             ProjectScholarshipHolderSeeder::class,
-            CreateAdminUserSeeder::class,
         ]);
     }
 }

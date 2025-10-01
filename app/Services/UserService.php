@@ -23,15 +23,17 @@ class UserService
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role'     => $data['role'] ?? 'bolsista'
         ]);
 
-        // Associa as unidades se elas forem enviadas
-        if (!empty($data['units'])) {
-            $user->units()->sync($data['units']);
+        // Atribui role
+        if (!empty($data['role'])) {
+            $user->assignRole($data['role']);
         }
 
-        $user->assignRole($user->role);
+        // Atribui units (many-to-many)
+        if (!empty($data['unit'])) {
+            $user->unit()->sync($data['unit']);
+        }
 
         return $user;
     }
@@ -45,34 +47,46 @@ class UserService
      */
     public function updateUser(User $user, array $data): User
     {
-        // 1. Atualiza os dados básicos do utilizador
+        // Atualiza dados básicos
         $user->update([
-            'name' => $data['name'],
+            'name'  => $data['name'],
             'email' => $data['email'],
         ]);
 
-        // 2. Sincroniza as unidades (a sua lógica)
-        // O segundo argumento [] garante que se 'units' não for enviado,
-        // todas as associações são removidas.
-        $user->units()->sync($data['units'] ?? []);
+        // Atualiza senha se enviada
+        if (!empty($data['password'])) {
+            $user->update([
+                'password' => Hash::make($data['password']),
+            ]);
+        }
 
+        // Sincroniza role
         if (!empty($data['role'])) {
             $user->syncRoles([$data['role']]);
+        }
+
+        // Sincroniza unidade
+        if (!empty($data['unit'])) {
+            $user->unit()->associate($data['unit']);
+        } else {
+            $user->unit()->dissociate();
         }
 
         return $user;
     }
 
-    /**
-     * Atualiza as unidades de um usuário existente.
-     *
-     * @param User $user
-     * @param array $units
-     * @return User
-     */
-    public function updateUserUnits(User $user, array $units): User
+    public function getUsersWithUnits()
     {
-        $user->units()->sync($units);
-        return $user;
+        $user = Auth::user();
+
+        // Se for admin ou coordenador geral → vê todas as unidades
+        if ($user->hasRole(['admin','coordenador-geral'])) {
+            return User::with('units','roles')->get();
+        }
+
+        // Caso contrário → apenas usuários da(s) mesma(s) unidade(s)
+        return User::whereHas('units', function($q) use ($user) {
+            $q->whereIn('units.id', $user->units->pluck('id'));
+        })->with('units','roles')->get();
     }
 }
