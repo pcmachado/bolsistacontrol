@@ -17,7 +17,7 @@ class HomologationController extends Controller
     public function index(): View
     {
         $records = AttendanceRecord::where('status', 'pendente')->get();
-        return view('admin.homologation.index', compact('records'));
+        return view('admin.homologations.index', compact('records'));
     }
 
     /**

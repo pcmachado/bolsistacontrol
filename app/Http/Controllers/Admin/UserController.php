@@ -45,22 +45,30 @@ class UserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'units' => 'array|exists:units,id',
-            'role' => 'required|string'
-        ]);
+            'role' => 'required|string|exists:roles,name'
+        ];
 
-        $this->userService->createUser($request->all());
+        // Se não for admin ou coordenador geral, exige unit_id
+        if (!auth()->user()->hasRole(['admin', 'coordenador-geral'])) {
+            $rules['unit_id'] = 'required|exists:units,id';
+        } else {
+            $rules['unit_id'] = 'nullable|exists:units,id';
+        }
+
+        $validated = $request->validate($rules);
+        // Cria usuário via service
+        $user = $this->userService->createUser($validated);
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
     }
 
     public function show(User $user): View
     {
-        $user = $this->userService->getUsersWithUnits($user);
+        $user->load('unit', 'roles');
         return view('admin.users.show', compact('user'));
     }
 
@@ -70,7 +78,7 @@ class UserController extends Controller
     public function edit(User $user): View
     {
         $units = Unit::all();
-        $roles = Role::all()->pluck('name', 'id');
+        $roles = Role::all();
         return view('admin.users.edit', compact('user', 'units', 'roles'));
     }
 
@@ -79,14 +87,26 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
-        $request->validate([
+        $rules=[
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'units' => 'nullable|array',
-            'role' => 'required|string'
-        ]);
+            'role' => 'required|string|exists:roles,name'
+        ];
 
-        $this->userService->updateUser($user, $request->all());
+        if (!auth()->user()->hasRole(['admin', 'coordenador-geral'])) {
+            $rules['unit_id'] = 'required|exists:units,id';
+        } else {
+            $rules['unit_id'] = 'nullable|exists:units,id';
+        }
+
+        if ($request->filled('password')) {
+            $rules['password'] = 'string|min:6|confirmed';
+        }
+
+        $validated = $request->validate($rules);
+
+
+        $this->userService->updateUser($user, $validated);
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário atualizado com sucesso!');
     }

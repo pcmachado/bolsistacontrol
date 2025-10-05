@@ -1,11 +1,11 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm px-3">
     {{-- Botão toggle da sidebar --}}
-    <button class="btn btn-outline-secondary me-3" id="sidebarToggle">
-        ☰
+    <button class="btn btn-outline-secondary" id="sidebarToggle">
+        <i class="bi bi-list"></i>
     </button>
 
     {{-- Marca/Logo --}}
-    <a class="navbar-brand fw-bold" href="{{ route('home') }}">BolsistaControl</a>
+    <a class="navbar-brand fw-bold ms-3" href="{{ route('home') }}">BolsistaControl</a>
 
     {{-- Botão para colapsar o menu em telas pequenas --}}
     <button class="navbar-toggler border-0" type="button"
@@ -22,7 +22,10 @@
         <ul class="navbar-nav ms-auto align-items-center">
             {{-- Item de menu simples --}}
             <li class="nav-item">
-                <a href="#" class="nav-link">🔔 Notificações</a>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="d-lg-none ms-2">Notificações</span>
+                </a>
             </li>
 
             {{-- Dropdown de usuário --}}
@@ -30,28 +33,27 @@
                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
                    id="userDropdown" role="button" data-bs-toggle="dropdown"
                    aria-expanded="false">
-                    <img src="{{ auth()->user()->avatar_url }}"
+                    <img src="https://www.gravatar.com/avatar/{{ md5(strtolower(trim(auth()->user()->email))) }}?d=mp"
                          alt="Avatar"
-                         class="rounded-circle me-2">
+                         class="rounded-circle me-2" width="32" height="32">
                     <span>{{ auth()->user()->name }}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     @auth
-                    <li><a class="dropdown-item" href="#">Perfil</a></li>
-                    <li><a class="dropdown-item" href="#">Configurações</a></li>
+                    <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Perfil</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><form method="POST" action="{{ route('logout') }}" class="d-inline">
-                        @csrf
-                        <button class="dropdown-item">Sair</button>
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <button class="dropdown-item">Sair</button>
                         </form>
                     </li>
                     @else
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}">Login</a>
-                    </li>
+                    <li><a class="dropdown-item" href="{{ route('login') }}">Login</a></li>
                     @endauth
                 </ul>
             </li>
         </ul>
     </div>
 </nav>
+

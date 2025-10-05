@@ -25,6 +25,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_positions',
             'manage_projects',
             'manage_instituitions',
+            'manage_permissions',
         ];
 
         // Criar permissões se não existirem
@@ -47,6 +48,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'scholarship_holder_dashboard']);
         Permission::firstOrCreate(['name' => 'manage_instituitions']);
         Permission::firstOrCreate(['name' => 'manage_users']);
+        Permission::firstOrCreate(['name' => 'manage_permissions']);
 
 
         // Criar papéis
@@ -67,6 +69,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_units',
             'manage_positions',
             'manage_projects',
+            'manage_instituitions',
+            'manage_permissions',
         ]);
 
         $coordenadorAdjuntoRole->syncPermissions([

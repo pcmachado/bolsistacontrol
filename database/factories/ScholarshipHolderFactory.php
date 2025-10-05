@@ -18,7 +18,6 @@ class ScholarshipHolderFactory extends Factory
             'bank' => $this->faker->company(),
             'agency' => $this->faker->numerify('####'),
             'account' => $this->faker->numerify('######'),
-            'instituition_link' => $this->faker->word(),
             'user_id' => User::factory(),
             'unit_id' => Unit::factory(),
             'start_date' => $this->faker->dateTimeBetween('-1 year', 'now'),

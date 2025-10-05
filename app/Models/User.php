@@ -6,7 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -16,9 +16,14 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     // Relacionamento: um usuário pertence a uma unidade
-    public function units(): BelongsToMany
+    public function unit(): BelongsTo
     {
-        return $this->belongsToMany(Unit::class, 'user_unit');
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function scholarshipHolder(): BelongsTo
+    {
+        return $this->belongsTo(ScholarshipHolder::class);
     }
 
     /**
@@ -30,6 +35,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'unit_id',
     ];
 
     /**
@@ -70,4 +76,5 @@ class User extends Authenticatable
     {
         return $this->hasRole('Admin');
     }
+
 }

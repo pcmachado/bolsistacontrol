@@ -55,6 +55,14 @@ return new class extends Migration
             $table->softDeletes();
         });
 
+        Schema::table('users', function (Blueprint $table) {
+            // adiciona a coluna unit_id como chave estrangeira
+            $table->foreignId('unit_id')
+                  ->nullable()
+                  ->constrained('units')
+                  ->onDelete('set null');
+        });
+
         // 6. Bolsistas
         Schema::create('scholarship_holders', function (Blueprint $table) {
             $table->id();
@@ -65,7 +73,6 @@ return new class extends Migration
             $table->string('bank')->nullable();
             $table->string('agency')->nullable();
             $table->string('account')->nullable();
-            $table->string('instituition_link')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->date('start_date')->nullable();
@@ -79,12 +86,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
             $table->date('date');
-            $table->time('entry_time')->nullable();
-            $table->time('exit_time')->nullable();
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
             $table->text('observation')->nullable();
             $table->integer('hours');
             $table->decimal('calculated_value', 10, 2)->nullable();
             $table->boolean('approved')->default(false);
+            $table->string('status')->default('draft');
+            $table->timestamp('submitted_at')->nullable();
+            $table->unsignedBigInteger('approved_by_user_id')->nullable();
+            $table->text('rejection_reason')->nullable();
+            $table->foreign('approved_by_user_id')->references('id')->on('users')->onDelete('set null');
+            
             $table->timestamps();
             $table->softDeletes();
         });
@@ -111,16 +124,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-
-        // 10. Relação M:N entre usuários e unidades
-        Schema::create('user_unit', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('unit_id')->constrained()->onDelete('cascade');
-            $table->string('role')->default('bolsista'); // 'admin', 'user'
-            $table->timestamps();
-            $table->softDeletes();
-        });
     }
 
     /**
@@ -128,7 +131,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_unit');
         Schema::dropIfExists('project_scholarship_holders');
         Schema::dropIfExists('notifications');
         Schema::dropIfExists('attendance_records');

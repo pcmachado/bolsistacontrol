@@ -13,9 +13,9 @@ class UsersDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->setRowId('id')
-        ->addColumn('role', function ($user) {
+        ->addColumn('roles', function ($user) {
             // Pega o primeiro papel do utilizador e exibe o nome
-                return $user->role->pluck('name');
+            return $user->getRoleNames()->first() ?? 'N/A';
         })
         ->editColumn('created_at', function ($user) {
             return formatDate($user->created_at);
@@ -24,8 +24,7 @@ class UsersDataTable extends DataTable
             return formatDate($user->updated_at);
         })
         ->addColumn('unit', function ($user) {
-            // Pega os nomes das unidades associadas e junta em uma string
-            return $user->unit->pluck('name') ?? 'N/A';
+            return $user->unit->name ?? 'N/A';
         })
         ->addColumn('actions', 'admin.users.partials.actions')
         ->rawColumns(['actions']);
@@ -33,7 +32,7 @@ class UsersDataTable extends DataTable
 
     public function query(User $model)
     {
-        return $model->newQuery()->with(['role', 'unit']);
+        return $model->newQuery()->with(['roles', 'unit']);
     }
 
     public function html()
@@ -62,8 +61,8 @@ class UsersDataTable extends DataTable
         Column::make('id'),
         Column::make('name')->title('Nome'),
         Column::make('email')->title('E-mail'),
-        Column::make('role')->title('Papel')->orderable(false)->searchable(false), // Adiciona a coluna
-        Column::make('unit')->title('Unidade')->orderable(false)->searchable(false), // Adiciona a coluna de unidade
+        Column::make('roles')->title('Papel')->orderable(false)->searchable(false), // Adiciona a coluna
+        Column::make('unit')->title('Unidade')->orderable(false)->searchable(false), // Adiciona a coluna de unidades
         Column::make('created_at')->title('Criado Em'),
         Column::make('updated_at')->title('Atualizado Em'),
         Column::computed('actions')

@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Project extends Model
 {
@@ -15,9 +15,9 @@ class Project extends Model
         'name', 'description', 'instituition_id', 'start_date', 'end_date'
     ];
 
-    public function instituitions()
+    public function instituition()
     {
-        return $this->hasOne(Instituition::class);
+        return $this->belongsTo(Instituition::class);
     }
 
     public function scholarshipHolders()

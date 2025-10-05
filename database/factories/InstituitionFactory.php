@@ -1,8 +1,9 @@
 <?php
 
-namespace database\factories;
+namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Instituition;
 
 class InstituitionFactory extends Factory
 {
