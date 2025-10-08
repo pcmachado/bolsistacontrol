@@ -1,29 +1,29 @@
 <?php
 namespace App\DataTables;
 
-use App\Models\Unit;
+use App\Models\Course;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 
-class UnitsDataTable extends DataTable
+class CoursesDataTable extends DataTable
 {
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
             ->setRowId('id')
-            ->addColumn('created_at', function ($unit) {
-                return formatDate($unit->created_at);
+            ->addColumn('created_at', function ($course) {
+                return formatDate($course->created_at);
             })
-            ->addColumn('updated_at', function ($unit) {
-                return formatDate($unit->updated_at);
+            ->addColumn('updated_at', function ($course) {
+                return formatDate($course->updated_at);
             })
-            ->addColumn('actions', 'admin.units.partials.actions') // Usando uma view para as ações
+            ->addColumn('actions', 'admin.courses.partials.actions') // Usando uma view para as ações
             ->rawColumns(['actions']);
     }
 
-    public function query(Unit $model)
+    public function query(Course $model)
     {
         return $model->newQuery();
     }
@@ -31,7 +31,7 @@ class UnitsDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-            ->setTableId('units-table')
+            ->setTableId('courses-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->dom('Bfrtip')
@@ -53,8 +53,6 @@ class UnitsDataTable extends DataTable
         return [
             Column::make('id'),
             Column::make('name')->title('Nome'),
-            Column::make('city')->title('Cidade'),
-            Column::make('address')->title('Endereço'),
             Column::make('created_at')->title('Criado Em'),
             Column::make('updated_at')->title('Atualizado Em'),
             Column::computed('actions')
@@ -68,6 +66,6 @@ class UnitsDataTable extends DataTable
 
     protected function filename(): string
     {
-        return 'Units_' . date('YmdHis');
+        return 'Courses_' . date('YmdHis');
     }
 }

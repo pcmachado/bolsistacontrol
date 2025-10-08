@@ -10,11 +10,11 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->catchPhrase(),
-            'description' => $this->faker->paragraph(),
-            'instituition_id' => Instituition::factory(),
-            'start_date' => $this->faker->dateTimeBetween('-1 year', 'now'),
-            'end_date' => $this->faker->dateTimeBetween('now', '+1 year'),
+            'name' => fake()->randomElement(['MM', 'Extensão', 'Monitoria', 'Pesquisa', 'Inovação']),
+            'description' => fake()->paragraph(2),
+            'instituition_id' => Instituition::inRandomOrder()->first()->id ?? Instituition::factory(),
+            'start_date' => fake()->dateTimeBetween('-2 years', '-1 month'),
+            'end_date' => fake()->dateTimeBetween('now', '+1 year'),
         ];
     }
 }

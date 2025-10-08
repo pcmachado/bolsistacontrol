@@ -29,7 +29,8 @@ class Project extends Model
 
     public function courses(): BelongsToMany
     {
-        return $this->belongsToMany(Course::class, 'course_project');
+        return $this->belongsToMany(Course::class, 'course_project')
+                    ->withTimestamps();
     }
 
     public function positions(): HasMany
@@ -39,6 +40,7 @@ class Project extends Model
 
     public function fundingSources(): BelongsToMany
     {
-        return $this->belongsToMany(FundingSource::class, 'project_funding_source');
+        return $this->belongsToMany(FundingSource::class, 'project_funding_source')
+                    ->withTimestamps();
     }
 }

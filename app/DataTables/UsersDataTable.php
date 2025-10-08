@@ -44,8 +44,8 @@ class UsersDataTable extends DataTable
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
             ->parameters([
-            'responsive' => true,
-            'autoWidth' => false,
+                'responsive' => true,
+                'autoWidth' => false,
             ])
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0')->text('📊 Excel'),

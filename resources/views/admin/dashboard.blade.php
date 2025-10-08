@@ -1,5 +1,30 @@
 @extends('layouts.app')
 
+<style>
+.border-orange {
+    border-color: orange !important;
+}
+.border-purple {
+    border-color: purple !important;
+}
+.border-teal {
+    border-color: teal !important;
+}
+.border-pink {
+    border-color: pink !important;
+}
+.sidebar-text {
+    font-size: 0.95rem; /* Ajuste o tamanho conforme necessário */
+}
+.user-profile img {
+    width: 40px;
+    height: 40px;
+}
+.user-profile {
+    margin-top: 10px;
+}
+</style>
+
 @section('title', 'Visão Geral - Admin')
 
 @section('content')
@@ -17,7 +42,7 @@
             </div>
         </div>
         <div class="col-12 col-md-6 col-lg-3">
-            <div class="card shadow-lg border-start border-5 border-primary rounded-3 h-100">
+            <div class="card shadow-lg border-start border-5 border-danger rounded-3 h-100">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <p class="text-secondary fw-semibold mb-0">Bolsistas</p>
@@ -32,11 +57,11 @@
             <div class="card shadow-lg border-start border-5 border-warning rounded-3 h-100">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <p class="text-secondary fw-semibold mb-0">Receita Média</p>
-                        <span class="badge text-bg-success fw-bold">+7.8%</span>
+                        <p class="text-secondary fw-semibold mb-0">Cursos</p>
+                        <span class="badge text-bg-success fw-bold"></span>
                     </div>
-                    <h2 class="card-title h3 fw-bolder text-dark">R$ 135.50</h2>
-                    <p class="card-text small text-muted mt-2">Valor por transação</p>
+                    <h2 class="card-title h3 fw-bolder text-dark">{{ $coursesCount ?? 0 }}</h2>
+                    <p class="card-text small text-muted mt-2">cadastrados</p>
                 </div>
             </div>
         </div>

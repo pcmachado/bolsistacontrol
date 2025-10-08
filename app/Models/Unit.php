@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,18 +15,24 @@ class Unit extends Model
 
     protected $fillable = ['instituition_id', 'name', 'city', 'address'];
 
-    public function instituitions(): BelongsTo
+    public function instituition(): BelongsTo
     {
         return $this->belongsTo(Instituition::class);
     }  
 
-    public function scholarshipHolders(): HasMany
+    /**
+     * Os utilizadores que pertencem a esta unidade.
+     */
+    public function users(): BelongsToMany
     {
-        return $this->hasMany(ScholarshipHolder::class, 'unit_id');
+        return $this->belongsToMany(User::class, 'user_unit');
     }
 
-    public function users(): HasMany
+    /**
+     * Os bolsistas que pertencem a esta unidade.
+     */
+    public function scholarshipHolders(): BelongsToMany
     {
-        return $this->hasMany(User::class);
+        return $this->belongsToMany(ScholarshipHolder::class, 'unit_scholarship_holder');
     }
 }

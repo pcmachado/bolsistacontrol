@@ -70,9 +70,9 @@ return new class extends Migration
             $table->string('cpf')->unique();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-            $table->string('bank')->nullable();
-            $table->string('agency')->nullable();
-            $table->string('account')->nullable();
+            $table->text('bank')->nullable();
+            $table->text('agency')->nullable();
+            $table->text('account')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->date('start_date')->nullable();
@@ -131,6 +131,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela para Fontes Pagadoras
@@ -139,6 +140,7 @@ return new class extends Migration
             $table->string('name');
             $table->enum('type', ['internal', 'external'])->default('external');
             $table->timestamps();
+            $table->softDeletes();
         });
 
          // Um projeto pode ter vários cursos
@@ -147,6 +149,7 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Um projeto pode ter várias fontes pagadoras
@@ -155,6 +158,7 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->foreignId('funding_source_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
         
         // Um bolsista pode estar em vários cursos
@@ -163,6 +167,7 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela Pivot para a relação N:M entre Projetos e Cargos
@@ -175,6 +180,7 @@ return new class extends Migration
             $table->decimal('hourly_rate', 8, 2)->nullable(); // Valor/hora para este cargo neste projeto
             $table->integer('weekly_hour_limit')->nullable(); // Limite de horas para este cargo neste projeto
             $table->timestamps();
+            $table->softDeletes();
         });
 
         // Tabela para Atribuições (Assignments)
@@ -186,6 +192,7 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

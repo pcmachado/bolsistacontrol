@@ -16,6 +16,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\HomologationController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\InstitutionController;
+use App\Http\Controllers\Admin\CourseController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('welcome');
@@ -38,6 +41,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 
 });
 
@@ -63,5 +74,9 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::resource('reports', ReportController::class);
         Route::resource('homologations', HomologationController::class);
         Route::resource('permissions', PermissionController::class);
+        Route::resource('courses', CourseController::class);
+        Route::resource('funding_sources', FundingSourceController::class);
+        Route::resource('projects', ProjectController::class);
+        Route::resource('assignments', AssignmentController::class);
         });
 });

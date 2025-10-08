@@ -42,13 +42,13 @@ class RoleController extends Controller
         $role = Role::create(['name' => $request->name]);
         $role->syncPermissions($request->permissions ?? []);
 
-        return redirect()->route('admin.roles.index')->with('success', 'Role criada com sucesso!');
+        return redirect()->route('admin.roles.index')->with('success', 'Função criada com sucesso!');
     }
 
     public function destroy(Role $role)
     {
         $role->delete();
-        return redirect()->route('admin.roles.index')->with('success', 'Role removida!');
+        return redirect()->route('admin.roles.index')->with('success', 'Função removida com sucesso!');
     }
 
     public function edit(Role $role)

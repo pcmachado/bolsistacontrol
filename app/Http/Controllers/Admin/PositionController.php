@@ -4,21 +4,24 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Position;
+use App\DataTables\PositionsDataTable;
+use App\Services\PositionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PositionController extends Controller
 {
-    /**
-     * Exibe a lista de todos os cargos.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function index(): View
+    protected $positionService;
+
+    public function __construct(PositionService $positionService)
     {
-        $positions = Position::all();
-        return view('admin.positions.index', compact('positions'));
+        $this->positionService = $positionService;
+    }
+
+    public function index(PositionsDataTable $dataTable)
+    {
+        return $dataTable->render('admin.positions.index');
     }
 
     /**
@@ -39,13 +42,20 @@ class PositionController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255|unique:positions,name',
-        ]);
+        ];
 
-        Position::create($request->all());
+        $validated = $request->validate($rules);
+
+        $this->positionService->createPosition($validated);
 
         return redirect()->route('admin.positions.index')->with('success', 'Cargo cadastrado com sucesso!');
+    }
+
+    public function show(Position $position): View
+    {
+        return view('admin.positions.show', compact('position'));
     }
 
     /**

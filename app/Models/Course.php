@@ -15,11 +15,13 @@ class Course extends Model
 
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class, 'course_project');
+        return $this->belongsToMany(Project::class, 'course_project')
+                    ->withTimestamps();
     }
 
     public function scholarshipHolders(): BelongsToMany
     {
-        return $this->belongsToMany(ScholarshipHolder::class, 'course_scholarship_holder');
+        return $this->belongsToMany(ScholarshipHolder::class, 'course_scholarship_holder')
+                    ->withTimestamps();
     }
 }

@@ -28,9 +28,6 @@
         <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.dashboard') }}" title="Dashboard Admin">
             <i class="bi bi-gear-wide-connected fa-fw me-3"></i><span class="sidebar-text">Dashboard Admin</span>
         </a>
-        <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.users.index') }}" title="Utilizadores">
-            <i class="bi bi-person-gear fa-fw me-3"></i><span class="sidebar-text">Utilizadores</span>
-        </a>
         <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.units.index') }}" title="Unidades">
             <i class="bi bi-building fa-fw me-3"></i><span class="sidebar-text">Unidades</span>
         </a>
@@ -43,8 +40,14 @@
         <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.projects.index') }}" title="Projetos">
             <i class="bi bi-kanban fa-fw me-3"></i><span class="sidebar-text">Projetos</span>
         </a>
+        <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.courses.index') }}" title="Cursos">
+            <i class="bi bi-mortarboard fa-fw me-3"></i><span class="sidebar-text">Cursos</span>
+        </a>
         <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.homologations.index') }}" title="Homologação">
             <i class="bi bi-check2-square fa-fw me-3"></i><span class="sidebar-text">Homologação</span>
+        </a>
+        <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.users.index') }}" title="Utilizadores">
+            <i class="bi bi-person-gear fa-fw me-3"></i><span class="sidebar-text">Usuários</span>
         </a>
         <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.roles.index') }}" title="Funções">
             <i class="bi bi-key fa-fw me-3"></i><span class="sidebar-text">Funções</span>

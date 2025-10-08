@@ -1,12 +1,12 @@
 <?php
-// app/Http/Controllers/Admin/DashboardController.php
-// Controller para a área administrativa
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ScholarshipHolder;
 use App\Models\Notification;
 use App\Models\Unit;
+use App\Models\Course;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -15,10 +15,6 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    /**
-     * Exibe o dashboard da área administrativa.
-     * Coleta dados de alto nível para uma visão geral do sistema.
-     */
     public function index(): View
     {
         $user = Auth::user();
@@ -32,12 +28,13 @@ class DashboardController extends Controller
 
             $usersCount = User::count();
             $scholarshipHoldersCount = ScholarshipHolder::count();
+            $coursesCount = Course::count();
 
             $labels = Unit::pluck('name');
             $notificacoesPendentes = Notification::where('read', false)->count();
 
             // Passa os dados para a view
-            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes', 'unidades', 'labels', 'usersCount', 'scholarshipHoldersCount'));
+            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes', 'unidades', 'labels', 'usersCount', 'scholarshipHoldersCount', 'coursesCount'));
         }
 
         // Se não for um coordenador, retorna o dashboard padrão para o bolsista

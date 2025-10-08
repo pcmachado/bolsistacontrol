@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use App\Models\Unit;
+use App\Models\Instituition;
 use Illuminate\View\View;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -26,26 +27,38 @@ class UnitController extends Controller
 
     public function create(): View
     {
-        return view('admin.units.create');
+        $Instituitions = Instituition::all();
+        return view('admin.units.create', compact('Instituitions'));
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'address' => 'required|string|max:255',
-        ]);
+        ];
 
-        $this->unitService->createUnit($request->all());
+        $rules['instituition_id'] = 'nullable|exists:instituitions,id';
+
+        $validated = $request->validate($rules);
+
+        $this->unitService->createUnit($validated);
 
         return redirect()->route('admin.units.index')->with('success', 'Unidade cadastrada com sucesso!');
     }
 
+    public function show(Unit $unit): View
+    {
+        $unit->load('instituition');
+        return view('admin.units.show', compact('unit'));
+    }
+
     public function edit(Unit $unit): View
     {
-        return view('admin.units.edit', compact('unit'));
-    }  
+        $Instituitions = Instituition::all();
+        return view('admin.units.edit', compact('unit', 'Instituitions'));
+    }
 
     public function update(Request $request, Unit $unit): RedirectResponse
     {

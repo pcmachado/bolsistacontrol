@@ -4,10 +4,10 @@
 <div class="row">
     <div class="col-lg-12 margin-tb">
         <div class="pull-left">
-            <h2>Criar novo Projeto</h2>
+            <h2>Cadastrar Nova Unidade</h2>
         </div>
         <div class="pull-right">
-            <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.projects.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
+            <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.units.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
         </div>
     </div>
 </div>
@@ -23,7 +23,7 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('admin.projects.store') }}">
+<form method="POST" action="{{ route('admin.units.store') }}">
     @csrf
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-12">
@@ -34,47 +34,32 @@
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Descrição:</strong>
-                <input type="text" name="description" placeholder="Descrição" class="form-control">
+                <strong>Endereço:</strong>
+                <input type="text" name="address" placeholder="Endereço" class="form-control">
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Início::</strong>
-                <input type="date" name="start_date" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Final:</strong>
-                <input type="date" name="end_date" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Unidade:</strong>
-                <select name="unit_id" class="form-control">
-                    <option value="">Selecione uma unidade</option>
-                    @foreach ($units as $unit)
-                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                    @endforeach
-                </select>
+                <strong>Cidade:</strong>
+                <input type="text" name="city" placeholder="Cidade" class="form-control">
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
                 <strong>Instituição:</strong>
                 <select name="instituition_id" class="form-control">
-                    <option value="">Selecione uma instituição</option>
-                    @foreach ($instituitions as $instituition)
+                    <option value="">Selecione uma Instituição</option>
+                    @foreach ($Instituitions as $instituition)
                         <option value="{{ $instituition->id }}">{{ $instituition->name }}</option>
                     @endforeach
                 </select>
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Enviar</button>
+            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Submit</button>
         </div>
     </div>
 </form>
+
+<p class="text-center text-primary"><small>Tutorial by ItSolutionStuff.com</small></p>
 @endsection
