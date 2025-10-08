@@ -24,7 +24,7 @@ class ProjectScholarshipHolderSeeder extends Seeder
                 'project_id' => $project->id,
                 'scholarship_holder_id' => $scholar->id,
                 'position_id' => $positions->random()->id,
-                'monthly_workload' => $faker->randomFloat(1, 10, 40),
+                'weekly_hour_limit' => $faker->randomFloat(2, 20, 40),
                 'start_date' => $faker->dateTimeBetween('-6 months', 'now'),
                 'created_at' => now(),
                 'updated_at' => now(),

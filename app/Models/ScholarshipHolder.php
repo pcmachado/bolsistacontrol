@@ -52,4 +52,14 @@ class ScholarshipHolder extends Model
         return $this->hasMany(Notification::class);
     }
 
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
+    }
+
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_scholarship_holder');
+    }
+
 }

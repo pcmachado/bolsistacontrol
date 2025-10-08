@@ -97,7 +97,6 @@ return new class extends Migration
             $table->unsignedBigInteger('approved_by_user_id')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->foreign('approved_by_user_id')->references('id')->on('users')->onDelete('set null');
-            
             $table->timestamps();
             $table->softDeletes();
         });
@@ -119,10 +118,74 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
             $table->foreignId('position_id')->constrained()->onDelete('cascade');
-            $table->float('monthly_workload');
+            $table->integer('weekly_hour_limit')->default(20);
+            $table->text('assignments')->nullable(); // Descrição das atribuições
+            $table->decimal('hourly_rate', 8, 2)->nullable(); // Valor da hora de trabalho
             $table->date('start_date');
             $table->timestamps();
             $table->softDeletes();
+        });
+
+        // Tabela para Cursos
+        Schema::create('courses', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        // Tabela para Fontes Pagadoras
+        Schema::create('funding_sources', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->enum('type', ['internal', 'external'])->default('external');
+            $table->timestamps();
+        });
+
+         // Um projeto pode ter vários cursos
+        Schema::create('course_project', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained()->onDelete('cascade');
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+
+        // Um projeto pode ter várias fontes pagadoras
+        Schema::create('project_funding_source', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->foreignId('funding_source_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+        
+        // Um bolsista pode estar em vários cursos
+        Schema::create('course_scholarship_holder', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained()->onDelete('cascade');
+            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+
+        // Tabela Pivot para a relação N:M entre Projetos e Cargos
+        // Esta tabela conterá os atributos específicos da relação
+        Schema::create('position_project', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('position_id')->constrained()->onDelete('cascade');
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->text('assignments')->nullable(); // Atribuições específicas para este cargo neste projeto
+            $table->decimal('hourly_rate', 8, 2)->nullable(); // Valor/hora para este cargo neste projeto
+            $table->integer('weekly_hour_limit')->nullable(); // Limite de horas para este cargo neste projeto
+            $table->timestamps();
+        });
+
+        // Tabela para Atribuições (Assignments)
+        Schema::create('assignments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->foreignId('position_project_id')->constrained('position_project')->onDelete('cascade');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
+            $table->timestamps();
         });
     }
 
@@ -131,7 +194,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('assignments');
+        Schema::dropIfExists('position_project');
         Schema::dropIfExists('project_scholarship_holders');
+        Schema::dropIfExists('course_project');
+        Schema::dropIfExists('project_funding_source');
+        Schema::dropIfExists('course_scholarship_holder');
         Schema::dropIfExists('notifications');
         Schema::dropIfExists('attendance_records');
         Schema::dropIfExists('scholarship_holders');
@@ -139,5 +207,7 @@ return new class extends Migration
         Schema::dropIfExists('projects');
         Schema::dropIfExists('positions');
         Schema::dropIfExists('instituitions');
+        Schema::dropIfExists('courses');
+        Schema::dropIfExists('funding_sources');
     }
 };

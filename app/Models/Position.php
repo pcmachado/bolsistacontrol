@@ -15,8 +15,10 @@ class Position extends Model
 
     protected $fillable = ['name'];
 
-    public function scholarshipHolders(): HasMany
+        public function projects(): BelongsToMany
     {
-        return $this->hasMany(ScholarshipHolder::class);
+        return $this->belongsToMany(Project::class, 'position_project')
+                    ->withPivot(['assignments', 'hourly_rate', 'weekly_hour_limit'])
+                    ->withTimestamps();
     }
 }

@@ -26,4 +26,19 @@ class Project extends Model
                     ->withPivot(['position_id', 'monthly_workload', 'start_date'])
                     ->withTimestamps();
     }
+
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_project');
+    }
+
+    public function positions(): HasMany
+    {
+        return $this->hasMany(Position::class);
+    }
+
+    public function fundingSources(): BelongsToMany
+    {
+        return $this->belongsToMany(FundingSource::class, 'project_funding_source');
+    }
 }
