@@ -84,4 +84,13 @@ class Kernel extends HttpKernel
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
     ];
+
+    protected function schedule(Schedule $schedule)
+{
+    // Dia 6: notificar bolsistas atrasados
+    $schedule->command('attendance:notify-late')->monthlyOn(6, '08:00');
+
+    // Dia 11: notificar coordenadores pendentes
+    $schedule->command('attendance:notify-pending')->monthlyOn(11, '08:00');
+}
 }

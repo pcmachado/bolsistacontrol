@@ -1,2 +1,50 @@
+
+/* Bootstrap */
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+/* Bootstrap Icons */
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+/* DataTables (se quiser via npm, senão pode manter via CDN) */
 @import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
 @import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
+
+/* Select2 (se instalar via npm) */
+@import "select2/dist/css/select2.min.css";
+
+/* Seus estilos customizados */
+body {
+    overflow-x: hidden;
+}
+
+#wrapper {
+    display: flex;
+    transition: all 0.3s ease;
+}
+
+#page-content-wrapper {
+    width: 100%;
+}
+
+#sidebar-wrapper {
+    width: 15rem;
+    transition: width 0.3s ease;
+}
+
+#wrapper.collapsed #sidebar-wrapper {
+    width: 4.5rem;
+}
+
+#wrapper.collapsed .sidebar-text,
+#wrapper.collapsed .user-profile .small,
+#wrapper.collapsed .sidebar-heading hr {
+    display: none;
+}
+
+#wrapper.collapsed #sidebar-wrapper .list-group-item {
+    text-align: center;
+}
+
+#wrapper.collapsed #sidebar-wrapper .list-group-item i {
+    margin-right: 0 !important;
+}

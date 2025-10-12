@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Position;
 use App\Models\Project;
 
-class PositionProjectFactory extends Factory
+class ProjectPositionFactory extends Factory
 {
     public function definition(): array
     {

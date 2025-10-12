@@ -80,21 +80,74 @@
         </div>
     </section>
 
+    <div class="row g-3">
+        {{-- Homologadas --}}
+        <div class="col-md-3">
+            <a href="{{ route('attendance.card.approved') }}" class="text-decoration-none">
+                <div class="card text-white bg-success shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-check-circle display-5"></i>
+                        <h5 class="card-title mt-2">Homologadas</h5>
+                        <h2>{{ $counts['approved'] ?? 0 }}</h2>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Pendentes --}}
+        <div class="col-md-3">
+            <a href="{{ route('attendance.card.pending') }}" class="text-decoration-none">
+                <div class="card text-white bg-info shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-hourglass-split display-5"></i>
+                        <h5 class="card-title mt-2">Pendentes</h5>
+                        <h2>{{ $counts['pending'] ?? 0 }}</h2>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Em atraso --}}
+        <div class="col-md-3">
+            <a href="{{ route('attendance.card.late') }}" class="text-decoration-none">
+                <div class="card text-dark bg-warning shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle display-5"></i>
+                        <h5 class="card-title mt-2">Em Atraso</h5>
+                        <h2>{{ $counts['late'] ?? 0 }}</h2>
+                        <small class="text-muted">Registros não enviados no prazo</small>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Rejeitadas --}}
+        <div class="col-md-3">
+            <a href="{{ route('attendance.card.rejected') }}" class="text-decoration-none">
+                <div class="card text-white bg-danger shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="bi bi-x-circle display-5"></i>
+                        <h5 class="card-title mt-2">Rejeitadas</h5>
+                        <h2>{{ $counts['rejected'] ?? 0 }}</h2>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <hr class="my-4">
+
     <!-- Relatórios e Gráficos (Grid 2/3 e 1/3 no Desktop) -->
     <section class="row g-4 mb-4">
         
-        <!-- Coluna Principal para Gráfico (8 colunas no desktop, 12 no mobile) -->
-        <div class="col-lg-8">
-            <div class="card shadow-lg rounded-3 h-100">
-                <div class="card-body p-4">
-                    <h2 class="h5 card-title fw-semibold mb-4">Gráfico de Linha de Desempenho</h2>
-                    <!-- Placeholder para a biblioteca de gráficos -->
-                    <div class="d-flex align-items-center justify-content-center bg-light border border-dashed border-secondary-subtle rounded-3 text-secondary" style="height: 250px;">
-                        Placeholder do Gráfico (Biblioteca Chart.js seria integrada aqui)
+        {{-- Gráfico --}}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Distribuição dos Registros</h5>
+                        <canvas id="attendanceChart"></canvas>
                     </div>
-                    <button class="btn btn-primary mt-4 px-4 py-2 rounded-3 shadow-sm">
-                        Gerar Relatório Detalhado
-                    </button>
                 </div>
             </div>
         </div>
@@ -188,3 +241,42 @@
         </div>
     </section>
 @endsection
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie', // pode trocar para 'bar'
+        data: {
+            labels: ['Homologadas', 'Pendentes', 'Em Atraso', 'Rejeitadas'],
+            datasets: [{
+                data: [
+                    {{ $counts['approved'] }},
+                    {{ $counts['pending'] }},
+                    {{ $counts['late'] }},
+                    {{ $counts['rejected'] }}
+                ],
+                backgroundColor: [
+                    'rgba(25, 135, 84, 0.8)',   // verde
+                    'rgba(13, 202, 240, 0.8)',  // azul
+                    'rgba(255, 193, 7, 0.8)',   // amarelo
+                    'rgba(220, 53, 69, 0.8)'    // vermelho
+                ],
+                borderColor: [
+                    'rgba(25, 135, 84, 1)',
+                    'rgba(13, 202, 240, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
+@endpush

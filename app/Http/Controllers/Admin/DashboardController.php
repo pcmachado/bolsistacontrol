@@ -33,8 +33,28 @@ class DashboardController extends Controller
             $labels = Unit::pluck('name');
             $notificacoesPendentes = Notification::where('read', false)->count();
 
+            $counts = [
+                'approved' => AttendanceRecord::where('status', 'approved')->count(),
+                'pending'  => AttendanceRecord::where('status', 'pending')->count(),
+                'late'     => AttendanceRecord::late()->count(),
+                'rejected' => AttendanceRecord::where('status', 'rejected')->count(),
+            ];
+
+            $myPending = 0;
+            if ($user->scholarshipHolder) {
+                $myPending = AttendanceRecord::where('scholarship_holder_id', $user->scholarshipHolder->id)
+                    ->where('status', 'pending')
+                    ->count();
+            }
+            $labels = ['Aprovados', 'Pendentes', 'Atrasados', 'Rejeitados'];
+            $data = [
+                $counts['approved'],    
+                $counts['pending'],
+                $counts['late'],
+                $counts['rejected'],
+            ];
             // Passa os dados para a view
-            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes', 'unidades', 'labels', 'usersCount', 'scholarshipHoldersCount', 'coursesCount'));
+            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes', 'unidades', 'labels', 'usersCount', 'scholarshipHoldersCount', 'coursesCount', 'data', 'myPending', 'counts', 'user', 'notificacoesPendentes'));
         }
 
         // Se não for um coordenador, retorna o dashboard padrão para o bolsista

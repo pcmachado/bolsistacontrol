@@ -1,28 +1,29 @@
 import './bootstrap';
-import $ from 'jquery';
-window.$ = window.jQuery = $;
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'alpinejs';
 
-// DataTables + Bootstrap 5
+import * as bootstrap from 'bootstrap';
+window.bootstrap = bootstrap;
+
+import $ from 'jquery';
+window.$ = $;
+window.jQuery = $;
+
+// Se quiser DataTables via npm (senão mantém via CDN)
 import 'datatables.net-bs5';
 import 'datatables.net-buttons-bs5';
-import 'datatables.net-buttons/js/buttons.html5';
-import 'datatables.net-buttons/js/buttons.print';
+import 'datatables.net-buttons/js/buttons.html5.min.js';
+import 'datatables.net-buttons/js/buttons.print.min.js';
 
-document.addEventListener('DOMContentLoaded', function () {
-    const toggleBtn = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    const body = document.body;
+// Se quiser Select2 via npm
+import 'select2';
 
-    if (toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', function () {
-            sidebar.classList.toggle('collapsed');
-            body.classList.toggle('sidebar-collapsed');
-        });
-    }
+// Importa seu JS customizado
+import { handleAjaxForm } from './modal-ajax';
 
-    // Inicia fechado no mobile
-    if (window.innerWidth < 992) {
-        sidebar.classList.add('collapsed');
-        body.classList.add('sidebar-collapsed');
-    }
-});
+// Exemplo de uso da função handleAjaxForm
+handleAjaxForm('addInstitutionForm', 'institution_id', 'addInstitutionModal');
+handleAjaxForm('addCourseForm', 'course_id', 'addCourseModal');
+handleAjaxForm('addProjectForm', 'project_id', 'addProjectModal');
+handleAjaxForm('addScholarshipHolderForm', 'scholarship_holder_id', 'addScholarshipHolderModal');
+

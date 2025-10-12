@@ -1,29 +1,28 @@
-@php
-    $isCoordinator = auth()->user()->hasRole('coordenador_adjunto');
-@endphp
+{{-- Botões de ação para cada registro de frequência --}}
+<div class="btn-group" role="group">
+    {{-- Editar: permitido se for rascunho ou rejeitado dentro do prazo de 7 dias --}}
+    @if(app(\App\Services\AttendanceRecordService::class)->isEditable($record))
+        <a href="{{ route('attendance-records.edit', $record) }}" class="btn btn-sm btn-warning">
+            <i class="bi bi-pencil"></i>
+        </a>
+    @endif
 
-<div class="flex gap-2">
-    @if($isCoordinator && $record->status === 'pending')
-        <form method="POST" action="{{ route('admin.homologations.homologate', $record->id) }}">
+    {{-- Enviar para homologação: só em rascunho --}}
+    @if($record->status === 'draft')
+        <form action="{{ route('attendance-records.submit', $record) }}" method="POST" class="d-inline">
             @csrf
-            <button class="btn btn-success">Homologar</button>
+            <button type="submit" class="btn btn-sm btn-success">
+                <i class="bi bi-send"></i> Enviar
+            </button>
         </form>
-
-        <button class="btn btn-danger" data-toggle="modal" data-target="#rejectModal-{{ $record->id }}">
-            Rejeitar
-        </button>
-
-        @include('components.attendance.reject_modal', ['record' => $record])
-    @else
-        @if(in_array($record->status, ['draft', 'rejected']))
-            <a href="{{ route('scholarship_holder.attendance.edit', $record->id) }}" class="btn btn-primary">Editar</a>
-        @endif
-
-        @if($record->status === 'draft')
-            <form method="POST" action="{{ route('scholarship_holder.attendance.send', $record->id) }}">
-                @csrf
-                <button class="btn btn-warning">Enviar</button>
-            </form>
-        @endif
     @endif
 </div>
+
+{{-- Badge de aviso para registros rejeitados --}}
+@if($record->status === 'rejected' && $record->rejected_at && now()->diffInDays($record->rejected_at) <= 7)
+    <div class="mt-1">
+        <span class="badge bg-warning">
+            Ajustes liberados até {{ $record->rejected_at->addDays(7)->format('d/m/Y') }}
+        </span>
+    </div>
+@endif

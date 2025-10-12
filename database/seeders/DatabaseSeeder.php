@@ -32,10 +32,9 @@ class DatabaseSeeder extends Seeder
             AttendanceRecordSeeder::class,
             FundingSourceSeeder::class,
             CourseSeeder::class,
-            PositionProjectSeeder::class,
             ProjectFundingSourceSeeder::class,
             CourseScholarshipHolderSeeder::class,
-            CourseProjectSeeder::class,
+            ProjectCourseSeeder::class,
         ]);
     }
 }

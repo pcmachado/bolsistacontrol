@@ -15,8 +15,18 @@ class ScholarshipHolder extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'cpf', 'email', 'phone', 'bank', 'agency', 'account',
-         'user_id', 'unit_id', 'start_date', 'end_date'  
+        'name',
+        'cpf',
+        'email',
+        'phone',
+        'pix_key',
+        'bank',
+        'agency',
+        'account',
+        'user_id',
+        'unit_id',
+        'start_date',
+        'end_date'  
     ];
     
     // Criptografa os dados bancários antes de salvar no banco
@@ -57,9 +67,13 @@ class ScholarshipHolder extends Model
         return $this->belongsTo(Position::class);
     }
 
-    public function courses(): BelongsToMany
+    public function courses(): HasMany
     {
-        return $this->belongsToMany(Course::class, 'course_scholarship_holder');
+        return $this->hasMany(CourseScholarshipHolder::class);
     }
+    public function projects(): HasMany
+    {
+        return $this->hasMany(ProjectScholarshipHolder::class);
+    }  
 
 }

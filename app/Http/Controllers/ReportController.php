@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Unit;
 use App\Models\AttendanceRecord;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use PDF;
 use Illuminate\Support\Facades\Storage;
@@ -14,8 +15,8 @@ class ReportController extends Controller
 {
     public function index(): View
     {
-        $unidades = Unit::all();
-        return view('reports.index', compact('unidades'));
+        $units = Unit::all();
+        return view('reports.index', compact('units'));
     }
 
     public function gerarRelatorio(Request $request)
@@ -69,8 +70,8 @@ class ReportController extends Controller
     
     public function download($filename)
     {
-        $path = storage_path("app/public/relatorios/{$filename}");
-        if (!Storage::disk('public')->exists("relatorios/{$filename}")) {
+        $path = storage_path("app/public/reports/{$filename}");
+        if (!Storage::disk('public')->exists("reports/{$filename}")) {
             return response()->json(['message' => 'Arquivo não encontrado.'], 404);
         }
         return response()->download($path);
@@ -105,7 +106,7 @@ class ReportController extends Controller
             ];
         });
 
-        return view('admin.reports.monthly', compact('report', 'month', 'year'));
+        return view('reports.monthly', compact('report', 'month', 'year'));
     }
 
     public function unitDetail(Request $request, \App\Models\Unit $unit)
@@ -133,6 +134,43 @@ class ReportController extends Controller
             ];
         });
 
-        return view('admin.reports.unit_detail', compact('unit', 'report', 'month', 'year'));
+        return view('reports.unit_detail', compact('unit', 'report', 'month', 'year'));
+    }
+
+    public function individualReport(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year  = $request->get('year', now()->year);
+
+        $holder = Auth::user()->scholarshipHolder;
+dd(Auth::user());
+        $attendances = $holder->attendances()
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->get();
+
+        // Agrupar por semana
+        $semanas = $attendances->groupBy(function($item) {
+            return \Carbon\Carbon::parse($item->date)->weekOfMonth;
+        })->map(function($items, $semana) {
+            return [
+                'semana' => $semana,
+                'horas' => $items->sum('hours'),
+                'atividades' => $items->pluck('observation')->implode('; ')
+            ];
+        });
+
+        $totalHoras = $attendances->sum('hours');
+
+        $data = [
+            'holder' => $holder,
+            'month' => $month,
+            'year' => $year,
+            'semanas' => $semanas,
+            'totalHoras' => $totalHoras,
+        ];
+
+        $pdf = \PDF::loadView('reports.myReport', $data);
+        return $pdf->download("individual_report_{$holder->id}_{$month}_{$year}.pdf");
     }
 }

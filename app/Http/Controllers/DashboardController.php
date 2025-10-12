@@ -14,28 +14,33 @@ use App\Models\AttendanceRecord;
 // Controller para a área do usuário (pode ser o dashboard principal após o login)
 class DashboardController extends Controller
 {
-    /**
-     * Exibe o dashboard principal do usuário logado.
-     * Este dashboard pode mostrar informações personalizadas
-     * para o bolsista ou ter links rápidos para as principais
-     * funcionalidades, como o registro de frequência.
-     */
-    public function index(): View
+    public function index()
     {
         $user = Auth::user();
-        // Verifica se o usuário tem o papel de coordenador e o redireciona para a view do admin
-        if ($user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto')) {
-            // Pega dados de resumo para o dashboard do admin, se necessário
-            $totalBolsistas = User::role('bolsista')->count();
-            //$registrosPendentes = AttendanceRecord::where('status', 'pendente')->count();
-            $totalUnidades = Unit::count();
             $notificacoesPendentes = Notification::where('read', false)->count();
 
-            // Passa os dados para a view
-            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes'));
-        }
+            $counts = [
+                'approved' => AttendanceRecord::where('status', 'approved')->count(),
+                'pending'  => AttendanceRecord::where('status', 'pending')->count(),
+                'late'     => AttendanceRecord::late()->count(),
+                'rejected' => AttendanceRecord::where('status', 'rejected')->count(),
+            ];
+
+            $myPending = 0;
+            if ($user->scholarshipHolder) {
+                $myPending = AttendanceRecord::where('scholarship_holder_id', $user->scholarshipHolder->id)
+                    ->where('status', 'pending')
+                    ->count();
+            }
+            $labels = ['Aprovados', 'Pendentes', 'Atrasados', 'Rejeitados'];
+            $data = [
+                $counts['approved'],    
+                $counts['pending'],
+                $counts['late'],
+                $counts['rejected'],
+            ];
 
         // Se não for um coordenador, retorna o dashboard padrão para o bolsista
-        return view('dashboard');
+        return view('dashboard', compact('user', 'notificacoesPendentes', 'counts', 'myPending', 'labels', 'data'));
     }
 }

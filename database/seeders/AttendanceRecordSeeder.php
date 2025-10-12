@@ -10,38 +10,18 @@ use Illuminate\Support\Carbon;
 
 class AttendanceRecordSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
-        $scholarshipHolders = ScholarshipHolder::all();
-        $coordinator = User::role('coordenador_adjunto')->first();
-
-        foreach ($scholarshipHolders as $holder) {
-            // Cria registros em diferentes estados
-            AttendanceRecord::factory()->count(3)->create([
-                'scholarship_holder_id' => $holder->id,
-                'status' => AttendanceRecord::STATUS_DRAFT,
-            ]);
-
-            AttendanceRecord::factory()->count(2)->create([
-                'scholarship_holder_id' => $holder->id,
-                'status' => AttendanceRecord::STATUS_PENDING,
-                'submitted_at' => Carbon::now()->subDays(2),
-            ]);
-
-            AttendanceRecord::factory()->count(2)->create([
-                'scholarship_holder_id' => $holder->id,
-                'status' => AttendanceRecord::STATUS_APPROVED,
-                'submitted_at' => Carbon::now()->subDays(5),
-                'approved_by_user_id' => $coordinator->id,
-            ]);
-
-            AttendanceRecord::factory()->count(1)->create([
-                'scholarship_holder_id' => $holder->id,
-                'status' => AttendanceRecord::STATUS_REJECTED,
-                'submitted_at' => Carbon::now()->subDays(3),
-                'approved_by_user_id' => $coordinator->id,
-                'rejection_reason' => 'Horário inconsistente com jornada semanal.',
-            ]);
-        }
+        // Cria 10 bolsistas com registros de frequência
+        ScholarshipHolder::factory()
+            ->count(10)
+            ->create()
+            ->each(function ($holder) {
+                AttendanceRecord::factory()
+                    ->count(rand(5, 15))
+                    ->create([
+                        'scholarship_holder_id' => $holder->id,
+                    ]);
+            });
     }
 }

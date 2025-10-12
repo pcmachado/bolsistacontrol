@@ -11,17 +11,23 @@ class Course extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name'];
+    protected $fillable = [
+        'name',
+        'description',
+        'duration_hours',
+        'prerequisites',
+        'start_date',
+        'end_date',
+        'active',
+    ];
 
-    public function projects(): BelongsToMany
+    public function projects(): HasMany
     {
-        return $this->belongsToMany(Project::class, 'course_project')
-                    ->withTimestamps();
+        return $this->hasMany(CourseProject::class);
     }
 
-    public function scholarshipHolders(): BelongsToMany
+    public function scholarshipHolders(): HasMany
     {
-        return $this->belongsToMany(ScholarshipHolder::class, 'course_scholarship_holder')
-                    ->withTimestamps();
+        return $this->hasMany(CourseScholarshipHolder::class);
     }
 }

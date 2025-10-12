@@ -11,13 +11,18 @@ class ProjectFundingSourceSeeder extends Seeder
 {
     public function run(): void
     {
-       $projects = Project::all();
-        $sources = FundingSource::all();
+        $project = Project::first();
+        $sources = FundingSource::take(2)->get();
 
-        foreach ($projects as $project) {
-            $project->fundingSources()->attach(
-                $sources->random(rand(1, 3))->pluck('id')->toArray()
-            );
+        foreach ($sources as $source) {
+            ProjectFundingSource::create([
+                'project_id' => $project->id,
+                'funding_source_id' => $source->id,
+                'amount' => rand(5000, 20000),
+                'start_date' => now()->subMonths(rand(1, 12)),
+                'end_date' => null,
+                'status' => 'active',
+            ]);
         }
     }
 }

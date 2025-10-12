@@ -50,6 +50,10 @@ class PositionController extends Controller
 
         $this->positionService->createPosition($validated);
 
+        if ($request->ajax()) {
+            return response()->json($position);
+        }
+
         return redirect()->route('admin.positions.index')->with('success', 'Cargo cadastrado com sucesso!');
     }
 

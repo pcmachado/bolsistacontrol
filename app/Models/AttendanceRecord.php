@@ -13,6 +13,8 @@ class AttendanceRecord extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $dates = ['submitted_at', 'rejected_at'];
+
     /**
      * Define o status inicial como rascunho.
      */
@@ -27,9 +29,11 @@ class AttendanceRecord extends Model
         'start_time',
         'end_time',
         'hours',
+        'calculated_value',
         'observation',
         'status',
         'submitted_at', // Data de envio para homologação
+        'approved',
         'approved_by_user_id', // ID do usuário Coordenador que aprovou/rejeitou
         'rejection_reason',
     ];
@@ -56,5 +60,48 @@ class AttendanceRecord extends Model
     {
         // Relaciona-se com o Model User
         return $this->belongsTo(User::class, 'approved_by_user_id');
+    }
+
+    public function scopeApproved($q) {
+        return $q->where('status', 'approved');
+    }
+
+    public function scopeRejected($q) { 
+        return $q->where('status', 'rejected'); 
+    }
+
+    public function scopeDraft($q) {
+        return $q->where('status', 'draft');
+    }
+
+    public function scopePending($q) {
+        return $q->where('status', 'pending');
+    }
+
+    public function scopeSubmitted($q) {
+        return $q->where('status', 'submitted');
+    }
+    
+    public function scopeByMonth($q, $month, $year) {
+        return $q->whereMonth('date', $month)->whereYear('date', $year);
+    }
+
+    public function scopeLate($query)
+    {
+        return $query->whereIn('status', ['draft', 'pending'])
+                    ->where('date', '<', now()->subDays(7)); // atraso > 7 dias
+    }
+
+        public function isEditable(): bool
+    {
+        if ($this->status === 'draft') {
+            return true;
+        }
+
+        if ($this->status === 'rejected' && $this->rejected_at) {
+            return now()->diffInDays($this->rejected_at) <= 7;
+        }
+
+        return false;
     }
 }

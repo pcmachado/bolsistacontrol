@@ -4,43 +4,45 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Project extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'description', 'instituition_id', 'start_date', 'end_date'
+        'name',
+        'description',
+        'instituition_id',
+        'start_date',
+        'end_date'
     ];
 
-    public function instituition()
+    public function instituition(): BelongsTo
     {
         return $this->belongsTo(Instituition::class);
     }
 
-    public function scholarshipHolders()
+    public function courses(): HasMany
     {
-        return $this->belongsToMany(ScholarshipHolder::class, 'project_scholarship_holders')
-                    ->withPivot(['position_id', 'monthly_workload', 'start_date'])
+        return $this->hasMany(ProjectCourse::class);
+    }
+
+    public function positions(): BelongsToMany
+    {
+        return $this->belongsToMany(Position::class, 'project_positions')
                     ->withTimestamps();
     }
 
-    public function courses(): BelongsToMany
+    public function fundingSources(): HasMany
     {
-        return $this->belongsToMany(Course::class, 'course_project')
-                    ->withTimestamps();
+        return $this->hasMany(ProjectFundingSource::class);
     }
 
-    public function positions(): HasMany
+    public function scholarshipHolders(): HasMany
     {
-        return $this->hasMany(Position::class);
-    }
-
-    public function fundingSources(): BelongsToMany
-    {
-        return $this->belongsToMany(FundingSource::class, 'project_funding_source')
-                    ->withTimestamps();
+        return $this->hasMany(ProjectScholarshipHolder::class);
     }
 }

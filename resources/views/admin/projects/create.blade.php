@@ -6,6 +6,13 @@
         <div class="pull-left">
             <h2>Criar novo Projeto</h2>
         </div>
+        {{-- Botão para abrir o assistente --}}
+        <div class="mb-3">
+            <a href="{{ route('admin.projects.create.step1') }}" class="btn btn-outline-primary">
+                <i class="bi bi-magic"></i> Criar Projeto com Assistente
+            </a>
+        </div>
+        {{-- Fim do botão --}}
         <div class="pull-right">
             <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.projects.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
         </div>

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Course;
 use App\Models\Project;
 
-class CourseProjectFactory extends Factory
+class ProjectCourseFactory extends Factory
 {
     public function definition(): array
     {

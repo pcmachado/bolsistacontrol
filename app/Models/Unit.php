@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -13,7 +14,15 @@ class Unit extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['instituition_id', 'name', 'city', 'address'];
+    protected $fillable = [
+        'instituition_id',
+        'name',
+        'city',
+        'address',
+        'phone',
+        'email',
+        'cnpj'
+    ];
 
     public function instituition(): BelongsTo
     {
@@ -25,14 +34,14 @@ class Unit extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_unit');
+        return $this->belongsToMany(User::class);
     }
 
     /**
      * Os bolsistas que pertencem a esta unidade.
      */
-    public function scholarshipHolders(): BelongsToMany
+    public function scholarshipHolders(): HasMany
     {
-        return $this->belongsToMany(ScholarshipHolder::class, 'unit_scholarship_holder');
+        return $this->hasMany(ScholarshipHolder::class);
     }
 }
