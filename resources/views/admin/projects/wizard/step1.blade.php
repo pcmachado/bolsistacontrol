@@ -11,7 +11,7 @@
 <div class="container">
     <h3>Passo 1: Criar Projeto</h3>
     @include('admin.projects.partials._steps', ['step' => 1, 'project' => $project ?? null])
-    @include('admin.projects.partials._progress', ['progress' => 25, 'label' => 'Passo 1 de 4'])
+    @include('admin.projects.partials._progress', ['progress' => 16, 'label' => 'Passo 1 de 6'])
     <form method="POST" action="{{ route('admin.projects.store.step1') }}">
         @csrf
         <div class="mb-3">
@@ -20,8 +20,8 @@
         </div>
         <div class="mb-3">
             <label>Instituição</label>
-            <select name="instituition_id" class="form-control" required>
-                @foreach($instituitions as $inst)
+            <select name="institution_id" class="form-control" required>
+                @foreach($institutions as $inst)
                     <option value="{{ $inst->id }}">{{ $inst->name }}</option>
                 @endforeach
             </select>

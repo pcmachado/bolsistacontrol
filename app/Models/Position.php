@@ -27,8 +27,9 @@ class Position extends Model
         return $this->hasMany(Assignment::class);
     }
 
-    public function scholarshipHolders(): HasMany
+    public function scholarshipHolders(): BelongsToMany
     {
-        return $this->hasMany(ScholarshipHolder::class);
+        return $this->belongsToMany(ScholarshipHolder::class, 'position_scholarship_holder')
+                    ->withTimestamps();
     }
 }

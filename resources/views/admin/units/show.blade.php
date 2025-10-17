@@ -26,7 +26,7 @@
     </div>
     <div class="form-group">
         <strong>Instituição:</strong>
-        {{ $unit->instituition->name }}
+        {{ $unit->institution->name }}
     </div>
     <div class="form-group">
         <strong>Endereço:</strong>

@@ -19,7 +19,7 @@ return new class extends Migration
             'projects',
             'positions',
             'notifications',
-            'instituitions',
+            'institutions',
             'attendance_records',
         ];
 
@@ -45,7 +45,7 @@ return new class extends Migration
             'projects',
             'positions',
             'notifications',
-            'instituitions',
+            'institutions',
             'attendance_records',
         ];
 

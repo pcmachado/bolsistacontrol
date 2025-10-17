@@ -33,7 +33,7 @@
             <ul class="list-group list-group-flush">
                 <li>
                     <a class="list-group-item list-group-item-action ps-5"
-                    href="{{ route('attendance.index') }}"
+                    href="{{ route('attendance.my') }}"
                     data-bs-toggle="tooltip" data-bs-placement="right" title="Minhas Frequências">
                         <i class="bi bi-clock-history me-2 text-info"></i>
                         <span class="d-none d-lg-inline">Minhas Frequências</span>
@@ -77,6 +77,9 @@
         <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.courses.index') }}" title="Cursos">
             <i class="bi bi-mortarboard fa-fw me-3"></i><span class="sidebar-text">Cursos</span>
         </a>
+        <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.attendance_records.index') }}" title="Frequências">
+            <i class="bi bi-calendar2-week fa-fw me-3"></i><span class="sidebar-text">Frequências</span>
+        </a>
         <a class="list-group-item list-group-item-action list-group-item-dark p-3" href="{{ route('admin.homologations.index') }}" title="Homologação">
             <i class="bi bi-check2-square fa-fw me-3"></i><span class="sidebar-text">Homologação</span>
         </a>
@@ -109,38 +112,52 @@
 
     <div class="collapse" id="submenuReports">
         <ul class="list-group list-group-flush">
-            @role('bolsista')
-            <li>
-                <a class="list-group-item list-group-item-action ps-5"
-                   href="{{ route('reports.myReport') }}"
-                   data-bs-toggle="tooltip" data-bs-placement="right" title="Relatório Individual">
-                    <i class="bi bi-person-lines-fill me-2 text-success"></i>
-                    <span class="d-none d-lg-inline">Relatório Individual</span>
-                </a>
-            </li>
+            {{-- Relatórios - visíveis conforme papel --}}
+            @role(['admin','coordenador_geral'])
+                <li>
+                    <a class="list-group-item list-group-item-action ps-5" 
+                        href="{{ route('admin.reports.unit_detail') }}"
+                        data-bs-toggle="tooltip" data-bs-placement="right" title="Relatórios por Unidade">
+                        <i class="bi bi-funnel"></i> Relatórios por Unidade
+                    </a>
+                </li>
+                <li>
+                    <a class="list-group-item list-group-item-action ps-5" 
+                        href="{{ route('admin.reports.monthly') }}"
+                        data-bs-toggle="tooltip" data-bs-placement="right" title="Consolidado Mensal">
+                        <i class="bi bi-bar-chart"></i> Consolidado Mensal
+                    </a>
+                </li>
             @endrole
 
-            @role('coordenador_adjunto|coordenador_geral')
-            <li>
-                <a class="list-group-item list-group-item-action ps-5"
-                   href="{{ route('admin.homologations.report') }}"
-                   data-bs-toggle="tooltip" data-bs-placement="right" title="Relatório da Unidade">
-                    <i class="bi bi-building me-2 text-primary"></i>
-                    <span class="d-none d-lg-inline">Relatório da Unidade</span>
-                </a>
-            </li>
+            @role('coordenador_adjunto')
+                <li>
+                    <a class="list-group-item list-group-item-action ps-5" 
+                        href="{{ route('admin.reports.unit_detail') }}"
+                        data-bs-toggle="tooltip" data-bs-placement="right" title="Minhas Unidades">
+                        <i class="bi bi-funnel"></i> Minhas Unidades
+                    </a>
+                </li>
+                <li>
+                    <a class="list-group-item list-group-item-action ps-5" 
+                        href="{{ route('admin.reports.monthly') }}"
+                        data-bs-toggle="tooltip" data-bs-placement="right" title="Consolidado Mensal">
+                        <i class="bi bi-bar-chart"></i> Consolidado Mensal
+                    </a>
+                </li>
             @endrole
 
-            @role('coordenador_geral')
-            <li>
-                <a class="list-group-item list-group-item-action ps-5"
-                   href="{{ route('admin.reports.monthly') }}"
-                   data-bs-toggle="tooltip" data-bs-placement="right" title="Relatório Consolidado">
-                    <i class="bi bi-collection me-2 text-info"></i>
-                    <span class="d-none d-lg-inline">Relatório Consolidado</span>
-                </a>
-            </li>
+            @role('scholarship_holder')
+                <li>
+                    <a class="list-group-item list-group-item-action ps-5"
+                        href="{{ route('reports.myReport') }}"
+                        data-bs-toggle="tooltip" data-bs-placement="right" title="Meu Relatório Mensal">
+                        <i class="bi bi-file-earmark-person me-2"></i>
+                        <span class="d-none d-lg-inline">Meu Relatório Mensal</span>
+                    </a>
+                </li>
             @endrole
+
         </ul>
     </div>
 </div>

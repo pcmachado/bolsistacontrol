@@ -12,12 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Instituições
-        Schema::create('instituitions', function (Blueprint $table) {
+        Schema::create('institutions', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('city');
             $table->string('state');
             $table->string('address')->nullable();
+            $table->string('cnpj')->nullable()->unique();
+            $table->string('email')->nullable();
+            $table->string('website')->nullable();
+            $table->string('acronym')->nullable();
+            $table->string('contact_person')->nullable();
+            $table->string('contact_email')->nullable();
+            $table->string('contact_phone')->nullable();
+            $table->string('logo_path')->nullable();
+            $table->string('postal_code')->nullable();
+            $table->string('neighborhood')->nullable();
+            $table->string('complement')->nullable();
+            $table->string('number')->nullable();
+            $table->string('country')->default('Brasil');
             $table->string('phone')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -37,7 +50,7 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
             $table->text('description')->nullable();
-            $table->foreignId('instituition_id')->constrained()->onDelete('cascade');
+            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->timestamps();
@@ -47,7 +60,7 @@ return new class extends Migration
         // 5. Unidades
         Schema::create('units', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('instituition_id')->constrained()->onDelete('cascade');
+            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('city');
             $table->string('address')->nullable();
@@ -148,7 +161,7 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
             $table->foreignId('position_id')->constrained()->onDelete('cascade');
-            $table->integer('weekly_hour_limit')->default(20);
+            $table->integer('weekly_workload')->default(20);
             $table->text('assignments')->nullable(); // Descrição das atribuições
             $table->decimal('hourly_rate', 8, 2)->nullable(); // Valor da hora de trabalho
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
@@ -238,7 +251,7 @@ return new class extends Migration
         Schema::dropIfExists('units');
         Schema::dropIfExists('projects');
         Schema::dropIfExists('positions');
-        Schema::dropIfExists('instituitions');
+        Schema::dropIfExists('institutions');
         Schema::dropIfExists('courses');
         Schema::dropIfExists('funding_sources');
     }

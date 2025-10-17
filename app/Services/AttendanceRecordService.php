@@ -146,20 +146,38 @@ class AttendanceRecordService
         return in_array($record->status, ['draft', 'rejected']);
     }
 
-    public function create(array $data)
+    public function create(array $data): AttendanceRecord
     {
-        $data['user_id'] = Auth::id();
+        $data['scholarship_holder_id'] = Auth::user()->scholarshipHolder->id ?? null;
         return AttendanceRecord::create($data);
     }
 
-    public function update(AttendanceRecord $attendance, array $data)
+    public function update(AttendanceRecord $record, array $data): AttendanceRecord
     {
-        $attendance->update($data);
-        return $attendance;
+        $record->update($data);
+        return $record;
+    }
+
+    public function submit(AttendanceRecord $record): AttendanceRecord
+    {
+        $record->update(['status' => AttendanceRecord::STATUS_SUBMITTED]);
+        return $record;
     }
 
     public function delete(AttendanceRecord $attendance)
     {
         return $attendance->delete();
+    }
+
+    public function approve(AttendanceRecord $record): AttendanceRecord
+    {
+        $record->update(['status' => AttendanceRecord::STATUS_APPROVED]);
+        return $record;
+    }
+
+    public function reject(AttendanceRecord $record): AttendanceRecord
+    {
+        $record->update(['status' => AttendanceRecord::STATUS_REJECTED]);
+        return $record;
     }
 }

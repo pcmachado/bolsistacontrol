@@ -23,9 +23,11 @@ class ProjectScholarshipHolderSeeder extends Seeder
                 'project_id' => $project->id,
                 'scholarship_holder_id' => $holder->id,
                 'position_id' => $positions[$i % $positions->count()]->id,
-                'weekly_hour_limit' => rand(10, 20),
+                'weekly_workload' => rand(10, 20),
                 'start_date' => now()->subMonths(rand(1, 6)),
                 'end_date' => null,
+                'assignments' => 'Realizar atividades relacionadas ao projeto conforme designado.',
+                'hourly_rate' => rand(15, 50),
                 'status' => 'active',
             ]);
         }

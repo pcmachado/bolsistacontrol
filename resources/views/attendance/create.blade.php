@@ -27,7 +27,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('attendance.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('attendance.my') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                     <button type="submit" class="btn btn-success">

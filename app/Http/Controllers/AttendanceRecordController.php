@@ -34,12 +34,14 @@ class AttendanceRecordController extends Controller
 
     public function index(Request $request, AttendanceRecordDataTable $dataTable)
     {
-        if ($request->routeIs('admin.homologations.index')) {
+        if ($request->routeIs('attendance.my')) {
+            $dataTable->mode = 'my';
+        } else if ($request->routeIs('admin.homologations.index')) {
             $dataTable->mode = 'homologation';
-        } else {
+        } else if ($request->routeIs('admin.attendance_records.index')) {
             $dataTable->mode = 'default';
         }
-
+        // Aplica filtros da requisição
         $filters = $request->only([
             'project_id', 'unit_id', 'role', 'scholarship_holder_id', 'month', 'start_date', 'end_date'
         ]);
@@ -60,23 +62,26 @@ class AttendanceRecordController extends Controller
         return view('attendance.create');
     }
 
-    public function store(AttendanceRecordStoreRequest $request)
+    public function store(Request $request)
     {
+        $validated = $request->validate([
+            'date'        => 'required|date',
+            'start_time'  => 'required|date_format:H:i',
+            'end_time'    => 'nullable|date_format:H:i|after:start_time',
+            'status'      => 'required|in:draft,submitted,approved,rejected',
+            'observation' => 'nullable|string|max:1000',
+        ]);
+
         try {
-            // O AttendanceRecordStoreRequest já validou os dados, incluindo a data e horas.
-            $data = $request->validated();
-            
-            // Pega o ID do bolsista logado
             $scholarshipHolder = Auth::user()->scholarshipHolder;
 
             if (!$scholarshipHolder) {
                 return back()->with('error', 'Usuário logado não está associado a um bolsista.');
             }
 
-            // O service se encarrega do cálculo do tempo total e da validação do limite semanal
-            $this->attendanceRecordService->createRecord($scholarshipHolder->id, $data);
+            $this->attendanceRecordService->create( $validated);
 
-            return redirect()->route('attendance.index')->with('success', 'Registro de frequência criado com sucesso!');
+            return redirect()->route('attendance.my')->with('success', 'Registro de frequência criado com sucesso!');
 
         } catch (\Exception $e) {
             // Se o Service lançar uma exceção de limite semanal excedido, por exemplo.
@@ -96,11 +101,19 @@ class AttendanceRecordController extends Controller
         return view('attendance.edit', compact('attendanceRecord'));
     }
 
-    public function update(AttendanceRecordStoreRequest $request, AttendanceRecord $attendanceRecord)
+    public function update(Request $request, AttendanceRecord $attendanceRecord)
     {
         $this->authorize('update', $attendanceRecord);
 
-        $this->attendanceRecordService->updateRecord($attendanceRecord, $request->validated());
+        $validated = $request->validate([
+            'date'        => 'required|date',
+            'start_time'  => 'required|date_format:H:i',
+            'end_time'    => 'nullable|date_format:H:i|after:start_time',
+            'status'      => 'required|in:draft,submitted',
+            'observation' => 'nullable|string|max:1000',
+        ]);
+
+        $this->attendanceRecordService->update($attendanceRecord, $validated);
 
         return redirect()->route('attendance.index')->with('success', 'Registro atualizado com sucesso!');
     }
@@ -109,29 +122,29 @@ class AttendanceRecordController extends Controller
     {
         $this->authorize('delete', $attendanceRecord);
 
-        $this->attendanceRecordService->deleteRecord($attendanceRecord);
+        $this->attendanceRecordService->delete($attendanceRecord);
 
         return redirect()->route('attendance.index')->with('success', 'Registro excluído com sucesso!');
     }
 
-    public function submit(AttendanceRecord $record, AttendanceRecordService $service)
+    public function submit(AttendanceRecord $record)
     {
         $this->authorize('submit', $record);
-        $service->submitRecord($record);
+        $this->attendanceRecordService->submitRecord($record);
         return back()->with('success', 'Registro enviado para homologação.');
     }
 
-    public function approve(AttendanceRecord $record, AttendanceRecordService $service)
+    public function approve(AttendanceRecord $record)
     {
         $this->authorize('approve', $record);
-        $service->approveRecord($record);
+        $this->attendanceRecordService->approveRecord($record);
         return back()->with('success', 'Registro aprovado.');
     }
 
-    public function reject(Request $request, AttendanceRecord $record, AttendanceRecordService $service)
+    public function reject(Request $request, AttendanceRecord $record)
     {
         $this->authorize('reject', $record);
-        $service->rejectRecord($record, $request->input('reason'));
+        $this->attendanceRecordService->rejectRecord($record, $request->input('reason'));
         return back()->with('success', 'Registro recusado.');
     }
 
@@ -151,13 +164,13 @@ class AttendanceRecordController extends Controller
         return view('attendance.pending', compact('pendingRecords'));
     }*/
 
-    public function report(Request $request, AttendanceRecordService $service)
+    public function report(Request $request)
     {
         $unitId = Auth::user()->unit_id;
         $month = $request->input('month', now()->month);
         $year = $request->input('year', now()->year);
 
-        $report = $service->generateReport($unitId, $month, $year);
+        $report = $this->attendanceRecordService->generateReport($unitId, $month, $year);
 
         return view('attendance.report', compact('report', 'month', 'year'));
     }

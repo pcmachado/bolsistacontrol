@@ -19,8 +19,8 @@ class ProjectsDataTable extends DataTable
         ->addColumn('description', function ($project) {
             return $project->description ?? 'N/A';
         })
-        ->addColumn('instituition', function ($project) {
-            return $project->instituition->name ?? 'N/A';
+        ->addColumn('institution', function ($project) {
+            return $project->institution->name ?? 'N/A';
         })
         ->addColumn('start_date', function ($project) {
             return formatDate($project->start_date);
@@ -40,7 +40,7 @@ class ProjectsDataTable extends DataTable
 
     public function query(Project $model)
     {
-        return $model->newQuery()->with(['instituition']);
+        return $model->newQuery()->with(['institution']);
     }
 
     public function html()
@@ -69,7 +69,7 @@ class ProjectsDataTable extends DataTable
         Column::make('id'),
         Column::make('name')->title('Nome'),
         Column::make('description')->title('Descrição'),
-        Column::make('instituition')->title('Instituição'),
+        Column::make('institution')->title('Instituição'),
         Column::make('start_date')->title('Data de Início'),
         Column::make('end_date')->title('Data de Término'),
         Column::make('created_at')->title('Criado Em'),

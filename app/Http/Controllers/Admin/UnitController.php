@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use App\Models\Unit;
-use App\Models\Instituition;
+use App\Models\institution;
 use Illuminate\View\View;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -27,8 +27,8 @@ class UnitController extends Controller
 
     public function create(): View
     {
-        $Instituitions = Instituition::all();
-        return view('admin.units.create', compact('Instituitions'));
+        $institutions = institution::all();
+        return view('admin.units.create', compact('institutions'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -39,7 +39,7 @@ class UnitController extends Controller
             'address' => 'required|string|max:255',
         ];
 
-        $rules['instituition_id'] = 'nullable|exists:instituitions,id';
+        $rules['institution_id'] = 'nullable|exists:institutions,id';
 
         $validated = $request->validate($rules);
 
@@ -50,14 +50,14 @@ class UnitController extends Controller
 
     public function show(Unit $unit): View
     {
-        $unit->load('instituition');
+        $unit->load('institution');
         return view('admin.units.show', compact('unit'));
     }
 
     public function edit(Unit $unit): View
     {
-        $Instituitions = Instituition::all();
-        return view('admin.units.edit', compact('unit', 'Instituitions'));
+        $institutions = institution::all();
+        return view('admin.units.edit', compact('unit', 'institutions'));
     }
 
     public function update(Request $request, Unit $unit): RedirectResponse

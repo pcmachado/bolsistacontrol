@@ -89,4 +89,20 @@ class HomologationController extends Controller
         return view('attendance.homologation.report', compact('report', 'month', 'year', 'units', 'unitId'));
     }
 
+    public function bulk(Request $request, AttendanceRecordService $service)
+    {
+        $action = $request->input('action');
+        $records = AttendanceRecord::whereIn('id', $request->input('records', []))->get();
+
+        foreach ($records as $record) {
+            if ($action === 'approve') {
+                $service->approveRecord($record);
+            } elseif ($action === 'reject') {
+                $service->rejectRecord($record, $request->input('reason'));
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
 }

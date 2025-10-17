@@ -32,20 +32,32 @@ class AttendanceRecordPolicy
      * Determina se o utilizador pode atualizar o registo de frequência.
      * Condição: O registo deve estar no estado 'rascunho' E o utilizador deve ser o bolsista dono do registo.
      */
-    public function update(User $user, AttendanceRecord $attendanceRecord): bool
+    public function update(User $user, AttendanceRecord $record): bool
     {
-        return $attendanceRecord->status === AttendanceRecord::STATUS_DRAFT
-            && $user->scholarshipHolder?->id === $attendanceRecord->scholarship_holder_id;
+        return $user->scholarshipHolder
+            && $user->scholarshipHolder->id === $record->scholarship_holder_id
+            && in_array($record->status, ['draft','rejected']);
+    }
+
+    /**
+     * Bolsista pode excluir se for dono e registro ainda não enviado.
+     */
+    public function delete(User $user, AttendanceRecord $record): bool
+    {
+        return $user->scholarshipHolder
+            && $user->scholarshipHolder->id === $record->scholarship_holder_id
+            && $record->status === 'draft';
     }
 
     /**
      * Determina se o utilizador pode submeter o registo para aprovação.
      * Condição: O registo deve estar no estado 'rascunho' E o utilizador deve ser o dono.
      */
-    public function submit(User $user, AttendanceRecord $attendanceRecord): bool
+    public function submit(User $user, AttendanceRecord $record): bool
     {
-        return $attendanceRecord->status === AttendanceRecord::STATUS_DRAFT
-            && $user->scholarshipHolder?->id === $attendanceRecord->scholarship_holder_id;
+        return $user->scholarshipHolder
+            && $user->scholarshipHolder->id === $record->scholarship_holder_id
+            && $record->status === 'draft';
     }
 
     /**
@@ -53,28 +65,19 @@ class AttendanceRecordPolicy
      * Condição: O utilizador deve ser 'coordenador_adjunto' de pelo menos uma das unidades do bolsista
      * E o registo deve estar no estado 'pendente'.
      */
-    public function approve(User $user, AttendanceRecord $attendanceRecord): bool
+    public function approve(User $user, AttendanceRecord $record): bool
     {
-        if (!$user->hasRole('coordenador_adjunto') || $attendanceRecord->status !== AttendanceRecord::STATUS_PENDING) {
-            return false;
-        }
-
-        // Pega os IDs das unidades do coordenador.
-        $coordinatorUnitIds = $user->units->pluck('id');
-
-        // Pega os IDs das unidades do bolsista que fez o registo.
-        $scholarshipHolderUnitIds = $attendanceRecord->scholarshipHolder->units->pluck('id');
-
-        // Verifica se o coordenador e o bolsista partilham pelo menos uma unidade.
-        return $coordinatorUnitIds->intersect($scholarshipHolderUnitIds)->isNotEmpty();
+        return $user->hasRole(['admin','coordenador_geral','coordenador_adjunto'])
+            && $record->status === 'submitted';
     }
 
     /**
      * Determina se o utilizador pode rejeitar um registo de frequência.
      * A lógica é a mesma da aprovação.
      */
-    public function reject(User $user, AttendanceRecord $attendanceRecord): bool
+    public function reject(User $user, AttendanceRecord $record): bool
     {
-        return $this->approve($user, $attendanceRecord);
+        return $user->hasRole(['admin','coordenador_geral','coordenador_adjunto'])
+            && $record->status === 'submitted';
     }
 }

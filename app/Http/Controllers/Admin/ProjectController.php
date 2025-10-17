@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
-use App\Models\Instituition;
+use App\Models\institution;
 use App\Models\Unit;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -29,8 +29,8 @@ class ProjectController extends Controller
     public function create()
     {
         $units = Unit::all();
-        $instituitions = Instituition::all();
-        return view('admin.projects.create', compact('units', 'instituitions'));
+        $institutions = institution::all();
+        return view('admin.projects.create', compact('units', 'institutions'));
     }
 
     public function store(Request $request)
@@ -54,10 +54,10 @@ class ProjectController extends Controller
         $units = Unit::all();
         $currentUnit = $project->unit_id ? Unit::find($project->unit_id) : null;
 
-        $instituitions = Instituition::all();
-        $currentInstituition = $project->instituition_id ? Instituition::find($project->instituition_id) : null;
+        $institutions = institution::all();
+        $currentinstitution = $project->institution_id ? institution::find($project->institution_id) : null;
 
-        return view('admin.projects.edit', compact('project', 'units', 'currentUnit', 'instituitions', 'currentInstituition'));
+        return view('admin.projects.edit', compact('project', 'units', 'currentUnit', 'institutions', 'currentinstitution'));
     }
 
     public function update(Request $request, Project $project)

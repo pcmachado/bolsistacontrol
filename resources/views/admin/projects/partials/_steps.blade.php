@@ -21,11 +21,16 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ $step == 4 ? 'active' : '' }}"
-           href="{{ $step == 4 ? route('admin.projects.create.step4', $project ?? 0) : '#' }}">
-            <i class="bi bi-4-circle{{ $step >= 4 ? '-fill' : '' }} me-1"></i>
-            Revisão
-        </a>
+        <a class="nav-link {{ $step >= 4 ? 'completed' : '' }} {{ $step == 4 ? 'active' : '' }}"
+           href="{{ route('admin.projects.create.step4', $project) }}">4. Cursos</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ $step >= 5 ? 'completed' : '' }} {{ $step == 5 ? 'active' : '' }}"
+           href="{{ route('admin.projects.create.step5', $project) }}">5. Fontes de Fomento</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ $step == 6 ? 'active' : '' }}"
+           href="{{ route('admin.projects.review', $project) }}">6. Revisão Final</a>
     </li>
 </ul>
 <style>

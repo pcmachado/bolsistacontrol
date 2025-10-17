@@ -8,7 +8,7 @@ use App\Models\Position;
 use App\Models\Notification;
 use App\Models\AttendanceRecord;
 use App\Models\Unit;
-use App\Models\Instituition;
+use App\Models\institution;
 use App\DataTables\ScholarshipHoldersDataTable;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\Request;
@@ -30,15 +30,15 @@ class ScholarshipHolderController extends Controller
 
     public function index(ScholarshipHoldersDataTable $dataTable)
     {
-        return $dataTable->render('admin.scholarship-holders.index');
+        return $dataTable->render('admin.scholarship_holders.index');
     }
 
     public function create(): View
     {
         $unidades = Unit::all();
         $users = User::all();
-        $instituitions = Instituition::all();
-        return view('admin.scholarship-holders.create', compact('unidades', 'users', 'instituitions'));
+        $institutions = Institution::all();
+        return view('admin.scholarship_holders.create', compact('unidades', 'users', 'institutions'));
     }
 
     public function store(Request $request)
@@ -53,7 +53,7 @@ class ScholarshipHolderController extends Controller
             'end_date' => 'nullable|date',
             'position' => 'required|string|max:50',
             'phone' => 'nullable|string|max:15',
-            'instituition_link' => 'nullable|url',
+            'institution_link' => 'nullable|url',
             'bank' => 'nullable|string',
             'agency' => 'nullable|string',
             'account' => 'nullable|string',
@@ -105,13 +105,13 @@ class ScholarshipHolderController extends Controller
     {
         $unidades = Unit::all();
         $unidadeAtual = $scholarshipHolder->units()->first();
-        return view('admin.scholarship-holders.edit', compact('bolsista', 'unidades', 'unidadeAtual'));
+        return view('admin.scholarship_holders.edit', compact('bolsista', 'unidades', 'unidadeAtual'));
     }
 
     public function show(ScholarshipHolder $scholarshipHolder): View
     {
         $scholarshipHolder->load('unit', 'user');
-        return view('admin.scholarship-holders.show', compact('scholarshipHolder'));
+        return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
     }
 
     /**
@@ -145,4 +145,18 @@ class ScholarshipHolderController extends Controller
 
         return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista removido com sucesso!');
     }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('q');
+
+        $results = ScholarshipHolder::query()
+            ->where('name', 'like', "%{$term}%")
+            ->orWhere('cpf', 'like', "%{$term}%")
+            ->limit(10)
+            ->get(['id','name','cpf']);
+
+        return response()->json($results);
+    }
+
 }

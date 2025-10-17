@@ -24,7 +24,7 @@
     <table>
         <thead>
             <tr>
-                @if(!$unitId) {{-- só mostra se for multiunidade --}}
+                @if(!$unitId)
                     <th>Unidade</th>
                 @endif
                 <th>Nome</th>
@@ -42,7 +42,7 @@
             @foreach($report as $item)
             <tr>
                 @if(!$unitId)
-                    <td>{{ $item->scholarshipHolder->unit->name ?? '-' }}</td>
+                    <td>{{ $item->scholarshipHolder->units->first()->name ?? '-' }}</td>
                 @endif
                 <td>{{ $item->scholarshipHolder->name }}</td>
                 <td>{{ $item->scholarshipHolder->phone }}</td>
@@ -50,7 +50,13 @@
                 <td>{{ $item->scholarshipHolder->bank }}</td>
                 <td>{{ $item->scholarshipHolder->agency }}</td>
                 <td>{{ $item->scholarshipHolder->account }}</td>
-                <td>{{ $item->weekly_hour_limit ?? '-' }}</td>
+                <td>
+                    @if($item->scholarshipHolder->weekly_limit_minutes)
+                        {{ ($item->scholarshipHolder->weekly_limit_minutes / 60) * 4 }}
+                    @else
+                        -
+                    @endif
+                </td>
                 <td>{{ $item->total_hours }}</td>
                 <td>R$ {{ number_format($item->total_value, 2, ',', '.') }}</td>
             </tr>
@@ -59,12 +65,13 @@
                 <td colspan="{{ $unitId ? 9 : 10 }}" style="text-align: right;"><strong>Total</strong></td>
                 <td><strong>R$ {{ number_format($report->sum('total_value'), 2, ',', '.') }}</strong></td>
             </tr>
-        </tbody>
+</tbody>
+
     </table>
 
     <table class="signatures">
         <tr>
-            <td>_________________________________<br>Bolsista / Coordenação Adjunta</td>
+            <td>_________________________________<br>Coordenação Adjunta</td>
             <td>_________________________________<br>Coordenação Geral</td>
         </tr>
     </table>

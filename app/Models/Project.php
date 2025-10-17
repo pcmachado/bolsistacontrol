@@ -15,19 +15,20 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
-        'instituition_id',
+        'institution_id',
         'start_date',
         'end_date'
     ];
 
-    public function instituition(): BelongsTo
+    public function institution(): BelongsTo
     {
-        return $this->belongsTo(Instituition::class);
+        return $this->belongsTo(institution::class);
     }
 
-    public function courses(): HasMany
+    public function courses(): BelongsToMany
     {
-        return $this->hasMany(ProjectCourse::class);
+        return $this->belongsToMany(Course::class, 'project_courses')
+                    ->withTimestamps();
     }
 
     public function positions(): BelongsToMany
@@ -36,13 +37,15 @@ class Project extends Model
                     ->withTimestamps();
     }
 
-    public function fundingSources(): HasMany
+    public function fundingSources(): BelongsToMany
     {
-        return $this->hasMany(ProjectFundingSource::class);
+        return $this->belongsToMany(FundingSource::class, 'project_funding_sources')
+                    ->withTimestamps();
     }
 
-    public function scholarshipHolders(): HasMany
+    public function scholarshipHolders(): BelongsToMany
     {
-        return $this->hasMany(ProjectScholarshipHolder::class);
+        return $this->belongsToMany(ScholarshipHolder::class, 'project_scholarship_holders')
+                    ->withTimestamps();
     }
 }

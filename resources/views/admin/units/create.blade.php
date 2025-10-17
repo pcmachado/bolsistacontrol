@@ -47,10 +47,10 @@
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
                 <strong>Instituição:</strong>
-                <select name="instituition_id" class="form-control">
+                <select name="institution_id" class="form-control">
                     <option value="">Selecione uma Instituição</option>
-                    @foreach ($Instituitions as $instituition)
-                        <option value="{{ $instituition->id }}">{{ $instituition->name }}</option>
+                    @foreach ($institutions as $institution)
+                        <option value="{{ $institution->id }}">{{ $institution->name }}</option>
                     @endforeach
                 </select>
             </div>

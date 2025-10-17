@@ -11,7 +11,7 @@
 <div class="container">
     <h3>Passo 2: Definir Cargos</h3>
     @include('admin.projects.partials._steps', ['step' => 2, 'project' => $project ?? null])
-    @include('admin.projects.partials._progress', ['progress' => 50, 'label' => 'Passo 2 de 4'])
+    @include('admin.projects.partials._progress', ['progress' => 32, 'label' => 'Passo 2 de 6'])
     <form method="POST" action="{{ route('admin.projects.store.step2', $project) }}">
         @csrf
         <div class="mb-3">

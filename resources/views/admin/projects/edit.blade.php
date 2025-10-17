@@ -57,13 +57,13 @@
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="mb-3">
-                <label for="instituition" class="form-label"> <strong>Instituição</strong></label>
-                <select name="instituition_id" id="instituition" class="form-select select2" >
+                <label for="institution" class="form-label"> <strong>Instituição</strong></label>
+                <select name="institution_id" id="institution" class="form-select select2" >
                     <option value="">Selecione</option>
-                    @foreach($instituitions as $instituition)
-                        <option value="{{ $instituition->id }}"
-                            {{ (old('instituition_id', $project->instituition_id ?? '') == $instituition->id) ? 'selected' : '' }}>
-                            {{ $instituition->name }}
+                    @foreach($institutions as $institution)
+                        <option value="{{ $institution->id }}"
+                            {{ (old('institution_id', $project->institution_id ?? '') == $institution->id) ? 'selected' : '' }}>
+                            {{ $institution->name }}
                         </option>
                     @endforeach
                 </select>

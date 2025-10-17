@@ -25,7 +25,7 @@ class ScholarshipHoldersDataTable extends DataTable
         ->addColumn('unit', function ($scholarshipHolder) {
             return $scholarshipHolder->unit->name ?? 'N/A';
         })
-        ->addColumn('actions', 'admin.scholarship-holders.partials.actions')
+        ->addColumn('actions', 'admin.scholarship_holders.partials.actions')
         ->rawColumns(['actions']);
     }
 

@@ -67,13 +67,16 @@ class ScholarshipHolder extends Model
         return $this->belongsTo(Position::class);
     }
 
-    public function courses(): HasMany
+    public function courses(): BelongsToMany
     {
-        return $this->hasMany(CourseScholarshipHolder::class);
+        return $this->belongsToMany(Course::class, 'course_scholarship_holders')
+                    ->withTimestamps();
     }
-    public function projects(): HasMany
+
+    public function projects(): BelongsToMany
     {
-        return $this->hasMany(ProjectScholarshipHolder::class);
-    }  
+        return $this->belongsToMany(Project::class, 'project_scholarship_holders')
+                    ->withTimestamps();
+    }
 
 }

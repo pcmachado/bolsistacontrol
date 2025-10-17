@@ -15,7 +15,7 @@ class Unit extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'instituition_id',
+        'institution_id',
         'name',
         'city',
         'address',
@@ -24,9 +24,9 @@ class Unit extends Model
         'cnpj'
     ];
 
-    public function instituition(): BelongsTo
+    public function institution(): BelongsTo
     {
-        return $this->belongsTo(Instituition::class);
+        return $this->belongsTo(institution::class);
     }  
 
     /**

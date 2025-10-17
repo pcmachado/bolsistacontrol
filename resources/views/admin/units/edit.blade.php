@@ -48,18 +48,18 @@
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="mb-3">
-                <label for="instituition" class="form-label"><strong>Instituição</strong></label>
-                <select name="instituition" class="form-select" required>
+                <label for="institution" class="form-label"><strong>Instituição</strong></label>
+                <select name="institution" class="form-select" required>
                     <option value="">Selecione uma Instituição</option>
-                    @foreach($Instituitions as $instituition)
-                        <option value="{{ $instituition->id }}"
-                            {{ old('instituition_id', $unit->instituition_id ?? '') == $instituition->id ? 'selected' : '' }}>
-                            {{ ucfirst($instituition->name) }}
+                    @foreach($institutions as $institution)
+                        <option value="{{ $institution->id }}"
+                            {{ old('institution_id', $unit->institution_id ?? '') == $institution->id ? 'selected' : '' }}>
+                            {{ ucfirst($institution->name) }}
                         </option>
                     @endforeach
                 </select>
                 
-                @error('instituition')
+                @error('institution')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
             </div>

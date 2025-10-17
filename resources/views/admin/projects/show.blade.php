@@ -26,6 +26,6 @@
     </div>
     <div class="form-group">
         <strong>Instituição:</strong>
-        {{ $project->instituition->name ?? 'Sem instituição' }}
+        {{ $project->institution->name ?? 'Sem instituição' }}
     </div>
 @endsection

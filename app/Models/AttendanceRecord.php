@@ -104,4 +104,21 @@ class AttendanceRecord extends Model
 
         return false;
     }
+
+    public function formattedDuration(): string
+    {
+        if (!$this->start_time || !$this->end_time) {
+            return '-';
+        }
+
+        $start = \Carbon\Carbon::parse($this->start_time);
+        $end   = \Carbon\Carbon::parse($this->end_time);
+
+        $diffInMinutes = $end->diffInMinutes($start);
+
+        $hours = floor($diffInMinutes / 60);
+        $minutes = $diffInMinutes % 60;
+
+        return sprintf('%02dh %02dm', $hours, $minutes);
+    }
 }

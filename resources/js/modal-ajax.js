@@ -1,4 +1,4 @@
-function handleAjaxForm(formId, selectName, modalId) {
+export function handleAjaxForm(formId, selectName, modalId) {
     const form = document.getElementById(formId);
     if (!form) return;
 

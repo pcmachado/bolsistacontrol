@@ -38,7 +38,7 @@
         </tr>
         <tr>
             <td><strong>Carga horária prevista</strong></td>
-            <td>{{ $holder->weekly_hour_limit * 4 ?? '-' }} horas mensais</td>
+            <td>{{ $holder->weekly_hour_limit / 60 * 4 ?? '-' }} horas mensais</td>
         </tr>
     </table>
 
@@ -72,7 +72,7 @@
     <h5>3. Assinaturas</h5>
     <table class="assinaturas">
         <tr>
-            <td>_________________________________<br>Bolsista / Coordenação Adjunta</td>
+            <td>_________________________________<br>Coordenação Adjunta</td>
             <td>_________________________________<br>Coordenação Geral</td>
         </tr>
     </table>

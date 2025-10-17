@@ -33,11 +33,16 @@ class CourseController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
         ];
 
         $validated = $request->validate($rules);
 
         $this->courseService->createCourse($validated);
+
+        if ($request->ajax()) {
+            return response()->json($course);
+        }
 
         return redirect()->route('admin.courses.index')->with('success', 'Curso cadastrado com sucesso!');
     }
@@ -67,5 +72,18 @@ class CourseController extends Controller
     {
         $course->delete();
         return redirect()->route('admin.courses.index')->with('success', 'Curso excluído com sucesso!');
+    }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('q');
+
+        $results = Course::query()
+            ->where('name', 'like', "%{$term}%")
+            ->orderBy('name')
+            ->limit(10)
+            ->get(['id','name']);
+
+        return response()->json($results);
     }
 }

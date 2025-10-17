@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
-use App\Models\Instituition;
+use App\Models\institution;
 use App\Models\Unit;
 use App\Models\Position;
 use App\Models\ScholarshipHolder;
+use App\Models\Course;
+use App\Models\FundingSource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -18,9 +20,9 @@ class ProjectWizardController extends Controller
     // Passo 1: Criar Projeto
     public function createStep1()
     {
-        $instituitions = Instituition::all();
+        $institutions = institution::all();
         $units = Unit::all();
-        return view('admin.projects.wizard.step1', compact('instituitions', 'units'));
+        return view('admin.projects.wizard.step1', compact('institutions', 'units'));
     }
 
     public function storeStep1(Request $request)
@@ -28,7 +30,7 @@ class ProjectWizardController extends Controller
         $project = Project::create($request->validate([
             'name' => 'required|string|max:255',
             'unit_id' => 'required|exists:units,id',
-            'instituition_id' => 'required|exists:instituitions,id',
+            'institution_id' => 'required|exists:institutions,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]));
@@ -58,35 +60,116 @@ class ProjectWizardController extends Controller
     public function createStep3(Project $project)
     {
         $positions = $project->positions;
-        $holders = ScholarshipHolder::all();
-        return view('admin.projects.wizard.step3', compact('project', 'positions', 'holders'));
+        $scholarshipHolders = ScholarshipHolder::all();
+        return view('admin.projects.wizard.step3', compact('project', 'positions', 'scholarshipHolders'));
     }
 
     public function storeStep3(Request $request, Project $project)
     {
-        foreach ($request->scholarships as $sch) {
-            $project->scholarshipHolders()->create([
-                'scholarship_holder_id' => $sch['holder_id'],
-                'project_position_id' => $sch['position_id'],
-                //'start_date' => $sch['start_date'],
-                //'end_date' => $sch['end_date'] ?? null,
-                //'status' => 'active',
-            ]);
+        $data = $request->input('scholarships', []);
+
+        $syncData = [];
+        foreach ($data as $item) {
+            $syncData[$item['scholarship_holder_id']] = [
+                'position_id'   => $item['position_id'],
+                'start_date'    => $item['start_date'] ?? null,
+                'end_date'      => $item['end_date'] ?? null,
+                'weekly_workload' => $item['weekly_workload'] ?? null,
+                'assignments'   => $item['assignments'] ?? null,
+                'hourly_rate'   => $item['hourly_rate'] ?? null,
+                'status'        => $item['status'] ?? null
+            ];
         }
 
-        return redirect()->route('admin.projects.create.step4', $project);
+        $project->scholarshipHolders()->sync($syncData);
+
+        return redirect()->route('admin.projects.create.step4', $project)->with('success', 'Bolsistas vinculados com sucesso!');
     }
 
-    // Passo 4: Revisão
+    // Passo 4: Associar Cursos
     public function createStep4(Project $project)
     {
-        $project->load('positions', 'scholarships.scholarshipHolder');
-        return view('admin.projects.wizard.step4', compact('project'));
+        $courses = Course::all();
+        return view('admin.projects.wizard.step4', compact('project', 'courses'));
     }
 
-    public function finish(Project $project)
+    public function storeStep4(Request $request, Project $project)
     {
-        $project->update(['status' => 'active']);
-        return redirect()->route('admin.projects.show', $project)->with('success', 'Projeto ativado com sucesso!');
+        $data = $request->input('courses', []);
+
+        $syncData = [];
+        foreach ($data as $item) {
+            if (!empty($item['course_id'])) {
+                $syncData[$item['course_id']] = [
+                    'semester' => $item['semester'] ?? null,
+                    'year'     => $item['year'] ?? null,
+                    'active'   => isset($item['active']) ? (bool)$item['active'] : false,
+                    'start_date' => $item['start_date'] ?? null,
+                    'end_date'   => $item['end_date'] ?? null,
+                    'capacity'   => $item['capacity'] ?? null,
+                    'status'     => $item['status'] ?? null
+                ];
+            }
+        }
+
+        $project->courses()->sync($syncData);
+
+        return redirect()->route('admin.projects.create.step5', $project)
+                        ->with('success', 'Cursos vinculados ao projeto com sucesso!');
     }
+    
+    public function createStep5(Project $project)
+    {
+        // Aqui você pode carregar dados necessários para o Step 5
+        // Exemplo: fontes de fomento já cadastradas
+        $fundingSources = FundingSource::all();
+
+        return view('admin.projects.wizard.step5', compact('project', 'fundingSources'));
+    }
+
+    public function storeStep5(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'fundings' => 'required|array',
+            'fundings.*.funding_source_id' => 'required|exists:funding_sources,id',
+            'fundings.*.amount' => 'required|numeric|min:0',
+        ]);
+
+        $syncData = [];
+        foreach ($validated['fundings'] as $funding) {
+            $syncData[$funding['funding_source_id']] = [
+                'amount' => $funding['amount'],
+            ];
+        }
+
+        $project->fundingSources()->syncWithoutDetaching($syncData);
+
+        return redirect()
+            ->route('admin.projects.review', $project->id)
+            ->with('success', 'Fontes de fomento adicionadas com sucesso!');
+    }
+
+    public function review(Project $project)
+    {
+        // Carrega todas as relações necessárias
+        $project->load([
+            'positions',
+            'scholarshipHolders',
+            'courses',
+            'fundingSources'
+        ]);
+
+        return view('admin.projects.wizard.review', compact('project'));
+    }
+
+    public function finalize(Project $project)
+    {
+        // Aqui você pode marcar o projeto como "completo"
+        $project->update(['status' => 'completed']);
+
+        return redirect()
+            ->route('admin.projects.index')
+            ->with('success', 'Projeto finalizado com sucesso!');
+    }
+
 }

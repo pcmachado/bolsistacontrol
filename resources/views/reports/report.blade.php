@@ -28,9 +28,9 @@
     <tbody>
         @foreach($report as $item)
         <tr>
-            <td>{{ $item->scholarshipHolder->name }}</td>
-            <td>{{ $item->total_hours }}</td>
-            <td>R$ {{ number_format($item->total_value, 2, ',', '.') }}</td>
+            <td>{{ $item['scholarshipHolder'] }}</td>
+            <td>{{ $item['totalHours'] }}</td>
+            <td>R$ {{ number_format($item['totalValue'], 2, ',', '.') }}</td>
         </tr>
         @endforeach
     </tbody>
@@ -39,7 +39,7 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
+    jQuery(document).ready(function($) {
         $('#reportTable').DataTable({
             dom: 'Bfrtip',
             buttons: ['excel', 'pdf', 'print']
