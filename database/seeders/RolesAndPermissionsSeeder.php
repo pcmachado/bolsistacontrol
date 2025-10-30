@@ -26,6 +26,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_projects',
             'manage_institutions',
             'manage_permissions',
+            'view_users',
+            'update_attendances',
+            'delete_attendances',
+            'submit_attendances',
         ];
 
         // Criar permissões se não existirem
@@ -37,7 +41,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Criação de Permissões
         Permission::firstOrCreate(['name' => ' view_users']);
-        
         Permission::firstOrCreate(['name' => 'manage_units']);
         Permission::firstOrCreate(['name' => 'manage_positions']);
         Permission::firstOrCreate(['name' => 'manage_scholarship_holders']);
@@ -49,7 +52,10 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'manage_institutions']);
         Permission::firstOrCreate(['name' => 'manage_users']);
         Permission::firstOrCreate(['name' => 'manage_permissions']);
-
+        Permission::firstOrCreate(['name' => 'view_users']);
+        Permission::firstOrCreate(['name' => 'update_attendances']);
+        Permission::firstOrCreate(['name' => 'delete_attendances']);
+        Permission::firstOrCreate(['name' => 'submit_attendances']);
 
         // Criar papéis
         $coordenadorGeralRole = Role::firstOrCreate(['name' => 'coordenador_geral', 'guard_name' => 'web']);
@@ -71,6 +77,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_projects',
             'manage_institutions',
             'manage_permissions',
+            'view_users',
+            'update_attendances',
+            'delete_attendances',
+            'submit_attendances',
         ]);
 
         $coordenadorAdjuntoRole->syncPermissions([
@@ -78,11 +88,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_attendances',
             'manage_reports',
             'scholarship_holder_dashboard',
+            'update_attendances',
+            'delete_attendances',
+            'submit_attendances',
         ]);
 
         $bolsistaRole->syncPermissions([
             'scholarship_holder_dashboard',
-            'manage_attendances',
+            'update_attendances',
+            'submit_attendances',
+            'delete_attendances',
         ]);
 
         $adminRole->syncPermissions(Permission::all());

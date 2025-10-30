@@ -13,15 +13,15 @@ class AttendanceRecord extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $dates = ['submitted_at', 'rejected_at'];
+    protected $dates = ['submitted_at', 'rejected_at', 'approved_at'];
 
     /**
      * Define o status inicial como rascunho.
      */
     public const STATUS_DRAFT = 'draft'; // Rascunho (pode ser editado pelo bolsista)
-    public const STATUS_PENDING = 'pending'; // Pendente de aprovação
     public const STATUS_APPROVED = 'approved'; // Homologado pelo coordenador
     public const STATUS_REJECTED = 'rejected'; // Rejeitado (precisa de ajustes)
+    public const STATUS_SUBMITTED = 'submitted'; // Enviado para homologação
 
     protected $fillable = [
         'scholarship_holder_id',
@@ -33,14 +33,17 @@ class AttendanceRecord extends Model
         'observation',
         'status',
         'submitted_at', // Data de envio para homologação
-        'approved',
+        'approved_at',
         'approved_by_user_id', // ID do usuário Coordenador que aprovou/rejeitou
         'rejection_reason',
+        'rejected_at',
     ];
 
     protected $casts = [
         'date' => 'date',
         'submitted_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     // --- RELACIONAMENTOS ---
@@ -63,23 +66,19 @@ class AttendanceRecord extends Model
     }
 
     public function scopeApproved($q) {
-        return $q->where('status', 'approved');
+        return $q->where('status', self::STATUS_APPROVED);
     }
 
-    public function scopeRejected($q) { 
-        return $q->where('status', 'rejected'); 
+    public function scopeRejected($q) {
+        return $q->where('status', self::STATUS_REJECTED);
     }
 
     public function scopeDraft($q) {
-        return $q->where('status', 'draft');
-    }
-
-    public function scopePending($q) {
-        return $q->where('status', 'pending');
+        return $q->where('status', self::STATUS_DRAFT);
     }
 
     public function scopeSubmitted($q) {
-        return $q->where('status', 'submitted');
+        return $q->where('status', self::STATUS_SUBMITTED);
     }
     
     public function scopeByMonth($q, $month, $year) {
@@ -88,7 +87,7 @@ class AttendanceRecord extends Model
 
     public function scopeLate($query)
     {
-        return $query->whereIn('status', ['draft', 'pending'])
+        return $query->whereIn('status', ['draft', 'submitted'])
                     ->where('date', '<', now()->subDays(7)); // atraso > 7 dias
     }
 
@@ -114,7 +113,7 @@ class AttendanceRecord extends Model
         $start = \Carbon\Carbon::parse($this->start_time);
         $end   = \Carbon\Carbon::parse($this->end_time);
 
-        $diffInMinutes = $end->diffInMinutes($start);
+        $diffInMinutes = $start->diffInMinutes($end);
 
         $hours = floor($diffInMinutes / 60);
         $minutes = $diffInMinutes % 60;

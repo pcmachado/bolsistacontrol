@@ -40,7 +40,8 @@ return new class extends Migration
         // 3. Cargos
         Schema::create('positions', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
+            $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -89,6 +90,7 @@ return new class extends Migration
             $table->text('bank')->nullable();
             $table->text('agency')->nullable();
             $table->text('account')->nullable();
+            $table->text('pix_key')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->date('start_date')->nullable();
@@ -162,8 +164,6 @@ return new class extends Migration
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
             $table->foreignId('position_id')->constrained()->onDelete('cascade');
             $table->integer('weekly_workload')->default(20);
-            $table->text('assignments')->nullable(); // Descrição das atribuições
-            $table->decimal('hourly_rate', 8, 2)->nullable(); // Valor da hora de trabalho
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
             $table->date('end_date')->nullable();
             $table->date('start_date');
@@ -216,21 +216,12 @@ return new class extends Migration
         // Esta tabela conterá os atributos específicos da relação
         Schema::create('project_positions', function (Blueprint $table) {
             $table->id();
+            $table->text('assignments')->nullable(); // Descrição das atribuições
+            $table->decimal('hourly_rate', 8, 2)->nullable(); // Valor da hora de trabalho
+            $table->integer('weekly_workload')->default(20); // Limite semanal de horas
             $table->foreignId('position_id')->constrained()->onDelete('cascade');
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-        });
-
-        // Tabela para Atribuições (Assignments)
-        Schema::create('assignments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
-            $table->foreignId('project_position_id')->constrained('project_positions')->onDelete('cascade');
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
-            $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -239,7 +230,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('assignments');
         Schema::dropIfExists('project_positions');
         Schema::dropIfExists('project_scholarship_holders');
         Schema::dropIfExists('project_courses');

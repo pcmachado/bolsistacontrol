@@ -43,71 +43,71 @@ class AttendanceRecordService
     /**
      * Bolsista envia registro para homologação
      */
-    public function submitRecord(AttendanceRecord $record): AttendanceRecord
+    public function submitRecord(AttendanceRecord $attendanceRecord): AttendanceRecord
     {
         $now = Carbon::now();
 
         // Verifica prazo (até dia 5 do mês seguinte)
-        $limitDate = Carbon::parse($record->date)->endOfMonth()->addDays(5);
+        $limitDate = Carbon::parse($attendanceRecord->date)->endOfMonth()->addDays(5);
         if ($now->greaterThan($limitDate)) {
             throw new \Exception("Prazo de envio expirado. Registros só podem ser enviados até o dia 5 do mês seguinte.");
         }
 
-        if ($record->status !== 'draft') {
+        if ($attendanceRecord->status !== 'draft') {
             throw new \Exception("Somente registros em rascunho podem ser enviados.");
         }
 
-        $record->update([
+        $attendanceRecord->update([
             'status' => 'submitted',
             'submitted_at' => $now,
         ]);
 
-        return $record;
+        return $attendanceRecord;
     }
 
     /**
      * Coordenador aprova registro
      */
-    public function approveRecord(AttendanceRecord $record): AttendanceRecord
+    public function approveRecord(AttendanceRecord $attendanceRecord): AttendanceRecord
     {
         $now = Carbon::now();
 
         // Verifica prazo (até dia 10 do mês seguinte)
-        $limitDate = Carbon::parse($record->date)->endOfMonth()->addDays(10);
+        $limitDate = Carbon::parse($attendanceRecord->date)->endOfMonth()->addDays(10);
         if ($now->greaterThan($limitDate)) {
             throw new \Exception("Prazo de homologação expirado. Registros só podem ser homologados até o dia 10 do mês seguinte.");
         }
 
-        if ($record->status !== 'submitted') {
+        if ($attendanceRecord->status !== 'submitted') {
             throw new \Exception("Somente registros enviados podem ser aprovados.");
         }
 
-        $record->update([
+        $attendanceRecord->update([
             'status' => 'approved',
             'approved' => true,
             'approved_by_user_id' => Auth::id(),
         ]);
 
-        return $record;
+        return $attendanceRecord;
     }
 
     /**
      * Coordenador recusa registro
      */
-    public function rejectRecord(AttendanceRecord $record, string $reason): AttendanceRecord
+    public function rejectRecord(AttendanceRecord $attendanceRecord, string $reason): AttendanceRecord
     {
-        if ($record->status !== 'submitted') {
+        if ($attendanceRecord->status !== 'submitted') {
             throw new \Exception("Somente registros enviados podem ser recusados.");
         }
 
-        $record->update([
+        $attendanceRecord->update([
             'status' => 'rejected',
             'approved' => false,
             'approved_by_user_id' => Auth::id(),
             'rejection_reason' => $reason,
         ]);
 
-        return $record;
+        return $attendanceRecord;
     }
 
     /**
@@ -140,10 +140,10 @@ class AttendanceRecordService
         return AttendanceRecord::where('user_id', $userId)->latest()->get();
     }
 
-    public function isEditable(AttendanceRecord $record): bool
+    public function isEditable(AttendanceRecord $attendanceRecord): bool
     {
         // Só pode editar se estiver em rascunho ou rejeitado
-        return in_array($record->status, ['draft', 'rejected']);
+        return in_array($attendanceRecord->status, ['draft', 'rejected']);
     }
 
     public function create(array $data): AttendanceRecord
@@ -152,32 +152,32 @@ class AttendanceRecordService
         return AttendanceRecord::create($data);
     }
 
-    public function update(AttendanceRecord $record, array $data): AttendanceRecord
+    public function update(AttendanceRecord $attendanceRecord, array $data): AttendanceRecord
     {
-        $record->update($data);
-        return $record;
+        $attendanceRecord->update($data);
+        return $attendanceRecord;
     }
 
-    public function submit(AttendanceRecord $record): AttendanceRecord
+    public function submit(AttendanceRecord $attendanceRecord): AttendanceRecord
     {
-        $record->update(['status' => AttendanceRecord::STATUS_SUBMITTED]);
-        return $record;
+        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_SUBMITTED]);
+        return $attendanceRecord;
     }
 
-    public function delete(AttendanceRecord $attendance)
+    public function delete(AttendanceRecord $attendanceRecord)
     {
-        return $attendance->delete();
+        return $attendanceRecord->delete();
     }
 
-    public function approve(AttendanceRecord $record): AttendanceRecord
+    public function approve(AttendanceRecord $attendanceRecord): AttendanceRecord
     {
-        $record->update(['status' => AttendanceRecord::STATUS_APPROVED]);
-        return $record;
+        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_APPROVED]);
+        return $attendanceRecord;
     }
 
-    public function reject(AttendanceRecord $record): AttendanceRecord
+    public function reject(AttendanceRecord $attendanceRecord): AttendanceRecord
     {
-        $record->update(['status' => AttendanceRecord::STATUS_REJECTED]);
-        return $record;
+        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_REJECTED]);
+        return $attendanceRecord;
     }
 }

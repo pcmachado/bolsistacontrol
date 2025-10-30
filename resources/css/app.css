@@ -48,3 +48,7 @@ body {
 #wrapper.collapsed #sidebar-wrapper .list-group-item i {
     margin-right: 0 !important;
 }
+
+.dropdown-menu {
+    z-index: 2050; /* bom ajuste */
+}

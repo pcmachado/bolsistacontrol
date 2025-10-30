@@ -15,24 +15,45 @@
     <div class="col-md-3">
         <button type="submit" class="btn btn-primary">Filtrar</button>
     </div>
+
+    {{-- Botões de exportação --}}
+    <div class="col-md-3 align-self-end d-flex gap-2">
+        <button type="submit" formaction="{{ route('admin.reports.export_pdf') }}" 
+                formmethod="GET" name="export" value="pdf" class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+        </button>
+
+        <button type="submit" formaction="{{ route('admin.reports.export_excel') }}" 
+                formmethod="GET" name="export" value="excel" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Excel
+        </button>
+    </div>
 </form>
 
-<table id="reportTable" class="table table-striped table-bordered">
+<table class="table table-striped table-bordered">
     <thead>
         <tr>
             <th>Bolsista</th>
-            <th>Total de Horas</th>
-            <th>Valor Calculado</th>
+            <th>Horas Previstas</th>
+            <th>Horas Cumpridas</th>
+            <th>Valor Hora</th>
+            <th>Total (R$)</th>
         </tr>
     </thead>
     <tbody>
-        @foreach($report as $item)
+        @forelse($report as $item)
         <tr>
             <td>{{ $item['scholarshipHolder'] }}</td>
+            <td>{{ $item['expected_hours'] ?? '-' }}</td>
             <td>{{ $item['totalHours'] }}</td>
+            <td>R$ {{ number_format($item['hourlyRate'], 2, ',', '.') }}</td>
             <td>R$ {{ number_format($item['totalValue'], 2, ',', '.') }}</td>
         </tr>
-        @endforeach
+        @empty
+        <tr>
+            <td colspan="5" class="text-center text-muted">Nenhum registro encontrado.</td>
+        </tr>
+        @endforelse
     </tbody>
 </table>
 @endsection

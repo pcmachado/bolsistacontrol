@@ -47,11 +47,20 @@ class ProjectWizardController extends Controller
 
     public function storeStep2(Request $request, Project $project)
     {
-        // Garante que veio um array de cargos
-        $positions = $request->input('positions', []);
+        // Expect: positions = [ ['id' => 1, 'hourly_rate' => 40.00], ... ]
+        $positions = $request->validate([
+            'positions' => 'required|array|min:1',
+            'positions.*.id' => 'required|exists:positions,id',
+            'positions.*.hourly_rate' => 'required|numeric|min:0',
+        ])['positions'];
 
-        // Vincula múltiplos cargos de uma vez
-        $project->positions()->sync($positions);
+        // Build sync array: [ position_id => ['hourly_rate' => value], ... ]
+        $sync = [];
+        foreach ($positions as $p) {
+            $sync[$p['id']] = ['hourly_rate' => $p['hourly_rate']];
+        }
+
+        $project->positions()->sync($sync);
 
         return redirect()->route('admin.projects.create.step3', $project);
     }

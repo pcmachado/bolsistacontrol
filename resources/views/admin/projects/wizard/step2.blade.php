@@ -17,11 +17,20 @@
         <div class="mb-3">
             <label for="positions" class="form-label">Cargos</label>
             <div class="input-group">
-                <select name="positions[]" class="form-select" multiple>
-                    @foreach($positions as $pos)
-                        <option value="{{ $pos->id }}">{{ $pos->name }}</option>
+                @foreach($positions as $position)
+                    <div class="row g-2 align-items-center mb-2">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="positions[{{ $position->id }}][id]" value="{{ $position->id }}">
+                                <label class="form-check-label">{{ $position->name }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="number" step="0.01" min="0" class="form-control"
+                                name="positions[{{ $position->id }}][hourly_rate]" placeholder="Valor/hora">
+                        </div>
+                    </div>
                     @endforeach
-                </select>
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPositionModal">
                     + Novo
                 </button>
@@ -40,7 +49,7 @@
     :fields="[
         ['name' => 'name', 'label' => 'Nome do Cargo', 'type' => 'text', 'required' => true],
         ['name' => 'hourly_rate', 'label' => 'Valor da Bolsa', 'type' => 'number'],
-        ['name' => 'weekly_hour_limit', 'label' => 'Carga Horária Semanal', 'type' => 'number']
+        ['name' => 'weekly_workload', 'label' => 'Carga Horária Semanal', 'type' => 'number']
     ]"
 />
 @endsection

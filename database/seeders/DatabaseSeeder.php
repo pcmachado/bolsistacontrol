@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             ProjectFundingSourceSeeder::class,
             CourseScholarshipHolderSeeder::class,
             ProjectCourseSeeder::class,
+            ProjectPositionSeeder::class,
         ]);
     }
 }

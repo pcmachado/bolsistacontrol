@@ -21,7 +21,6 @@ class ProjectScholarshipHolder extends Pivot
         'start_date',
         'end_date',
         'assignments',
-        'hourly_rate',
         'status'
     ];
 

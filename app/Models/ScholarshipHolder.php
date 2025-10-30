@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,19 +31,42 @@ class ScholarshipHolder extends Model
     ];
     
     // Criptografa os dados bancários antes de salvar no banco
-    public function setBankAttribute($value): void { $this->attributes['bank'] = Crypt::encryptString($value); }
-    public function getBankAttribute($value): string { return Crypt::decryptString($value); }
+    public function setBankAttribute($value): void {
+        $this->attributes['bank'] = Crypt::encryptString($value);
+    }
 
-    public function setAgencyAttribute($value): void { $this->attributes['agency'] = Crypt::encryptString($value); }
-    public function getAgencyAttribute($value): string { return Crypt::decryptString($value); }
+    public function getBankAttribute($value): ?string {
+        return Crypt::decryptString($value);
+    }
 
-    public function setAccountAttribute($value): void { $this->attributes['account'] = Crypt::encryptString($value); }
-    public function getAccountAttribute($value): string { return Crypt::decryptString($value); }
+    public function setAgencyAttribute($value): void {
+        $this->attributes['agency'] = Crypt::encryptString($value);
+    }
+
+    public function getAgencyAttribute($value): ?string {
+        return Crypt::decryptString($value);
+    }
+
+    public function setAccountAttribute($value): void {
+        $this->attributes['account'] = Crypt::encryptString($value);
+    }
+
+    public function getPixKeyAttribute($value): ?string {
+        return Crypt::decryptString($value);
+    }
+
+    public function setPixKeyAttribute($value): void {
+        $this->attributes['pix_key'] = Crypt::encryptString($value);
+    }   
+    
+    public function getAccountAttribute($value): ?string {
+        return Crypt::decryptString($value);
+    }
 
     // Relacionamento: um bolsista pertence a um usuário (para autenticação)
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function unit(): BelongsTo

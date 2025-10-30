@@ -26,8 +26,6 @@ class ProjectScholarshipHolderSeeder extends Seeder
                 'weekly_workload' => rand(10, 20),
                 'start_date' => now()->subMonths(rand(1, 6)),
                 'end_date' => null,
-                'assignments' => 'Realizar atividades relacionadas ao projeto conforme designado.',
-                'hourly_rate' => rand(15, 50),
                 'status' => 'active',
             ]);
         }

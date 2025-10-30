@@ -63,12 +63,14 @@ class RoleController extends Controller
     {
         $request->validate([
             'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
-        // sincroniza permissões da role
-        $role->syncPermissions($request->permissions ?? []);
+        $permissions = Permission::whereIn('id', $request->permissions ?? [])->get();
 
-        return redirect()->route('roles.index')->with('success', 'Permissões atualizadas com sucesso!');
+        // sincroniza permissões da role
+        $role->syncPermissions($permissions);
+
+        return redirect()->route('admin.roles.index')->with('success', 'Permissões atualizadas com sucesso!');
     }
 }

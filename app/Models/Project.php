@@ -34,6 +34,7 @@ class Project extends Model
     public function positions(): BelongsToMany
     {
         return $this->belongsToMany(Position::class, 'project_positions')
+                    ->withPivot(['weekly_workload', 'hourly_rate'])
                     ->withTimestamps();
     }
 
@@ -47,5 +48,15 @@ class Project extends Model
     {
         return $this->belongsToMany(ScholarshipHolder::class, 'project_scholarship_holders')
                     ->withTimestamps();
+    }
+
+    public function hourlyRateForScholarshipHolder(ScholarshipHolder $holder): float
+    {
+        $pivot = $this->scholarshipHolders()->where('scholarship_holder_id', $holder->id)->first()?->pivot;
+        if (!$pivot) return 0;
+        $positionId = $pivot->position_id;
+
+        $positionPivot = $this->positions()->where('position_id', $positionId)->first()?->pivot;
+        return (float)($positionPivot?->hourly_rate ?? 0);
     }
 }

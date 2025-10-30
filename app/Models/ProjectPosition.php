@@ -18,7 +18,7 @@ class ProjectPosition extends Pivot
         'position_id',
         'assignments',
         'hourly_rate',
-        'weekly_hour_limit'
+        'weekly_workload'
     ];
 
     public function project(): BelongsTo

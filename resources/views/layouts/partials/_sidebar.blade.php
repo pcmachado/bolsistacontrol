@@ -123,7 +123,7 @@
                 </li>
                 <li>
                     <a class="list-group-item list-group-item-action ps-5" 
-                        href="{{ route('admin.reports.monthly') }}"
+                        href="{{ route('admin.reports.report') }}"
                         data-bs-toggle="tooltip" data-bs-placement="right" title="Consolidado Mensal">
                         <i class="bi bi-bar-chart"></i> Consolidado Mensal
                     </a>
@@ -140,14 +140,14 @@
                 </li>
                 <li>
                     <a class="list-group-item list-group-item-action ps-5" 
-                        href="{{ route('admin.reports.monthly') }}"
+                        href="{{ route('admin.reports.report') }}"
                         data-bs-toggle="tooltip" data-bs-placement="right" title="Consolidado Mensal">
                         <i class="bi bi-bar-chart"></i> Consolidado Mensal
                     </a>
                 </li>
             @endrole
 
-            @role('scholarship_holder')
+            @role('bolsista')
                 <li>
                     <a class="list-group-item list-group-item-action ps-5"
                         href="{{ route('reports.myReport') }}"

@@ -19,6 +19,7 @@ class Position extends Model
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_positions')
+                    ->withPivot(['weekly_workload', 'hourly_rate'])
                     ->withTimestamps();
     }
 

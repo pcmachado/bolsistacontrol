@@ -15,7 +15,7 @@ class ProjectPositionFactory extends Factory
             'project_id' => Project::inRandomOrder()->first()->id ?? Project::factory(),
             'assignments' => fake()->sentence(8),
             'hourly_rate' => fake()->randomFloat(2, 20, 120),
-            'weekly_hour_limit' => fake()->numberBetween(10, 40),
+            'weekly_workload' => fake()->numberBetween(10, 40),
         ];
     }
 }

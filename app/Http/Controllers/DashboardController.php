@@ -21,23 +21,25 @@ class DashboardController extends Controller
 
             $counts = [
                 'approved' => AttendanceRecord::where('status', 'approved')->count(),
-                'pending'  => AttendanceRecord::where('status', 'pending')->count(),
+                'submitted'  => AttendanceRecord::where('status', 'submitted')->count(),
                 'late'     => AttendanceRecord::late()->count(),
                 'rejected' => AttendanceRecord::where('status', 'rejected')->count(),
+                'draft'    => AttendanceRecord::where('status', 'draft')->count(),
             ];
 
             $myPending = 0;
             if ($user->scholarshipHolder) {
                 $myPending = AttendanceRecord::where('scholarship_holder_id', $user->scholarshipHolder->id)
-                    ->where('status', 'pending')
+                    ->where('status', 'draft')
                     ->count();
             }
-            $labels = ['Aprovados', 'Pendentes', 'Atrasados', 'Rejeitados'];
+            $labels = ['Aprovados', 'Rascunhos', 'Atrasados', 'Rejeitados', 'Enviados'];
             $data = [
                 $counts['approved'],    
-                $counts['pending'],
+                $counts['draft'],
                 $counts['late'],
                 $counts['rejected'],
+                $counts['submitted'],
             ];
 
         // Se não for um coordenador, retorna o dashboard padrão para o bolsista

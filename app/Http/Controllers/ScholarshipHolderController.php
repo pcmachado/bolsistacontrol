@@ -21,11 +21,11 @@ use Illuminate\Validation\Rule;
 
 class ScholarshipHolderController extends Controller
 {
-    protected $scholarshipHolderService;
+    protected ScholarshipHolderService $scholarshipHolderService;
 
     public function __construct(ScholarshipHolderService $scholarshipHolderService)
     {
-        $this->scholarshipHplderService = $scholarshipHolderService;
+        $this->scholarshipHolderService = $scholarshipHolderService;
     }
 
     public function index(ScholarshipHoldersDataTable $dataTable)
@@ -57,6 +57,7 @@ class ScholarshipHolderController extends Controller
             'bank' => 'nullable|string',
             'agency' => 'nullable|string',
             'account' => 'nullable|string',
+            'pix_key' => 'nullable|string',
         ]);
 
         // Cria um usuário para o bolsista (com senha padrão)

@@ -6,7 +6,7 @@
         </button>
 
         {{-- Marca/Logo --}}
-        <a class="navbar-brand fw-bold ms-3" href="{{ route('home') }}">BolsistaControl</a>
+        <a class="navbar-brand fw-bold ms-3" href="{{ route('dashboard') }}">BolsistaControl</a>
 
         {{-- Conteúdo da navbar --}}
         <div class="collapse navbar-collapse" id="navbarContent">
@@ -17,29 +17,42 @@
                         <span class="d-lg-none ms-2">Notificações</span>
                     </a>
                 </li>
-
                 {{-- Dropdown de usuário --}}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
-                       id="userDropdown" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center"
+                    href="#"
+                    id="userDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
                         <img src="https://www.gravatar.com/avatar/{{ md5(strtolower(trim(auth()->user()->email))) }}?d=mp"
-                             alt="Avatar"
-                             class="rounded-circle me-2" width="32" height="32">
+                            alt="Avatar"
+                            class="rounded-circle me-2" width="32" height="32">
                         <span>{{ auth()->user()->name }}</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
                         @auth
-                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Perfil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                                @csrf
-                                <button class="dropdown-item">Sair</button>
-                            </form>
-                        </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                    <i class="bi bi-person-circle me-2"></i> Perfil
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                    @csrf
+                                    <button class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Sair
+                                    </button>
+                                </form>
+                            </li>
                         @else
-                        <li><a class="dropdown-item" href="{{ route('login') }}">Login</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('login') }}">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i> Login
+                                </a>
+                            </li>
                         @endauth
                     </ul>
                 </li>

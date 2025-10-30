@@ -3,106 +3,104 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Homologation;
 use App\Models\AttendanceRecord;
-use App\Services\AttendanceRecordService;
+use App\Models\Unit;
+use App\Models\ScholarshipHolder;
+use App\Services\HomologationService;
+use App\DataTables\HomologationsDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use PDF;
-use Excel;
-use App\Exports\ReportExport;
+use Illuminate\View\View;
 
 class HomologationController extends Controller
 {
-    public function __construct()
+
+    protected $homologationService;
+
+    public function __construct(HomologationService $homologationService)
     {
+        $this->homologationService = $homologationService;
         $this->middleware('auth');
     }
 
-    public function index(Request $request)
+    public function index(HomologationsDataTable $dataTable, Request $request)
     {
-        $query = AttendanceRecord::where('status', 'submitted')
-            ->with('scholarshipHolder.unit');
+        // Captura filtros enviados pela view
+        $filters = $request->only([
+            'unit_id',
+            'scholarship_holder_id',
+            'status',
+            'start_date',
+            'end_date',
+            'month',
+        ]);
 
-        // Coordenador Adjunto → só vê a própria unidade
-        if (Auth::user()->hasRole('coordenador_adjunto')) {
-            $query->whereHas('scholarshipHolder', fn($q) =>
-                $q->where('unit_id', Auth::user()->unit_id)
-            );
-        }
+        // Dados auxiliares para os selects
+        $units = Unit::orderBy('name')->get();
+        $scholarshipHolders = ScholarshipHolder::with('user')->orderBy('id')->get();
 
-        // Coordenador Geral → pode filtrar qualquer unidade
-        if ($request->filled('unit_id') && Auth::user()->hasRole('coordenador_geral')) {
-            $query->whereHas('scholarshipHolder', fn($q) =>
-                $q->where('unit_id', $request->unit_id)
-            );
-        }
-
-        $records = $query->get();
-        $units = \App\Models\Unit::all();
-
-        return view('attendance.homologation.index', compact('records', 'units'));
+        // Passa filtros para o DataTable e renderiza a view
+        return $dataTable
+            ->setFilters($filters)
+            ->render('admin.homologations.index', compact('units', 'scholarshipHolders'));
     }
 
-    public function approve(AttendanceRecord $record, AttendanceRecordService $service)
+    public function bulk(Request $request)
     {
-        $this->authorize('approve', $record);
-        $service->approveRecord($record);
+        $request->validate([
+            'action'   => 'required|in:approve,reject',
+            'records'  => 'required|array',
+            'records.*'=> 'integer|exists:attendance_records,id',
+            'reason'   => 'required_if:action,reject|string',
+        ]);
 
-        return back()->with('success', 'Registro homologado com sucesso.');
-    }
+        $records = AttendanceRecord::whereIn('id', $request->records)->get();
 
-    public function reject(Request $request, AttendanceRecord $record, AttendanceRecordService $service)
-    {
-        $this->authorize('reject', $record);
-        $request->validate(['reason' => 'required|string']);
-        $service->rejectRecord($record, $request->reason);
-
-        return back()->with('success', 'Registro rejeitado e devolvido ao bolsista.');
-    }
-
-    public function report(Request $request, AttendanceRecordService $service)
-    {
-        $month = $request->input('month', now()->month);
-        $year = $request->input('year', now()->year);
-
-        if (Auth::user()->hasRole('coordenador_adjunto')) {
-            $unitId = Auth::user()->unit_id;
-        } else {
-            $unitId = $request->input('unit_id'); // pode ser null
-        }
-
-        $report = $service->generateReport($unitId, $month, $year);
-        $units = \App\Models\Unit::all();
-
-        // 🔑 Aqui entra a exportação
-        if ($request->has('export')) {
-            if ($request->export === 'pdf') {
-                $pdf = \PDF::loadView('attendance.homologation.report_pdf', compact('report','month','year','unitId'));
-                return $pdf->download("relatorio_frequencia_{$month}_{$year}.pdf");
-            }
-            if ($request->export === 'excel') {
-                return \Excel::download(new \App\Exports\ReportExport($report, $month, $year, $unitId), "relatorio_frequencia_{$month}_{$year}.xlsx");
-            }
-        }
-
-        return view('attendance.homologation.report', compact('report', 'month', 'year', 'units', 'unitId'));
-    }
-
-    public function bulk(Request $request, AttendanceRecordService $service)
-    {
-        $action = $request->input('action');
-        $records = AttendanceRecord::whereIn('id', $request->input('records', []))->get();
+        // Contadores
+        $processed = 0;
+        $skipped   = 0;
 
         foreach ($records as $record) {
-            if ($action === 'approve') {
-                $service->approveRecord($record);
-            } elseif ($action === 'reject') {
-                $service->rejectRecord($record, $request->input('reason'));
+            if ($request->action === 'approve' && \Gate::allows('approve', $record)) {
+                $this->homologationService->approve($record, auth()->id());
+                $processed++;
+            } elseif ($request->action === 'reject' && \Gate::allows('reject', $record)) {
+                $this->homologationService->reject($record, auth()->id(), $request->reason);
+                $processed++;
+            } else {
+                $skipped++;
             }
         }
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success'   => true,
+            'action'    => $request->action,
+            'requested' => count($request->records),
+            'processed' => $processed,
+            'skipped'   => $skipped,
+            'message'   => "Processados {$processed} registros. Ignorados {$skipped} por falta de permissão."
+        ]);
     }
 
+    public function approve(AttendanceRecord $record)
+    {
+        $this->authorize('approve', $record);
+
+        $this->homologationService->approve($record, auth()->id());
+
+        return back()->with('success', 'Registro aprovado com sucesso!');
+    }
+
+    public function reject(Request $request, AttendanceRecord $record)
+    {
+        $this->authorize('reject', $record);
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $this->homologationService->reject($record, auth()->id(), $request->reason);
+
+        return back()->with('success', 'Registro rejeitado com sucesso!');
+    }
 }

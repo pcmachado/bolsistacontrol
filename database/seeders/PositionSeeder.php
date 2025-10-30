@@ -9,10 +9,20 @@ class PositionSeeder extends Seeder
 {
     public function run(): void
     {
-        $positions = ['Coordenador Geral', 'Coordenador Adjunto', 'Bolsista', 'Supervisor', 'Apoio Administrativo', 'Docente'];
+        $positions = [
+            'Coordenador Geral',
+            'Coordenador Adjunto',
+            'Bolsista',
+            'Supervisor',
+            'Apoio Administrativo',
+            'Docente'
+        ];
 
         foreach ($positions as $name) {
-            Position::create(['name' => $name]);
+            Position::updateOrCreate(
+                ['name' => $name], 
+                ['description' => 'Descrição do cargo ' . $name]
+            );
         }
     }
 }

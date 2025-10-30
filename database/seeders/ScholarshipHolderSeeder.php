@@ -25,6 +25,7 @@ class ScholarshipHolderSeeder extends Seeder
                 'bank' => $faker->company(),
                 'agency' => $faker->numerify('####'),
                 'account' => $faker->numerify('######'),
+                'pix_key' => $faker->unique()->email(),
                 'user_id' => $user->id,
                 'unit_id' => $units->random()->id,
                 'start_date' => $faker->dateTimeBetween('-1 year', 'now'),

@@ -53,6 +53,7 @@ class PositionsDataTable extends DataTable
         return [
             Column::make('id'),
             Column::make('name')->title('Nome'),
+            Column::make('description')->title('Descrição'),
             Column::make('created_at')->title('Criado Em'),
             Column::make('updated_at')->title('Atualizado Em'),
             Column::computed('actions')

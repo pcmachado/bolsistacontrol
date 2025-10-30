@@ -44,6 +44,7 @@ class PositionController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255|unique:positions,name',
+            'description' => 'nullable|string',
         ];
 
         $validated = $request->validate($rules);
@@ -84,6 +85,7 @@ class PositionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:positions,name,' . $position->id,
+            'description' => 'nullable|string',
         ]);
 
         $position->update($request->all());

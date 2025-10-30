@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -15,15 +16,17 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
+    protected $with = ['scholarshipHolder'];
+
     // Relacionamento: um usuário pertence a uma unidade
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
     }
 
-    public function scholarshipHolder(): BelongsTo
+    public function scholarshipHolder(): HasOne
     {
-        return $this->belongsTo(ScholarshipHolder::class);
+        return $this->hasOne(ScholarshipHolder::class, 'user_id');
     }
 
     /**

@@ -8,7 +8,7 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form action="{{ route('attendance.update', $attendanceRecord->id) }}" method="POST">
+            <form action="{{ route('attendance.update', $attendanceRecord) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -19,9 +19,15 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="hours" class="form-label">Horas Trabalhadas</label>
-                    <input type="number" name="hours" id="hours" class="form-control" min="1" max="12" 
-                           value="{{ old('hours', $attendanceRecord->hours) }}" required>
+                    <label for="start_time" class="form-label">Hora de Início</label>
+                    <input type="time" name="start_time" id="start_time" class="form-control"
+                        value="{{ old('start_time', \Carbon\Carbon::parse($attendanceRecord->start_time)->format('H:i')) }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="end_time" class="form-label">Hora de Término</label>
+                    <input type="time" name="end_time" id="end_time" class="form-control"
+                        value="{{ old('end_time', \Carbon\Carbon::parse($attendanceRecord->end_time)->format('H:i')) }}" required>
                 </div>
 
                 <div class="mb-3">
@@ -30,7 +36,7 @@
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('attendance.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('attendance.my') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                     <button type="submit" class="btn btn-primary">

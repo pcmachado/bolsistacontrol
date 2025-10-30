@@ -10,10 +10,8 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-light">
+<body class="bg-light page-{{ str_replace('.', '-', Route::currentRouteName()) }}">
     <div class="d-flex" id="wrapper">
         <!-- Sidebar -->
         @include('layouts.partials._sidebar')
@@ -29,9 +27,7 @@
                     <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
                 </div>
-                <div class="offcanvas-body p-0">
-                    @include('layouts.partials._sidebar')
-                </div>
+                
             </div>
 
             <!-- Conteúdo Principal -->
@@ -39,12 +35,13 @@
                 @yield('content')
             </main>
 
-            <!-- Footer -->
-            <footer class="bg-white border-top p-3 text-center text-muted small mt-auto">
-                2025 by Paulo César Machado. Todos os direitos reservados.
-            </footer>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top p-3 text-center text-muted small mt-auto">
+        2025 by Paulo César Machado. Todos os direitos reservados.
+    </footer>
 
     <!-- Sidebar Toggle -->
     <script>
@@ -83,7 +80,7 @@
             })
         });
     </script>
-
-    @stack('scripts')
+ @vite(['resources/css/app.css', 'resources/js/app.js'])
+ @stack('scripts')
 </body>
 </html>

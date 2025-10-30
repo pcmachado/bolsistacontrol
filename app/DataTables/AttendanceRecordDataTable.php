@@ -31,42 +31,42 @@ class AttendanceRecordDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             // Coluna de checkbox para seleção em lote
-            ->addColumn('checkbox', function ($record) {
-                return '<input type="checkbox" name="records[]" value="'.$record->id.'">';
+            ->addColumn('checkbox', function ($attendanceRecord) {
+                return '<input type="checkbox" name="records[]" value="'.$attendanceRecord->id.'">';
             })
 
             // Data formatada
-            ->editColumn('date', fn($record) => $record->date->format('d/m/Y'))
+            ->editColumn('date', fn($attendanceRecord) => $attendanceRecord->date->format('d/m/Y'))
 
             // Nome do bolsista
-            ->addColumn('scholarship_holder.name', function ($record) {
-                if (Auth::user()->scholarshipHolder && Auth::user()->scholarshipHolder->id === $record->scholarship_holder_id) {
-                    return ($record->scholarshipHolder->name ?? 'Bolsista não encontrado') .
+            ->addColumn('scholarship_holder.name', function ($attendanceRecord) {
+                if (Auth::user()->scholarshipHolder && Auth::user()->scholarshipHolder->id === $attendanceRecord->scholarship_holder_id) {
+                    return ($attendanceRecord->scholarshipHolder->name ?? 'Bolsista não encontrado') .
                         ' <span class="badge bg-secondary">Meu Registro</span>';
                 }
-                return $record->scholarshipHolder->name ?? 'Bolsista não encontrado';
+                return $attendanceRecord->scholarshipHolder->name ?? 'Bolsista não encontrado';
             })
 
             // Duração formatada
-            ->addColumn('duration', fn($record) => $record->formattedDuration())
+            ->addColumn('duration', fn($attendanceRecord) => $attendanceRecord->formattedDuration())
 
             // Status com badge
-            ->addColumn('status_label', function ($record) {
-                return match ($record->status) {
+            ->addColumn('status_label', function ($attendanceRecord) {
+                return match ($attendanceRecord->status) {
                     'draft'    => '<span class="badge bg-secondary">Rascunho</span>',
                     'submitted'=> '<span class="badge bg-info">Enviado</span>',
                     'approved' => '<span class="badge bg-success">Homologado</span>',
                     'rejected' => '<span class="badge bg-danger">Rejeitado</span>',
-                    default    => ucfirst($record->status),
+                    default    => ucfirst($attendanceRecord->status),
                 };
             })
 
             // Ações (parciais diferentes conforme o modo)
-            ->addColumn('actions', function ($record) {
+            ->addColumn('actions', function ($attendanceRecord) {
                 if ($this->mode === 'homologation') {
-                    return view('attendance.homologation.partials.actions', compact('record'))->render();
+                    return view('attendance.homologation.partials.actions', compact('attendanceRecord'))->render();
                 }
-                return view('attendance.partials.actions', compact('record'))->render();
+                return view('attendance.partials.actions', compact('attendanceRecord'))->render();
             })
 
             ->setRowId('id')
@@ -84,8 +84,8 @@ class AttendanceRecordDataTable extends DataTable
                 $query->where('status', 'approved');
                 break;
 
-            case 'pending':
-                $query->where('status', 'pending');
+            case 'submitted':
+                $query->where('status', 'submitted');
                 break;
 
             case 'rejected':
@@ -97,7 +97,9 @@ class AttendanceRecordDataTable extends DataTable
                 break;
 
             case 'homologation':
-                $query->where('status', AttendanceRecord::STATUS_PENDING);
+                $query->where('status', 
+                    AttendanceRecord::STATUS_SUBMITTED
+                );
                 break;
 
             case 'my':

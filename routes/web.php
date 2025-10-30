@@ -36,18 +36,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/attendance/my', [AttendanceRecordController::class, 'index'])->name('attendance.my');
     Route::get('/attendance/create', [AttendanceRecordController::class, 'create'])->name('attendance.create');
     Route::post('/attendance', [AttendanceRecordController::class, 'store'])->name('attendance.store');
-    Route::get('/attendance/{record}/edit', [AttendanceRecordController::class, 'edit'])->name('attendance.edit');
-    Route::put('/attendance/{record}', [AttendanceRecordController::class, 'update'])->name('attendance.update');
-    Route::delete('/attendance/{record}', [AttendanceRecordController::class, 'destroy'])->name('attendance.destroy');
+    Route::get('/attendance/{attendanceRecord}/edit', [AttendanceRecordController::class, 'edit'])->name('attendance.edit');
+    Route::put('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'update'])->name('attendance.update');
+    Route::delete('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'destroy'])->name('attendance.destroy');
 
     Route::get('/attendance/history', [AttendanceRecordController::class, 'history'])->name('attendance.history');
     Route::get('/attendance/pending', [AttendanceRecordController::class, 'pending'])->name('attendance.pending');
-    Route::post('/attendance/{record}/submit', [AttendanceRecordController::class, 'submit'])->name('attendance.submit');
+    Route::post('/attendance/{attendanceRecord}/submit', [AttendanceRecordController::class, 'submit'])->name('attendance.submit');
 
     Route::get('/attendance/card/approved', [AttendanceRecordController::class, 'approved'])->name('attendance.card.approved');
-    Route::get('/attendance/card/pending', [AttendanceRecordController::class, 'pending'])->name('attendance.card.pending');
+    Route::get('/attendance/card/submitted', [AttendanceRecordController::class, 'submitted'])->name('attendance.card.submitted');
     Route::get('/attendance/card/rejected', [AttendanceRecordController::class, 'rejected'])->name('attendance.card.rejected');
     Route::get('/attendance/card/late', [AttendanceRecordController::class, 'late'])->name('attendance.card.late');
+
+    Route::get('/attendance/submissions', [AttendanceRecordController::class, 'submissions'])->name('attendance.submissions');
+    Route::get('/attendance/approvals', [AttendanceRecordController::class, 'approvals'])->name('attendance.approvals');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -74,6 +77,7 @@ Route::get('/courses/search', [CourseController::class, 'search'])->name('course
 Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
     Route::group(['middleware' => ['auth']], function() {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
 
         Route::post('/{record}/approve', [HomologationController::class, 'approve'])->name('homologations.approve');
         Route::post('/{record}/reject', [HomologationController::class, 'reject'])->name('homologations.reject');
@@ -82,13 +86,18 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('/homologations/report', [HomologationController::class, 'report'])->name('homologations.report');
 
         Route::post('/homologations/bulk', [HomologationController::class, 'bulk'])->name('homologations.bulk');
-
+        Route::get('/homologations/pending', [HomologationController::class, 'pending'])->name('homologations.pending');
+        Route::get('/homologations/{id}', [HomologationController::class, 'show'])->name('homologations.show');
+        Route::get('/homologations', [HomologationController::class, 'index'])->name('homologations.index');
+        Route::get('/homologations/late', [HomologationController::class, 'late'])->name('homologations.late');
 
         // 🔹 Relatório Consolidado (apenas coordenador geral)
-        Route::get('/reports/monthly', [ReportController::class, 'monthlyReport'])->middleware('role:coordenador_geral')->name('reports.monthly');
+        Route::get('/reports/monthly', [ReportController::class, 'monthlyReport'])->name('reports.report');
+        Route::get('/reports/pdf', [ReportController::class, 'reportPdf'])->name('reports.export_pdf');
+        Route::get('/reports/excel', [ReportController::class, 'reportExcel'])->name('reports.export_excel');
 
         // 🔹 Relatório Detalhado por Unidade (coordenador geral)
-        Route::get('/reports/unit/{unit?}', [ReportController::class, 'unitDetail'])->middleware('role:coordenador_geral')->name('reports.unit_detail');
+        Route::get('/reports/unit/{unit?}', [ReportController::class, 'unitDetail'])->name('reports.unit_detail');
 
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);
@@ -100,7 +109,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::resource('attendance_records', AttendanceRecordController::class);
         Route::resource('institutions', InstitutionController::class);
         Route::resource('reports', ReportController::class);
-        Route::resource('homologations', HomologationController::class);
+        //Route::resource('homologations', HomologationController::class);
         Route::resource('permissions', PermissionController::class);
         Route::resource('courses', CourseController::class);
         Route::resource('funding_sources', FundingSourceController::class);

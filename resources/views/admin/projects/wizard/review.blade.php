@@ -57,7 +57,7 @@
         <div class="card-body">
             <ul>
                 @foreach($project->positions as $pos)
-                    <li>{{ $pos->name }} (Bolsa: {{ $pos->hourly_rate }}, Horas: {{ $pos->weekly_hour_limit }})</li>
+                    <li>{{ $pos->name }} (Bolsa: {{ $pos->hourly_rate }}, Horas: {{ $pos->weekly_workload }})</li>
                 @endforeach
             </ul>
         </div>

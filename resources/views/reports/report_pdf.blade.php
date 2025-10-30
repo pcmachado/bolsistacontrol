@@ -17,14 +17,15 @@
     <div class="header">
         <p>INSTITUTO FEDERAL DE EDUCAÇÃO, CIÊNCIA E TECNOLOGIA<br>
         Pró-Reitoria de Extensão - PROEX</p>
-        <p><strong>Autorização de Pagamento de Bolsistas - Campus {{ Auth::user()->unit->name ?? 'XXXXX' }}</strong></p>
+        <p><strong>Autorização de Pagamento de Bolsistas - 
+            {{ $unit ? $unit->name : 'Todas as Unidades' }}</strong></p>
         <p>Mês: {{ str_pad($month, 2, '0', STR_PAD_LEFT) }}/{{ $year }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
-                @if(!$unitId)
+                @if(!$unit)
                     <th>Unidade</th>
                 @endif
                 <th>Nome</th>
@@ -33,40 +34,33 @@
                 <th>Banco</th>
                 <th>Agência</th>
                 <th>Conta</th>
-                <th>Horas Previstas</th>
                 <th>Horas Cumpridas</th>
-                <th>Valor (R$)</th>
+                <th>Valor Hora (R$)</th>
+                <th>Total (R$)</th>
             </tr>
         </thead>
         <tbody>
             @foreach($report as $item)
             <tr>
-                @if(!$unitId)
-                    <td>{{ $item->scholarshipHolder->units->first()->name ?? '-' }}</td>
+                @if(!$unit)
+                    <td>{{ $item['unit'] ?? '-' }}</td>
                 @endif
-                <td>{{ $item->scholarshipHolder->name }}</td>
-                <td>{{ $item->scholarshipHolder->phone }}</td>
-                <td>{{ $item->scholarshipHolder->cpf }}</td>
-                <td>{{ $item->scholarshipHolder->bank }}</td>
-                <td>{{ $item->scholarshipHolder->agency }}</td>
-                <td>{{ $item->scholarshipHolder->account }}</td>
-                <td>
-                    @if($item->scholarshipHolder->weekly_limit_minutes)
-                        {{ ($item->scholarshipHolder->weekly_limit_minutes / 60) * 4 }}
-                    @else
-                        -
-                    @endif
-                </td>
-                <td>{{ $item->total_hours }}</td>
-                <td>R$ {{ number_format($item->total_value, 2, ',', '.') }}</td>
+                <td>{{ $item['scholarshipHolder'] }}</td>
+                <td>{{ $item['phone'] ?? '-' }}</td>
+                <td>{{ $item['cpf'] ?? '-' }}</td>
+                <td>{{ $item['bank'] ?? '-' }}</td>
+                <td>{{ $item['agency'] ?? '-' }}</td>
+                <td>{{ $item['account'] ?? '-' }}</td>
+                <td>{{ $item['totalHours'] }}</td>
+                <td>R$ {{ number_format($item['hourlyRate'], 2, ',', '.') }}</td>
+                <td>R$ {{ number_format($item['totalValue'], 2, ',', '.') }}</td>
             </tr>
             @endforeach
             <tr>
-                <td colspan="{{ $unitId ? 9 : 10 }}" style="text-align: right;"><strong>Total</strong></td>
-                <td><strong>R$ {{ number_format($report->sum('total_value'), 2, ',', '.') }}</strong></td>
+                <td colspan="{{ $unit ? 7 : 8 }}" style="text-align: right;"><strong>Total</strong></td>
+                <td><strong>R$ {{ number_format($report->sum('totalValue'), 2, ',', '.') }}</strong></td>
             </tr>
-</tbody>
-
+        </tbody>
     </table>
 
     <table class="signatures">
@@ -79,6 +73,5 @@
     <p style="margin-top: 40px; font-size: 11px; text-align: right;">
         Emitido por {{ Auth::user()->name }} em {{ now()->format('d/m/Y H:i') }}
     </p>
-
 </body>
 </html>

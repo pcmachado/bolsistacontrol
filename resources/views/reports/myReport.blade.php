@@ -38,7 +38,7 @@
         </tr>
         <tr>
             <td><strong>Carga horária prevista</strong></td>
-            <td>{{ $holder->weekly_hour_limit / 60 * 4 ?? '-' }} horas mensais</td>
+            <td>{{ $holder->weekly_workload / 60 * 4 ?? '-' }} horas mensais</td>
         </tr>
     </table>
 

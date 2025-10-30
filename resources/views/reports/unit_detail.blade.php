@@ -11,25 +11,6 @@
     </div>
 </div>
 
-{{-- Botões de exportação (somente admin/geral/adjunto) --}}
-@canany(['admin','coordenador_geral','coordenador_adjunto'])
-<form method="GET" action="{{ route('admin.homologations.report') }}" class="d-inline">
-    <input type="hidden" name="month" value="{{ $month }}">
-    <input type="hidden" name="year" value="{{ $year }}">
-    @if(isset($unitId))
-        <input type="hidden" name="unit_id" value="{{ $unitId }}">
-    @endif
-
-    <button type="submit" name="export" value="pdf" class="btn btn-danger">
-        <i class="bi bi-file-earmark-pdf"></i> PDF
-    </button>
-
-    <button type="submit" name="export" value="excel" class="btn btn-success">
-        <i class="bi bi-file-earmark-excel"></i> Excel
-    </button>
-</form>
-@endcanany
-
 {{-- Filtros --}}
 <form method="GET" class="row g-3 mb-3 mt-3">
     @if(auth()->user()->hasRole(['admin','coordenador_geral']))
@@ -62,6 +43,18 @@
         </div>
     @endif
 
+    <div class="col-md-3">
+        <label for="status" class="form-label">Status</label>
+        <select name="status" id="status" class="form-select">
+            <option value="">Todos</option>
+            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Aprovado</option>
+            <option value="submitted" {{ request('status') == 'submitted' ? 'selected' : '' }}>Enviado</option>
+            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejeitado</option>
+            <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Rascunho</option>
+            <option value="late" {{ request('status') == 'late' ? 'selected' : '' }}>Atrasado</option>
+        </select>
+    </div>
+
     <div class="col-md-2">
         <label for="month" class="form-label">Mês</label>
         <input type="number" name="month" id="month" class="form-control" value="{{ $month }}" min="1" max="12">
@@ -75,6 +68,19 @@
     <div class="col-md-2 align-self-end">
         <button type="submit" class="btn btn-primary">Filtrar</button>
     </div>
+
+    {{-- Botões de exportação --}}
+    <div class="col-md-3 align-self-end d-flex gap-2">
+        <button type="submit" formaction="{{ route('admin.reports.export_pdf', $unit) }}" 
+                formmethod="GET" name="export" value="pdf" class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+        </button>
+
+        <button type="submit" formaction="{{ route('admin.reports.export_excel', $unit) }}" 
+                formmethod="GET" name="export" value="excel" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Excel
+        </button>
+    </div>
 </form>
 
 {{-- Tabela --}}
@@ -82,20 +88,24 @@
     <thead>
         <tr>
             <th>Bolsista</th>
-            <th>Total de Horas</th>
-            <th>Valor Calculado</th>
+            <th>Horas Previstas</th>
+            <th>Horas Cumpridas</th>
+            <th>Valor Hora</th>
+            <th>Total (R$)</th>
         </tr>
     </thead>
     <tbody>
         @forelse($report as $item)
         <tr>
-            <td>{{ $item->scholarshipHolder->name }}</td>
-            <td>{{ $item->total_hours }}</td>
-            <td>R$ {{ number_format($item->total_value, 2, ',', '.') }}</td>
+            <td>{{ $item['scholarshipHolder'] }}</td>
+            <td>{{ $item['expected_hours'] ?? '-' }}</td>
+            <td>{{ $item['totalHours'] }}</td>
+            <td>R$ {{ number_format($item['hourlyRate'], 2, ',', '.') }}</td>
+            <td>R$ {{ number_format($item['totalValue'], 2, ',', '.') }}</td>
         </tr>
         @empty
         <tr>
-            <td colspan="3" class="text-center text-muted">Nenhum registro encontrado para o período.</td>
+            <td colspan="5" class="text-center text-muted">Nenhum registro encontrado.</td>
         </tr>
         @endforelse
     </tbody>
