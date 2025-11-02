@@ -222,6 +222,16 @@ return new class extends Migration
             $table->foreignId('position_id')->constrained()->onDelete('cascade');
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('institution_users', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('institution_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->boolean('active')->default(true); // opcional: marcar vínculo ativo/inativo
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -230,6 +240,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('institution_users');
         Schema::dropIfExists('project_positions');
         Schema::dropIfExists('project_scholarship_holders');
         Schema::dropIfExists('project_courses');

@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Http\Traits\BelongsToInstitution;
 
 class ScholarshipHolder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToInstitution;
 
     protected $fillable = [
         'name',
@@ -100,6 +101,7 @@ class ScholarshipHolder extends Model
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_scholarship_holders')
+                    ->withPivot('position_id')
                     ->withTimestamps();
     }
 

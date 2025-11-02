@@ -5,6 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Unit;
 use App\Models\AttendanceRecord;
+use App\Models\Project;
+use App\Models\ScholarshipHolder;
+use App\Models\User;
+use App\Models\Position;
+use App\Models\ProjectPosition;
+use App\Models\Institution;
+use App\Exports\ReportExport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -40,6 +47,8 @@ class ReportController extends Controller
         $year  = (int) $request->get('year', now()->year);
         $user  = Auth::user();
 
+        $projects = $unit->projects()->with('scholarshipHolders.user')->get();
+
         // Carrega unidades conforme papel
         if ($user->hasRole(['admin','coordenador_geral'])) {
             $unitsQuery = Unit::query();
@@ -65,8 +74,8 @@ class ReportController extends Controller
             ->get();
 
         // Mês/ano como período Date para comparar intervalo do vínculo do projeto
-        $periodStart = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
-        $periodEnd   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+        $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
+        $periodEnd   = Carbon::create($year, $month, 1)->endOfMonth();
 
         // Para reduzir consultas, vamos preparar um cache local de rates por projeto/cargo
         $positionRatesCache = [];
@@ -78,8 +87,8 @@ class ReportController extends Controller
                 // Descobrir o vínculo de projeto "ativo" no período
                 // Regra: vínculo cujo intervalo [start_date, end_date] intersecta o mês.
                 $activeProject = $holder->projects->first(function ($project) use ($periodStart, $periodEnd) {
-                    $start = $project->pivot->start_date ? \Carbon\Carbon::parse($project->pivot->start_date) : null;
-                    $end   = $project->pivot->end_date ? \Carbon\Carbon::parse($project->pivot->end_date) : null;
+                    $start = $project->pivot->start_date ? Carbon::parse($project->pivot->start_date) : null;
+                    $end   = $project->pivot->end_date ? Carbon::parse($project->pivot->end_date) : null;
 
                     // Considera sem end_date como aberto
                     $inRangeStart = $start ? $start <= $periodEnd : true;
@@ -140,8 +149,11 @@ class ReportController extends Controller
     public function unitDetail(Request $request, Unit $unit)
     {
         $user = Auth::user();
+        $this->authorize('view', $project);
 
-        $project = Project::findOrFail($projectId);
+        if ($project->institution_id !== $user->institution_id) {
+            abort(403, 'Você não tem acesso a este projeto.');
+        }
 
         // 🔒 Coordenador adjunto só pode acessar sua própria unidade
         if ($user->hasRole('coordenador_adjunto') && !$user->units->contains($unit)) {
@@ -152,7 +164,7 @@ class ReportController extends Controller
         $year  = $request->get('year', now()->year);
 
         // 🔹 Monta query de attendances
-        $attendancesQuery = \App\Models\AttendanceRecord::with(['scholarshipHolder.user'])
+        $attendancesQuery = AttendanceRecord::with(['scholarshipHolder.user'])
             ->whereYear('date', $year)
             ->whereMonth('date', $month);
 
@@ -211,9 +223,11 @@ class ReportController extends Controller
             ];
         });
 
+        $projects = $unit->projects()->with('scholarshipHolders.user')->get();
+
         $units = Unit::all();
     //dd($report);exit;
-        return view('reports.unit_detail', compact('unit', 'report', 'month', 'year', 'units'));
+        return view('reports.unit_detail', compact('unit', 'report', 'month', 'year', 'units', 'projects'));
     }
 
     /**
@@ -223,6 +237,7 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         $holder = $user->scholarshipHolder;
+        $this->authorize('view', $project);
 
         if (!$holder) {
             abort(403, 'Apenas bolsistas podem gerar relatório individual.');
@@ -272,7 +287,7 @@ class ReportController extends Controller
     {
         [$report, $month, $year, $units] = $this->buildReport($request, $unit);
 
-        return Excel::download(new \App\Exports\ReportExport($report, $month, $year, $unit), 
+        return Excel::download(new ReportExport($report, $month, $year, $unit),
             "relatorio_{$unit->id}_{$month}_{$year}.xlsx");
     }
 
@@ -281,9 +296,11 @@ class ReportController extends Controller
         $user = auth()->user();
         $month = $request->get('month', now()->month);
         $year  = $request->get('year', now()->year);
+
+        $projects = $unit->projects()->with('scholarshipHolders.user')->get();
         $units = Unit::all();
 
-        $attendancesQuery = \App\Models\AttendanceRecord::with(['scholarshipHolder.user', 'scholarshipHolder.scholarship'])
+        $attendancesQuery = AttendanceRecord::with(['scholarshipHolder.user', 'scholarshipHolder.scholarship'])
             ->whereYear('date', $year)
             ->whereMonth('date', $month);
 
@@ -342,7 +359,7 @@ class ReportController extends Controller
             ];
         });
 
-        return [$report, $month, $year, $units];
+        return [$report, $month, $year, $units, $projects];
 
     }
 

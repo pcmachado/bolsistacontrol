@@ -69,6 +69,9 @@ require __DIR__.'/auth.php';
 
 Auth::routes();
 
+    Route::get('/institution/select', [InstitutionController::class, 'select'])->name('institution.select');
+    Route::post('/institution/set', [InstitutionController::class, 'set'])->name('institution.set');
+
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, 'search'])->name('scholarshipholders.search');
@@ -97,7 +100,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('/reports/excel', [ReportController::class, 'reportExcel'])->name('reports.export_excel');
 
         // 🔹 Relatório Detalhado por Unidade (coordenador geral)
-        Route::get('/reports/unit/{unit?}', [ReportController::class, 'unitDetail'])->name('reports.unit_detail');
+        Route::get('/reports/unit/{unit?}/{project?}', [ReportController::class, 'unitDetail'])->name('reports.unit_detail');
 
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);

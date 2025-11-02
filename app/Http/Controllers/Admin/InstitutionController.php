@@ -32,7 +32,7 @@ class InstitutionController extends Controller
 
         Institution::create($validated);
 
-        return redirect()->route('admin.institutions.index')
+        return redirect()->route('institutions.index')
                          ->with('success', 'Instituição criada com sucesso!');
     }
 
@@ -59,7 +59,7 @@ class InstitutionController extends Controller
 
         $institution->update($validated);
 
-        return redirect()->route('admin.institutions.index')
+        return redirect()->route('institutions.index')
                          ->with('success', 'Instituição atualizada com sucesso!');
     }
 
@@ -67,7 +67,25 @@ class InstitutionController extends Controller
     {
         $institution->delete();
 
-        return redirect()->route('admin.institutions.index')
+        return redirect()->route('institutions.index')
                          ->with('success', 'Instituição removida com sucesso!');
+    }
+
+    public function select()
+    {
+        $user = Auth::user();
+        $institutions = $user->isAdmin()
+            ? Institution::all()
+            : $user->institutions;
+
+        return view('institutions.select', compact('institutions'));
+    }
+
+    public function set(Request $request)
+    {
+        $institutionId = $request->input('institution_id');
+        session(['institution_id' => $institutionId]);
+
+        return redirect()->route('dashboard');
     }
 }

@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Http\Traits\BelongsToInstitution;
 
 class Project extends Model
 {
     use HasFactory, SoftDeletes;
+    use BelongsToInstitution;
 
     protected $fillable = [
         'name',

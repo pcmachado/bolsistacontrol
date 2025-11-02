@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Http\Traits\BelongsToInstitution;
 
 class Unit extends Model
 {
     use HasFactory, SoftDeletes;
+    use BelongsToInstitution;
 
     protected $fillable = [
         'institution_id',

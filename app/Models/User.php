@@ -29,6 +29,13 @@ class User extends Authenticatable
         return $this->hasOne(ScholarshipHolder::class, 'user_id');
     }
 
+    public function institutions()
+    {
+        return $this->belongsToMany(Institution::class, 'institution_users')
+            ->withPivot('active')
+            ->withTimestamps();
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -78,6 +85,16 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->hasRole('Admin');
+    }
+
+    public function isCoordenadorAdjunto(): bool
+    {
+        return $this->hasRole('coordenador_adjunto');
+    }
+
+    public function activeInstitutions()
+    {
+        return $this->institutions()->wherePivot('active', true)->first();
     }
 
 }

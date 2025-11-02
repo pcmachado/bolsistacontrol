@@ -5,7 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\institution;
 
-class institutionFactory extends Factory
+class InstitutionFactory extends Factory
 {
     public function definition(): array
     {

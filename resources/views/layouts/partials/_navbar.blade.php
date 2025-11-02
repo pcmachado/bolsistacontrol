@@ -11,6 +11,32 @@
         {{-- Conteúdo da navbar --}}
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item dropdown">
+                    @php
+                        $user = Auth::user();
+                        $institutions = $user->isAdmin()
+                            ? \App\Models\Institution::all()
+                            : $user->institutions;
+
+                        $activeInstitution = $user->activeInstitutions() ?? $institutions->first();
+                    @endphp
+
+                    @if($institutions->count() > 1 || $user->isAdmin())
+                        <form method="POST" action="{{ route('institution.set') }}">
+                            @csrf
+                            <select name="institution_id" onchange="this.form.submit()" class="form-select">
+                                @foreach($institutions as $inst)
+                                    <option value="{{ $inst->id }}" {{ $activeInstitution && $activeInstitution->id == $inst->id ? 'selected' : '' }}>
+                                        {{ $inst->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
+                    @else
+                        <span class="navbar-text">{{ $activeInstitution->name ?? 'Sem vínculo' }}</span>
+                    @endif
+                </li>
+                {{-- Ícone de notificações --}}
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="bi bi-bell-fill"></i>

@@ -15,6 +15,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         AttendanceRecord::class => AttendanceRecordPolicy::class,
+        Project::class => ProjectPolicy::class,
     ];
 
     /**

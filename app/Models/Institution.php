@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class institution extends Model
+class Institution extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -24,6 +24,13 @@ class institution extends Model
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)
+            ->withTimestamps();
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'institution_user')
+            ->withPivot('active')
             ->withTimestamps();
     }
 }
