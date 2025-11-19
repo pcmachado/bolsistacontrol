@@ -10,9 +10,14 @@ trait BelongsToInstitution
     protected static function bootBelongsToInstitution()
     {
         static::addGlobalScope('institution', function (Builder $builder) {
-            // só aplica o filtro se não for admin
-            if (session()->has('institution_id') && !auth()->user()?->isAdmin()) {
+            if (session()->has('institution_id')) {
                 $builder->where('institution_id', session('institution_id'));
+            }
+        });
+
+        static::creating(function ($model) {
+            if (session()->has('institution_id') && empty($model->institution_id)) {
+                $model->institution_id = session('institution_id');
             }
         });
     }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Institution extends Model
@@ -15,15 +16,15 @@ class Institution extends Model
         'name', 'city', 'state', 'address', 'phone'
     ];
 
-    public function units(): BelongsToMany
+    public function units(): HasMany
     {
-        return $this->belongsToMany(Unit::class)
+        return $this->hasMany(Unit::class)
             ->withTimestamps();
     }
 
-    public function projects(): BelongsToMany
+    public function projects(): HasMany
     {
-        return $this->belongsToMany(Project::class)
+        return $this->hasMany(Project::class)
             ->withTimestamps();
     }
 

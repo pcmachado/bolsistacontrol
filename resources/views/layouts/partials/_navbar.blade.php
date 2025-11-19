@@ -12,28 +12,27 @@
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item dropdown">
-                    @php
-                        $user = Auth::user();
-                        $institutions = $user->isAdmin()
-                            ? \App\Models\Institution::all()
-                            : $user->institutions;
+                    @if(session('institution_id'))
+                        @php
+                            $user = Auth::user();
+                            $institution = \App\Models\Institution::find(session('institution_id'));
+                            $institutions = $user->isAdmin()
+                                ? \App\Models\Institution::all()
+                                : $user->institutions;
 
-                        $activeInstitution = $user->activeInstitutions() ?? $institutions->first();
-                    @endphp
+                            $activeInstitution = $user->activeInstitutions() ?? $institutions->first();
+                        @endphp
 
-                    @if($institutions->count() > 1 || $user->isAdmin())
-                        <form method="POST" action="{{ route('institution.set') }}">
-                            @csrf
-                            <select name="institution_id" onchange="this.form.submit()" class="form-select">
-                                @foreach($institutions as $inst)
-                                    <option value="{{ $inst->id }}" {{ $activeInstitution && $activeInstitution->id == $inst->id ? 'selected' : '' }}>
-                                        {{ $inst->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                    @else
-                        <span class="navbar-text">{{ $activeInstitution->name ?? 'Sem vínculo' }}</span>
+                        <span class="navbar-text text-muted small me-3">
+                            <i class="bi bi-building me-1"></i>
+                            {{ $institution->name ?? 'Instituição não definida' }}
+                        </span>
+
+                        @if($institutions->count() > 1 || $user->isAdmin())
+                            <a href="{{ route('institution.clear') }}" class="text-decoration-none small text-secondary">
+                                Alterar
+                            </a>
+                        @endif
                     @endif
                 </li>
                 {{-- Ícone de notificações --}}

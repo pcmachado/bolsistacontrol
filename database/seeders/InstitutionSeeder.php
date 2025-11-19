@@ -10,29 +10,29 @@ class InstitutionSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create('pt_BR');
+        $institutions = [
+            [
+                'name' => 'Universidade de Caxias do Sul',
+                'cnpj' => '12.345.678/0001-99',
+                'city' => 'Caxias do Sul',
+                'state' => 'RS',
+                'address' => 'Rua Francisco Getúlio Vargas, 1130',
+                'phone' => '(54) 3218-2100',
+                'created_at' => now(),
+            ],
+            [
+                'name' => 'Instituto Federal do Rio Grande do Sul',
+                'cnpj' => '98.765.432/0001-00',
+                'city' => 'Bento Gonçalves',
+                'state' => 'RS',
+                'address' => 'Av. Osvaldo Aranha, 540',
+                'phone' => '(54) 3452-1260',
+                'created_at' => now(),
+            ],
+        ];
 
-        for ($i = 0; $i < 5; $i++) {
-            institution::create([
-                'name' => $faker->company(),
-                'city' => $faker->city(),
-                'state' => $faker->stateAbbr(),
-                'address' => $faker->address(),
-                'phone' => $faker->phoneNumber(),
-                'website' => $faker->url(),
-                'cnpj' => $faker->cnpj(),
-                'email' => $faker->unique()->companyEmail(),
-                'acronym' => strtoupper($faker->lexify('???')),
-                'contact_person' => $faker->name(),
-                'contact_email' => $faker->unique()->companyEmail(),
-                'contact_phone' => $faker->phoneNumber(),
-                'logo_path' => null,
-                'postal_code' => $faker->postcode(),
-                'neighborhood' => $faker->word(),
-                'complement' => $faker->secondaryAddress(),
-                'number' => $faker->buildingNumber(),
-                'country' => 'Brasil',
-            ]);
+        foreach ($institutions as $i) {
+            Institution::create($i);
         }
     }
 }

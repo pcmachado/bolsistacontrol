@@ -12,12 +12,16 @@ class ScholarshipHolderSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create('pt_BR');
-        $users = User::all();
-        $units = Unit::all();
+        //$faker = Faker::create('pt_BR');
+        //$users = User::all();
+        //$units = Unit::all();
 
-        foreach ($users as $user) {
-            ScholarshipHolder::create([
+        $bolsistas = User::role('bolsista')->get();
+
+        foreach ($bolsistas as $user) {
+            ScholarshipHolder::firstOrCreate(
+                ['user_id' => $user->id],
+                [
                 'name' => $user->name,
                 'cpf' => $faker->unique()->cpf(false),
                 'email' => $user->email,
@@ -27,10 +31,12 @@ class ScholarshipHolderSeeder extends Seeder
                 'account' => $faker->numerify('######'),
                 'pix_key' => $faker->unique()->email(),
                 'user_id' => $user->id,
-                'unit_id' => $units->random()->id,
+                'unit_id' => $user->unit_id,
                 'start_date' => $faker->dateTimeBetween('-1 year', 'now'),
                 'end_date' => $faker->dateTimeBetween('now', '+1 year'),
-            ]);
+                'status' => 'active',
+                ]
+            );
         }
     }
 }

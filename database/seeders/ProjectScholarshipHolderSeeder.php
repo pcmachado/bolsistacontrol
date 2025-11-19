@@ -14,7 +14,7 @@ class ProjectScholarshipHolderSeeder extends Seeder
 {
     public function run(): void
     {
-        $project = Project::first();
+        /*$project = Project::first();
         $holders = ScholarshipHolder::take(3)->get();
         $positions = Position::take(3)->get();
 
@@ -28,6 +28,38 @@ class ProjectScholarshipHolderSeeder extends Seeder
                 'end_date' => null,
                 'status' => 'active',
             ]);
+        }*/
+
+            $projects = Project::with('instituition')->get();
+
+        foreach ($projects as $project) {
+            $instId = $project->instituition_id ?? $project->instituition?->id;
+
+            // pega bolsistas da mesma instituição via unit->institution
+            $holders = ScholarshipHolder::whereHas('unit', function ($q) use ($instId) {
+                $q->where('institution_id', $instId);
+            })->get();
+
+            // anexa até 6 bolsistas por projeto (ou menos se não houver)
+            $toAttach = $holders->take(6);
+
+            foreach ($toAttach as $holder) {
+                // Se existir pivot model, use create; senão attach via DB
+                try {
+                    \DB::table('project_scholarship_holders')->insert([
+                        'project_id' => $project->id,
+                        'scholarship_holder_id' => $holder->id,
+                        'position_id' => null,
+                        'weekly_workload' => rand(10, 20),
+                        'status' => 'active',
+                        'start_date' => now()->toDateString(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    // ignore duplicates
+                }
+            }
         }
     }
 }

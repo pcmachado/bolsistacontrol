@@ -29,6 +29,10 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    Route::get('/institution/select', [InstitutionController::class, 'select'])->name('institution.select');
+    Route::post('/institution/set', [InstitutionController::class, 'set'])->name('institution.set');
+    Route::post('/institution/clear', [InstitutionController::class, 'clear'])->name('institution.clear');
+
     Route::resource('/dashboard', DashboardController::class)->only(['index'])->names(['index' => 'dashboard']);
 
     // Módulo de Frequência para o Bolsista
@@ -69,77 +73,74 @@ require __DIR__.'/auth.php';
 
 Auth::routes();
 
-    Route::get('/institution/select', [InstitutionController::class, 'select'])->name('institution.select');
-    Route::post('/institution/set', [InstitutionController::class, 'set'])->name('institution.set');
-
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, 'search'])->name('scholarshipholders.search');
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 
 Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
-    Route::group(['middleware' => ['auth']], function() {
+    Route::group(['middleware' => ['institution.selected']], function() {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
+    });
 
-        Route::post('/{record}/approve', [HomologationController::class, 'approve'])->name('homologations.approve');
-        Route::post('/{record}/reject', [HomologationController::class, 'reject'])->name('homologations.reject');
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
 
-        // 🔹 Relatório de Homologações (apenas coordenador geral e adjunto)
-        Route::get('/homologations/report', [HomologationController::class, 'report'])->name('homologations.report');
+    Route::post('/{record}/approve', [HomologationController::class, 'approve'])->name('homologations.approve');
+    Route::post('/{record}/reject', [HomologationController::class, 'reject'])->name('homologations.reject');
 
-        Route::post('/homologations/bulk', [HomologationController::class, 'bulk'])->name('homologations.bulk');
-        Route::get('/homologations/pending', [HomologationController::class, 'pending'])->name('homologations.pending');
-        Route::get('/homologations/{id}', [HomologationController::class, 'show'])->name('homologations.show');
-        Route::get('/homologations', [HomologationController::class, 'index'])->name('homologations.index');
-        Route::get('/homologations/late', [HomologationController::class, 'late'])->name('homologations.late');
+    // 🔹 Relatório de Homologações (apenas coordenador geral e adjunto)
+    Route::get('/homologations/report', [HomologationController::class, 'report'])->name('homologations.report');
 
-        // 🔹 Relatório Consolidado (apenas coordenador geral)
-        Route::get('/reports/monthly', [ReportController::class, 'monthlyReport'])->name('reports.report');
-        Route::get('/reports/pdf', [ReportController::class, 'reportPdf'])->name('reports.export_pdf');
-        Route::get('/reports/excel', [ReportController::class, 'reportExcel'])->name('reports.export_excel');
+    Route::post('/homologations/bulk', [HomologationController::class, 'bulk'])->name('homologations.bulk');
+    Route::get('/homologations/pending', [HomologationController::class, 'pending'])->name('homologations.pending');
+    Route::get('/homologations/{id}', [HomologationController::class, 'show'])->name('homologations.show');
+    Route::get('/homologations', [HomologationController::class, 'index'])->name('homologations.index');
+    Route::get('/homologations/late', [HomologationController::class, 'late'])->name('homologations.late');
 
-        // 🔹 Relatório Detalhado por Unidade (coordenador geral)
-        Route::get('/reports/unit/{unit?}/{project?}', [ReportController::class, 'unitDetail'])->name('reports.unit_detail');
+    // 🔹 Relatório Consolidado (apenas coordenador geral)
+    Route::get('/reports/monthly', [ReportController::class, 'monthlyReport'])->name('reports.report');
+    Route::get('/reports/pdf', [ReportController::class, 'reportPdf'])->name('reports.export_pdf');
+    Route::get('/reports/excel', [ReportController::class, 'reportExcel'])->name('reports.export_excel');
 
-        Route::resource('roles', RoleController::class);
-        Route::resource('users', UserController::class);
-        Route::resource('units', UnitController::class);
-        Route::resource('positions', PositionController::class);
-        Route::resource('scholarship_holders', ScholarshipHolderController::class);
-        Route::resource('projects', ProjectController::class);
-        Route::resource('notifications', NotificationController::class);
-        Route::resource('attendance_records', AttendanceRecordController::class);
-        Route::resource('institutions', InstitutionController::class);
-        Route::resource('reports', ReportController::class);
-        //Route::resource('homologations', HomologationController::class);
-        Route::resource('permissions', PermissionController::class);
-        Route::resource('courses', CourseController::class);
-        Route::resource('funding_sources', FundingSourceController::class);
-        Route::resource('projects', ProjectController::class);
-        Route::resource('assignments', AssignmentController::class);
+    // 🔹 Relatório Detalhado por Unidade (coordenador geral)
+    Route::get('/reports/unit/{unit?}/{project?}', [ReportController::class, 'unitDetail'])->name('reports.unit_detail');
 
-        Route::prefix('projects')->group(function () {
-            Route::get('create/step1', [ProjectWizardController::class, 'createStep1'])->name('projects.create.step1');
-            Route::post('store/step1', [ProjectWizardController::class, 'storeStep1'])->name('projects.store.step1');
+    Route::resource('roles', RoleController::class);
+    Route::resource('users', UserController::class);
+    Route::resource('units', UnitController::class);
+    Route::resource('positions', PositionController::class);
+    Route::resource('scholarship_holders', ScholarshipHolderController::class);
+    Route::resource('projects', ProjectController::class);
+    Route::resource('notifications', NotificationController::class);
+    Route::resource('attendance_records', AttendanceRecordController::class);
+    Route::resource('institutions', InstitutionController::class);
+    Route::resource('reports', ReportController::class);
+    //Route::resource('homologations', HomologationController::class);
+    Route::resource('permissions', PermissionController::class);
+    Route::resource('courses', CourseController::class);
+    Route::resource('funding_sources', FundingSourceController::class);
+    Route::resource('projects', ProjectController::class);
+    Route::resource('assignments', AssignmentController::class);
 
-            Route::get('create/step2/{project}', [ProjectWizardController::class, 'createStep2'])->name('projects.create.step2');
-            Route::post('store/step2/{project}', [ProjectWizardController::class, 'storeStep2'])->name('projects.store.step2');
+    Route::prefix('projects')->group(function () {
+        Route::get('create/step1', [ProjectWizardController::class, 'createStep1'])->name('projects.create.step1');
+        Route::post('store/step1', [ProjectWizardController::class, 'storeStep1'])->name('projects.store.step1');
 
-            Route::get('create/step3/{project}', [ProjectWizardController::class, 'createStep3'])->name('projects.create.step3');
-            Route::post('store/step3/{project}', [ProjectWizardController::class, 'storeStep3'])->name('projects.store.step3');
+        Route::get('create/step2/{project}', [ProjectWizardController::class, 'createStep2'])->name('projects.create.step2');
+        Route::post('store/step2/{project}', [ProjectWizardController::class, 'storeStep2'])->name('projects.store.step2');
 
-            Route::get('create/step4/{project}', [ProjectWizardController::class, 'createStep4'])->name('projects.create.step4');
-            Route::post('store/step4/{project}', [ProjectWizardController::class, 'storeStep4'])->name('projects.store.step4');
+        Route::get('create/step3/{project}', [ProjectWizardController::class, 'createStep3'])->name('projects.create.step3');
+        Route::post('store/step3/{project}', [ProjectWizardController::class, 'storeStep3'])->name('projects.store.step3');
 
-            Route::get('create/step5/{project}', [ProjectWizardController::class, 'createStep5'])->name('projects.create.step5');
-            Route::post('store/step5/{project}', [ProjectWizardController::class, 'storeStep5'])->name('projects.store.step5');
+        Route::get('create/step4/{project}', [ProjectWizardController::class, 'createStep4'])->name('projects.create.step4');
+        Route::post('store/step4/{project}', [ProjectWizardController::class, 'storeStep4'])->name('projects.store.step4');
 
-            Route::get('review/{project}', [ProjectWizardController::class, 'review'])->name('projects.review');
+        Route::get('create/step5/{project}', [ProjectWizardController::class, 'createStep5'])->name('projects.create.step5');
+        Route::post('store/step5/{project}', [ProjectWizardController::class, 'storeStep5'])->name('projects.store.step5');
 
-            Route::post('finalize/{project}', [ProjectWizardController::class, 'finalize'])->name('projects.finalize');
+        Route::get('review/{project}', [ProjectWizardController::class, 'review'])->name('projects.review');
 
-        });
+        Route::post('finalize/{project}', [ProjectWizardController::class, 'finalize'])->name('projects.finalize');
 
     });
 });

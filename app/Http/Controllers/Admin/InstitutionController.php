@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Institution;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class InstitutionController extends Controller
 {
@@ -71,21 +74,42 @@ class InstitutionController extends Controller
                          ->with('success', 'Instituição removida com sucesso!');
     }
 
-    public function select()
+    public function select(): View
     {
         $user = Auth::user();
-        $institutions = $user->isAdmin()
-            ? Institution::all()
-            : $user->institutions;
 
-        return view('institutions.select', compact('institutions'));
+        $institutions = $user->isAdmin()
+            ? Institution::orderBy('name')->get(['institutions.id', 'institutions.name'])
+            : $user->institutions()->orderBy('institutions.name')->get(['institutions.id', 'institutions.name']);
+
+        return view('institutions.select', [
+            'institutions' => $institutions,
+            'active'       => session('institution_id'),
+            'user'         => $user,
+        ]);
     }
 
-    public function set(Request $request)
+    public function set(Request $request): RedirectResponse
     {
-        $institutionId = $request->input('institution_id');
-        session(['institution_id' => $institutionId]);
+        $request->validate([
+            'institution_id' => 'required|exists:institutions,id',
+        ]);
 
-        return redirect()->route('dashboard');
+        $institutionId = (int) $request->input('institution_id');
+        session(['institution_id' => $institutionId]);
+        session()->save();
+
+        $user = Auth::user();
+        $route = $user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto'])
+            ? 'admin.dashboard'
+            : 'dashboard';
+
+        return redirect()->route($route);
+    }
+
+    public function clear(): RedirectResponse
+    {
+        session()->forget('institution_id');
+        return redirect()->route('institution.select');
     }
 }

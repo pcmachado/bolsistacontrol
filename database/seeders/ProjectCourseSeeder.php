@@ -11,7 +11,7 @@ class ProjectCourseSeeder extends Seeder
 {
     public function run(): void
     {
-        $project = Project::first();
+        /*$project = Project::first();
         $courses = Course::take(2)->get();
 
         foreach ($courses as $i => $course) {
@@ -26,6 +26,67 @@ class ProjectCourseSeeder extends Seeder
                 'capacity' => rand(20, 50),
                 'status' => 'ongoing',
             ]);
-        }
+        }*/
+
+            ProjectCourse::insert([
+            [
+                'project_id' => 1,
+                'course_id' => 1,
+                'semester' => 'Semester ' . ($i + 1),
+                'year' => date('Y'),
+                'active' => true,
+                'start_date' => now()->subMonths(2),
+                'end_date' => null,
+                'capacity' => rand(20, 50),
+                'status' => 'ongoing',
+            ],
+            [
+                'project_id' => 1,
+                'course_id' => 2,
+                'semester' => 'Semester ' . ($i + 1),
+                'year' => date('Y'),
+                'active' => true,
+                'start_date' => now()->subMonths(2),
+                'end_date' => null,
+                'capacity' => rand(20, 50),
+                'status' => 'ongoing',
+            ],
+
+            [
+                'project_id' => 2,
+                'course_id' => 3,
+                'semester' => 'Semester ' . ($i + 1),
+                'year' => date('Y'),
+                'active' => true,
+                'start_date' => now()->subMonths(2),
+                'end_date' => null,
+                'capacity' => rand(20, 50),
+                'status' => 'ongoing',
+            ],
+
+            [
+                'project_id' => 3,
+                'course_id' => 4,
+                'semester' => 'Semester ' . ($i + 1),
+                'year' => date('Y'),
+                'active' => true,
+                'start_date' => now()->subMonths(2),
+                'end_date' => null,
+                'capacity' => rand(20, 50),
+                'status' => 'ongoing',
+            ],
+
+            [
+                'project_id' => 4,
+                'course_id' => 5,
+                'semester' => 'Semester ' . ($i + 1),
+                'year' => date('Y'),
+                'active' => true,
+                'start_date' => now()->subMonths(2),
+                'end_date' => null,
+                'capacity' => rand(20, 50),
+                'status' => 'ongoing',
+            ],
+        ]);
     }
 }

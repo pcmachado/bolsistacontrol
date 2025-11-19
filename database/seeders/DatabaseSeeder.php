@@ -2,30 +2,74 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        /*// Lista das tabelas que vamos resetar (orde negativa — dependentes primeiro)
+        $tables = [
+            'attendance_records',
+            'project_scholarship_holders',
+            'project_course',
+            'project_funding_source',
+            'project_scholarship_holders',
+            'project_scholarship_holders', // duplicated safe
+            'scholarship_holders',
+            'project_scholarship_holders',
+            'institution_users',
+            'projects',
+            'units',
+            'funding_sources',
+            'courses',
+            'project_positions',
+            'users',
+            'institutions',
+            'roles',
+            'permissions',
+            'model_has_roles',
+            'model_has_permissions',
+            'role_has_permissions',
+        ];
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-        
+        foreach ($tables as $table) {
+            DB::table($table)->delete();
+            try {
+                DB::statement("ALTER TABLE `$table` AUTO_INCREMENT = 1;");
+            } catch (\Throwable $e) {
+                // ignore if table doesn't exist or cannot reset
+            }
+        }*/
+
+        /*
+        RolesAndPermissionsSeeder::class,
+        UserSeeder::class,
+        institutionSeeder::class,
+        UnitSeeder::class,
+        PositionSeeder::class,
+        ScholarshipHolderSeeder::class,
+        ProjectSeeder::class,
+        ProjectScholarshipHolderSeeder::class,
+        AttendanceRecordSeeder::class,
+        FundingSourceSeeder::class,
+        CourseSeeder::class,
+        ProjectFundingSourceSeeder::class,
+        CourseScholarshipHolderSeeder::class,
+        ProjectCourseSeeder::class,
+        ProjectPositionSeeder::class,
+        InstitutionUserSeeder::class,
+        */
+
+        // Roda os seeders na ordem correta
         $this->call([
             RolesAndPermissionsSeeder::class,
-            UserSeeder::class,
-            institutionSeeder::class,
+            InstitutionSeeder::class,
             UnitSeeder::class,
+            UserSeeder::class,
             PositionSeeder::class,
+            InstitutionUserSeeder::class,
             ScholarshipHolderSeeder::class,
             ProjectSeeder::class,
             ProjectScholarshipHolderSeeder::class,
@@ -36,7 +80,6 @@ class DatabaseSeeder extends Seeder
             CourseScholarshipHolderSeeder::class,
             ProjectCourseSeeder::class,
             ProjectPositionSeeder::class,
-            InstitutionUserSeeder::class,
         ]);
     }
 }

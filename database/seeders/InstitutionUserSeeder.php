@@ -11,7 +11,7 @@ class InstitutionUserSeeder extends Seeder
     public function run(): void
     {
         // Admin → vinculado a todas as instituições
-        $admin = User::where('email', 'admin@example.com')->first();
+        $admin = User::whereIn('email', ['admin@example.com', 'admin@bolsista.com'])->first();
         if ($admin) {
             $institutions = Institution::all();
             foreach ($institutions as $institution) {
@@ -21,6 +21,25 @@ class InstitutionUserSeeder extends Seeder
             }
         }
 
+        // Para cada usuário com unit_id setado, vincula à instituição correspondente
+        $users = User::whereNotNull('unit_id')->get();
+        foreach ($users as $user) {
+            $unit = $user->unit;
+            if ($unit && $unit->institution_id) {
+                $user->institutions()->syncWithoutDetaching($unit->institution_id);
+            }
+        }
+
+        // Coordenadores gerais: vincula o CG à sua instituição
+        $cgs = User::role('coordenador_geral')->get();
+        foreach ($cgs as $cg) {
+            // tenta inferir instituição via unidade dos adjuntos ou pelo nome
+            // fallback: vincula à primeira instituição (defensivo)
+            $inst = Institution::where('name', 'like', "%{$cg->name}%")->first() ?? Institution::first();
+            if ($inst) $cg->institutions()->syncWithoutDetaching($inst->id);
+        }
+
+        /*
         // Coordenador Geral → vinculado à primeira instituição
         $coordenador = User::where('email', 'coordenador@example.com')->first();
         if ($coordenador) {
@@ -46,6 +65,6 @@ class InstitutionUserSeeder extends Seeder
             $bolsista->institutions()->syncWithoutDetaching([
                 $institution->id => ['active' => true],
             ]);
-        }
+        }*/
     }
 }

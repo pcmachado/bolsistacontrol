@@ -9,6 +9,11 @@ class FundingSourceSeeder extends Seeder
 {
     public function run(): void
     {
-        FundingSource::factory()->count(10)->create();
+        //FundingSource::factory()->count(10)->create();
+
+        FundingSource::insert([
+            ['name' => 'FAURGS', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'IFRS', 'created_at' => now(), 'updated_at' => now()],
+        ]);
     }
 }
