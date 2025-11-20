@@ -12,7 +12,7 @@ class ScholarshipHolderSeeder extends Seeder
 {
     public function run(): void
     {
-        //$faker = Faker::create('pt_BR');
+        $faker = Faker::create('pt_BR');
         //$users = User::all();
         //$units = Unit::all();
 

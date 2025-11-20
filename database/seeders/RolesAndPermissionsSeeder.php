@@ -61,6 +61,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $coordenadorGeralRole = Role::firstOrCreate(['name' => 'coordenador_geral', 'guard_name' => 'web']);
         $coordenadorAdjuntoRole = Role::firstOrCreate(['name' => 'coordenador_adjunto', 'guard_name' => 'web']);
         $bolsistaRole          = Role::firstOrCreate(['name' => 'bolsista', 'guard_name' => 'web']);
+        $supervisorRole        = Role::firstOrCreate(['name' => 'supervisor', 'guard_name' => 'web']);
+        $apoioRole            = Role::firstOrCreate(['name' => 'apoio_administrativo', 'guard_name' => 'web']);
+        $orientadorRole        = Role::firstOrCreate(['name' => 'orientador', 'guard_name' => 'web']);
         $adminRole        = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
         $adminRole->givePermissionTo(Permission::all());
 
@@ -99,6 +102,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'submit_attendances',
             'delete_attendances',
         ]);
+
+
 
         $adminRole->syncPermissions(Permission::all());
         // Exemplo de atribuição de papel a um usuário específico (opcional)

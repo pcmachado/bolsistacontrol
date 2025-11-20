@@ -120,4 +120,30 @@ class AttendanceRecord extends Model
 
         return sprintf('%02dh %02dm', $hours, $minutes);
     }
+
+    public function scopeByUserScope($query, $scope)
+    {
+        if ($scope['scope'] === 'all') {
+            return $query;
+        }
+
+        if ($scope['scope'] === 'institution') {
+            return $query->whereHas('scholarshipHolder', function ($q) use ($scope) {
+                $q->where('institution_id', $scope['institution_id']);
+            });
+        }
+
+        if ($scope['scope'] === 'unit') {
+            return $query->whereHas('scholarshipHolder', function ($q) use ($scope) {
+                $q->where('unit_id', $scope['unit_id']);
+            });
+        }
+
+        if ($scope['scope'] === 'self') {
+            return $query->where('scholarship_holder_id', auth()->user()->scholarshipHolder->id);
+        }
+
+        return $query->whereRaw('1 = 0'); // sem permissão
+    }
+
 }

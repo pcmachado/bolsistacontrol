@@ -8,7 +8,6 @@ use App\Models\ScholarshipHolder;
 use App\Models\Position;
 use App\Models\ProjectScholarshipHolder;
 use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
 
 class ProjectScholarshipHolderSeeder extends Seeder
 {
@@ -30,10 +29,10 @@ class ProjectScholarshipHolderSeeder extends Seeder
             ]);
         }*/
 
-            $projects = Project::with('instituition')->get();
+            $projects = Project::with('institution')->get();
 
         foreach ($projects as $project) {
-            $instId = $project->instituition_id ?? $project->instituition?->id;
+            $instId = $project->institution_id ?? $project->institution?->id;
 
             // pega bolsistas da mesma instituição via unit->institution
             $holders = ScholarshipHolder::whereHas('unit', function ($q) use ($instId) {

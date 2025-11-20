@@ -32,7 +32,7 @@ class ProjectCourseSeeder extends Seeder
             [
                 'project_id' => 1,
                 'course_id' => 1,
-                'semester' => 'Semester ' . ($i + 1),
+                'semester' => 'Semester ' . 1,
                 'year' => date('Y'),
                 'active' => true,
                 'start_date' => now()->subMonths(2),
@@ -43,7 +43,7 @@ class ProjectCourseSeeder extends Seeder
             [
                 'project_id' => 1,
                 'course_id' => 2,
-                'semester' => 'Semester ' . ($i + 1),
+                'semester' => 'Semester ' . 1,
                 'year' => date('Y'),
                 'active' => true,
                 'start_date' => now()->subMonths(2),
@@ -55,7 +55,7 @@ class ProjectCourseSeeder extends Seeder
             [
                 'project_id' => 2,
                 'course_id' => 3,
-                'semester' => 'Semester ' . ($i + 1),
+                'semester' => 'Semester ' . 2,
                 'year' => date('Y'),
                 'active' => true,
                 'start_date' => now()->subMonths(2),
@@ -67,7 +67,7 @@ class ProjectCourseSeeder extends Seeder
             [
                 'project_id' => 3,
                 'course_id' => 4,
-                'semester' => 'Semester ' . ($i + 1),
+                'semester' => 'Semester ' . 1,
                 'year' => date('Y'),
                 'active' => true,
                 'start_date' => now()->subMonths(2),
@@ -79,7 +79,7 @@ class ProjectCourseSeeder extends Seeder
             [
                 'project_id' => 4,
                 'course_id' => 5,
-                'semester' => 'Semester ' . ($i + 1),
+                'semester' => 'Semester ' . 2,
                 'year' => date('Y'),
                 'active' => true,
                 'start_date' => now()->subMonths(2),

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\CourseScholarshipHolder;
+use App\Models\ScholarshipHolder;
 
 class CourseScholarshipHolderSeeder extends Seeder
 {
@@ -11,10 +12,17 @@ class CourseScholarshipHolderSeeder extends Seeder
     {
         //CourseScholarshipHolder::factory()->count(15)->create();
 
-        for ($i = 1; $i <= 12; $i++) {
+        $holders = ScholarshipHolder::pluck('id');
+
+        if ($holders->isEmpty()) {
+            echo "Nenhum bolsista encontrado — CourseScholarshipHolderSeeder ignorado.\n";
+            return;
+        }
+
+        foreach ($holders as $holderId) {
             CourseScholarshipHolder::create([
                 'course_id' => rand(1, 4),
-                'scholarship_holder_id' => $i,
+                'scholarship_holder_id' => $holderId,
             ]);
         }
     }

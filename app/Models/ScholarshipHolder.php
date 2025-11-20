@@ -27,7 +27,8 @@ class ScholarshipHolder extends Model
         'user_id',
         'unit_id',
         'start_date',
-        'end_date'  
+        'end_date',
+        'status',
     ];
     
     // Criptografa os dados bancários antes de salvar no banco

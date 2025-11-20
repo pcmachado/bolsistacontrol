@@ -18,8 +18,7 @@ class Institution extends Model
 
     public function units(): HasMany
     {
-        return $this->hasMany(Unit::class)
-            ->withTimestamps();
+        return $this->hasMany(Unit::class);
     }
 
     public function projects(): HasMany

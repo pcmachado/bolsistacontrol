@@ -95,6 +95,7 @@ return new class extends Migration
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->string('status')->default('active');
             $table->timestamps();
             $table->softDeletes();
         });
