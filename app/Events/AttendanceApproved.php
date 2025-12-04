@@ -8,7 +8,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 
 class AttendanceApproved implements ShouldBroadcast
 {

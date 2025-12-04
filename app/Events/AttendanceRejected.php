@@ -8,7 +8,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 
 class AttendanceRejected implements ShouldBroadcast
 {
@@ -31,7 +31,7 @@ class AttendanceRejected implements ShouldBroadcast
         return [
             'message' => 'Seu registro de frequência foi rejeitado.',
             'record_id' => $this->record->id,
-            'reason' => $this->record->rejection_reason,
+            'reason' => $this->record->rejected_reason,
         ];
     }
 }

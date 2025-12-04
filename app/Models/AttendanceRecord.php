@@ -22,6 +22,7 @@ class AttendanceRecord extends Model
     public const STATUS_APPROVED = 'approved'; // Homologado pelo coordenador
     public const STATUS_REJECTED = 'rejected'; // Rejeitado (precisa de ajustes)
     public const STATUS_SUBMITTED = 'submitted'; // Enviado para homologação
+    public const STATUS_LATE = 'late'; // Atrasado (não enviado em até 7 dias)
 
     protected $fillable = [
         'scholarship_holder_id',
@@ -35,7 +36,7 @@ class AttendanceRecord extends Model
         'submitted_at', // Data de envio para homologação
         'approved_at',
         'approved_by_user_id', // ID do usuário Coordenador que aprovou/rejeitou
-        'rejection_reason',
+        'rejected_reason',
         'rejected_at',
     ];
 
@@ -78,6 +79,10 @@ class AttendanceRecord extends Model
     }
 
     public function scopeSubmitted($q) {
+        return $q->where('status', self::STATUS_SUBMITTED);
+    }
+
+    public function scopePending($q) {
         return $q->where('status', self::STATUS_SUBMITTED);
     }
     

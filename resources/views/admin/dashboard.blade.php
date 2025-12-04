@@ -31,21 +31,11 @@
     <div class="container-fluid">
         {{-- 🔔 Faixa institucional abaixo da navbar --}}
         @if($unitName)
-            @php
-                $alertClass = match($role) {
-                    'admin'               => 'bg-success text-white',
-                    'coordenador_geral'   => 'bg-secondary text-white',
-                    'coordenador_adjunto' => 'bg-info text-white',
-                    default               => 'bg-light text-dark',
-                };
-            @endphp
-
-            <div class="{{ $alertClass }} py-2 sticky-top shadow-sm" style="z-index: 1029; top: 56px;">
+            <div class="bg-info text-white py-2 sticky-top shadow-sm" style="z-index: 1029; top: 56px;">
                 <div class="container d-flex align-items-center">
                     <i class="bi bi-building me-2"></i>
                     <span>
                         Você está visualizando os dados da <strong>{{ $unitName }}</strong>
-                        <small class="ms-2">(Perfil: {{ ucfirst(str_replace('_', ' ', $role)) }})</small>
                     </span>
                 </div>
             </div>

@@ -11,7 +11,7 @@ class ProjectFundingSource extends pivot
 {
     use HasFactory;
 
-    protected $table = 'project_funding_sources';
+    protected $table = 'project_funding_source';
 
     protected $fillable = [
         'project_id',

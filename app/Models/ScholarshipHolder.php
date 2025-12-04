@@ -94,15 +94,22 @@ class ScholarshipHolder extends Model
 
     public function courses(): BelongsToMany
     {
-        return $this->belongsToMany(Course::class, 'course_scholarship_holders')
+        return $this->belongsToMany(Course::class, 'course_scholarship_holder')
                     ->withTimestamps();
     }
 
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class, 'project_scholarship_holders')
+        return $this->belongsToMany(Project::class, 'project_scholarship_holder')
                     ->withPivot('position_id')
                     ->withTimestamps();
+    }
+
+    public function classOfferings()
+    {
+        return $this->belongsToMany(ClassOffering::class, 'scholarship_holder_class_offering')
+            ->withPivot(['role'])
+            ->withTimestamps();
     }
 
 }

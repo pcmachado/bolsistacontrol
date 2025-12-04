@@ -11,6 +11,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <dl class="row">
+
                 {{-- Data --}}
                 <dt class="col-sm-3">Data</dt>
                 <dd class="col-sm-9">{{ $attendanceRecord->date?->format('d/m/Y') ?? '-' }}</dd>
@@ -45,34 +46,36 @@
                 {{-- Bolsista --}}
                 <dt class="col-sm-3">Bolsista</dt>
                 <dd class="col-sm-9">
-                    {{ $attendanceRecord->scholarshipHolder->name ?? 'Não informado' }}
+                    {{ $attendanceRecord->scholarshipHolder?->user?->name ?? 'Não informado' }}
                     <br>
                     <small class="text-muted">
-                        Usuário: {{ $attendanceRecord->scholarshipHolder->user->name ?? '-' }}
+                        Unidade: {{ $attendanceRecord->scholarshipHolder?->unit?->name ?? '-' }}
                     </small>
                 </dd>
 
-                {{-- Unidades --}}
-                <dt class="col-sm-3">Unidades</dt>
-                <dd class="col-sm-9">
-                    @if($attendanceRecord->scholarshipHolder && $attendanceRecord->scholarshipHolder->units->count())
+                {{-- Unidades (se houver múltiplas) --}}
+                @if($attendanceRecord->scholarshipHolder?->units?->count())
+                    <dt class="col-sm-3">Unidades Vinculadas</dt>
+                    <dd class="col-sm-9">
                         <ul class="list-unstyled mb-0">
                             @foreach($attendanceRecord->scholarshipHolder->units as $unit)
                                 <li><i class="bi bi-building me-1"></i> {{ $unit->name }}</li>
                             @endforeach
                         </ul>
-                    @else
-                        <span class="text-muted">Nenhuma unidade associada</span>
-                    @endif
-                </dd>
+                    </dd>
+                @endif
 
                 {{-- Homologação --}}
                 @if($attendanceRecord->status === 'approved')
                     <dt class="col-sm-3">Homologado por</dt>
-                    <dd class="col-sm-9">{{ $attendanceRecord->approver?->name ?? '-' }}</dd>
+                    <dd class="col-sm-9">
+                        {{ $attendanceRecord->approver?->name ?? '---' }}
+                    </dd>
                 @elseif($attendanceRecord->status === 'rejected')
                     <dt class="col-sm-3">Motivo da Rejeição</dt>
-                    <dd class="col-sm-9">{{ $attendanceRecord->rejection_reason ?? '-' }}</dd>
+                    <dd class="col-sm-9">
+                        {{ $attendanceRecord->rejected_reason ?? '---' }}
+                    </dd>
                 @endif
             </dl>
         </div>
@@ -83,7 +86,7 @@
             <i class="bi bi-arrow-left"></i> Voltar
         </a>
 
-        {{-- Botões condicionados à Policy --}}
+        {{-- Botões com Policy --}}
         <div>
             @can('update', $attendanceRecord)
                 <a href="{{ route('attendance.edit', $attendanceRecord) }}" class="btn btn-warning">
@@ -92,7 +95,7 @@
             @endcan
 
             @can('delete', $attendanceRecord)
-                <form action="{{ route('attendance.destroy', $attendanceRecord) }}" method="POST" style="display:inline">
+                <form action="{{ route('attendance.destroy', $attendanceRecord) }}" method="POST" class="d-inline">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash"></i> Excluir
@@ -101,11 +104,10 @@
             @endcan
 
             @can('submit', $attendanceRecord)
-                <form action="{{ route('attendance.submit', $attendanceRecord) }}" method="POST" style="display:inline">
+                <form action="{{ route('attendance.submit', $attendanceRecord) }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-info">
-                        <i class="bi bi-upload"></i> Enviar
-                    </button>
+                        <i class="bi bi-upload"></i> Enviar</button>
                 </form>
             @endcan
         </div>

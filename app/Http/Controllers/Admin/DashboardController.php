@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ScholarshipHolder;
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 use App\Models\Unit;
 use App\Models\Course;
 use Illuminate\View\View;
@@ -22,8 +22,6 @@ class DashboardController extends Controller
     {
         $this->dashboard = $dashboard;
 
-        // Garante que o usuário selecione instituição antes de ver o dashboard
-        $this->middleware('institution.selected');
     }
 
         /**

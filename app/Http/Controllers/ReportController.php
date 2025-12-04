@@ -237,42 +237,79 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         $holder = $user->scholarshipHolder;
-        $this->authorize('view', $project);
 
         if (!$holder) {
             abort(403, 'Apenas bolsistas podem gerar relatório individual.');
         }
 
-        $month = $request->get('month', now()->month);
-        $year  = $request->get('year', now()->year);
+        if ($request->filled('month') && str_contains($request->month, '-')) {
+            [$year, $month] = explode('-', $request->month);
+        } else {
+            $month = $request->input('month', now()->month);
+            $year  = $request->input('year', now()->year);
+        }
+
+        $month = (int)$month;
+        $year  = (int)$year;
 
         $attendanceRecords = $holder->attendanceRecords()
             ->whereMonth('date', $month)
             ->whereYear('date', $year)
+            ->orderBy('date','asc')
             ->get();
+
+         $currentProject = $holder->projects()
+            ->withPivot(['weekly_workload','start_date','end_date','status','position_id'])
+            ->wherePivot('status', 'active')
+            ->first();
+
+        // Se não tiver registros, manda para a view "em branco"
+        if ($attendanceRecords->isEmpty()) {
+
+            $data = compact(
+                'holder',
+                'month',
+                'year',
+                'currentProject',
+            );
+
+            if ($request->boolean('pdf')) {
+                $pdf = PDF::loadView('reports.myReport_blank', $data);
+                return $pdf->download("individual_report_{$holder->id}_{$month}_{$year}.pdf");
+            }
+
+            return view('reports.myReport_blank', $data);
+        }
 
         $semanas = $attendanceRecords->groupBy(function($item) {
             return \Carbon\Carbon::parse($item->date)->weekOfMonth;
-        })->map(function($items, $semana) {
-            return [
-                'semana'     => $semana,
-                'horas'      => $items->sum('hours'),
-                'atividades' => $items->pluck('observation')->implode('; ')
-            ];
-        });
+            })->map(function($items, $semana) {
+                return [
+                    'semana'     => $semana,
+                    'horas'      => $items->sum('hours'),
+                    'atividades' => $items->pluck('observation')->implode('; ')
+                ];
+            })
+            ->sortKeys();
 
         $totalHoras = $attendanceRecords->sum('hours');
 
         $data = [
-            'holder'     => $holder,
-            'month'      => $month,
-            'year'       => $year,
-            'semanas'    => $semanas,
-            'totalHoras' => $totalHoras,
+            'holder'         => $holder,
+            'month'          => $month,
+            'year'           => $year,
+            'semanas'        => $semanas,
+            'totalHoras'     => $totalHoras,
+            'attendanceRecords'=> $attendanceRecords,
+            'project' => $currentProject,
         ];
 
-        $pdf = PDF::loadView('reports.myReport', $data);
-        return $pdf->download("individual_report_{$holder->id}_{$month}_{$year}.pdf");
+        if ($request->boolean('pdf')) {
+            $pdf = PDF::loadView('reports.myReport', $data);
+            return $pdf->download("individual_report_{$holder->id}_{$month}_{$year}.pdf");
+        }
+
+        return view('reports.myReport', $data);
     }
 
     public function reportPdf(Request $request, Unit $unit)

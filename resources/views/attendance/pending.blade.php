@@ -33,7 +33,7 @@
                                     <span class="badge bg-info">Pendente</span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('attendance-records.show', $record) }}" 
+                                    <a href="{{ route('attendance.show', $record) }}" 
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i> Ver Detalhes
                                     </a>

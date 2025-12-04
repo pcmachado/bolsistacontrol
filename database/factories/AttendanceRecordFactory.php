@@ -39,7 +39,7 @@ class AttendanceRecordFactory extends Factory
             'submitted_at' => null,
             'approved' => false,
             'approved_by_user_id' => null,
-            'rejection_reason' => null,
+            'rejected_reason' => null,
             'rejected_at' => null,
         ];
     }

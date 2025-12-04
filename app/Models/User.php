@@ -16,8 +16,6 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
-    protected $with = ['scholarshipHolder'];
-
     // Relacionamento: um usuário pertence a uma unidade
     public function unit(): BelongsTo
     {
@@ -31,7 +29,7 @@ class User extends Authenticatable
 
     public function institutions()
     {
-        return $this->belongsToMany(Institution::class, 'institution_users')
+        return $this->belongsToMany(Institution::class, 'institution_user')
             ->withPivot('active')
             ->withTimestamps();
     }
@@ -84,7 +82,7 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->hasRole('Admin');
+        return $this->hasRole('admin');
     }
 
     public function isCoordenadorAdjunto(): bool
@@ -92,9 +90,31 @@ class User extends Authenticatable
         return $this->hasRole('coordenador_adjunto');
     }
 
+    public function isCoordenador(): bool
+    {
+        return $this->hasAnyRole(['coordenador_geral', 'coordenador_adjunto']);
+    }
+
     public function activeInstitutions()
     {
         return $this->institutions()->wherePivot('active', true)->first();
+    }
+
+    public function teachingDisciplines()
+    {
+        return $this->hasMany(ClassOfferingDiscipline::class, 'teacher_id');
+    }
+
+    public function supervisedAssignments()
+    {
+        return $this->hasMany(SupervisorAssignment::class, 'supervisor_id');
+    }
+
+    public function supervisedCourses()
+    {
+        return $this->belongsToMany(Course::class, 'supervisor_course_unit', 'supervisor_id', 'course_id')
+                    ->withPivot('unit_id', 'active')
+                    ->withTimestamps();
     }
 
 }

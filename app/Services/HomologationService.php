@@ -16,7 +16,7 @@ class HomologationService
             'status' => AttendanceRecord::STATUS_APPROVED,
             'approved_by_user_id' => $userId,
             'approved_at' => now(),
-            'rejection_reason' => null,
+            'rejected_reason' => null,
             'rejected_at' => null,
         ]);
 
@@ -31,7 +31,7 @@ class HomologationService
         $record->update([
             'status' => AttendanceRecord::STATUS_REJECTED,
             'approved_by_user_id' => $userId, // ou rejected_by_user_id se quiser separar
-            'rejection_reason' => $reason,
+            'rejected_reason' => $reason,
             'rejected_at' => now(),
         ]);
 

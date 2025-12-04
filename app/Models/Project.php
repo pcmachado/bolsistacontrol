@@ -29,26 +29,26 @@ class Project extends Model
 
     public function courses(): BelongsToMany
     {
-        return $this->belongsToMany(Course::class, 'project_courses')
+        return $this->belongsToMany(Course::class, 'project_course')
                     ->withTimestamps();
     }
 
     public function positions(): BelongsToMany
     {
-        return $this->belongsToMany(Position::class, 'project_positions')
+        return $this->belongsToMany(Position::class, 'project_position')
                     ->withPivot(['weekly_workload', 'hourly_rate'])
                     ->withTimestamps();
     }
 
     public function fundingSources(): BelongsToMany
     {
-        return $this->belongsToMany(FundingSource::class, 'project_funding_sources')
+        return $this->belongsToMany(FundingSource::class, 'project_funding_source')
                     ->withTimestamps();
     }
 
     public function scholarshipHolders(): BelongsToMany
     {
-        return $this->belongsToMany(ScholarshipHolder::class, 'project_scholarship_holders')
+        return $this->belongsToMany(ScholarshipHolder::class, 'project_scholarship_holder')
                     ->withTimestamps();
     }
 

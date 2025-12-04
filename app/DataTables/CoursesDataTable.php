@@ -19,13 +19,36 @@ class CoursesDataTable extends DataTable
             ->addColumn('updated_at', function ($course) {
                 return formatDate($course->updated_at);
             })
+            ->addColumn('projects', function ($course) {
+                return $course->projects->pluck('name')->implode('<br>');
+            })
+
+            ->addColumn('units', function ($course) {
+                return $course->units->pluck('name')->implode('<br>');
+            })
             ->addColumn('actions', 'admin.courses.partials.actions') // Usando uma view para as ações
             ->rawColumns(['actions']);
     }
 
     public function query(Course $model)
     {
-        return $model->newQuery();
+        $query = $model->newQuery();
+        $user = auth()->user();
+
+        // ADMIN e Coordenador Geral → veem tudo
+        if ($user->hasRole(['admin', 'coordenador_geral'])) {
+            return $query;
+        }
+
+        // Coordenador Adjunto → só cursos da sua unidade
+        if ($user->hasRole('coordenador_adjunto')) {
+            return $query->whereHas('projectCourses', function ($q) use ($user) {
+                $q->where('unit_id', $user->unit_id);
+            });
+        }
+
+        // Demais usuários → não veem nada
+        return $query->whereRaw('1=0');
     }
 
     public function html()

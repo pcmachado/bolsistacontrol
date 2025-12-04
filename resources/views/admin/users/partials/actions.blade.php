@@ -1,19 +1,22 @@
 <div class="d-flex justify-content-center gap-2">
     {{-- Botão Visualizar --}}
-    <a href="{{ route('admin.users.show', $id) }}" 
+    <a href="{{ route('admin.users.show', $user->id) }}" 
        class="btn btn-sm btn-info rounded-0" 
        title="Visualizar">
         <i class="bi bi-eye"></i>
     </a>
     {{-- Botão Editar --}}
-    <a href="{{ route('admin.users.edit', $id) }}" 
+    @can('update', $user)
+    <a href="{{ route('admin.users.edit', $user->id) }}" 
        class="btn btn-sm btn-primary rounded-0" 
        title="Editar">
         <i class="bi bi-pencil-square"></i>
     </a>
+    @endcan
 
     {{-- Botão Excluir --}}
-    <form action="{{ route('admin.users.destroy', $id) }}" method="POST" 
+    @can('delete', $user)
+    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" 
           onsubmit="return confirm('Tem certeza que deseja excluir?');" 
           style="display:inline;">
         @csrf
@@ -22,4 +25,5 @@
             <i class="bi bi-trash"></i>
         </button>
     </form>
+    @endcan
 </div>

@@ -33,10 +33,6 @@ Route::get('/contact', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('/institution/select', [InstitutionController::class, 'select'])->name('institution.select');
-    Route::post('/institution/set', [InstitutionController::class, 'set'])->name('institution.set');
-    Route::post('/institution/clear', [InstitutionController::class, 'clear'])->name('institution.clear');
-
     Route::resource('/dashboard', DashboardController::class)->only(['index'])->names(['index' => 'dashboard']);
 
     // Módulo de Frequência para o Bolsista
@@ -44,21 +40,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/attendance/my', [AttendanceRecordController::class, 'index'])->name('attendance.my');
     Route::get('/attendance/create', [AttendanceRecordController::class, 'create'])->name('attendance.create');
     Route::post('/attendance', [AttendanceRecordController::class, 'store'])->name('attendance.store');
-    Route::get('/attendance/{attendanceRecord}/edit', [AttendanceRecordController::class, 'edit'])->name('attendance.edit');
-    Route::put('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'update'])->name('attendance.update');
-    Route::delete('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'destroy'])->name('attendance.destroy');
-
     Route::get('/attendance/history', [AttendanceRecordController::class, 'history'])->name('attendance.history');
     Route::get('/attendance/pending', [AttendanceRecordController::class, 'pending'])->name('attendance.pending');
-    Route::post('/attendance/{attendanceRecord}/submit', [AttendanceRecordController::class, 'submit'])->name('attendance.submit');
-
     Route::get('/attendance/card/approved', [AttendanceRecordController::class, 'approved'])->name('attendance.card.approved');
     Route::get('/attendance/card/submitted', [AttendanceRecordController::class, 'submitted'])->name('attendance.card.submitted');
     Route::get('/attendance/card/rejected', [AttendanceRecordController::class, 'rejected'])->name('attendance.card.rejected');
     Route::get('/attendance/card/late', [AttendanceRecordController::class, 'late'])->name('attendance.card.late');
-
     Route::get('/attendance/submissions', [AttendanceRecordController::class, 'submissions'])->name('attendance.submissions');
     Route::get('/attendance/approvals', [AttendanceRecordController::class, 'approvals'])->name('attendance.approvals');
+
+    Route::get('/attendance/{attendanceRecord}/edit', [AttendanceRecordController::class, 'edit'])->name('attendance.edit');
+    Route::put('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'update'])->name('attendance.update');
+    Route::delete('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'destroy'])->name('attendance.destroy');
+    Route::post('/attendance/{attendanceRecord}/submit', [AttendanceRecordController::class, 'submit'])->name('attendance.submit');
+    Route::get('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'show'])->name('attendance.show');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -67,8 +62,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/reports/my-report', [ReportController::class, 'individualReport'])->name('reports.myReport');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
-    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::post('/notifications/mark-all', [NotificationController::class, 'markAll'])->name('notifications.markAll');
+    
+    Route::get('/notifications/read/{id}', [NotificationController::class, 'read'])->name('notifications.read');
     Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 
 });
@@ -83,9 +79,7 @@ Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, '
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 
 Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
-    Route::group(['middleware' => ['institution.selected']], function() {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    });
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
 
@@ -94,12 +88,12 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
 
     // 🔹 Relatório de Homologações (apenas coordenador geral e adjunto)
     Route::get('/homologations/report', [HomologationController::class, 'report'])->name('homologations.report');
-
     Route::post('/homologations/bulk', [HomologationController::class, 'bulk'])->name('homologations.bulk');
     Route::get('/homologations/pending', [HomologationController::class, 'pending'])->name('homologations.pending');
-    Route::get('/homologations/{id}', [HomologationController::class, 'show'])->name('homologations.show');
     Route::get('/homologations', [HomologationController::class, 'index'])->name('homologations.index');
     Route::get('/homologations/late', [HomologationController::class, 'late'])->name('homologations.late');
+
+    Route::get('/homologations/{id}', [HomologationController::class, 'show'])->name('homologations.show');
 
     // 🔹 Relatório Consolidado (apenas coordenador geral)
     Route::get('/reports/monthly', [ReportController::class, 'monthlyReport'])->name('reports.report');

@@ -1,40 +1,71 @@
 @extends('layouts.app')
 
+@section('title', 'Cadastrar Curso')
+
 @section('content')
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2>Cadastrar Novo Curso</h2>
+<div class="container-fluid">
+
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-journal-plus me-2"></i> Cadastrar Novo Curso
+        </h2>
+
+        <a href="{{ route('admin.courses.index') }}" class="btn btn-outline-secondary shadow-sm px-3">
+            <i class="bi bi-arrow-left me-2"></i> Voltar
+        </a>
+    </div>
+
+    {{-- Exibir erros --}}
+    @if ($errors->any())
+        <div class="alert alert-danger shadow-sm">
+            <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i> Erros encontrados:</h6>
+            <ul class="mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
-        <div class="pull-right">
-            <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.courses.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
+    @endif
+
+    {{-- Card do formulário --}}
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0 fw-semibold">
+                <i class="bi bi-pencil-square me-2"></i> Informações do Curso
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" action="{{ route('admin.courses.store') }}">
+                @csrf
+                
+                {{-- Nome do curso --}}
+                <div class="mb-4">
+                    <label for="name" class="form-label fw-semibold">Nome do Curso</label>
+                    <input 
+                        type="text" 
+                        name="name" 
+                        id="name"
+                        value="{{ old('name') }}"
+                        class="form-control @error('name') is-invalid @enderror"
+                        placeholder="Ex: Curso de Informática"
+                        required
+                    >
+                    
+                    @error('name')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                {{-- Botão --}}
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-check-lg me-2"></i> Salvar Curso
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-
-@if (count($errors) > 0)
-    <div class="alert alert-danger">
-      <strong>Whoops!</strong> Ocorreu um problema com sua entrada.<br><br>
-      <ul>
-         @foreach ($errors->all() as $error)
-           <li>{{ $error }}</li>
-         @endforeach
-      </ul>
-    </div>
-@endif
-
-<form method="POST" action="{{ route('admin.courses.store') }}">
-    @csrf
-    <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Nome:</strong>
-                <input type="text" name="name" placeholder="Nome" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Enviar</button>
-        </div>
-    </div>
-</form>
 @endsection

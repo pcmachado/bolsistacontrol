@@ -57,6 +57,7 @@ class AttendanceRecordDataTable extends DataTable
                     'submitted'=> '<span class="badge bg-info">Enviado</span>',
                     'approved' => '<span class="badge bg-success">Homologado</span>',
                     'rejected' => '<span class="badge bg-danger">Rejeitado</span>',
+                    'late'     => '<span class="badge bg-warning text-dark">Atrasado</span>',
                     default    => ucfirst($attendanceRecord->status),
                 };
             })
@@ -75,7 +76,7 @@ class AttendanceRecordDataTable extends DataTable
 
     public function query(AttendanceRecord $model)
     {
-        $query = $model->newQuery()->with(['scholarshipHolder.user']);
+        $query = $model->newQuery()->with(['scholarshipHolder.user', 'scholarshipHolder.unit']);
         $user  = Auth::user();
 
         // --- LÓGICA DE VISIBILIDADE ---
@@ -85,6 +86,10 @@ class AttendanceRecordDataTable extends DataTable
                 break;
 
             case 'submitted':
+                $query->where('status', 'submitted');
+                break;
+
+            case 'pending':
                 $query->where('status', 'submitted');
                 break;
 
@@ -114,21 +119,26 @@ class AttendanceRecordDataTable extends DataTable
             default:
                 if ($user->hasRole(['admin', 'coordenador_geral'])) {
                     // visão total
-                } elseif ($user->hasRole('coordenador_adjunto')) {
-                    $coordinatorUnitIds = $user->units()->pluck('units.id');
+                    break;
+                }
+                if ($user->hasRole('coordenador_adjunto')) {
 
-                    $query->where(function ($q) use ($user, $coordinatorUnitIds) {
+                    $query->where(function ($q) use ($user) {
                         // sempre inclui os próprios registros
                         if ($user->scholarshipHolder) {
                             $q->where('scholarship_holder_id', $user->scholarshipHolder->id);
                         }
 
                         // e também os registros dos bolsistas das suas unidades
-                        $q->orWhereHas('scholarshipHolder.units', function ($unitQuery) use ($coordinatorUnitIds) {
-                            $unitQuery->whereIn('units.id', $coordinatorUnitIds);
+                        $q->orWhereHas('scholarshipHolder', function ($sq) use ($user) {
+                            $sq->where('unit_id', $user->unit_id);
                         });
                     });
-                } elseif ($user->scholarshipHolder) {
+
+                    break;
+                }
+                
+                if ($user->scholarshipHolder) {
                     // bolsista comum
                     $query->where('scholarship_holder_id', $user->scholarshipHolder->id);
                 } else {
@@ -147,18 +157,40 @@ class AttendanceRecordDataTable extends DataTable
         }
 
         if (!empty($this->filters['unit_id'])) {
-            $query->whereHas('scholarshipHolder.units', function ($q) {
-                $q->where('units.id', $this->filters['unit_id']);
-            });
+            $query->whereHas('scholarshipHolder', fn ($q) => 
+                $q->where('unit_id', $this->filters['unit_id'])
+            );
         }
 
         if (!empty($this->filters['scholarship_holder_id'])) {
             $query->where('scholarship_holder_id', $this->filters['scholarship_holder_id']);
         }
 
+        // 🔎 Filtro por período
+        if (!empty($this->filters['start_date'])) {
+            $query->whereDate('date', '>=', $this->filters['start_date']);
+        }
+        if (!empty($this->filters['end_date'])) {
+            $query->whereDate('date', '<=', $this->filters['end_date']);
+        }
+
         if (!empty($this->filters['month'])) {
             $query->whereYear('date', substr($this->filters['month'], 0, 4))
                 ->whereMonth('date', substr($this->filters['month'], 5, 2));
+        }
+
+        // Filtro por mês e ano
+        if (!empty($this->filters['monthYear'])) {
+            $query->whereMonth('date', $this->filters['monthYear']);
+        }
+
+        if (!empty($this->filters['year'])) {
+            $query->whereYear('date', $this->filters['year']);
+        }
+
+        // 🔎 Filtro por status
+        if (!empty($this->filters['status'])) {
+            $query->where('status', $this->filters['status']);
         }
         // --- FIM DOS FILTROS ---
 

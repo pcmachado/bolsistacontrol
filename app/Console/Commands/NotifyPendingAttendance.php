@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\AttendanceRecord;
 use App\Models\User;
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 use Carbon\Carbon;
 
 class NotifyPendingAttendance extends Command

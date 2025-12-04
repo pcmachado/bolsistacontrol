@@ -11,7 +11,7 @@ class ProjectPosition extends Pivot
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'project_positions';
+    protected $table = 'project_position';
 
     protected $fillable = [
         'project_id',

@@ -48,7 +48,7 @@ class AttendanceRecordSeeder extends Seeder
                         'submitted_at' => null,
                         'approved_by_user_id' => null,
                         'rejected_at' => null,
-                        'rejection_reason' => null,
+                        'rejected_reason' => null,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);

@@ -21,15 +21,37 @@ class Course extends Model
         'active',
     ];
 
-    public function projects(): BelongsToMany
-    {
-        return $this->belongsToMany(Project::class, 'course_projects')
-                    ->withTimestamps();
-    }
-
     public function scholarshipHolders(): BelongsToMany
     {
         return $this->belongsToMany(ScholarshipHolder::class, 'course_scholarship_holder')
                     ->withTimestamps();
     }
+
+    public function disciplines()
+    {
+        return $this->hasMany(Discipline::class);
+    }
+
+    public function classOfferings()
+    {
+        return $this->hasMany(ClassOffering::class);
+    }
+
+    public function units()
+    {
+        return $this->hasManyThrough(Unit::class, ClassOffering::class);
+    }
+
+    public function projects()
+    {
+        return $this->hasManyThrough(Project::class, ClassOffering::class);
+    }
+
+    public function supervisors()
+    {
+        return $this->belongsToMany(User::class, 'supervisor_course_unit', 'course_id', 'supervisor_id')
+                    ->withPivot('unit_id', 'active')
+                    ->withTimestamps();
+    }
+
 }

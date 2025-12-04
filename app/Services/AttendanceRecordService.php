@@ -104,7 +104,7 @@ class AttendanceRecordService
             'status' => 'rejected',
             'approved' => false,
             'approved_by_user_id' => Auth::id(),
-            'rejection_reason' => $reason,
+            'rejected_reason' => $reason,
         ]);
 
         return $attendanceRecord;

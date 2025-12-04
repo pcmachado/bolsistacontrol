@@ -3,58 +3,86 @@
 namespace App\Services;
 
 use App\Models\AttendanceRecord;
-use App\Models\ScholarshipHolder;
-use App\Models\Notification;
+use App\Models\ScholarshipHolder; 
 use App\Models\Unit;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 
 class DashboardService
 {
-    protected DataScopeService $scopeService;
-
-    public function __construct(DataScopeService $scopeService)
-    {
-        $this->scopeService = $scopeService;
-    }
-
     public function getDashboardData(array $filters): array
     {
         $user = Auth::user();
-        $scope = $this->scopeService->getScope();
 
-        // ================================
-        // 1) FILTRO DE MÊS
-        // ================================
-        $month = $filters['month'] ?? now()->month;
-        $year  = $filters['year']  ?? now()->year;
+        $monthInput = $filters['month'] ?? null;
+
+        if ($monthInput && preg_match('/^\d{4}-\d{2}$/', $monthInput)) {
+            // formato vindo do <input type="month">
+            [$year, $month] = explode('-', $monthInput);
+            $year  = (int) $year;
+            $month = (int) $month;
+        } else {
+            // fallback: mês e ano separados
+            $year  = isset($filters['year']) ? (int) $filters['year'] : (int) now()->format('Y');
+            $month = isset($filters['month']) && is_numeric($filters['month'])
+                ? (int) $filters['month']
+                : (int) now()->format('m');
+        }
 
         $currentMonth = now()->format('Y-m');
 
-        // ================================
-        // 2) Consulta principal
-        // ================================
         $query = AttendanceRecord::query()
             ->whereYear('date', $year)
-            ->whereMonth('date', $month)
-            ->byUserScope($scope); // 🔥 Aqui aplicamos o escopo
+            ->whereMonth('date', $month);
 
-        // ================================
-        // 2.1) 🔒 Se for coordenador adjunto, filtra pela unidade dele
-        // ================================
+        $role = $user->roles->pluck('name')->first();
         $unitName = null;
-        $role = auth()->user()->roles->pluck('name')->first();
 
-        if ($role === 'coordenador_adjunto') {
-            $unitId = auth()->user()->unit_id;
-            $query->whereHas('scholarshipHolder', fn($q) => $q->where('unit_id', $unitId));
-            $unitName = optional(auth()->user()->unit)->name;
+        // superAdmin → vê tudo
+        if ($user->hasRole('superAdmin')) {
+            // sem filtro extra
+        }
+        // admin / coordenador_geral → vê todos os registros do sistema
+        elseif ($user->hasRole('admin') || $user->hasRole('coordenador_geral')) {
+            // sem filtro extra
+        }
+        // coordenador_adjunto / supervisor / apoio_administrativo / orientador → só unidade
+        elseif (
+            $user->hasRole('coordenador_adjunto') ||
+            $user->hasRole('supervisor') ||
+            $user->hasRole('apoio_administrativo') ||
+            $user->hasRole('orientador')
+        ) {
+            $unitId = $user->unit_id;
+
+            if ($unitId) {
+                $query->whereHas('scholarshipHolder', function ($q) use ($unitId) {
+                    $q->where('unit_id', $unitId);
+                });
+
+                $unitName = optional($user->unit)->name;
+            } else {
+                // sem unidade vinculada → não mostra nada
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // bolsista → só os próprios registros
+        elseif ($user->hasRole('bolsista')) {
+            if ($user->scholarshipHolder) {
+                $query->where('scholarship_holder_id', $user->scholarshipHolder->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // qualquer outro papel inesperado → vazio
+        else {
+            $query->whereRaw('1 = 0');
         }
 
-        // ================================
-        // 3) Contagens
-        // ================================
         $total = $query->count();
 
         $counts = [
@@ -68,18 +96,22 @@ class DashboardService
         // ================================
         // 4) Últimos eventos
         // ================================
-        $lastSubmissions = AttendanceRecord::with('scholarshipHolder.user')
+        $lastSubmissions = (clone $query)
+            ->with('scholarshipHolder.user')
             ->where('status', 'submitted')
-            ->byUserScope($scope)
-            ->orderBy('date', 'desc')
-            ->limit(5)
+            ->selectRaw('scholarship_holder_id, DATE(date) as date')
+            ->groupBy('scholarship_holder_id', 'date')
+            ->latest('date')
+            ->take(5)
             ->get();
 
-        $lastApprovals = AttendanceRecord::with('scholarshipHolder.user')
+        $lastApprovals = (clone $query)
+            ->with('scholarshipHolder.user')
             ->where('status', 'approved')
-            ->byUserScope($scope)
-            ->orderBy('date', 'desc')
-            ->limit(5)
+            ->selectRaw('scholarship_holder_id, DATE(date) as date')
+            ->groupBy('scholarship_holder_id', 'date')
+            ->latest('date')
+            ->take(5)
             ->get();
 
         // ================================
@@ -87,25 +119,64 @@ class DashboardService
         // ================================
         $myPending = 0;
         if ($user->scholarshipHolder) {
-            $myPending = AttendanceRecord::where('scholarship_holder_id', $user->scholarshipHolder->id)
+            $myPending = AttendanceRecord::query()
+                ->where('scholarship_holder_id', $user->scholarshipHolder->id)
+                ->whereYear('date', $year)
+                ->whereMonth('date', $month)
                 ->where('status', 'draft')
                 ->count();
         }
 
-        // ================================
-        // 6) Cards adicionais (instituição / sistema)
-        // ================================
-        $totalBolsistas = User::role('bolsista')->count();
-        $totalUnidades = Unit::count();
-        $unidades = Unit::all();
-        $usersCount = User::count();
-        $scholarshipHoldersCount = ScholarshipHolder::count();
-        $coursesCount = Course::count();
-        $notificacoesPendentes = Notification::where('read', false)->count();
+        $baseUserQuery        = User::query();
+        $baseScholarQuery     = ScholarshipHolder::query();
+        $baseUnitQuery        = Unit::query();
+        $baseCourseQuery      = Course::query();
 
-        // ================================
-        // 7) Gráfico
-        // ================================
+        // Se quiser restringir para alguns papéis à unidade:
+        if (
+            $user->hasRole('coordenador_adjunto') ||
+            $user->hasRole('supervisor') ||
+            $user->hasRole('apoio_administrativo') ||
+            $user->hasRole('orientador')
+        ) {
+            $unitId = $user->unit_id;
+
+            if ($unitId) {
+                $baseUserQuery->where('unit_id', $unitId);
+                $baseScholarQuery->where('unit_id', $unitId);
+                $baseUnitQuery->where('id', $unitId);
+            }
+        } elseif ($user->hasRole('bolsista')) {
+            if ($user->scholarshipHolder) {
+                $baseUserQuery->where('id', $user->id);
+                $baseScholarQuery->where('id', $user->scholarshipHolder->id);
+                $baseUnitQuery->where('id', $user->scholarshipHolder->unit_id);
+            } else {
+                $baseUserQuery->where('id', $user->id);
+                $baseScholarQuery->whereRaw('1 = 0');
+                $baseUnitQuery->whereRaw('1 = 0');
+            }
+        }
+        // superAdmin / admin / coordenador_geral → veem tudo
+
+        $usersCount              = $baseUserQuery->count();
+        $scholarshipHoldersCount = $baseScholarQuery->count();
+        $coursesCount            = $baseCourseQuery->count();
+        $totalBolsistas          = $scholarshipHoldersCount;
+        $totalUnidades           = $baseUnitQuery->count();
+        $unidades                = $baseUnitQuery->get();
+
+        // Notificações — por enquanto: todas não lidas (podemos depois filtrar por user)
+        $notificacoesPendentes = $user->unreadNotifications()->count();
+        $recentNotifications = $user->notifications()
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $lastNotifications = $user->notifications()
+            ->take(5)
+            ->get();
+        
         $percentages = collect($counts)->map(
             fn($c) => $total ? round($c / $total * 100, 1) : 0
         );
@@ -140,11 +211,11 @@ class DashboardService
             'percentages',
             'month',
             'year',
-            'scope',
             'lastSubmissions',
             'lastApprovals',
             'unitName',
-            'currentMonth'
+            'currentMonth',
+            'recentNotifications'
         );
     }
 }

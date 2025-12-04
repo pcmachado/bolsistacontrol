@@ -13,6 +13,12 @@
         .assinaturas td { border: none; text-align: center; padding-top: 40px; }
         .rodape { font-size: 10px; text-align: right; margin-top: 20px; }
     </style>
+    <div class="text-end mb-3">
+        <a href="{{ request()->fullUrlWithQuery(['pdf' => 1]) }}"
+        class="btn btn-danger" target="_blank">
+        <i class="bi bi-file-earmark-pdf"></i> Baixar PDF
+        </a>
+    </div>
 </head>
 <body>
 

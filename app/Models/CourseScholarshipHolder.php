@@ -12,7 +12,7 @@ class CourseScholarshipHolder extends Pivot
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'course_scholarship_holders';
+    protected $table = 'course_scholarship_holder';
 
     protected $fillable = [
         'course_id',

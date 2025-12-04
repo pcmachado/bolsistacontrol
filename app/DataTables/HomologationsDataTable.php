@@ -54,8 +54,9 @@ class HomologationsDataTable extends DataTable
 
         // --- regras de visibilidade ---
         if ($user->hasRole('coordenador_adjunto')) {
-            $unitIds = $user->units()->pluck('units.id');
-            $query->whereHas('scholarshipHolder.unit', fn($q) => $q->whereIn('units.id', $unitIds));
+            $query->whereHas('scholarshipHolder', function ($q) use ($user) {
+                $q->where('unit_id', $user->unit_id);
+            });
         }
 
         // --- filtros adicionais ---

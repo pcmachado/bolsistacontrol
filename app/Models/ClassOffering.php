@@ -8,18 +8,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ProjectCourse extends Pivot
+class ClassOffering extends Pivot
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'project_courses';
+    protected $table = 'project_course';
 
     protected $fillable = [
         'course_id',
         'project_id',
+        'unit_id',
+        'name',
         'semester',
         'year',
-        'active',
         'start_date',
         'end_date',
         'capacity',
@@ -31,8 +32,28 @@ class ProjectCourse extends Pivot
         return $this->belongsTo(Course::class);
     }
 
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function disciplines()
+    {
+        return $this->belongsToMany(Discipline::class, 'class_offering_discipline')
+            ->withPivot(['teacher_id', 'workload', 'schedule', 'room'])
+            ->withTimestamps();
+    }
+
+    public function scholarshipHolders()
+    {
+        return $this->belongsToMany(ScholarshipHolder::class, 'scholarship_holder_class_offering')
+            ->withPivot(['role'])
+            ->withTimestamps();
+    }
+
 }

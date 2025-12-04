@@ -11,7 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Instituições
         Schema::create('institutions', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -35,52 +34,31 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-        // 2. Usuários (já existe na migration padrão do Laravel)
 
-        // 3. Cargos
-        Schema::create('positions', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->text('description')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        // 4. Projetos
-        Schema::create('projects', function (Blueprint $table) {
-            $table->id();
-            $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
-            $table->text('description')->nullable();
-            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        // 5. Unidades
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->foreignId('institution_id')->constrained()->onDelete('cascade');
             $table->string('name');
+            $table->string('shortname')->nullable();
             $table->string('city');
             $table->string('address')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
+            $table->string('domain')->nullable();
             $table->string('cnpj')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
 
         Schema::table('users', function (Blueprint $table) {
-            // adiciona a coluna unit_id como chave estrangeira
-            $table->foreignId('unit_id')
-                  ->nullable()
-                  ->constrained('units')
-                  ->onDelete('set null');
+            if (!Schema::hasColumn('users', 'institution_id')) {
+                $table->foreignId('institution_id')->nullable()->constrained('institutions')->onDelete('set null');
+            }
+            if (!Schema::hasColumn('users', 'unit_id')) {
+                $table->foreignId('unit_id')->nullable()->constrained('units')->onDelete('set null');
+            }
         });
 
-        // 6. Bolsistas
         Schema::create('scholarship_holders', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -100,7 +78,6 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        // 7. Registro de frequência
         Schema::create('attendance_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
@@ -111,28 +88,16 @@ return new class extends Migration
             $table->integer('hours');
             $table->decimal('calculated_value', 10, 2)->nullable();
             $table->boolean('approved')->default(false);
-            $table->string('status')->default('draft');
+            $table->enum('status', ['draft','submitted','approved','rejected','late'])->default('draft');
             $table->timestamp('submitted_at')->nullable();
             $table->unsignedBigInteger('approved_by_user_id')->nullable();
             $table->timestamp('rejected_at')->nullable();
-            $table->text('rejection_reason')->nullable();
+            $table->text('rejected_reason')->nullable();
             $table->foreign('approved_by_user_id')->references('id')->on('users')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
         });
 
-        // 8. Notificações
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
-            $table->string('type'); // 'atraso', 'pendencia', 'falta'
-            $table->text('message');
-            $table->boolean('read')->default(false);
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        // Tabela para Cursos
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -146,7 +111,78 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        // Tabela para Fontes Pagadoras
+        Schema::create('projects', function (Blueprint $table) {
+            $table->id();
+            $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
+            $table->text('description')->nullable();
+            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
+            $table->foreignId('unit_id')->nullable()->constrained('units')->onDelete('set null');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('positions', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('course_scholarship_holder', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained()->onDelete('cascade');
+            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->date('enrollment_date')->nullable();
+            $table->date('completion_date')->nullable();
+            $table->enum('status', ['enrolled', 'completed', 'dropped'])->default('enrolled');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('disciplines', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->unsignedInteger('workload')->nullable(); // carga horária em horas
+            $table->unsignedInteger('sequence_order')->nullable(); // ordem no curso
+            $table->boolean('active')->default(true);
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('class_offerings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('unit_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('name')->nullable(); // ex: Turma A noite
+            $table->string('semester')->nullable(); // ex: 2025/1
+            $table->year('year')->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->unsignedInteger('capacity')->nullable();
+            $table->enum('status', ['planned', 'ongoing', 'completed', 'cancelled', 'finished'])->default('planned'); // planned, ongoing, finished, cancelled
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('project_scholarship_holder', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->foreignId('position_id')->constrained()->onDelete('cascade');
+            $table->integer('weekly_workload')->default(20);
+            $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
+            $table->date('end_date')->nullable();
+            $table->date('start_date');
+            $table->text('assignments')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+        
         Schema::create('funding_sources', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -158,38 +194,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        // 9. Relação M:N entre projetos e bolsistas
-        Schema::create('project_scholarship_holders', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained()->onDelete('cascade');
-            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
-            $table->foreignId('position_id')->constrained()->onDelete('cascade');
-            $table->integer('weekly_workload')->default(20);
-            $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
-            $table->date('end_date')->nullable();
-            $table->date('start_date');
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-         // Um projeto pode ter vários cursos
-        Schema::create('project_courses', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->foreignId('project_id')->constrained()->onDelete('cascade');
-            $table->string('semester')->nullable();
-            $table->integer('year')->nullable();
-            $table->boolean('active')->default(true);
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->integer('capacity')->nullable();
-            $table->enum('status', ['planned', 'ongoing', 'completed'])->default('planned');
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        // Um projeto pode ter várias fontes pagadoras
-        Schema::create('project_funding_sources', function (Blueprint $table) {
+        Schema::create('project_funding_source', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->foreignId('funding_source_id')->constrained()->onDelete('cascade');
@@ -200,22 +205,8 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-        
-        // Um bolsista pode estar em vários cursos
-        Schema::create('course_scholarship_holders', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
-            $table->date('enrollment_date')->nullable();
-            $table->date('completion_date')->nullable();
-            $table->enum('status', ['enrolled', 'completed', 'dropped'])->default('enrolled');
-            $table->timestamps();
-            $table->softDeletes();
-        });
 
-        // Tabela Pivot para a relação N:M entre Projetos e Cargos
-        // Esta tabela conterá os atributos específicos da relação
-        Schema::create('project_positions', function (Blueprint $table) {
+        Schema::create('project_position', function (Blueprint $table) {
             $table->id();
             $table->text('assignments')->nullable(); // Descrição das atribuições
             $table->decimal('hourly_rate', 8, 2)->nullable(); // Valor da hora de trabalho
@@ -226,12 +217,38 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('institution_users', function (Blueprint $table) {
+        Schema::create('class_offering_discipline', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('institution_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->boolean('active')->default(true); // opcional: marcar vínculo ativo/inativo
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('discipline_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('teacher_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedInteger('workload')->nullable(); // pode sobrescrever carga padrão
+            $table->string('schedule')->nullable(); // ex: "2ª e 4ª - 19h às 22h"
+            $table->string('room')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('supervisor_assignment', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('supervisor_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('unit_id')->constrained()->cascadeOnDelete();
+            $table->boolean('active')->default(true);
+            $table->timestamps();
+
+            $table->unique(['supervisor_id', 'course_id', 'unit_id']);
+            $table->softDeletes();
+        });
+
+        Schema::create('scholarship_holder_class_offering', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('scholarship_holder_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+            $table->string('role')->nullable(); // ex: aluno, monitor, bolsista
+            $table->timestamps();
+
+            $table->unique(['scholarship_holder_id', 'class_offering_id']);
             $table->softDeletes();
         });
     }
@@ -241,13 +258,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('institution_users');
-        Schema::dropIfExists('project_positions');
-        Schema::dropIfExists('project_scholarship_holders');
-        Schema::dropIfExists('project_courses');
-        Schema::dropIfExists('project_funding_sources');
-        Schema::dropIfExists('course_scholarship_holders');
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('project_position');
+        Schema::dropIfExists('supervisor_course_unit');
+        Schema::dropIfExists('scholarship_holder_class_offering');
+        Schema::dropIfExists('class_offering_discipline');
+        Schema::dropIfExists('project_scholarship_holder');
+        Schema::dropIfExists('class_offering');
+        Schema::dropIfExists('project_funding_source');
+        Schema::dropIfExists('course_scholarship_holder');
+        Schema::dropIfExists('disciplines');
         Schema::dropIfExists('attendance_records');
         Schema::dropIfExists('scholarship_holders');
         Schema::dropIfExists('units');

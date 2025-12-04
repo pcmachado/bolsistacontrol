@@ -11,7 +11,7 @@ class ProjectScholarshipHolder extends Pivot
 
     use HasFactory, SoftDeletes;
     
-    protected $table = 'project_scholarship_holders';
+    protected $table = 'project_scholarship_holder';
 
     protected $fillable = [
         'project_id',

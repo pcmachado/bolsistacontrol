@@ -19,9 +19,11 @@ class Unit extends Model
     protected $fillable = [
         'institution_id',
         'name',
+        'shortname',
         'city',
         'address',
         'phone',
+        'domain',
         'email',
         'cnpj'
     ];
@@ -46,4 +48,15 @@ class Unit extends Model
     {
         return $this->hasMany(ScholarshipHolder::class);
     }
+
+    public function classOfferings()
+    {
+        return $this->hasMany(ClassOffering::class);
+    }
+
+    public function supervisorAssignments()
+    {
+        return $this->hasMany(SupervisorAssignment::class);
+    }
+
 }

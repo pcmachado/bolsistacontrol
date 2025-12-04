@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
             UnitSeeder::class,
             UserSeeder::class,
             PositionSeeder::class,
-            InstitutionUserSeeder::class,
+            //InstitutionUserSeeder::class,
             ScholarshipHolderSeeder::class,
             ProjectSeeder::class,
             ProjectScholarshipHolderSeeder::class,
@@ -80,6 +80,7 @@ class DatabaseSeeder extends Seeder
             CourseScholarshipHolderSeeder::class,
             ProjectCourseSeeder::class,
             ProjectPositionSeeder::class,
+            NotificationTestSeeder::class,
         ]);
     }
 }

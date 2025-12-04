@@ -21,7 +21,7 @@ class FundingSource extends Model
 
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class, 'project_funding_sources')
+        return $this->belongsToMany(Project::class, 'project_funding_source')
                     ->withTimestamps();
     }
 

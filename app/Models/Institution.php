@@ -13,7 +13,7 @@ class Institution extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'city', 'state', 'address', 'phone'
+        'name', 'city', 'state', 'address', 'phone', 'email', 'cnpj'
     ];
 
     public function units(): HasMany

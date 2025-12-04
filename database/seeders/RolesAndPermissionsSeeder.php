@@ -65,6 +65,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $apoioRole            = Role::firstOrCreate(['name' => 'apoio_administrativo', 'guard_name' => 'web']);
         $orientadorRole        = Role::firstOrCreate(['name' => 'orientador', 'guard_name' => 'web']);
         $adminRole        = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $superadminRole        = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
         $adminRole->givePermissionTo(Permission::all());
 
         // Atribuir permissões
@@ -106,6 +107,8 @@ class RolesAndPermissionsSeeder extends Seeder
 
 
         $adminRole->syncPermissions(Permission::all());
+
+        $superadminRole->syncPermissions(Permission::all());
         // Exemplo de atribuição de papel a um usuário específico (opcional)
         // $user = \App\Models\User::find(1);
         // $user->assignRole('bolsista');

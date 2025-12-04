@@ -2,47 +2,78 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\ScholarshipHolder;
-use App\Models\Notification;
-use App\Models\Unit;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use App\Models\AttendanceRecord;
+use Illuminate\Notifications\DatabaseNotification as Notification;
+use Illuminate\Support\Facades\Auth;
 
-// Controller para a área do usuário (pode ser o dashboard principal após o login)
 class DashboardController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-            $notificacoesPendentes = Notification::where('read', false)->count();
+        $sch = $user->scholarshipHolder;
 
-            $counts = [
-                'approved' => AttendanceRecord::where('status', 'approved')->count(),
-                'submitted'  => AttendanceRecord::where('status', 'submitted')->count(),
-                'late'     => AttendanceRecord::late()->count(),
-                'rejected' => AttendanceRecord::where('status', 'rejected')->count(),
-                'draft'    => AttendanceRecord::where('status', 'draft')->count(),
-            ];
+        // projeto do bolsista (se houver)
+        $project = $sch?->projects()->first();
 
-            $myPending = 0;
-            if ($user->scholarshipHolder) {
-                $myPending = AttendanceRecord::where('scholarship_holder_id', $user->scholarshipHolder->id)
-                    ->where('status', 'draft')
-                    ->count();
-            }
-            $labels = ['Aprovados', 'Rascunhos', 'Atrasados', 'Rejeitados', 'Enviados'];
-            $data = [
-                $counts['approved'],    
-                $counts['draft'],
-                $counts['late'],
-                $counts['rejected'],
-                $counts['submitted'],
-            ];
+        // notificações do usuário
+        $notificacoesPendentes = $user->unreadNotifications()->count();
+        $recentNotifications = $user->notifications()
+        ->latest()
+        ->take(5)
+        ->get();
 
-        // Se não for um coordenador, retorna o dashboard padrão para o bolsista
-        return view('dashboard', compact('user', 'notificacoesPendentes', 'counts', 'myPending', 'labels', 'data'));
+        // consulta base
+        $query = AttendanceRecord::where('scholarship_holder_id', $sch?->id);
+
+        // contadores
+        $counts = [
+            'approved'  => (clone $query)->where('status', 'approved')->count(),
+            'submitted' => (clone $query)->where('status', 'submitted')->count(),
+            'late'      => (clone $query)->late()->count(),
+            'rejected'  => (clone $query)->where('status', 'rejected')->count(),
+            'draft'     => (clone $query)->where('status', 'draft')->count(),
+        ];
+
+        // gráfico
+        $labels = ['Aprovados', 'Rascunhos', 'Atrasados', 'Rejeitados', 'Enviados'];
+        $data = [
+            $counts['approved'],
+            $counts['draft'],
+            $counts['late'],
+            $counts['rejected'],
+            $counts['submitted'],
+        ];
+
+        $lastSubmissions = (clone $query)
+            ->with('scholarshipHolder.user')
+            ->where('status', 'submitted')
+            ->selectRaw('scholarship_holder_id, DATE(date) as date')
+            ->groupBy('scholarship_holder_id', 'date')
+            ->latest('date')
+            ->take(5)
+            ->get();
+
+        $lastApprovals = (clone $query)
+            ->with('scholarshipHolder.user')
+            ->where('status', 'approved')
+            ->selectRaw('scholarship_holder_id, DATE(date) as date')
+            ->groupBy('scholarship_holder_id', 'date')
+            ->latest('date')
+            ->take(5)
+            ->get();
+
+        return view('dashboard', compact(
+            'user',
+            'sch',
+            'project',
+            'counts',
+            'data',
+            'labels',
+            'notificacoesPendentes',
+            'recentNotifications',
+            'lastSubmissions',
+            'lastApprovals',
+        ));
     }
 }

@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 use App\Notifications\PendingShipment;
-use App\Notifications\RejectedAttendanceNotification;
+use App\Notifications\RejectedAttendance;
+use App\Notifications\ApprovedAttendance;
+use App\Services\NotificationService;
 use App\Events\ActivitySent;
-use App\Events\RejectedAttendance;
 use App\Models\User;
 use App\Models\Project;
 use App\Models\Unit;
@@ -43,7 +44,15 @@ class AttendanceRecordController extends Controller
         }
         // Aplica filtros da requisição
         $filters = $request->only([
-            'project_id', 'unit_id', 'role', 'scholarship_holder_id', 'month', 'start_date', 'end_date'
+            'project_id',
+            'unit_id', 'role',
+            'scholarship_holder_id',
+            'month',
+            'monthYear',
+            'year',
+            'start_date',
+            'end_date',
+            'status',
         ]);
 
         $projects = Project::all();
@@ -116,7 +125,7 @@ class AttendanceRecordController extends Controller
             'date'        => 'required|date',
             'start_time'  => 'required|date_format:H:i',
             'end_time'    => 'nullable|date_format:H:i|after:start_time',
-            //'status'      => 'required|in:draft,submitted',
+            'status'      => 'required|in:draft,submitted',
             'observation' => 'nullable|string|max:1000',
         ]);
 
@@ -138,6 +147,13 @@ class AttendanceRecordController extends Controller
     {
         $this->authorize('submit', $attendanceRecord);
         $this->attendanceRecordService->submitRecord($attendanceRecord);
+
+        app(NotificationService::class)->sendToUser(
+            $attendanceRecord->scholarshipHolder->coordenador_adjunto,
+            "O bolsista {$user->name} enviou um registro de frequência para análise.",
+            'submitted'
+        );
+
         return back()->with('success', 'Registro enviado para homologação.');
     }
 
@@ -145,6 +161,13 @@ class AttendanceRecordController extends Controller
     {
         $this->authorize('approve', $attendanceRecord);
         $this->attendanceRecordService->approveRecord($attendanceRecord);
+
+        app(NotificationService::class)->sendToUser(
+            $attendanceRecord->scholarshipHolder->user,
+            "Seu registro de frequência de {$attendanceRecord->date->format('d/m/Y')} foi homologado.",
+            'approved'
+        );
+
         return back()->with('success', 'Registro aprovado.');
     }
 
@@ -152,10 +175,17 @@ class AttendanceRecordController extends Controller
     {
         $this->authorize('reject', $attendanceRecord);
         $this->attendanceRecordService->rejectRecord($attendanceRecord, $request->input('reason'));
+
+        app(NotificationService::class)->sendToUser(
+            $attendanceRecord->scholarshipHolder->user,
+            "Seu registro de frequência foi rejeitado. Motivo: {$attendanceRecord->rejected_reason}.",
+            'rejected'
+        );
+
         return back()->with('success', 'Registro recusado.');
     }
 
-    /*public function pending(): View
+    public function pending(): View
     {
         $scholarshipHolder = Auth::user()->scholarshipHolder;
 
@@ -164,14 +194,13 @@ class AttendanceRecordController extends Controller
         }
 
         $pendingRecords = AttendanceRecord::where('scholarship_holder_id', $scholarshipHolder->id)
-            ->where('status', AttendanceRecord::STATUS_PENDING) // ajuste conforme sua constante
+            ->where('status', AttendanceRecord::STATUS_SUBMITTED) // ajuste conforme sua constante
             ->orderBy('date', 'desc')
             ->get();
-
         return view('attendance.pending', compact('pendingRecords'));
-    }*/
+    }
 
-    public function report(Request $request)
+    /*public function report(Request $request)
     {
         $unitId = Auth::user()->unit_id;
         $month = $request->input('month', now()->month);
@@ -180,7 +209,7 @@ class AttendanceRecordController extends Controller
         $report = $this->attendanceRecordService->generateReport($unitId, $month, $year);
 
         return view('attendance.report', compact('report', 'month', 'year'));
-    }
+    }*/
 
     public function approved(AttendanceRecordDataTable $dataTable)
     {

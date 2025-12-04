@@ -12,36 +12,54 @@
         <div class="collapse navbar-collapse" id="navbarContent">
             <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item dropdown">
-                    @if(session('institution_id'))
-                        @php
-                            $user = Auth::user();
-                            $institution = \App\Models\Institution::find(session('institution_id'));
-                            $institutions = $user->isAdmin()
-                                ? \App\Models\Institution::all()
-                                : $user->institutions;
-
-                            $activeInstitution = $user->activeInstitutions() ?? $institutions->first();
-                        @endphp
-
-                        <span class="navbar-text text-muted small me-3">
+                    @if(activeInstitution())
+                        <li class="nav-item me-3 text-dark">
                             <i class="bi bi-building me-1"></i>
-                            {{ $institution->name ?? 'Instituição não definida' }}
-                        </span>
-
-                        @if($institutions->count() > 1 || $user->isAdmin())
-                            <a href="{{ route('institution.clear') }}" class="text-decoration-none small text-secondary">
-                                Alterar
-                            </a>
-                        @endif
+                            <strong>{{ activeInstitution()->name }}</strong>
+                        </li>
                     @endif
+
+                    {{-- PAPEL DO USUÁRIO --}}
+                    <li class="nav-item me-3 text-dark small">
+                        <i class="bi bi-person-badge"></i>
+                        {{ ucfirst(str_replace('_',' ', auth()->user()->roles()->pluck('name')->first())) }}
+                    </li>
                 </li>
                 {{-- Ícone de notificações --}}
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="bi bi-bell-fill"></i>
-                        <span class="d-lg-none ms-2">Notificações</span>
+                <li class="nav-item dropdown">
+                    <a class="nav-link position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-bell" style="font-size: 1.3rem"></i>
+
+                        @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
+
+                        @if($unread > 0)
+                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
+                                {{ $unread }}
+                            </span>
+                        @endif
                     </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="notificationsDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li class="dropdown-header fw-bold">Notificações</li>
+
+                        @forelse(auth()->user()->unreadNotifications()->limit(5)->get() as $n)
+                            <li>
+                                <a class="dropdown-item small" href="{{ route('notifications.read', $n->id) }}">
+                                    <strong>{{ $n->data['title'] ?? 'Notificação' }}</strong>
+                                    <div>{{ $n->data['message'] ?? '' }}</div>
+                                    <span class="text-muted">{{ $n->created_at->diffForHumans() }}</span>
+                                </a>
+                            </li>
+                        @empty
+                            <li><span class="dropdown-item small text-muted">Nenhuma nova notificação</span></li>
+                        @endforelse
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li><a class="dropdown-item text-center small" href="{{ route('notifications.index') }}">Ver todas</a></li>
+                    </ul>
                 </li>
+
                 {{-- Dropdown de usuário --}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center"

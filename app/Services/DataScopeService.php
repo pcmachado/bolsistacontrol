@@ -10,54 +10,32 @@ class DataScopeService
     {
         $user = Auth::user();
 
-        if (!$user) {
-            return [
-                'institution_id' => null,
-                'unit_id' => null,
-                'scope' => 'none',
-            ];
+        // superadmin (institution_id null) -> global
+        if (!$user) return ['type' => 'guest'];
+
+        if ($user->hasRole('superadmin')) {
+            return ['type' => 'global'];
         }
 
-        // ADMIN → vê tudo
-        if ($user->hasRole('admin')) {
-            return [
-                'institution_id' => null,
-                'unit_id' => null,
-                'scope' => 'all',
-            ];
+
+        // admin/institutional roles -> institution level
+        if ($user->hasRole(['admin','coordenador_geral'])) {
+            return ['type' => 'institution', 'institution_id' => $user->institution_id];
         }
 
-        // COORDENADOR GERAL → vê toda a instituição
-        if ($user->hasRole('coordenador_geral')) {
-            return [
-                'institution_id' => session('institution_id'),
-                'unit_id' => null,
-                'scope' => 'institution',
-            ];
+
+        // unit-scoped roles
+        if ($user->hasRole(['coordenador_adjunto','supervisor','apoio_administrativo','orientador'])) {
+            return ['type' => 'unit', 'institution_id' => $user->institution_id, 'unit_id' => $user->unit_id];
         }
 
-        // COORDENADOR ADJUNTO ou SUPERVISOR → vê unidade
-        if ($user->hasRole(['coordenador_adjunto', 'supervisor', 'apoio_administrativo', 'orientador'])) {
-            return [
-                'institution_id' => session('institution_id'),
-                'unit_id' => $user->unit_id,
-                'scope' => 'unit',
-            ];
-        }
 
-        // BOLSISTA → vê só ele mesmo
+        // bolsista
         if ($user->hasRole('bolsista')) {
-            return [
-                'institution_id' => session('institution_id'),
-                'unit_id' => $user->unit_id,
-                'scope' => 'self',
-            ];
+            return ['type' => 'user', 'institution_id' => $user->institution_id, 'user_id' => $user->id, 'scholarship_holder_id' => optional($user->scholarshipHolder)->id];
         }
 
-        return [
-            'institution_id' => null,
-            'unit_id' => null,
-            'scope' => 'none',
-        ];
+
+        return ['type' => 'institution', 'institution_id' => $user->institution_id];
     }
 }

@@ -18,6 +18,7 @@ class ProjectScholarshipHolderFactory extends Factory
             'weekly_workload' => $this->faker->numberBetween(10, 20),
             'start_date' => $this->faker->dateTimeBetween('-6 months', 'now'),
             'end_date' => null,
+            'assignments' => $this->faker->sentence(10),
             'status' => 'active',
         ];
     }

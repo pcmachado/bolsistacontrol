@@ -2,19 +2,18 @@
 
 namespace App\Notifications;
 
-use App\Models\AttendanceRecord;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class AttendanceApprovedNotification extends Notification
+class AttendanceApproved extends Notification
 {
     use Queueable;
 
-    public AttendanceRecord $record;
+    public $attendance;
 
-    public function __construct(AttendanceRecord $record)
+    public function __construct($attendance)
     {
-        $this->record = $record;
+        $this->attendance = $attendance;
     }
 
     public function via($notifiable)
@@ -27,7 +26,7 @@ class AttendanceApprovedNotification extends Notification
         return [
             'title' => 'Registro homologado',
             'message' => 'Seu registro de frequência foi homologado com sucesso.',
-            'record_id' => $this->record->id,
+            'attendance_id' => $this->attendance->id,
         ];
     }
 }

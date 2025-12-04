@@ -8,6 +8,7 @@ use App\Models\ScholarshipHolder;
 use App\Models\Position;
 use App\Models\ProjectScholarshipHolder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class ProjectScholarshipHolderSeeder extends Seeder
 {
@@ -29,36 +30,49 @@ class ProjectScholarshipHolderSeeder extends Seeder
             ]);
         }*/
 
-            $projects = Project::with('institution')->get();
+        $faker = Faker::create('pt_BR');
 
-        foreach ($projects as $project) {
-            $instId = $project->institution_id ?? $project->institution?->id;
+        // Busca todos os bolsistas
+        $scholarshipHolders = ScholarshipHolder::with('unit')->get();
 
-            // pega bolsistas da mesma instituição via unit->institution
-            $holders = ScholarshipHolder::whereHas('unit', function ($q) use ($instId) {
-                $q->where('institution_id', $instId);
-            })->get();
-
-            // anexa até 6 bolsistas por projeto (ou menos se não houver)
-            $toAttach = $holders->take(6);
-
-            foreach ($toAttach as $holder) {
-                // Se existir pivot model, use create; senão attach via DB
-                try {
-                    \DB::table('project_scholarship_holders')->insert([
-                        'project_id' => $project->id,
-                        'scholarship_holder_id' => $holder->id,
-                        'position_id' => null,
-                        'weekly_workload' => rand(10, 20),
-                        'status' => 'active',
-                        'start_date' => now()->toDateString(),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } catch (\Throwable $e) {
-                    // ignore duplicates
-                }
-            }
+        if ($scholarshipHolders->isEmpty()) {
+            echo "⚠ Nenhum bolsista encontrado — ProjectScholarshipHolderSeeder ignorado.\n";
+            return;
         }
+
+        echo "🔗 Vinculando bolsistas aos projetos...\n";
+
+        foreach ($scholarshipHolders as $holder) {
+
+            // Obtém projetos da mesma instituição
+            $projects = Project::where('institution_id', $holder->unit->institution_id)->get();
+
+            if ($projects->isEmpty()) {
+                echo "⚠ Nenhum projeto encontrado para Instituição ID {$holder->unit->institution_id}\n";
+                continue;
+            }
+
+            // Escolhe 1 projeto aleatório
+            $project = $projects->random();
+
+            ProjectScholarshipHolder::firstOrCreate(
+                [
+                    'project_id'            => $project->id,
+                    'scholarship_holder_id' => $holder->id,
+                ],
+                [
+                    'position_id'      => rand(1, 3), // Ajuste para cargos reais
+                    'weekly_workload'  => [10, 20, 30][array_rand([10,20,30])],
+                    'start_date'       => $faker->dateTimeBetween('-8 months', '-2 months'),
+                    'end_date'         => $faker->dateTimeBetween('now', '+6 months'),
+                    'assignments'      => $faker->sentence(10),
+                    'status'           => 'active',
+                ]
+            );
+
+            echo "   ✔ Bolsista {$holder->name} vinculado ao Projeto {$project->shortname}\n";
+        }
+
+        echo "🎉 Finalizado: ProjectScholarshipHolderSeeder.\n";
     }
 }

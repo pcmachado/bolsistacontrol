@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\ScholarshipHolder;
 use App\Models\Position;
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 use App\Models\AttendanceRecord;
 use App\Models\Unit;
 use App\Models\institution;
