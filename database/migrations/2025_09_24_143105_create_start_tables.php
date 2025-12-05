@@ -164,6 +164,7 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->unsignedInteger('capacity')->nullable();
+            $table->boolean('active')->default(true);
             $table->enum('status', ['planned', 'ongoing', 'completed', 'cancelled', 'finished'])->default('planned'); // planned, ongoing, finished, cancelled
             $table->timestamps();
             $table->softDeletes();
@@ -248,7 +249,11 @@ return new class extends Migration
             $table->string('role')->nullable(); // ex: aluno, monitor, bolsista
             $table->timestamps();
 
-            $table->unique(['scholarship_holder_id', 'class_offering_id']);
+            $table->unique(
+                ['scholarship_holder_id', 'class_offering_id']
+            ,
+            'unique_scholarship_class'
+            );
             $table->softDeletes();
         });
     }

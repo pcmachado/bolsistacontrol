@@ -35,7 +35,7 @@
                     <input type="text" id="filter_name" class="form-control" placeholder="Digite o nome...">
                 </div>
 
-                {{-- Filtro por unidade (se estiver usando project_course_unit) --}}
+                {{-- Filtro por unidade (se estiver usando class_offerings) --}}
                 <div class="col-md-4">
                     <label class="form-label">Unidade</label>
                     <select id="filter_unit" class="form-select">

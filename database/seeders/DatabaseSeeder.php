@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
         $tables = [
             'attendance_records',
             'project_scholarship_holders',
-            'project_course',
+            'class_offerings',
             'project_funding_source',
             'project_scholarship_holders',
             'project_scholarship_holders', // duplicated safe
@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
         CourseSeeder::class,
         ProjectFundingSourceSeeder::class,
         CourseScholarshipHolderSeeder::class,
-        ProjectCourseSeeder::class,
+        ClassOfferingSeeder::class,
         ProjectPositionSeeder::class,
         InstitutionUserSeeder::class,
         */
@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
             CourseSeeder::class,
             ProjectFundingSourceSeeder::class,
             CourseScholarshipHolderSeeder::class,
-            ProjectCourseSeeder::class,
+            ClassOfferingSeeder::class,
             ProjectPositionSeeder::class,
             NotificationTestSeeder::class,
         ]);

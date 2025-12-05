@@ -42,7 +42,7 @@ class CoursesDataTable extends DataTable
 
         // Coordenador Adjunto → só cursos da sua unidade
         if ($user->hasRole('coordenador_adjunto')) {
-            return $query->whereHas('projectCourses', function ($q) use ($user) {
+            return $query->whereHas('classOfferings', function ($q) use ($user) {
                 $q->where('unit_id', $user->unit_id);
             });
         }

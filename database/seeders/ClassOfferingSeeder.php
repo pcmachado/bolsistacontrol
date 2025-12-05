@@ -5,9 +5,10 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\Course;
-use App\Models\ProjectCourse;
+use App\Models\Unit;
+use App\Models\ClassOffering;
 
-class ProjectCourseSeeder extends Seeder
+class ClassOfferingSeeder extends Seeder
 {
     public function run(): void
     {
@@ -15,7 +16,7 @@ class ProjectCourseSeeder extends Seeder
         $courses = Course::take(2)->get();
 
         foreach ($courses as $i => $course) {
-            ProjectCourse::create([
+            ClassOffering::create([
                 'project_id' => $project->id,
                 'course_id' => $course->id,
                 'semester' => 'Semester ' . ($i + 1),
@@ -28,7 +29,7 @@ class ProjectCourseSeeder extends Seeder
             ]);
         }*/
 
-            ProjectCourse::insert([
+            ClassOffering::insert([
             [
                 'project_id' => 1,
                 'course_id' => 1,

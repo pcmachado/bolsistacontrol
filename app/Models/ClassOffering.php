@@ -5,14 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ClassOffering extends Pivot
+class ClassOffering extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'project_course';
+    protected $table = 'class_offerings';
 
     protected $fillable = [
         'course_id',
@@ -23,6 +22,7 @@ class ClassOffering extends Pivot
         'year',
         'start_date',
         'end_date',
+        'active',
         'capacity',
         'status'
     ];

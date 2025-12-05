@@ -29,7 +29,7 @@ class Project extends Model
 
     public function courses(): BelongsToMany
     {
-        return $this->belongsToMany(Course::class, 'project_course')
+        return $this->belongsToMany(Course::class, 'class_offerings')
                     ->withTimestamps();
     }
 

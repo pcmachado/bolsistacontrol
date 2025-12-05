@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\FundingSourceController;
 use App\Http\Controllers\Admin\ProjectWizardController;
 use App\Http\Controllers\Admin\AssignmentController;
+use App\Http\Controllers\Admin\DisciplineController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -119,6 +120,24 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::resource('funding_sources', FundingSourceController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('assignments', AssignmentController::class);
+
+        Route::resource('disciplines', DisciplineController::class);
+        Route::resource('class-offerings', \App\Http\Controllers\Admin\ClassOfferingController::class);
+
+        Route::get('/class-offerings/{offering}/disciplines',
+            [\App\Http\Controllers\Admin\ClassOfferingDisciplineController::class, 'index']
+        )->name('class-offerings.disciplines');
+
+        Route::post('/class-offerings/{offering}/disciplines',
+            [\App\Http\Controllers\Admin\ClassOfferingDisciplineController::class, 'store']
+        )->name('class-offerings.disciplines.store');
+        Route::put('/class-offerings/discipline/{pivot}',
+            [\App\Http\Controllers\Admin\ClassOfferingDisciplineController::class, 'update']
+        )->name('class-offerings.disciplines.update');
+
+        Route::delete('/class-offerings/discipline/{pivot}',
+            [\App\Http\Controllers\Admin\ClassOfferingDisciplineController::class, 'destroy']
+        )->name('class-offerings.disciplines.destroy');
 
     Route::prefix('projects')->group(function () {
         Route::get('create/step1', [ProjectWizardController::class, 'createStep1'])->name('projects.create.step1');

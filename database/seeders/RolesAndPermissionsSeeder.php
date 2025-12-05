@@ -64,6 +64,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $supervisorRole        = Role::firstOrCreate(['name' => 'supervisor', 'guard_name' => 'web']);
         $apoioRole            = Role::firstOrCreate(['name' => 'apoio_administrativo', 'guard_name' => 'web']);
         $orientadorRole        = Role::firstOrCreate(['name' => 'orientador', 'guard_name' => 'web']);
+        $professorRole        = Role::firstOrCreate(['name' => 'professor', 'guard_name' => 'web']);
         $adminRole        = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
         $superadminRole        = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
         $adminRole->givePermissionTo(Permission::all());
