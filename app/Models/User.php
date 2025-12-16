@@ -117,4 +117,9 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function sessions()
+    {
+        return $this->hasMany(ClassSession::class, 'teacher_id');
+    }
+
 }

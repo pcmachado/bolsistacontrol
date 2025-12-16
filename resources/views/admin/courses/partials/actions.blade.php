@@ -1,25 +1,24 @@
-<div class="d-flex justify-content-center gap-2">
-    {{-- Botão Visualizar --}}
-    <a href="{{ route('admin.courses.show', $id) }}" 
-       class="btn btn-sm btn-info rounded-0" 
-       title="Visualizar">
-        <i class="bi bi-eye"></i>
-    </a>
-    {{-- Botão Editar --}}
-    <a href="{{ route('admin.courses.edit', $id) }}" 
-       class="btn btn-sm btn-primary rounded-0" 
-       title="Editar">
-        <i class="bi bi-pencil-square"></i>
-    </a>
+<a href="{{ route('admin.courses.edit', $course->id) }}"
+   class="btn btn-sm btn-warning">
+    <i class="bi bi-pencil"></i>
+</a>
 
-    {{-- Botão Excluir --}}
-    <form action="{{ route('admin.courses.destroy', $id) }}" method="POST" 
-          onsubmit="return confirm('Tem certeza que deseja excluir?');" 
-          style="display:inline;">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-sm btn-danger rounded-0" title="Excluir">
-            <i class="bi bi-trash"></i>
-        </button>
-    </form>
-</div>
+<a href="{{ route('admin.class-offerings.index') }}?filter_course={{ $course->id }}"
+   class="btn btn-sm btn-info">
+    <i class="bi bi-collection"></i>
+</a>
+
+<a href="{{ route('admin.disciplines.index') }}?filter_course={{ $course->id }}"
+   class="btn btn-sm btn-primary">
+    <i class="bi bi-journal-text"></i>
+</a>
+
+<form action="{{ route('admin.courses.destroy', $course->id) }}"
+      method="POST"
+      class="d-inline">
+    @csrf @method('DELETE')
+    <button class="btn btn-sm btn-danger"
+            onclick="return confirm('Deseja excluir este curso?')">
+        <i class="bi bi-trash"></i>
+    </button>
+</form>

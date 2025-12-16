@@ -17,6 +17,7 @@ class AuthServiceProvider extends ServiceProvider
         AttendanceRecord::class => AttendanceRecordPolicy::class,
         Project::class => ProjectPolicy::class,
         User::class => UserPolicy::class,
+        Payment::class => PaymentPolicy::class,
     ];
 
     /**

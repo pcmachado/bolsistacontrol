@@ -14,14 +14,26 @@
         @endif
     </div>
 
+    @php
+        $color = match($n->data['level'] ?? 'info') {
+            'info' => '',
+            'warning' => 'list-group-item-warning',
+            'danger' => 'list-group-item-danger',
+            default => ''
+        };
+    @endphp
+
     <div class="list-group">
         @forelse($notifications as $n)
             <a href="{{ route('notifications.read', $n->id) }}"
-               class="list-group-item list-group-item-action {{ is_null($n->read_at) ? 'fw-bold' : '' }}">
+               class="list-group-item list-group-item-action {{ is_null($n->read_at) ? 'fw-bold' : '' }} {{ $color }}">
                 <div class="d-flex w-100 justify-content-between">
                     <h6 class="mb-1">{{ $n->data['title'] ?? 'Notificação' }}</h6>
                     <small>{{ $n->created_at->diffForHumans() }}</small>
                 </div>
+                @if(!empty($n->data['url']))
+                    <small class="text-primary">Clique para abrir</small>
+                @endif
                 <p class="mb-1">{{ $n->data['message'] ?? '' }}</p>
             </a>
         @empty

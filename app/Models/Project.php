@@ -61,4 +61,9 @@ class Project extends Model
         $positionPivot = $this->positions()->where('position_id', $positionId)->first()?->pivot;
         return (float)($positionPivot?->hourly_rate ?? 0);
     }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

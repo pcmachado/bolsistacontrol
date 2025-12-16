@@ -14,12 +14,12 @@ class ClassOfferingController extends Controller
 {
     public function index(ClassOfferingsDataTable $dataTable)
     {
-        return $dataTable->render('admin.class_offerings.index');
+        return $dataTable->render('admin.class-offerings.index');
     }
 
     public function create()
     {
-        return view('admin.class_offerings.create', [
+        return view('admin.class-offerings.create', [
             'courses' => Course::orderBy('name')->get(),
             'units'   => Unit::orderBy('name')->get(),
             'projects'=> Project::orderBy('name')->get(),
@@ -50,7 +50,7 @@ class ClassOfferingController extends Controller
 
     public function edit(ClassOffering $classOffering)
     {
-        return view('admin.class_offerings.edit', [
+        return view('admin.class-offerings.edit', [
             'offering'  => $classOffering,
             'courses'   => Course::orderBy('name')->get(),
             'units'     => Unit::orderBy('name')->get(),

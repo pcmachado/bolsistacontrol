@@ -56,4 +56,9 @@ class ClassOffering extends Model
             ->withTimestamps();
     }
 
+    public function sessions()
+    {
+        return $this->hasMany(ClassSession::class);
+    }
+
 }

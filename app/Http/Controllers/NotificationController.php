@@ -29,16 +29,15 @@ class NotificationController extends Controller
 
     public function read($id)
     {
-        $notification = auth()->user()
-            ->notifications()
-            ->where('id', $id)
-            ->firstOrFail();
+        $n = auth()->user()->notifications()->findOrFail($id);
+        $n->markAsRead();
 
-        if ($notification->read_at === null) {
-            $notification->markAsRead();
+        // Redirecionar para link se existir
+        if (!empty($n->data['url'])) {
+            return redirect($n->data['url']);
         }
 
-        return redirect()->back();
+        return back();
     }
 
     public function markAll()

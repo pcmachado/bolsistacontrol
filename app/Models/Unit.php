@@ -13,8 +13,7 @@ use App\Http\Traits\BelongsToInstitution;
 
 class Unit extends Model
 {
-    use HasFactory, SoftDeletes;
-    use BelongsToInstitution;
+    use HasFactory, SoftDeletes, BelongsToInstitution;
 
     protected $fillable = [
         'institution_id',
@@ -57,6 +56,11 @@ class Unit extends Model
     public function supervisorAssignments()
     {
         return $this->hasMany(SupervisorAssignment::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
 }

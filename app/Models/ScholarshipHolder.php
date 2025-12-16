@@ -112,4 +112,9 @@ class ScholarshipHolder extends Model
             ->withTimestamps();
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
 }

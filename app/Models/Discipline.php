@@ -41,4 +41,10 @@ class Discipline extends Model
         return $this->belongsToMany(User::class, 'class_offering_discipline', 'discipline_id', 'teacher_id')
             ->withTimestamps();
     }
+
+    public function sessions()
+    {
+        return $this->hasMany(ClassSession::class);
+    }
+
 }

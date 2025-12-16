@@ -256,6 +256,126 @@ return new class extends Migration
             );
             $table->softDeletes();
         });
+
+        Schema::create('class_sessions', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('discipline_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
+
+            $table->date('date');
+            $table->time('start_time');
+            $table->time('end_time');
+
+            $table->decimal('duration_hours', 4, 2); // ex: 2.0, 3.5, 4.0
+
+            $table->string('status')->default('finished'); // finished, planned, cancelled
+
+            $table->text('notes')->nullable();
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('intelligent_alert_settings', function (Blueprint $table) {
+            $table->id();
+
+            // Dias sem aula
+            $table->integer('no_class_days')->default(10);
+
+            // Percentual mínimo ministrado vs tempo decorrido
+            $table->decimal('delay_percent_threshold', 5, 2)->default(0.80);
+
+            // Ativar/desativar regras
+            $table->boolean('check_delays_enabled')->default(true);
+            $table->boolean('check_no_class_enabled')->default(true);
+
+            // Quem recebe notificações (id do papel)
+            $table->string('delay_notify_roles')->default('coordenador_adjunto,supervisor');
+            $table->string('no_class_notify_roles')->default('coordenador_adjunto');
+
+            $table->timestamps();
+        });
+
+        Schema::create('payments', function (Blueprint $table) {
+            $table->id();
+
+            // Quem recebe
+            $table->foreignId('scholarship_holder_id')
+                  ->constrained()
+                  ->cascadeOnDelete();
+
+            // Projeto e unidade (ajudam na auditoria)
+            $table->foreignId('project_id')
+                  ->nullable()
+                  ->constrained()
+                  ->nullOnDelete();
+
+            $table->foreignId('unit_id')
+                  ->nullable()
+                  ->constrained()
+                  ->nullOnDelete();
+
+            // Referência do período
+            $table->unsignedTinyInteger('month'); // 1–12
+            $table->unsignedSmallInteger('year'); // ex: 2025
+
+            // Totais
+            $table->decimal('total_hours', 8, 2)->default(0);
+            $table->decimal('amount', 10, 2)->default(0);
+
+            // Status do pagamento
+            // draft | sent_to_payment | paid | confirmed
+            $table->string('status', 30)->default('draft');
+
+            $table->string('receipt_number')->nullable()->unique();
+            $table->timestamp('receipt_generated_at')->nullable();
+
+            // Datas do fluxo
+            $table->timestamp('sent_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('confirmed_at')->nullable();
+
+            // Quem executou o pagamento (usuário financeiro / coord adjunto)
+            $table->foreignId('paid_by_user_id')
+                  ->nullable()
+                  ->constrained('users')
+                  ->nullOnDelete();
+
+            // Observações gerais
+            $table->text('notes')->nullable();
+
+            $table->timestamps();
+            $table->softDeletes();
+
+            // Um pagamento por bolsista por mês/ano (se quiser garantir isso)
+            $table->unique(
+                ['scholarship_holder_id', 'month', 'year', 'project_id'],
+                'payment_holder_month_year_project_unique'
+            );
+        });
+
+        Schema::create('document_templates', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('key')->unique(); // ex: payment_receipt
+            $table->string('name');          // ex: Recibo de Pagamento
+            $table->text('description')->nullable();
+
+            // Conteúdo
+            $table->longText('header_html')->nullable();
+            $table->longText('body_html');
+            $table->longText('footer_html')->nullable();
+
+            // Escopo institucional
+            $table->foreignId('institution_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->boolean('active')->default(true);
+
+            $table->timestamps();
+        });
     }
 
     /**
@@ -263,6 +383,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('document_templates');
+        Schema::dropIfExists('payments');
+        Schema::dropIfExists('supervisor_assignment');
+        Schema::dropIfExists('class_sessions');
         Schema::dropIfExists('project_position');
         Schema::dropIfExists('supervisor_course_unit');
         Schema::dropIfExists('scholarship_holder_class_offering');

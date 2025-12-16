@@ -1,86 +1,128 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', config('app.name', 'Laravel'))</title>
+    <title>@yield('title', config('app.name', 'BolsistaControl'))</title>
 
-    <!-- Google Fonts -->
+    {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"/>
+
+    {{-- Editor (opcional) --}}
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"></script>
+
+    {{-- Vite --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-light page-{{ str_replace('.', '-', Route::currentRouteName()) }}">
-    <div class="d-flex" id="wrapper">
-        <!-- Sidebar -->
-        @include('layouts.partials._sidebar')
 
-        <!-- Conteúdo da Página -->
-        <div id="page-content-wrapper">
-            <!-- Navbar -->
-            @include('layouts.partials._navbar')
+<body class="bg-light">
 
-            <!-- Offcanvas (Mobile) -->
-            <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
-                <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
-                </div>
-                
+<div id="wrapper" class="d-flex">
+
+    {{-- SIDEBAR DESKTOP --}}
+    @include('layouts.partials._sidebar')
+
+    {{-- ÁREA PRINCIPAL --}}
+    <div id="main-content" class="flex-grow-1 d-flex flex-column">
+
+        {{-- NAVBAR --}}
+        @include('layouts.partials._navbar')
+
+        {{-- SIDEBAR MOBILE --}}
+        <div class="offcanvas offcanvas-start bg-dark text-white" id="sidebarOffcanvas">
+            <div class="offcanvas-header">
+                <h5 class="text-white">Menu</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
             </div>
 
-            <!-- Conteúdo Principal -->
-            <main class="container-fluid p-4">
-                @yield('content')
-            </main>
-
+            <div class="offcanvas-body p-0">
+                @include('layouts.partials._sidebar_mobile')
+            </div>
         </div>
+
+        {{-- CONTEÚDO PRINCIPAL --}}
+        <main id="content-area" class="flex-grow-1 p-4">
+            @yield('content')
+        </main>
+
+        {{-- FOOTER --}}
+        <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
+            2025 — BolsistaControl © Todos os direitos reservados.
+        </footer>
+
     </div>
+</div>
 
-    <!-- Footer -->
-    <footer class="bg-white border-top p-3 text-center text-muted small mt-auto">
-        2025 by Paulo César Machado. Todos os direitos reservados.
-    </footer>
+{{-- TOGGLE SIDEBAR --}}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
 
-    <!-- Sidebar Toggle -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const wrapper = document.getElementById('wrapper');
-            const offcanvasSidebar = new bootstrap.Offcanvas('#sidebarOffcanvas');
+    const wrapper = document.getElementById("wrapper");
+    const toggles = document.querySelectorAll("[data-sidebar-toggle]");
+    const mobileSidebar = bootstrap.Offcanvas ? new bootstrap.Offcanvas("#sidebarOffcanvas") : null;
 
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    if (window.innerWidth >= 992) {
-                        // Desktop → alterna sidebar fixa
-                        wrapper.classList.toggle('collapsed');
-                    } else {
-                        // Mobile → abre o offcanvas
-                        offcanvasSidebar.toggle();
-                    }
-                });
+    /* --- COLAPSO LATERAL --- */
+    toggles.forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (window.innerWidth >= 992) {
+                wrapper.classList.toggle("sidebar-collapsed");
+            } else if (mobileSidebar) {
+                mobileSidebar.toggle();
             }
-
-            // Reaplica tooltips
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
         });
-    </script>
+    });
 
-    <!-- Tooltips -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            })
+
+    /* --- SUBMENUS DO SIDEBAR --- */
+    document.querySelectorAll(".sidebar-submenu-toggle").forEach(toggle => {
+        toggle.addEventListener("click", () => {
+
+            const submenuKey = toggle.dataset.submenu;
+            const submenu = document.getElementById(`submenu-${submenuKey}`);
+
+            if (!submenu) return;
+
+            submenu.classList.toggle("open");
+
+            // Girar seta
+            const arrow = toggle.querySelector(".arrow-icon");
+            if (arrow) arrow.classList.toggle("rotate-180");
         });
-    </script>
- @vite(['resources/css/app.css', 'resources/js/app.js'])
- @stack('scripts')
+    });
+
+});
+</script>
+
+{{-- DARK/LIGHT THEME --}}
+<script>
+(function () {
+    const KEY = 'bolsistacontrol_theme';
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+
+    function toggleTheme() {
+        const current = localStorage.getItem(KEY) || 'light';
+        const next = current === 'dark' ? 'light' : 'light';
+        localStorage.setItem(KEY, next);
+        applyTheme(next);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        applyTheme(localStorage.getItem(KEY) || 'light');
+
+        const themeButton = document.getElementById("themeToggle");
+        if (themeButton) themeButton.addEventListener("click", toggleTheme);
+    });
+})();
+</script>
+
+@stack('scripts')
+
 </body>
 </html>

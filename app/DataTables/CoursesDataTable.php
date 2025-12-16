@@ -1,54 +1,59 @@
 <?php
+
 namespace App\DataTables;
 
 use App\Models\Course;
-use Yajra\DataTables\Html\Button;
-use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\Services\DataTable;
+use Yajra\DataTables\Html\Column;
+use Yajra\DataTables\Html\Button;
 
 class CoursesDataTable extends DataTable
 {
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
-            ->setRowId('id')
-            ->addColumn('created_at', function ($course) {
-                return formatDate($course->created_at);
-            })
-            ->addColumn('updated_at', function ($course) {
-                return formatDate($course->updated_at);
-            })
-            ->addColumn('projects', function ($course) {
-                return $course->projects->pluck('name')->implode('<br>');
+            ->addColumn('units', function ($course) {
+                return $course->classOfferings
+                    ->pluck('unit.name')
+                    ->unique()
+                    ->implode('<br>');
             })
 
-            ->addColumn('units', function ($course) {
-                return $course->units->pluck('name')->implode('<br>');
+            ->addColumn('projects', function ($course) {
+                return $course->classOfferings
+                    ->pluck('project.name')
+                    ->unique()
+                    ->filter() // remove null
+                    ->implode('<br>');
             })
-            ->addColumn('actions', 'admin.courses.partials.actions') // Usando uma view para as ações
-            ->rawColumns(['actions']);
+
+            ->addColumn('offerings_count', function ($course) {
+                return $course->classOfferings->count();
+            })
+
+            ->addColumn('actions', function ($course) {
+                return view('admin.courses.partials.actions', compact('course'));
+            })
+
+            ->rawColumns(['units', 'projects', 'actions'])
+            ->setRowId('id');
     }
 
     public function query(Course $model)
     {
-        $query = $model->newQuery();
-        $user = auth()->user();
+        $query = $model->newQuery()->with('classOfferings.unit', 'classOfferings.project');
 
-        // ADMIN e Coordenador Geral → veem tudo
-        if ($user->hasRole(['admin', 'coordenador_geral'])) {
-            return $query;
+        // Filtros opcionais (da view)
+        if ($unit = request('filter_unit')) {
+            $query->whereHas('classOfferings', fn($q) => $q->where('unit_id', $unit));
         }
 
-        // Coordenador Adjunto → só cursos da sua unidade
-        if ($user->hasRole('coordenador_adjunto')) {
-            return $query->whereHas('classOfferings', function ($q) use ($user) {
-                $q->where('unit_id', $user->unit_id);
-            });
+        if ($project = request('filter_project')) {
+            $query->whereHas('classOfferings', fn($q) => $q->where('project_id', $project));
         }
 
-        // Demais usuários → não veem nada
-        return $query->whereRaw('1=0');
+        return $query;
     }
 
     public function html()
@@ -58,37 +63,47 @@ class CoursesDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->dom('Bfrtip')
-            ->orderBy(0, 'asc')
-            ->parameters([
-                'responsive' => true,
-                'autoWidth' => false,
-            ])
+            ->orderBy(0)
             ->buttons([
-                Button::make('excel')->className('btn btn-success rounded-0')->text('📊 Excel'),
-                Button::make('csv')->className('btn btn-info rounded-0')->text('📝 CSV'),
-                Button::make('pdf')->className('btn btn-warning rounded-0')->text('📄 PDF'),
-                Button::make('print')->className('btn btn-secondary rounded-0')->text('🖨️ Imprimir'),
+                Button::make('excel')->className('btn btn-success rounded-0'),
+                Button::make('csv')->className('btn btn-info rounded-0'),
+                Button::make('pdf')->className('btn btn-warning rounded-0'),
+                Button::make('print')->className('btn btn-secondary rounded-0'),
             ]);
     }
 
     protected function getColumns(): array
     {
         return [
-            Column::make('id'),
-            Column::make('name')->title('Nome'),
-            Column::make('created_at')->title('Criado Em'),
-            Column::make('updated_at')->title('Atualizado Em'),
+            Column::make('name')->title('Curso'),
+
+            Column::computed('units')
+                ->title('Unidades')
+                ->orderable(false)
+                ->searchable(false)
+                ->addClass('text-start'),
+
+            Column::computed('projects')
+                ->title('Projetos')
+                ->orderable(false)
+                ->searchable(false)
+                ->addClass('text-start'),
+
+            Column::computed('offerings_count')
+                ->title('Turmas')
+                ->addClass('text-center'),
+
             Column::computed('actions')
+                ->title('Ações')
                 ->exportable(false)
                 ->printable(false)
-                ->width(150)
-                ->addClass('text-center')
-                ->title('Ações'),
+                ->width(160)
+                ->addClass('text-center'),
         ];
     }
 
     protected function filename(): string
     {
-        return 'Courses_' . date('YmdHis');
+        return 'Cursos_' . date('YmdHis');
     }
 }
