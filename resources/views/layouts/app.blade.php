@@ -62,40 +62,30 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const wrapper = document.getElementById("wrapper");
-    const toggles = document.querySelectorAll("[data-sidebar-toggle]");
-    const mobileSidebar = bootstrap.Offcanvas ? new bootstrap.Offcanvas("#sidebarOffcanvas") : null;
+    const sidebarMobile = document.getElementById("sidebarOffcanvas");
+    const offcanvasInstance = bootstrap.Offcanvas.getOrCreateInstance(sidebarMobile);
 
-    /* --- COLAPSO LATERAL --- */
-    toggles.forEach(btn => {
+    // Toggle Sidebar (desktop + mobile)
+    document.querySelectorAll("[data-sidebar-toggle]").forEach(btn => {
         btn.addEventListener("click", () => {
             if (window.innerWidth >= 992) {
                 wrapper.classList.toggle("sidebar-collapsed");
-            } else if (mobileSidebar) {
-                mobileSidebar.toggle();
+            } else {
+                offcanvasInstance.toggle();
             }
         });
     });
 
-
-    /* --- SUBMENUS DO SIDEBAR --- */
-    document.querySelectorAll(".sidebar-submenu-toggle").forEach(toggle => {
-        toggle.addEventListener("click", () => {
-
-            const submenuKey = toggle.dataset.submenu;
-            const submenu = document.getElementById(`submenu-${submenuKey}`);
-
-            if (!submenu) return;
-
-            submenu.classList.toggle("open");
-
-            // Girar seta
-            const arrow = toggle.querySelector(".arrow-icon");
-            if (arrow) arrow.classList.toggle("rotate-180");
+    // Toggle Submenus
+    document.querySelectorAll(".sidebar-submenu-toggle").forEach(btn => {
+        btn.addEventListener("click", () => {
+            btn.parentElement.classList.toggle("open");
         });
     });
 
 });
 </script>
+
 
 {{-- DARK/LIGHT THEME --}}
 <script>

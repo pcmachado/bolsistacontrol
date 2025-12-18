@@ -1,21 +1,12 @@
-
-/* Bootstrap */
+/* ============================================================
+   BOOTSTRAP & ICONS
+============================================================ */
 @import "bootstrap/dist/css/bootstrap.min.css";
-
-/* Bootstrap Icons */
 @import "bootstrap-icons/font/bootstrap-icons.css";
 
-/* DataTables (se quiser via npm, senão pode manter via CDN) */
-@import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
-@import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
-
-/* Select2 (se instalar via npm) */
-@import "select2/dist/css/select2.min.css";
-
-/* Seus estilos customizados */
-/* -----------------------------------------------------------
+/* ============================================================
    LAYOUT GLOBAL
------------------------------------------------------------ */
+============================================================ */
 
 html, body {
     height: 100%;
@@ -27,130 +18,56 @@ body {
     background: #f8f9fa;
 }
 
-/* Wrapper que contém sidebar + conteúdo */
+/* Wrapper geral */
 #wrapper {
     display: flex;
-    width: 100%;
     min-height: 100vh;
-    overflow-x: hidden;
+    width: 100%;
+    transition: all .25s ease;
 }
 
 /* Conteúdo principal */
-#page-content-wrapper {
+#main-content {
     flex-grow: 1;
-    min-width: 0;
+    display: flex;
+    flex-direction: column;
     background: #f8f9fa;
-    display: flex;
-    flex-direction: column;
 }
 
-/* Área central (onde ficam as views) */
-main {
-    flex: 1;
+#content-area {
+    flex-grow: 1;
 }
 
-/* -----------------------------------------------------------
-   SIDEBAR DESKTOP
------------------------------------------------------------ */
+/* ============================================================
+   SIDEBAR (DESKTOP)
+============================================================ */
 
-#sidebar-wrapper {
+#sidebar {
     width: 260px;
-    background: #1f1f1f;
-    min-height: 100vh;
-    overflow-y: auto;
-    color: #eaeaea;
-    display: flex;
-    flex-direction: column;
+    min-width: 260px;
+    background: #1e1e1e;
+    color: #fff;
+    height: 100vh;
     position: fixed;
     z-index: 1000;
-    transition: width .28s ease-in-out, min-width .28s ease-in-out;
+    transition: width .25s ease;
+    overflow-y: auto;
 }
 
-#sidebar-wrapper .sidebar-heading {
-    font-size: 1.1rem;
-}
-
-#sidebar-wrapper a.list-group-item {
-    color: #e9ecef;
-    background: #1f1f1f;
-    border: none;
-}
-
-#sidebar-wrapper a.list-group-item:hover,
-#sidebar-wrapper a.active {
-    background: #343a40;
-    color: #fff;
-}
-
-/* Texto do sidebar deve quebrar quando expandido */
-#sidebar-wrapper .sidebar-text {
-    white-space: normal !important;
-    display: inline-block;
-    line-height: 1.2;
-    max-width: 160px; /* evita passar do limite */
-}
-
-#sidebar-wrapper .list-group-item .sidebar-text {
-    white-space: normal !important;
-    display: inline-block !important;
-    max-width: 180px !important;
-    line-height: 1.2 !important;
-}
-
-/* Quando sidebar colapsado, esconder texto */
-#wrapper.collapsed #sidebar-wrapper .sidebar-text {
-    display: none !important;
-}
-
-/* -----------------------------------------------------------
-   SIDEBAR COLAPSADA
------------------------------------------------------------ */
-
-/* Sidebar colapsado */
-#wrapper.sidebar-collapsed #sidebar-wrapper {
-    width: 80px !important;
+.sidebar-collapsed #sidebar {
+    width: 78px !important;
     min-width: 78px !important;
 }
 
-#wrapper.sidebar-collapsed #page-content-wrapper {
-    margin-left: 80px !important;
-}
-
-/* Conteúdo move para o lado */
-#wrapper {
-    display: flex;
-    width: 100%;
-    min-height: 100vh;
-    transition: margin-left .28s ease-in-out;
-}
-
-/* Ocultar textos */
-#wrapper.sidebar-collapsed .sidebar-text {
-    display: none !important;
-}
-
-/* Esconder títulos e seções no colapso */
-.sidebar-collapsed .sidebar-section-title,
-.sidebar-collapsed .sidebar-title,
-.sidebar-collapsed .sidebar-logo {
-    display: none !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Quando normal */
-#page-content-wrapper {
-    margin-left: 260px;
-    transition: margin-left .28s ease-in-out;
-}
-
-/* =============== HEADERS DO SIDEBAR =============== */
 .sidebar-header {
-    background: #1a1a1a;
+    height: 60px;
+    background: #141414;
     border-bottom: 1px solid #333;
-    height: 58px;
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    font-weight: 600;
 }
 
 .sidebar-logo {
@@ -158,68 +75,77 @@ main {
     color: #ffc107;
 }
 
-.sidebar-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-
-/* =============== PERFIL =============== */
-.sidebar-profile {
-    background: #1f1f1f;
-}
-
+/* Perfil */
 .sidebar-profile img {
     border: 2px solid #ffc107;
 }
 
-/* =============== LINKS =============== */
+/* Links */
 .sidebar-link {
-    color: #ddd;
+    display: flex;
+    align-items: center;
+    padding: 10px 18px;
+    margin: 4px 0;
+    border-radius: 6px;
     text-decoration: none;
-    border-radius: 8px;
-    margin: 4px 10px;
-    transition: background .2s ease, padding-left .2s ease;
+    color: #ccc;
+    transition: background .2s ease;
 }
 
 .sidebar-link:hover {
     background: #2b2b2b;
+    color: #fff;
 }
 
 .sidebar-link.active {
     background: #343a40;
+    border-left: 3px solid #ffc107;
     color: #fff;
     font-weight: 600;
-    border-left: 3px solid #ffc107;
 }
 
 /* Ícones */
 .sidebar-icon {
     font-size: 1.2rem;
-    width: 20px;
+    width: 28px;
     text-align: center;
 }
 
-/* =============== SEÇÕES =============== */
-.sidebar-section-title {
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    color: #888;
-    padding: 10px 20px;
-    font-weight: 600;
+/* Textos */
+.sidebar-text {
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-/* =============== SUBMENUS =============== */
+.sidebar-collapsed .sidebar-logo,
+.sidebar-collapsed .sidebar-title,
+.sidebar-collapsed .sidebar-profile-text,
+.sidebar-collapsed .sidebar-text,
+.sidebar-collapsed .sidebar-section-title {
+    display: none !important;
+}
+
+.sidebar-section-title {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    color: #999;
+}
+
+/* ============================================================
+   SUBMENUS
+============================================================ */
+
 .sidebar-submenu-toggle {
     background: none;
     border: none;
     width: 100%;
-    text-align: left;
-    color: #ddd;
-    padding: 10px 20px;
-    font-size: .9rem;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    color: #ccc;
     cursor: pointer;
-    transition: background .2s;
 }
 
 .sidebar-submenu-toggle:hover {
@@ -228,179 +154,131 @@ main {
 
 .sidebar-submenu-items {
     display: none;
-    padding-left: 20px;
-    width: 100%;
     flex-direction: column;
 }
 
 .sidebar-submenu.open .sidebar-submenu-items {
-    display: block !important;
-}
-
-/* Esconder setinha no colapso */
-.sidebar-collapsed .sidebar-submenu-toggle i:last-child {
-    display: none !important;
-}
-
-/* Cada subitem deve ocupar uma linha */
-.sidebar-submenu-items .submenu-item {
     display: flex !important;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    padding: 8px 0;
 }
 
-/* ícones devem manter alinhamento */
-.sidebar-submenu-items .sidebar-icon {
-    min-width: 22px;
+.sidebar-submenu-items .submenu-item {
+    padding-left: 45px !important;
 }
 
-/* =============== COLAPSO (botão) =============== */
-.sidebar-collapse-btn {
-    height: 30px;
-    width: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.sidebar-collapsed .sidebar-collapse-btn i {
-    transform: rotate(180deg);
-    transition: transform .25s ease;
-}
-
-
-/* =============== TOOLTIPS QUANDO COLAPSADO =============== */
-.sidebar-collapsed .sidebar-link {
-    position: relative;
-}
-
-.sidebar-collapsed .sidebar-link:hover::after {
-    content: attr(data-title);
-    position: absolute;
-    left: 75px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #111;
-    padding: 6px 10px;
-    border-radius: 4px;
-    white-space: nowrap;
-    color: #fff;
-    font-size: .85rem;
-    box-shadow: 0px 2px 4px rgba(0,0,0,.4);
-    z-index: 9999;
-}
-
-/* seta girando quando aberto */
-.sidebar-submenu.open .arrow-icon {
-    transform: rotate(180deg);
+/* Seta */
+.arrow-icon {
     transition: transform .2s ease;
 }
 
-/* =============== MOBILE =============== */
-/* --------------------------
-   MOBILE: sidebar OFFCANVAS
-   -------------------------- */
+.sidebar-submenu.open .arrow-icon {
+    transform: rotate(180deg);
+}
 
-/* Sidebar normal deve sumir no mobile */
+/* ============================================================
+   COLAPSO DO SIDEBAR
+============================================================ */
+
+.sidebar-collapsed #main-content {
+    margin-left: 78px !important;
+}
+
+#main-content {
+    margin-left: 260px;
+    transition: margin-left .25s ease;
+}
+
+/* Botão */
+/* Botão de colapsar */
+.sidebar-collapse-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    transition: background .25s ease, border-color .25s ease;
+}
+
+/* Ícone suave */
+.sidebar-collapse-btn i {
+    transition: transform 0.25s ease-in-out;
+    font-size: 1.2rem;
+}
+
+/* Gira quando sidebar colapsa */
+#wrapper.sidebar-collapsed .sidebar-collapse-btn i {
+    transform: rotate(180deg);
+}
+
+/* Hover */
+.sidebar-collapse-btn:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: #aaa;
+}
+
+
+/* ============================================================
+   MOBILE (OFFCANVAS)
+============================================================ */
+
 @media (max-width: 991px) {
-    #sidebar-wrapper {
+
+    #sidebar {
         display: none !important;
     }
 
-    /* Ícones no offcanvas ficam visíveis, texto some */
+    #main-content {
+        margin-left: 0 !important;
+    }
+
+    /* Menu mobile só ícones */
     #sidebarOffcanvas .sidebar-text {
         display: none !important;
     }
 
-    /* Ajusta ícones para centralizar mais */
     #sidebarOffcanvas .sidebar-link {
         justify-content: center !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding: 12px 0 !important;
     }
 
     #sidebarOffcanvas .sidebar-icon {
-        font-size: 1.4rem;
-        margin: 0 !important;
-    }
-
-    /* Submenu também só mostra ícones */
-    #sidebarOffcanvas .submenu-item {
-        justify-content: center !important;
-    }
-
-    #sidebarOffcanvas .submenu-item .sidebar-text {
-        display: none !important;
-    }
-
-    /* Seta do submenu permanece */
-    #sidebarOffcanvas .arrow-icon {
-        display: inline-block !important;
-        margin-left: 8px;
+        font-size: 1.6rem;
     }
 }
 
-
-/* -----------------------------------------------------------
-   NAVBAR
------------------------------------------------------------ */
-
-.navbar {
-    z-index: 1030; /* Acima da sidebar */
-}
-
-.navbar-brand {
-    font-weight: 600;
-}
-
-/* -----------------------------------------------------------
+/* ============================================================
    FOOTER
------------------------------------------------------------ */
+============================================================ */
 
 footer {
     background: #fff;
-    padding: 12px 0;
-    margin-top: auto;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid #ddd;
 }
 
-
-/* -----------------------------------------------------------
-   DARK THEME (compatível com script do app.blade)
------------------------------------------------------------ */
-
-:root[data-theme='dark'] {
-    --bs-body-bg: #2b2b2b;
-    --bs-body-color: #e9ecef;
-    background: #2b2b2b;
-}
+/* ============================================================
+   DARK MODE
+============================================================ */
 
 :root[data-theme='dark'] body {
-    background: #2b2b2b;
-    color: #e9ecef;
+    background: #1b1b1b;
+    color: #eee;
 }
 
-:root[data-theme='dark'] #sidebar-wrapper {
+:root[data-theme='dark'] #sidebar {
     background: #000;
 }
 
-:root[data-theme='dark'] .navbar,
-:root[data-theme='dark'] footer {
-    background: #111 !important;
-    color: #e9ecef;
+/* Ícone quando expandido */
+.sidebar-collapse-btn-icon::before {
+    content: "\f284"; /* chevron-double-left */
+    font-family: "bootstrap-icons";
+    display: inline-block;
+    transition: transform .25s ease-in-out;
 }
 
-:root[data-theme='dark'] a.list-group-item {
-    color: #e9ecef !important;
-}
-
-:root[data-theme='dark'] a.list-group-item:hover {
-    background: #222 !important;
-}
-
-.rotate-180 {
+/* Ícone quando colapsado */
+#wrapper.sidebar-collapsed .sidebar-collapse-btn-icon::before {
+    content: "\f285"; /* chevron-double-right */
     transform: rotate(180deg);
-    transition: transform .2s ease;
 }
