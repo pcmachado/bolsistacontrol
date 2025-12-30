@@ -16,56 +16,91 @@ class PaymentDashboardController extends Controller
         $month = $request->month ?? now()->month;
         $year  = $request->year  ?? now()->year;
 
-        $query = Payment::where('year', $year)->where('month', $month);
+        $baseQuery = Payment::where('year', $year)
+            ->where('month', $month);
 
-        // Filtros
-        if ($request->project_id) {
-            $query->where('project_id', $request->project_id);
+        // 🔒 Escopo por papel (recomendado)
+        if (auth()->user()->hasRole('coordenador_adjunto')) {
+            $baseQuery->whereIn(
+                'unit_id',
+                auth()->user()->units->pluck('id')
+            );
         }
 
-        if ($request->unit_id) {
-            $query->where('unit_id', $request->unit_id);
+        if ($request->filled('project_id')) {
+            $baseQuery->where('project_id', $request->project_id);
         }
 
-        // Cards
-        $totalPaid = $query->where('status', 'paid')->sum('amount');
-        $totalConfirmed = $query->where('status', 'confirmed')->sum('amount');
-        $totalPending  = $query->where('status', 'sent_to_payment')->sum('amount');
+        if ($request->filled('unit_id')) {
+            $baseQuery->where('unit_id', $request->unit_id);
+        }
 
-        // Quantidades
-        $countPaid = $query->where('status', 'paid')->count();
-        $countPending = $query->where('status', 'sent_to_payment')->count();
+        // 🔹 Cards financeiros
+        $totalPaid = (clone $baseQuery)
+            ->where('status', Payment::STATUS_PAID)
+            ->sum('amount');
 
-        // Gráficos
-        $chartByProject = $query->selectRaw('project_id, SUM(amount) as total')
+        $totalConfirmed = (clone $baseQuery)
+            ->where('status', Payment::STATUS_CONFIRMED)
+            ->sum('amount');
+
+        $totalPending = (clone $baseQuery)
+            ->where('status', Payment::STATUS_SENT)
+            ->sum('amount');
+
+        // 🔹 Quantidades
+        $countPaid = (clone $baseQuery)
+            ->where('status', Payment::STATUS_PAID)
+            ->count();
+
+        $countPending = (clone $baseQuery)
+            ->where('status', Payment::STATUS_SENT)
+            ->count();
+
+        // 🔹 Gráficos
+        $chartByProject = (clone $baseQuery)
+            ->selectRaw('project_id, SUM(amount) as total')
             ->groupBy('project_id')
             ->with('project')
             ->get();
 
-        $chartByUnit = $query->selectRaw('unit_id, SUM(amount) as total')
+        $chartByUnit = (clone $baseQuery)
+            ->selectRaw('unit_id, SUM(amount) as total')
             ->groupBy('unit_id')
             ->with('unit')
             ->get();
 
-        // Tabelas
-        $latestPayments = Payment::where('status', 'paid')
-            ->latest()
+        // 🔹 Listas
+        $latestPayments = (clone $baseQuery)
+            ->where('status', Payment::STATUS_PAID)
+            ->latest('paid_at')
             ->limit(10)
             ->get();
 
-        $pendingPayments = Payment::where('status', 'sent_to_payment')
+        $pendingPayments = (clone $baseQuery)
+            ->where('status', Payment::STATUS_SENT)
+            ->latest('sent_at')
             ->limit(10)
             ->get();
 
-        $projects = Project::orderBy('name')->get();
-        $units = Unit::orderBy('name')->get();
+        return view('admin.payments.dashboard', [
+            'month' => $month,
+            'year'  => $year,
+            'projects' => Project::orderBy('name')->get(),
+            'units'    => Unit::orderBy('name')->get(),
 
-        return view('admin.payments.dashboard', compact(
-            'month','year','projects','units',
-            'totalPaid','totalConfirmed','totalPending',
-            'countPaid','countPending',
-            'chartByProject','chartByUnit',
-            'latestPayments','pendingPayments'
-        ));
+            'totalPaid'      => $totalPaid,
+            'totalConfirmed' => $totalConfirmed,
+            'totalPending'   => $totalPending,
+            'countPaid'      => $countPaid,
+            'countPending'   => $countPending,
+
+            'chartByProject' => $chartByProject,
+            'chartByUnit'    => $chartByUnit,
+
+            'latestPayments' => $latestPayments,
+            'pendingPayments'=> $pendingPayments,
+        ]);
     }
+
 }

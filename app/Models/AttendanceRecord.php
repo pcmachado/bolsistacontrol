@@ -31,7 +31,7 @@ class AttendanceRecord extends Model
         'end_time',
         'hours',
         'calculated_value',
-        'observation',
+        'description',
         'status',
         'submitted_at', // Data de envio para homologação
         'approved_at',
@@ -149,6 +149,45 @@ class AttendanceRecord extends Model
         }
 
         return $query->whereRaw('1 = 0'); // sem permissão
+    }
+
+    public function submit(): void
+    {
+        if ($this->status !== self::STATUS_DRAFT) {
+            return;
+        }
+
+        $this->update([
+            'status' => self::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+        ]);
+    }
+
+    public function approve(int $userId): void
+    {
+        if ($this->status !== self::STATUS_SUBMITTED) {
+            return;
+        }
+
+        $this->update([
+            'status' => self::STATUS_APPROVED,
+            'approved_at' => now(),
+            'approved_by_user_id' => $userId,
+        ]);
+    }
+
+    public function reject(string $reason, int $userId): void
+    {
+        if ($this->status !== self::STATUS_SUBMITTED) {
+            return;
+        }
+
+        $this->update([
+            'status' => self::STATUS_REJECTED,
+            'rejected_reason' => $reason,
+            'rejected_at' => now(),
+            'approved_by_user_id' => $userId,
+        ]);
     }
 
 }

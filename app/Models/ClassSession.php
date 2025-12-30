@@ -13,7 +13,6 @@ class ClassSession extends Model
     protected $fillable = [
         'class_offering_id',
         'discipline_id',
-        'teacher_id',
         'date',
         'start_time',
         'end_time',
@@ -34,10 +33,5 @@ class ClassSession extends Model
     public function discipline()
     {
         return $this->belongsTo(Discipline::class);
-    }
-
-    public function teacher()
-    {
-        return $this->belongsTo(User::class, 'teacher_id');
     }
 }

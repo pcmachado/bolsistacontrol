@@ -18,6 +18,8 @@ class Project extends Model
         'name',
         'description',
         'institution_id',
+        'unit_id',
+        'wizard_step',
         'start_date',
         'end_date'
     ];
@@ -29,7 +31,19 @@ class Project extends Model
 
     public function courses(): BelongsToMany
     {
-        return $this->belongsToMany(Course::class, 'class_offerings')
+        return $this->belongsToMany(
+                        Course::class,
+                        'class_offerings',
+                        'project_id',
+                        'course_id'
+                        )
+                    ->withPivot([
+                        'semester',
+                        'year',
+                        'active',
+                        'start_date',
+                        'end_date',
+                    ])
                     ->withTimestamps();
     }
 
@@ -42,13 +56,36 @@ class Project extends Model
 
     public function fundingSources(): BelongsToMany
     {
-        return $this->belongsToMany(FundingSource::class, 'project_funding_source')
+        return $this->belongsToMany(
+                        FundingSource::class,
+                        'project_funding_source',
+                        'project_id',
+                        'funding_source_id'
+                    )
+                    ->withPivot([
+                        'amount',
+                         'start_date',
+                         'end_date',
+                         'status',
+                         ])
                     ->withTimestamps();
     }
 
     public function scholarshipHolders(): BelongsToMany
     {
-        return $this->belongsToMany(ScholarshipHolder::class, 'project_scholarship_holder')
+        return $this->belongsToMany(
+                        ScholarshipHolder::class,
+                        'project_scholarship_holder',
+                        'project_id',
+                        'scholarship_holder_id'
+                    )
+                    ->withPivot([
+                        'position_id',
+                        'weekly_workload',
+                        'status',
+                        'start_date',
+                        'end_date',
+                    ])
                     ->withTimestamps();
     }
 

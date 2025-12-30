@@ -57,13 +57,45 @@
         <x-sidebar-item route="admin.units.index" icon="bi bi-building" title="Unidades"/>
         <x-sidebar-item route="admin.positions.index" icon="bi bi-briefcase" title="Cargos"/>
         <x-sidebar-item route="admin.scholarship_holders.index" icon="bi bi-people" title="Bolsistas"/>
-        <x-sidebar-item route="admin.projects.index" icon="bi bi-kanban" title="Projetos"/>
         <x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/>
         <x-sidebar-item route="admin.attendance_records.index" icon="bi bi-calendar-week" title="Frequências"/>
         <x-sidebar-item route="admin.homologations.index" icon="bi bi-check2-square" title="Homologações"/>
         <x-sidebar-item route="admin.users.index" icon="bi bi-person-gear" title="Usuários"/>
         <x-sidebar-item route="admin.roles.index" icon="bi bi-key" title="Funções"/>
         <x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissões"/>
+
+        {{-- SUBMENU PROJETOS --}}
+        <div class="sidebar-submenu">
+            <button class="sidebar-submenu-toggle">
+                <i class="bi bi-kanban sidebar-icon me-2"></i>
+                <span class="sidebar-text">Projetos</span>
+                <i class="bi bi-caret-down-fill arrow-icon ms-auto"></i>
+            </button>
+
+            <div class="sidebar-submenu-items">
+                <x-sidebar-item
+                    route="admin.projects.index"
+                    icon="bi bi-list-ul"
+                    title="Listar Projetos"/>
+
+                <x-sidebar-item
+                    route="admin.projects.create.step1"
+                    icon="bi bi-plus-circle"
+                    title="Novo Projeto"/>
+            </div>
+        </div>
+
+        {{-- EXECUÇÃO ACADÊMICA --}}
+        <h6 class="sidebar-section-title mt-4">Execução Acadêmica</h6>
+
+        <x-sidebar-item route="admin.class-offerings.index" icon="bi bi-diagram-3" title="Ofertas de Turma"/>
+        <x-sidebar-item route="admin.supervisors.index" icon="bi bi-person-check" title="Supervisões"/>
+
+        {{-- FINANCEIRO --}}
+        <h6 class="sidebar-section-title mt-4">Financeiro</h6>
+
+        <x-sidebar-item route="admin.payments.dashboard" icon="bi bi-currency-dollar" title="Pagamentos"/>
+        <x-sidebar-item route="admin.attendance_records.index" icon="bi bi-clock-history" title="Frequências"/>
 
         @endhasanyrole
 

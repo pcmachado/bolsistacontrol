@@ -29,7 +29,12 @@ class Course extends Model
 
     public function disciplines()
     {
-        return $this->hasMany(Discipline::class);
+        return $this->belongsToMany(
+            Discipline::class,
+            'course_discipline',
+            'course_id',
+            'discipline_id'
+        )->withTimestamps();
     }
 
     public function classOfferings()

@@ -47,98 +47,21 @@ class ReportController extends Controller
         $year  = (int) $request->get('year', now()->year);
         $user  = Auth::user();
 
-        $projects = $unit->projects()->with('scholarshipHolders.user')->get();
+        $unitsQuery = match (true) {
+            $user->hasRole(['admin','coordenador_geral']) => Unit::query(),
+            $user->hasRole('coordenador_adjunto')         => $user->units(),
+            default                                       => abort(403),
+        };
 
-        // Carrega unidades conforme papel
-        if ($user->hasRole(['admin','coordenador_geral'])) {
-            $unitsQuery = Unit::query();
-        } elseif ($user->hasRole('coordenador_adjunto')) {
-            $unitsQuery = $user->units();
-        } else {
-            abort(403, 'Acesso negado.');
-        }
+        $units = $unitsQuery->with([
+            'scholarshipHolders.user',
+            'scholarshipHolders.attendanceRecords' => fn ($q) =>
+                $q->whereMonth('date', $month)->whereYear('date', $year),
+            'scholarshipHolders.projects' => fn ($q) =>
+                $q->withPivot(['position_id', 'start_date', 'end_date', 'status']),
+        ])->get();
 
-        // Eager loading dos holders + user + attendances no mês/ano
-        $units = $unitsQuery
-            ->with([
-                'scholarshipHolders.user',
-                'scholarshipHolders.attendanceRecords' => function ($q) use ($month, $year) {
-                    $q->whereMonth('date', $month)->whereYear('date', $year);
-                },
-                // Para resolver valor/hora via projeto/cargo:
-                // Carrega os projetos vinculados ao bolsista com dados da pivot (position_id, datas)
-                'scholarshipHolders.projects' => function ($q) {
-                    $q->withPivot(['position_id', 'start_date', 'end_date', 'status']);
-                },
-            ])
-            ->get();
-
-        // Mês/ano como período Date para comparar intervalo do vínculo do projeto
-        $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
-        $periodEnd   = Carbon::create($year, $month, 1)->endOfMonth();
-
-        // Para reduzir consultas, vamos preparar um cache local de rates por projeto/cargo
-        $positionRatesCache = [];
-
-        $report = $units->flatMap(function ($unit) use ($periodStart, $periodEnd, &$positionRatesCache) {
-            return $unit->scholarshipHolders->map(function ($holder) use ($unit, $periodStart, $periodEnd, &$positionRatesCache) {
-                $totalHours = $holder->attendanceRecords->sum('hours');
-
-                // Descobrir o vínculo de projeto "ativo" no período
-                // Regra: vínculo cujo intervalo [start_date, end_date] intersecta o mês.
-                $activeProject = $holder->projects->first(function ($project) use ($periodStart, $periodEnd) {
-                    $start = $project->pivot->start_date ? Carbon::parse($project->pivot->start_date) : null;
-                    $end   = $project->pivot->end_date ? Carbon::parse($project->pivot->end_date) : null;
-
-                    // Considera sem end_date como aberto
-                    $inRangeStart = $start ? $start <= $periodEnd : true;
-                    $inRangeEnd   = $end   ? $end   >= $periodStart : true;
-
-                    return $inRangeStart && $inRangeEnd;
-                });
-
-                // Se não houver projeto ativo, considera rate 0
-                $hourlyRate = 0.0;
-
-                if ($activeProject) {
-                    $projectId  = $activeProject->id;
-                    $positionId = $activeProject->pivot->position_id;
-
-                    if ($projectId && $positionId) {
-                        // Cache key
-                        $key = $projectId.'_'.$positionId;
-
-                        if (!array_key_exists($key, $positionRatesCache)) {
-                            // Busca rate na pivot project_position
-                            $rate = \DB::table('project_positions')
-                                ->where('project_id', $projectId)
-                                ->where('position_id', $positionId)
-                                ->value('hourly_rate');
-
-                            $positionRatesCache[$key] = (float) ($rate ?? 0);
-                        }
-
-                        $hourlyRate = $positionRatesCache[$key];
-                    }
-                }
-
-                $totalValue = $totalHours * $hourlyRate;
-
-                // Horas previstas (se existir limite semanal)
-                $expectedHours = $holder->weekly_limit_minutes
-                    ? ($holder->weekly_limit_minutes / 60) * 4
-                    : null;
-
-                return [
-                    'unit'             => $unit->name,
-                    'scholarshipHolder'=> $holder->user->name,
-                    'expected_hours'   => $expectedHours,
-                    'totalHours'       => $totalHours,
-                    'hourlyRate'       => $hourlyRate,
-                    'totalValue'       => $totalValue,
-                ];
-            });
-        });
+        $report = $this->buildMonthlyConsolidatedReport($units, $month, $year);
 
         return view('reports.report', compact('report', 'month', 'year'));
     }
@@ -398,6 +321,63 @@ class ReportController extends Controller
 
         return [$report, $month, $year, $units, $projects];
 
+    }
+
+    private function buildMonthlyConsolidatedReport(
+        $units,
+        int $month,
+        int $year
+    ) {
+        $periodStart = Carbon::create($year, $month, 1)->startOfMonth();
+        $periodEnd   = Carbon::create($year, $month, 1)->endOfMonth();
+
+        $positionRatesCache = [];
+
+        return $units->flatMap(function ($unit) use (
+            $periodStart,
+            $periodEnd,
+            &$positionRatesCache
+        ) {
+            return $unit->scholarshipHolders->map(function ($holder) use (
+                $unit,
+                $periodStart,
+                $periodEnd,
+                &$positionRatesCache
+            ) {
+                $totalHours = $holder->attendanceRecords->sum('hours');
+
+                $activeProject = $holder->projects->first(function ($project) use ($periodStart, $periodEnd) {
+                    $start = $project->pivot->start_date ? Carbon::parse($project->pivot->start_date) : null;
+                    $end   = $project->pivot->end_date ? Carbon::parse($project->pivot->end_date) : null;
+
+                    return (!$start || $start <= $periodEnd)
+                        && (!$end || $end >= $periodStart);
+                });
+
+                $hourlyRate = 0;
+
+                if ($activeProject) {
+                    $key = $activeProject->id.'_'.$activeProject->pivot->position_id;
+
+                    if (!isset($positionRatesCache[$key])) {
+                        $positionRatesCache[$key] = (float) \DB::table('project_positions')
+                            ->where('project_id', $activeProject->id)
+                            ->where('position_id', $activeProject->pivot->position_id)
+                            ->value('hourly_rate');
+                    }
+
+                    $hourlyRate = $positionRatesCache[$key];
+                }
+
+                return [
+                    'unit'              => $unit->name,
+                    'scholarshipHolder' => $holder->user->name,
+                    'totalHours'        => $totalHours,
+                    'hourlyRate'        => $hourlyRate,
+                    'totalValue'        => $totalHours * $hourlyRate,
+                ];
+            });
+        });
     }
 
 }

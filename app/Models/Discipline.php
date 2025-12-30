@@ -20,9 +20,14 @@ class Discipline extends Model
         'active',
     ];
 
-    public function course(): BelongsTo
+    public function courses()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsToMany(
+            Course::class,
+            'course_discipline',
+            'discipline_id',
+            'course_id'
+        )->withTimestamps();
     }
 
     public function classOfferings()

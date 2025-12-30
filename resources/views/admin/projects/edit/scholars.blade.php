@@ -1,9 +1,8 @@
-@extends('layouts.project-wizard')
+@extends('layouts.app')
 
 @section('title', 'Bolsistas do Projeto')
 
-@section('wizard-content')
-
+@section('content')
 <h4 class="mb-4 fw-bold">Vincular Bolsistas</h4>
 
 @if ($errors->any())
@@ -17,7 +16,7 @@
 @endif
 
 <form method="POST"
-      action="{{ route('admin.projects.store.step4', $project) }}">
+      action="{{ route('admin.projects.edit.scholars.update', $project) }}">
     @csrf
 
     <p class="text-muted mb-3">
@@ -74,7 +73,8 @@
                                 {{-- Cargo --}}
                                 <div class="col-md-4">
                                     <select name="scholarships[{{ $i }}][position_id]"
-                                            class="form-select form-select-sm">
+                                            class="form-select form-select-sm"
+                                            {{ $pivot ? '' : 'disabled' }}>
                                         <option value="">Selecione o cargo</option>
                                         @foreach ($positions as $position)
                                             <option value="{{ $position->id }}"
@@ -93,13 +93,15 @@
                                            name="scholarships[{{ $i }}][weekly_workload]"
                                            class="form-control form-control-sm"
                                            placeholder="Horas/semana"
-                                           value="{{ $pivot->weekly_workload ?? '' }}">
+                                           value="{{ $pivot->weekly_workload ?? '' }}"
+                                           {{ $pivot ? '' : 'disabled' }}>
                                 </div>
 
                                 {{-- Status --}}
                                 <div class="col-md-4">
                                     <select name="scholarships[{{ $i }}][status]"
-                                            class="form-select form-select-sm">
+                                            class="form-select form-select-sm"
+                                            {{ $pivot ? '' : 'disabled' }}>
                                         <option value="active"
                                             {{ ($pivot && $pivot->status === 'active') ? 'selected' : '' }}>
                                             Ativo
@@ -121,14 +123,9 @@
     </div>
 
     {{-- Ações --}}
-    <div class="d-flex justify-content-between mt-4">
-        <a href="{{ route('admin.projects.create.step3', $project) }}"
-           class="btn btn-outline-secondary">
-            ← Voltar
-        </a>
-
+    <div class="d-flex justify-content-end mt-4">
         <button type="submit" class="btn btn-primary">
-            Próximo →
+            Salvar alterações
         </button>
     </div>
 

@@ -28,10 +28,9 @@
 @section('title', 'Visão Geral - Admin')
 
 @section('content')
-    <div class="container-fluid">
-        {{-- 🔔 Faixa institucional abaixo da navbar --}}
+{{-- 🔔 Faixa institucional abaixo da navbar --}}
         @if($unitName)
-            <div class="bg-info text-white py-2 sticky-top shadow-sm" style="z-index: 1029; top: 56px;">
+            <div class="bg-info text-white py-2 shadow-sm" style="margin-top: -1.5rem; margin-left: -1.5rem; margin-right: -1.5rem; margin-bottom: 1.5rem;">
                 <div class="container d-flex align-items-center">
                     <i class="bi bi-building me-2"></i>
                     <span>
@@ -40,6 +39,7 @@
                 </div>
             </div>
         @endif
+    <div class="container-fluid">
         <h1 class="mb-4">Dashboard Administrativo</h1>
         <div class="d-flex justify-content-end align-items-center mb-4 gap-3">
             <select id="filterType" class="form-select form-select-sm w-auto rounded-0 border-secondary-subtle">

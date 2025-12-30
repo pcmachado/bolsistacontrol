@@ -1,55 +1,90 @@
-@extends('layouts.app')
+@extends('layouts.project-wizard')
 
-<style>
-    .nav-pills .nav-link.completed {
-        background-color: #198754; /* verde */
-        color: #fff;
-    }
-</style>
+@section('title', 'Cargos do Projeto')
 
-@section('content')
-<div class="container">
-    <h3>Passo 2: Definir Cargos</h3>
-    @include('admin.projects.partials._steps', ['step' => 2, 'project' => $project ?? null])
-    @include('admin.projects.partials._progress', ['progress' => 32, 'label' => 'Passo 2 de 6'])
-    <form method="POST" action="{{ route('admin.projects.store.step2', $project) }}">
-        @csrf
-        <div class="mb-3">
-            <label for="positions" class="form-label">Cargos</label>
-            <div class="input-group">
+@section('wizard-content')
+
+<h4 class="mb-4 fw-bold">Definir Cargos</h4>
+
+<form method="POST"
+      action="{{ route('admin.projects.store.step2', $project) }}">
+    @csrf
+
+    <p class="text-muted mb-3">
+        Selecione os cargos que farão parte do projeto e defina o valor da hora.
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;"></th>
+                    <th>Cargo</th>
+                    <th style="width: 200px;">Valor Hora (R$)</th>
+                </tr>
+            </thead>
+            <tbody>
                 @foreach($positions as $position)
-                    <div class="row g-2 align-items-center mb-2">
-                        <div class="col-md-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="positions[{{ $position->id }}][id]" value="{{ $position->id }}">
-                                <label class="form-check-label">{{ $position->name }}</label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <input type="number" step="0.01" min="0" class="form-control"
-                                name="positions[{{ $position->id }}][hourly_rate]" placeholder="Valor/hora">
-                        </div>
-                    </div>
-                    @endforeach
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addPositionModal">
-                    + Novo
-                </button>
-            </div>
-            <small class="text-muted">Segure CTRL (ou CMD no Mac) para selecionar mais de um cargo.</small>
-        </div>
-        <button type="submit" class="btn btn-primary">Avançar</button>
-    </form>
-</div>
+                    @php
+                        $pivot = $project->positions->firstWhere('id', $position->id)?->pivot;
+                    @endphp
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   class="form-check-input position-check"
+                                   data-id="{{ $position->id }}"
+                                   {{ $pivot ? 'checked' : '' }}>
+                        </td>
 
-{{-- Modal genérico para adicionar cargo --}}
-<x-modal-add-generic 
-    id="addPositionModal"
-    title="Adicionar Cargo"
-    :route="route('admin.positions.store')"
-    :fields="[
-        ['name' => 'name', 'label' => 'Nome do Cargo', 'type' => 'text', 'required' => true],
-        ['name' => 'hourly_rate', 'label' => 'Valor da Bolsa', 'type' => 'number'],
-        ['name' => 'weekly_workload', 'label' => 'Carga Horária Semanal', 'type' => 'number']
-    ]"
-/>
+                        <td>{{ $position->name }}</td>
+
+                        <td>
+                            <input type="number"
+                                   step="0.01"
+                                   min="0"
+                                   name="positions[{{ $position->id }}][hourly_rate]"
+                                   class="form-control hourly-input"
+                                   value="{{ $pivot->hourly_rate ?? '' }}"
+                                   {{ $pivot ? '' : 'disabled' }}>
+                            <input type="hidden"
+                                   name="positions[{{ $position->id }}][id]"
+                                   value="{{ $position->id }}">
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Ações --}}
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{{ route('admin.projects.create.step1') }}"
+           class="btn btn-outline-secondary">
+            ← Voltar
+        </a>
+
+        <button type="submit" class="btn btn-primary">
+            Próximo →
+        </button>
+    </div>
+
+</form>
+
 @endsection
+
+@push('scripts')
+<script>
+document.querySelectorAll('.position-check').forEach(cb => {
+    cb.addEventListener('change', function () {
+        const row = this.closest('tr');
+        const input = row.querySelector('.hourly-input');
+
+        input.disabled = !this.checked;
+
+        if (!this.checked) {
+            input.value = '';
+        }
+    });
+});
+</script>
+@endpush

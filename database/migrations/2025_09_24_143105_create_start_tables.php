@@ -84,7 +84,7 @@ return new class extends Migration
             $table->date('date');
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
-            $table->text('observation')->nullable();
+            $table->text('description')->nullable();
             $table->integer('hours');
             $table->decimal('calculated_value', 10, 2)->nullable();
             $table->boolean('approved')->default(false);
@@ -115,6 +115,8 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
             $table->text('description')->nullable();
+            $table->string('wizard_step')->default('step1');
+            $table->string('status')->default('draft');
             $table->foreignId('institution_id')->constrained()->onDelete('cascade');
             $table->foreignId('unit_id')->nullable()->constrained('units')->onDelete('set null');
             $table->date('start_date')->nullable();
@@ -262,7 +264,6 @@ return new class extends Migration
 
             $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
             $table->foreignId('discipline_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
 
             $table->date('date');
             $table->time('start_time');

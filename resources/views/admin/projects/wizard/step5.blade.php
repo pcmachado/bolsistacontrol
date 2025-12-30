@@ -1,75 +1,96 @@
-@extends('layouts.app')
+@extends('layouts.project-wizard')
 
-    <style>
-        .nav-pills .nav-link.completed {
-            background-color: #198754; /* verde */
-            color: #fff;
-        }
-    </style>
+@section('title', 'Fontes de Fomento')
 
-@section('content')
-    <div class="container">
-        <h3>Passo 5: Fontes de Fomento</h3>
-        @include('admin.projects.partials._steps', ['step' => 5, 'project' => $project ?? null])
-        @include('admin.projects.partials._progress', ['progress' => 80, 'label' => 'Passo 5 de 6'])
+@section('wizard-content')
 
-        <form method="POST" action="{{ route('admin.projects.store.step5', $project) }}">
-            @csrf
-            <div class="mb-3">
-                <label for="fundings" class="form-label">Fontes de Fomento</label>
-                <div class="input-group">
-                    <select name="fundings[0][funding_source_id]" class="form-select">
-                        @foreach($fundingSources as $source)
-                            <option value="{{ $source->id }}">{{ $source->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="input-group mt-2" id="fundings-wrapper">
-                    <span class="input-group-text">R$</span>
-                    <input type="number" name="fundings[0][amount]" class="form-control" placeholder="Valor">
-                </div>
-                <div class="mt-3 d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addFundingModal">
-                        + Novo
-                    </button>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Finalizar</button>
-        </form>
+<h4 class="mb-4 fw-bold">Fontes de Fomento</h4>
+
+<form method="POST"
+      action="{{ route('admin.projects.store.step5', $project) }}">
+    @csrf
+
+    <p class="text-muted mb-3">
+        Selecione as fontes de fomento do projeto e informe os valores.
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th style="width:50px;"></th>
+                    <th>Fonte de Fomento</th>
+                    <th style="width:220px;">Valor (R$)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($fundingSources as $source)
+                    @php
+                        $pivot = $project->fundingSources
+                            ->firstWhere('id', $source->id)?->pivot;
+                    @endphp
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   class="form-check-input funding-check"
+                                   data-id="{{ $source->id }}"
+                                   {{ $pivot ? 'checked' : '' }}>
+                        </td>
+
+                        <td>
+                            <strong>{{ $source->name }}</strong><br>
+                            @if(!empty($source->description))
+                                <small class="text-muted">{{ $source->description }}</small>
+                            @endif
+                        </td>
+
+                        <td>
+                            <input type="number"
+                                   step="0.01"
+                                   min="0"
+                                   name="fundings[{{ $source->id }}][amount]"
+                                   class="form-control amount-input"
+                                   value="{{ $pivot->amount ?? '' }}"
+                                   {{ $pivot ? '' : 'disabled' }}>
+
+                            <input type="hidden"
+                                   name="fundings[{{ $source->id }}][funding_source_id]"
+                                   value="{{ $source->id }}">
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 
-    {{-- Modal para adicionar nova fonte de fomento --}}
-    <x-modal-add-generic 
-        id="addFundingModal"
-        title="Adicionar Fonte de Fomento"
-        :route="route('admin.funding_sources.store')"
-        :fields="[
-            ['name' => 'name', 'label' => 'Nome da Fonte', 'type' => 'text', 'required' => true],
-            ['name' => 'description', 'label' => 'Descrição', 'type' => 'textarea']
-        ]"
-    />
+    {{-- Ações --}}
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{{ route('admin.projects.create.step4', $project) }}"
+           class="btn btn-outline-secondary">
+            ← Voltar
+        </a>
+
+        <button type="submit" class="btn btn-primary">
+            Próximo →
+        </button>
+    </div>
+
+</form>
+
 @endsection
 
 @push('scripts')
 <script>
-    document.getElementById('addFundingRow').addEventListener('click', function() {
-        const wrapper = document.getElementById('fundings-wrapper');
-        const index = wrapper.querySelectorAll('.funding-row').length;
-        const row = document.createElement('div');
-        row.classList.add('row','mb-2','funding-row');
-        row.innerHTML = `
-            <div class="col-md-6">
-                <select name="fundings[${index}][funding_source_id]" class="form-select">
-                    @foreach($fundingSources as $source)
-                        <option value="{{ $source->id }}">{{ $source->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-4">
-                <input type="number" name="fundings[${index}][amount]" class="form-control" placeholder="Valor">
-            </div>
-        `;
-        wrapper.appendChild(row);
+document.querySelectorAll('.funding-check').forEach(cb => {
+    cb.addEventListener('change', function () {
+        const container = document.getElementById('funding-' + this.dataset.index);
+
+        container.classList.toggle('d-none', !this.checked);
+
+        container.querySelectorAll('input, select').forEach(el => {
+            el.disabled = !this.checked;
+        });
     });
+});
 </script>
 @endpush

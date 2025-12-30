@@ -1,12 +1,42 @@
 <div class="d-flex justify-content-center gap-2">
     {{-- Botão Visualizar --}}
-    <a href="{{ route('admin.projects.show', $id) }}" 
-       class="btn btn-sm btn-info rounded-0" 
-       title="Visualizar">
-        <i class="bi bi-eye"></i>
-    </a>
+    @if($model->status === 'draft' && $model->wizard_step)
+
+        {{-- STEP 1 (edição especial) --}}
+        @if($model->wizard_step === 'step1')
+            <a href="{{ route('admin.projects.edit.step1', $model) }}"
+            class="btn btn-sm btn-warning rounded-0"
+            title="Continuar cadastro">
+                <i class="bi bi-caret-right"></i>
+            </a>
+
+        {{-- REVIEW --}}
+        @elseif($model->wizard_step === 'review')
+            <a href="{{ route('admin.projects.review', $model) }}"
+            class="btn btn-sm btn-warning rounded-0"
+            title="Revisar projeto">
+                <i class="bi bi-clipboard-check"></i>
+            </a>
+
+        {{-- DEMAIS STEPS --}}
+        @else
+            <a href="{{ route('admin.projects.create.' . $model->wizard_step, $model) }}"
+            class="btn btn-sm btn-warning rounded-0"
+            title="Continuar cadastro">
+                <i class="bi bi-caret-right"></i>
+            </a>
+        @endif
+
+    @else
+        <a href="{{ route('admin.projects.show', $model) }}"
+        class="btn btn-sm btn-outline-secondary rounded-0"
+        title="Visualizar projeto">
+            <i class="bi bi-eye"></i>
+        </a>
+    @endif
+
     {{-- Botão Editar --}}
-    <a href="{{ route('admin.projects.edit', $id) }}" 
+    <a href="{{ route('admin.projects.edit.index', $id) }}" 
        class="btn btn-sm btn-primary rounded-0" 
        title="Editar">
         <i class="bi bi-pencil-square"></i>

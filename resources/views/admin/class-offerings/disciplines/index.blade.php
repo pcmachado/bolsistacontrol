@@ -63,7 +63,7 @@
         </div>
 
         <div class="card-body p-0">
-            @include('admin.class_offerings.disciplines.partials.list', [
+            @include('admin.class-offerings.disciplines.partials.list', [
                 'offering' => $offering,
                 'teachers' => $teachers
             ])

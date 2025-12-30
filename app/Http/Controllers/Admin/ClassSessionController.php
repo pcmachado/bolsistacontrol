@@ -3,51 +3,47 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClassSession;
 use App\Models\ClassOffering;
-use App\Models\Discipline;
-use App\Models\User;
-use App\DataTables\ClassSessionsDataTable;
+use App\Models\ClassSession;
 use Illuminate\Http\Request;
 
 class ClassSessionController extends Controller
 {
-    public function index(ClassSessionsDataTable $dataTable, ClassOffering $offering)
+    public function index(ClassOffering $offering)
     {
-        $dataTable->setOffering($offering);
+        $offering->load([
+            'sessions.discipline',
+            'disciplines'
+        ]);
 
-        return $dataTable->render('admin.class_offerings.sessions.index', [
-            'offering' => $offering,
+        return view('admin.class-offerings.sessions.index', [
+            'offering'    => $offering,
+            'sessions'    => $offering->sessions,
             'disciplines' => $offering->disciplines,
-            'teachers' => $offering->disciplines->pluck('pivot.teacher')->unique('id')->filter(),
         ]);
     }
 
     public function store(Request $request, ClassOffering $offering)
     {
         $validated = $request->validate([
-            'discipline_id' => 'required|exists:disciplines,id',
-            'teacher_id'    => 'required|exists:users,id',
-            'date'          => 'required|date',
-            'start_time'    => 'required',
-            'end_time'      => 'required|after:start_time',
-            'notes'         => 'nullable|string',
+            'discipline_id' => ['required', 'exists:disciplines,id'],
+            'date'          => ['required', 'date'],
+            'start_time'    => ['required'],
+            'end_time'      => ['required'],
+            'workload'      => ['required', 'integer', 'min:1'],
+            'room'          => ['nullable', 'string'],
+            'notes'         => ['nullable', 'string'],
         ]);
 
-        $start = \Carbon\Carbon::parse($validated['start_time']);
-        $end   = \Carbon\Carbon::parse($validated['end_time']);
+        $offering->sessions()->create($validated);
 
-        $validated['duration_hours'] = $start->diffInMinutes($end) / 60;
-
-        $validated['class_offering_id'] = $offering->id;
-
-        ClassSession::create($validated);
-
-        return back()->with('success', 'Aula registrada com sucesso!');
+        return back()->with('success', 'Aula registrada com sucesso.');
     }
 
-    public function destroy(ClassSession $session)
+    public function destroy(ClassOffering $offering, ClassSession $session)
     {
+        abort_if($session->class_offering_id !== $offering->id, 403);
+
         $session->delete();
 
         return back()->with('success', 'Aula removida.');

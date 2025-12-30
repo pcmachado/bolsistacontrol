@@ -27,19 +27,23 @@ class PaymentController extends Controller
             'year' => 'required|integer|min:2000|max:2100',
         ]);
 
-        $holder = ScholarshipHolder::with(['user', 'unit'])->findOrFail($data['scholarship_holder_id']);
+        $holder = ScholarshipHolder::with(['user', 'unit', 'projects'])->findOrFail($data['scholarship_holder_id']);
 
-        // Evita duplicidade
+        // evita duplicidade (exceto draft)
         $exists = Payment::where('scholarship_holder_id', $holder->id)
             ->where('month', $data['month'])
             ->where('year', $data['year'])
+            ->whereIn('status', [
+                Payment::STATUS_SENT,
+                Payment::STATUS_PAID,
+                Payment::STATUS_CONFIRMED,
+            ])
             ->exists();
 
         if ($exists) {
-            return back()->withErrors('Já existe um pagamento para este bolsista neste período.');
+            return back()->withErrors('Já existe pagamento fechado para este período.');
         }
 
-        // Busca frequências homologadas
         $records = AttendanceRecord::approved()
             ->where('scholarship_holder_id', $holder->id)
             ->whereMonth('date', $data['month'])
@@ -47,7 +51,7 @@ class PaymentController extends Controller
             ->get();
 
         if ($records->isEmpty()) {
-            return back()->withErrors('Nenhuma frequência homologada encontrada para este período.');
+            return back()->withErrors('Nenhuma frequência homologada encontrada.');
         }
 
         $totalHours = $records->sum('hours');
@@ -55,32 +59,29 @@ class PaymentController extends Controller
 
         DB::transaction(function () use ($data, $holder, $totalHours, $amount) {
 
-            Payment::create([
-                'scholarship_holder_id' => $holder->id,
-                'project_id' => optional($holder->projects()->first())->id,
-                'unit_id' => $holder->unit_id,
-
-                'month' => $data['month'],
-                'year' => $data['year'],
-
-                'total_hours' => $totalHours,
-                'amount' => $amount,
-
-                'status' => Payment::STATUS_SENT,
-                'sent_at' => now(),
-            ]);
+            Payment::updateOrCreate(
+                [
+                    'scholarship_holder_id' => $holder->id,
+                    'month' => $data['month'],
+                    'year' => $data['year'],
+                ],
+                [
+                    'project_id' => optional($holder->projects->first())->id,
+                    'unit_id'    => $holder->unit_id,
+                    'total_hours'=> $totalHours,
+                    'amount'     => $amount,
+                    'status'     => Payment::STATUS_DRAFT,
+                ]
+            );
         });
 
-        return redirect()
-            ->route('admin.payments.create')
-            ->with('success', 'Pagamento enviado para execução financeira.');
+        return back()->with('success', 'Pagamento gerado como rascunho.');
     }
 
     public function confirm(Payment $payment)
     {
-        $this->authorize('confirm', $payment);
+        abort_if(! $payment->isPaid(), 403);
 
-        // se ainda não tiver número de recibo, gerar
         if (!$payment->receipt_number) {
             $payment->receipt_number = Payment::generateReceiptNumber();
         }
@@ -88,10 +89,34 @@ class PaymentController extends Controller
         $payment->update([
             'status' => Payment::STATUS_CONFIRMED,
             'confirmed_at' => now(),
-            'receipt_generated_at' => now(),
         ]);
 
-        return back()->with('success', 'Recebimento confirmado e recibo gerado.');
+        return back()->with('success', 'Pagamento confirmado e recibo gerado.');
+    }
+
+    public function send(Payment $payment)
+    {
+        abort_if(! $payment->isDraft(), 403);
+
+        $payment->update([
+            'status'  => Payment::STATUS_SENT,
+            'sent_at' => now(),
+        ]);
+
+        return back()->with('success', 'Pagamento enviado para execução financeira.');
+    }
+
+    public function markAsPaid(Payment $payment)
+    {
+        abort_if(! $payment->isSent(), 403);
+
+        $payment->update([
+            'status'          => Payment::STATUS_PAID,
+            'paid_at'         => now(),
+            'paid_by_user_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Pagamento marcado como pago.');
     }
 
 }

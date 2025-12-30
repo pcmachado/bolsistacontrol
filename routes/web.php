@@ -35,14 +35,18 @@ use App\Http\Controllers\Admin\ClassSessionController;
 use App\Http\Controllers\Admin\ClassSessionReportController;
 use App\Http\Controllers\Admin\ClassOfferingSyllabusController;
 use App\Http\Controllers\Admin\ClassOfferingDashboardController;
+use App\Http\Controllers\Admin\ClassOfferingController;
+use App\Http\Controllers\Admin\DisciplineDashboardController;
 use App\Http\Controllers\Admin\GlobalDashboardController;
 use App\Http\Controllers\Admin\TeacherDashboardController;
-use App\Http\Controllers\Admin\DisciplineDashboardController;
 use App\Http\Controllers\Admin\UnitDashboardController;
 use App\Http\Controllers\Admin\IntelligentAlertSettingController;
 use App\Http\Controllers\Admin\SupervisorAssignmentController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Admin\ProjectEditController;
+use App\Http\Controllers\Admin\CourseDisciplineController;
+use App\Http\Controllers\Admin\CourseClassOfferingController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -90,12 +94,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 
     Route::middleware(['auth'])->group(function () {
-        Route::get('/payments/my', [MyPaymentController::class, 'index'])->name('payments.my');
+        Route::get('/payments/my', [MyPaymentController::class, 'myPayments'])->name('payments.my');
         Route::post('/payments/{payment}/confirm', [MyPaymentController::class, 'confirm'])->name('payments.confirm');
+
+        Route::get('/payments/{payment}/receipt', [PaymentReceiptController::class, 'download'])->name('payments.receipt');
+        Route::get('/payments/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('payments.receipt');
     });
 
-    Route::get('/payments/{payment}/receipt', [PaymentReceiptController::class, 'download'])->name('payments.receipt');
-    Route::get('/payments/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('payments.receipt');
+    
 
 });
 
@@ -151,37 +157,60 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::resource('assignments', AssignmentController::class);
 
     Route::resource('disciplines', DisciplineController::class);
-    Route::resource('class-offerings', \App\Http\Controllers\Admin\ClassOfferingController::class);
-
-    Route::get('/class-offerings/{offering}/disciplines',[ClassOfferingDisciplineController::class, 'index'])->name('class-offerings.disciplines');
-    Route::post('/class-offerings/{offering}/disciplines',[ClassOfferingDisciplineController::class, 'store'])->name('class-offerings.disciplines.store');
-    Route::put('/class-offerings/discipline/{pivot}',[ClassOfferingDisciplineController::class, 'update'])->name('class-offerings.disciplines.update');
-    Route::delete('/class-offerings/discipline/{pivot}',[ClassOfferingDisciplineController::class, 'destroy'])->name('class-offerings.disciplines.destroy');
 
     Route::resource('supervisors', SupervisorAssignmentController::class);
     Route::resource('teachers', TeacherController::class);
 
-    Route::get('/class-offerings/{offering}/scholarship_holders',[ClassOfferingScholarshipHolderController::class, 'index'])->name('class-offerings.scholarship_holders.index');
+    // 1. Recurso Principal (CRUD padrão)
+    Route::resource('class-offerings', ClassOfferingController::class);
 
-    Route::post('/class-offerings/{offering}/scholarship_holders',[ClassOfferingScholarshipHolderController::class, 'store'])->name('class-offerings.scholarship_holders.store');
-    Route::delete('/class-offerings/{offering}/scholarship_holders/{scholarshipHolder}',[ClassOfferingScholarshipHolderController::class, 'destroy'])->name('class-offerings.scholarship_holders.destroy');
+    // 2. Grupo de Rotas Aninhadas a uma Oferta específica
+    Route::prefix('class-offerings/{offering}')->as('class-offerings.')->group(function () {
 
-    Route::get('/class-offerings/{offering}/sessions',[ClassSessionController::class, 'index'])->name('class-offerings.sessions.index');
+        // Dashboard e Syllabus da Oferta
+        Route::get('dashboard', [ClassOfferingDashboardController::class, 'index'])->name('dashboard');
+        Route::get('syllabus', [ClassOfferingSyllabusController::class, 'index'])->name('syllabus');
 
-    Route::get('/class-offerings/{offering}/sessions/report',[ClassSessionReportController::class, 'index'])->name('class-offerings.sessions.report');
-    Route::get('/reports/class-sessions',[ClassSessionReportController::class, 'global'])->name('reports.class-sessions');
+        // Disciplinas da Oferta
+        Route::controller(ClassOfferingDisciplineController::class)->group(function () {
+            Route::get('disciplines', 'index')->name('disciplines');
+            Route::post('disciplines', 'store')->name('disciplines.store');
+            // Dashboard específico da disciplina dentro da oferta
+            Route::get('disciplines/{discipline}/dashboard', [DisciplineDashboardController::class, 'index'])->name('disciplines.dashboard');
+        });
 
-    Route::get('/class-offerings/{offering}/syllabus',[ClassOfferingSyllabusController::class, 'index'])->name('class-offerings.syllabus');
+        // Bolsistas (Scholarship Holders)
+        Route::controller(ClassOfferingScholarshipHolderController::class)->as('scholarship_holders.')->group(function () {
+            Route::get('scholarship_holders', 'index')->name('index');
+            Route::post('scholarship_holders', 'store')->name('store');
+            Route::delete('scholarship_holders/{scholarshipHolder}', 'destroy')->name('destroy');
+        });
 
-    Route::get('/class-offerings/{offering}/dashboard',[ClassOfferingDashboardController::class, 'index'])->name('class-offerings.dashboard');
+        // Sessões e Relatórios de Sessão
+        Route::get('sessions', [ClassSessionController::class, 'index'])->name('sessions.index');
+        Route::post('sessions', [ClassSessionController::class, 'store'])->name('sessions.store');
+        Route::delete('sessions/{session}', [ClassSessionController::class, 'destroy'])->name('sessions.destroy');
 
-    Route::get('/class-offerings/{offering}/sessions/report/pdf',[ClassSessionReportController::class, 'exportPdf'])->name('class-offerings.sessions.report.pdf');
-    Route::get('/class-offerings/{offering}/sessions/report/excel',[ClassSessionReportController::class, 'exportExcel'])->name('class-offerings.sessions.report.excel');
+        Route::controller(ClassSessionReportController::class)->as('sessions.report.')->group(function () {
+            Route::get('sessions/report', 'index')->name('index');
+            Route::get('sessions/report/pdf', 'exportPdf')->name('pdf');
+            Route::get('sessions/report/excel', 'exportExcel')->name('excel');
+        });
+    });
 
-    Route::get('/dashboard/academic',[GlobalDashboardController::class, 'index'])->name('dashboard.academic');
-    Route::get('/dashboard/professor/{teacher}',[TeacherDashboardController::class, 'index'])->name('dashboard.teacher');
+    // 3. Rotas de Pivot/Individuais (fora do grupo de prefixo de oferta, se o {pivot} for único)
+    Route::controller(ClassOfferingDisciplineController::class)->as('class-offerings.disciplines.')->group(function () {
+        Route::put('class-offerings/discipline/{pivot}', 'update')->name('update');
+        Route::delete('class-offerings/discipline/{pivot}', 'destroy')->name('destroy');
+    });
 
-    Route::get('/class-offerings/{offering}/disciplines/{discipline}/dashboard',[DisciplineDashboardController::class, 'index'])->name('class-offerings.disciplines.dashboard');
+    // 4. Dashboards Globais e Relatórios Gerais
+    Route::get('reports/class-sessions', [ClassSessionReportController::class, 'global'])->name('reports.class-sessions');
+
+    Route::prefix('dashboard')->as('dashboard.')->group(function () {
+        Route::get('academic', [GlobalDashboardController::class, 'index'])->name('academic');
+        Route::get('professor/{teacher}', [TeacherDashboardController::class, 'index'])->name('teacher');
+    });
 
     Route::get('/dashboard/unit/{unit}',[UnitDashboardController::class, 'index'])->name('dashboard.unit');
 
@@ -192,31 +221,60 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('send', [PaymentController::class, 'create'])->name('create');
         Route::post('send', [PaymentController::class, 'store'])->name('store');
 
-        Route::get('pending', [PaymentExecutionController::class, 'index'])->name('pending');
+        Route::get('/', [PaymentController::class, 'index'])->name('index');
+
+        Route::get('batch', [PaymentController::class, 'batchForm'])->name('batch.form');
+        Route::post('batch/preview', [PaymentController::class, 'batchPreview'])->name('batch.preview');
+        Route::post('batch/store', [PaymentController::class, 'batchStore'])->name('batch.store');
         Route::post('{payment}/pay', [PaymentExecutionController::class, 'pay'])->name('pay');
 
         Route::get('/dashboard', [PaymentDashboardController::class, 'index'])->name('dashboard');
     });
 
-    Route::prefix('projects')->group(function () {
-        Route::get('create/step1', [ProjectWizardController::class, 'createStep1'])->name('projects.create.step1');
-        Route::post('store/step1', [ProjectWizardController::class, 'storeStep1'])->name('projects.store.step1');
+    Route::prefix('projects/wizard')->name('projects.')->group(function () {
+        // STEP 1 — Projeto
+        Route::get('create', [ProjectWizardController::class, 'createStep1'])->name('create.step1');
+        Route::post('create', [ProjectWizardController::class, 'storeStep1'])->name('store.step1');
+        Route::get('{project}/step-1', [ProjectWizardController::class, 'editStep1'])->name('edit.step1');
+        Route::post('{project}/step-1', [ProjectWizardController::class, 'updateStep1'])->name('update.step1');
 
-        Route::get('create/step2/{project}', [ProjectWizardController::class, 'createStep2'])->name('projects.create.step2');
-        Route::post('store/step2/{project}', [ProjectWizardController::class, 'storeStep2'])->name('projects.store.step2');
+        // STEP 2 — Cargos
+        Route::get('{project}/step-2', [ProjectWizardController::class, 'createStep2'])->name('create.step2');
+        Route::post('{project}/step-2', [ProjectWizardController::class, 'storeStep2'])->name('store.step2');
 
-        Route::get('create/step3/{project}', [ProjectWizardController::class, 'createStep3'])->name('projects.create.step3');
-        Route::post('store/step3/{project}', [ProjectWizardController::class, 'storeStep3'])->name('projects.store.step3');
+        // STEP 3 — Cursos
+        Route::get('{project}/step-3', [ProjectWizardController::class, 'createStep3'])->name('create.step3');
+        Route::post('{project}/step-3', [ProjectWizardController::class, 'storeStep3'])->name('store.step3');
 
-        Route::get('create/step4/{project}', [ProjectWizardController::class, 'createStep4'])->name('projects.create.step4');
-        Route::post('store/step4/{project}', [ProjectWizardController::class, 'storeStep4'])->name('projects.store.step4');
+        // STEP 4 — Bolsistas
+        Route::get('{project}/step-4', [ProjectWizardController::class, 'createStep4'])->name('create.step4');
+        Route::post('{project}/step-4', [ProjectWizardController::class, 'storeStep4'])->name('store.step4');
 
-        Route::get('create/step5/{project}', [ProjectWizardController::class, 'createStep5'])->name('projects.create.step5');
-        Route::post('store/step5/{project}', [ProjectWizardController::class, 'storeStep5'])->name('projects.store.step5');
+        // STEP 5 — Fomento
+        Route::get('{project}/step-5', [ProjectWizardController::class, 'createStep5'])->name('create.step5');
+        Route::post('{project}/step-5', [ProjectWizardController::class, 'storeStep5'])->name('store.step5');
 
-        Route::get('review/{project}', [ProjectWizardController::class, 'review'])->name('projects.review');
+        // REVIEW
+        Route::get('{project}/review', [ProjectWizardController::class, 'review'])->name('review');
 
-        Route::post('finalize/{project}', [ProjectWizardController::class, 'finalize'])->name('projects.finalize');
+        // FINALIZE
+        Route::post('{project}/finalize', [ProjectWizardController::class, 'finalize'])->name('finalize');
+    });
+
+    Route::prefix('projects/{project}/edit')->name('projects.edit.')->middleware(['auth', 'verified'])->group(function () {
+
+        Route::get('/', [ProjectEditController::class, 'index'])->name('index');
+
+        Route::get('/general', [ProjectEditController::class, 'general'])->name('general');
+
+        Route::get('/scholars', [ProjectEditController::class, 'scholars'])->name('scholars');
+        Route::post('/scholars', [ProjectEditController::class, 'updateScholars'])->name('scholars.update');
+
+        Route::get('/courses', [ProjectEditController::class, 'courses'])->name('courses');
+        Route::post('/courses', [ProjectEditController::class, 'updateCourses'])->name('courses.update');
+
+        Route::get('/funding', [ProjectEditController::class, 'funding'])->name('funding');
+        Route::post('/funding', [ProjectEditController::class, 'updateFunding'])->name('funding.update');
     });
 
     Route::prefix('document-templates')->name('document-templates.')->group(function () {
@@ -244,6 +302,14 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('/institutional', [FinancialReportController::class, 'institutional'])->name('institutional');
         Route::get('/institutional/pdf', [FinancialReportController::class, 'institutionalPdf'])->name('institutional.pdf');
         Route::get('/institutional/excel', [FinancialReportController::class, 'institutionalExcel'])->name('institutional.excel');
+    });
+
+    Route::prefix('courses/{course}')->name('courses.')->group(function () {
+        Route::get('disciplines', [CourseDisciplineController::class, 'index'])->name('disciplines.index');
+        Route::post('disciplines',[CourseDisciplineController::class, 'store'])->name('disciplines.store');
+
+        Route::get('class-offerings',[CourseClassOfferingController::class, 'index'])->name('class-offerings.index');
+        Route::get('class-offerings/create',[CourseClassOfferingController::class, 'create'])->name('class-offerings.create');
     });
 
 });

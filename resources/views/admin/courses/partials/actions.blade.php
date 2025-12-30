@@ -1,15 +1,16 @@
 <a href="{{ route('admin.courses.edit', $course->id) }}"
-   class="btn btn-sm btn-warning">
+   class="btn btn-sm btn-warning" title="Editar Curso">
     <i class="bi bi-pencil"></i>
 </a>
 
-<a href="{{ route('admin.class-offerings.index') }}?filter_course={{ $course->id }}"
-   class="btn btn-sm btn-info">
+<a href="{{ route('admin.courses.class-offerings.index', $course) }}"
+   class="btn btn-sm btn-info"
+   title="Ver Turmas do Curso">
     <i class="bi bi-collection"></i>
 </a>
 
-<a href="{{ route('admin.disciplines.index') }}?filter_course={{ $course->id }}"
-   class="btn btn-sm btn-primary">
+<a href="{{ route('admin.courses.disciplines.index', $course) }}"
+   class="btn btn-sm btn-primary" title="Gerenciar Disciplinas do Curso">
     <i class="bi bi-journal-text"></i>
 </a>
 

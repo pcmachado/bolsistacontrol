@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', config('app.name', 'BolsistaControl'))</title>
+    <title>@yield('title', 'BolsistaControl')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -17,10 +17,11 @@
     {{-- Navbar visitante --}}
     <nav class="navbar navbar-light bg-white border-bottom">
         <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold" href="{{ url('/') }}">🎓 BolsistaControl</a>
+            <a class="navbar-brand fw-bold" href="{{ url('/') }}">
+                🎓 BolsistaControl
+            </a>
 
             <div>
-                <a href="{{ route('login') }}" class="btn btn-primary me-2">Entrar</a>
                 <a href="{{ route('contact') }}" class="btn btn-outline-secondary">Contato</a>
             </div>
         </div>
@@ -32,7 +33,7 @@
     </main>
 
     {{-- Footer --}}
-    <footer class="bg-white border-top p-3 text-center text-muted small">
+    <footer class="bg-white border-top py-3 text-center text-muted small">
         © 2025 — Paulo César Machado. Todos os direitos reservados.
     </footer>
 
