@@ -303,20 +303,11 @@ return new class extends Migration
             $table->id();
 
             // Quem recebe
-            $table->foreignId('scholarship_holder_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
+            $table->foreignId('scholarship_holder_id')->constrained()->cascadeOnDelete();
 
             // Projeto e unidade (ajudam na auditoria)
-            $table->foreignId('project_id')
-                  ->nullable()
-                  ->constrained()
-                  ->nullOnDelete();
-
-            $table->foreignId('unit_id')
-                  ->nullable()
-                  ->constrained()
-                  ->nullOnDelete();
+            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
 
             // Referência do período
             $table->unsignedTinyInteger('month'); // 1–12
@@ -332,6 +323,7 @@ return new class extends Migration
 
             $table->string('receipt_number')->nullable()->unique();
             $table->timestamp('receipt_generated_at')->nullable();
+            $table->string('receipt_hash', 64)->nullable()->unique();
 
             // Datas do fluxo
             $table->timestamp('sent_at')->nullable();
@@ -377,6 +369,35 @@ return new class extends Migration
 
             $table->timestamps();
         });
+
+        Schema::create('financial_closures', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('unit_id')->constrained()->cascadeOnDelete();
+            $table->unsignedTinyInteger('month');
+            $table->unsignedSmallInteger('year');
+
+            $table->timestamp('closed_at');
+            $table->foreignId('closed_by_user_id')->constrained('users');
+
+            $table->timestamps();
+
+            $table->unique(['unit_id', 'month', 'year']);
+        });
+
+        Schema::create('financial_logs', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('action'); // created, paid, confirmed, closed, reversed
+            $table->string('entity_type'); // Payment, Closure
+            $table->unsignedBigInteger('entity_id');
+
+            $table->json('metadata')->nullable();
+
+            $table->foreignId('user_id')->constrained();
+            $table->timestamps();
+        });
+
     }
 
     /**
@@ -384,6 +405,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('financial_logs');
+        Schema::dropIfExists('financial_closures');
         Schema::dropIfExists('document_templates');
         Schema::dropIfExists('payments');
         Schema::dropIfExists('supervisor_assignment');

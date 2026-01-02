@@ -6,6 +6,11 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
 use App\Models\AttendanceRecord;
+use App\Models\Project;
+use App\Models\User;
+use App\Models\Payment;
+use App\Policies\ProjectPolicy;
+use App\Policies\UserPolicy;
 use App\Policies\AttendanceRecordPolicy;
 
 class AuthServiceProvider extends ServiceProvider

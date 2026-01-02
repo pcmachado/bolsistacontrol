@@ -15,6 +15,24 @@
         </span>
     </div>
 
+    {{-- ALERTAS --}}
+    @if(!empty($alerts))
+        <div class="mb-4">
+            @foreach($alerts as $alert)
+                <div class="alert alert-{{ $alert['type'] }} d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ $alert['title'] }}</strong><br>
+                        {{ $alert['message'] }}
+                    </div>
+                    <a href="{{ $alert['action_url'] }}"
+                    class="btn btn-sm btn-outline-dark">
+                        Ver
+                    </a>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- FILTROS --}}
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -65,6 +83,21 @@
             </form>
         </div>
     </div>
+
+    {{-- FECHAMENTO FINANCEIRO --}}
+    <form method="POST" action="{{ route('admin.financial-closures.store') }}">
+        @csrf
+
+        <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
+        <input type="hidden" name="month" value="{{ $month }}">
+        <input type="hidden" name="year" value="{{ $year }}">
+
+        <button class="btn btn-danger"
+            onclick="return confirm('Confirmar fechamento financeiro do período?')">
+            <i class="bi bi-lock-fill me-1"></i> Fechar período
+        </button>
+    </form>
+
 
     {{-- CARDS --}}
     <div class="row g-3 mb-4">
@@ -121,6 +154,52 @@
                     <h4 class="fw-bold mt-2">
                         {{ $countPending }}
                     </h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Comparação mensal</span>
+
+                        @if(!is_null($variation))
+                            @if($variation >= 0)
+                                <span class="text-success fw-semibold">
+                                    <i class="bi bi-arrow-up"></i>
+                                    {{ number_format($variation, 2, ',', '.') }}%
+                                </span>
+                            @else
+                                <span class="text-danger fw-semibold">
+                                    <i class="bi bi-arrow-down"></i>
+                                    {{ number_format(abs($variation), 2, ',', '.') }}%
+                                </span>
+                            @endif
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </div>
+
+                    <h6 class="mt-3 mb-1">
+                        {{ str_pad($prevMonth,2,'0',STR_PAD_LEFT) }}/{{ $prevYear }}
+                        →
+                        {{ str_pad($month,2,'0',STR_PAD_LEFT) }}/{{ $year }}
+                    </h6>
+
+                    <div class="small text-muted">
+                        R$ {{ number_format($previousTotal, 2, ',', '.') }}
+                        →
+                        <strong>
+                            R$ {{ number_format($currentTotal, 2, ',', '.') }}
+                        </strong>
+                    </div>
+
                 </div>
             </div>
         </div>

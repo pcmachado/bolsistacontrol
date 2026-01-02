@@ -6,44 +6,53 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\ScholarshipHolder;
 use App\Models\AttendanceRecord;
-use Carbon\Carbon;
+use App\Models\FinancialClosure;
+use App\Services\FinancialAuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+    /**
+     * Formulário de geração de pagamento
+     */
     public function create()
     {
         return view('admin.payments.create', [
-            'scholarshipHolders' => ScholarshipHolder::with('user')->orderBy('name')->get(),
+            'scholarshipHolders' => ScholarshipHolder::with('user')->orderBy('id')->get(),
         ]);
     }
 
+    /**
+     * Gera pagamento individual
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
             'scholarship_holder_id' => 'required|exists:scholarship_holders,id',
             'month' => 'required|integer|min:1|max:12',
-            'year' => 'required|integer|min:2000|max:2100',
+            'year'  => 'required|integer|min:2000|max:2100',
         ]);
 
-        $holder = ScholarshipHolder::with(['user', 'unit', 'projects'])->findOrFail($data['scholarship_holder_id']);
+        $holder = ScholarshipHolder::with(['unit', 'projects'])->findOrFail($data['scholarship_holder_id']);
 
-        // evita duplicidade (exceto draft)
-        $exists = Payment::where('scholarship_holder_id', $holder->id)
-            ->where('month', $data['month'])
-            ->where('year', $data['year'])
-            ->whereIn('status', [
-                Payment::STATUS_SENT,
-                Payment::STATUS_PAID,
-                Payment::STATUS_CONFIRMED,
-            ])
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors('Já existe pagamento fechado para este período.');
+        // 🔒 Bloqueio por fechamento financeiro
+        if (FinancialClosure::isClosed($holder->unit_id, $data['month'], $data['year'])) {
+            return back()->withErrors('O período financeiro está fechado.');
         }
 
+        // Evita duplicidade
+        $exists = Payment::where([
+            'scholarship_holder_id' => $holder->id,
+            'month' => $data['month'],
+            'year' => $data['year'],
+        ])->exists();
+
+        if ($exists) {
+            return back()->withErrors('Já existe pagamento para este período.');
+        }
+
+        // Frequências homologadas
         $records = AttendanceRecord::approved()
             ->where('scholarship_holder_id', $holder->id)
             ->whereMonth('date', $data['month'])
@@ -54,33 +63,43 @@ class PaymentController extends Controller
             return back()->withErrors('Nenhuma frequência homologada encontrada.');
         }
 
-        $totalHours = $records->sum('hours');
-        $amount     = $records->sum('calculated_value');
+        DB::transaction(function () use ($data, $holder, $records) {
 
-        DB::transaction(function () use ($data, $holder, $totalHours, $amount) {
+            $payment = Payment::create([
+                'scholarship_holder_id' => $holder->id,
+                'project_id' => optional($holder->projects()->first())->id,
+                'unit_id' => $holder->unit_id,
+                'month' => $data['month'],
+                'year' => $data['year'],
+                'total_hours' => $records->sum('hours'),
+                'amount' => $records->sum('calculated_value'),
+                'status' => Payment::STATUS_SENT,
+                'sent_at' => now(),
+            ]);
 
-            Payment::updateOrCreate(
-                [
-                    'scholarship_holder_id' => $holder->id,
-                    'month' => $data['month'],
-                    'year' => $data['year'],
-                ],
-                [
-                    'project_id' => optional($holder->projects->first())->id,
-                    'unit_id'    => $holder->unit_id,
-                    'total_hours'=> $totalHours,
-                    'amount'     => $amount,
-                    'status'     => Payment::STATUS_DRAFT,
-                ]
+            FinancialAuditService::log(
+                'created',
+                'Payment',
+                $payment->id,
+                ['amount' => $payment->amount]
             );
         });
 
-        return back()->with('success', 'Pagamento gerado como rascunho.');
+        return redirect()
+            ->route('admin.payments.create')
+            ->with('success', 'Pagamento enviado para execução financeira.');
     }
 
+    /**
+     * Confirmação final do pagamento (bolsista)
+     */
     public function confirm(Payment $payment)
     {
-        abort_if(! $payment->isPaid(), 403);
+        $this->authorize('confirm', $payment);
+
+        if ($payment->status !== Payment::STATUS_PAID) {
+            abort(403, 'Pagamento ainda não foi realizado.');
+        }
 
         if (!$payment->receipt_number) {
             $payment->receipt_number = Payment::generateReceiptNumber();
@@ -91,32 +110,13 @@ class PaymentController extends Controller
             'confirmed_at' => now(),
         ]);
 
-        return back()->with('success', 'Pagamento confirmado e recibo gerado.');
+        FinancialAuditService::log(
+            'confirmed',
+            'Payment',
+            $payment->id,
+            ['receipt' => $payment->receipt_number]
+        );
+
+        return back()->with('success', 'Pagamento confirmado com sucesso.');
     }
-
-    public function send(Payment $payment)
-    {
-        abort_if(! $payment->isDraft(), 403);
-
-        $payment->update([
-            'status'  => Payment::STATUS_SENT,
-            'sent_at' => now(),
-        ]);
-
-        return back()->with('success', 'Pagamento enviado para execução financeira.');
-    }
-
-    public function markAsPaid(Payment $payment)
-    {
-        abort_if(! $payment->isSent(), 403);
-
-        $payment->update([
-            'status'          => Payment::STATUS_PAID,
-            'paid_at'         => now(),
-            'paid_by_user_id' => auth()->id(),
-        ]);
-
-        return back()->with('success', 'Pagamento marcado como pago.');
-    }
-
 }

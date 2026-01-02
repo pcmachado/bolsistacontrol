@@ -47,6 +47,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ProjectEditController;
 use App\Http\Controllers\Admin\CourseDisciplineController;
 use App\Http\Controllers\Admin\CourseClassOfferingController;
+use App\Http\Controllers\Admin\FinancialClosureController;
+use App\Http\Controllers\ReceiptVerificationController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -56,6 +58,11 @@ Route::get('/', function () {
 Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
+
+// Receipt Verification
+Route::get('/verificar-recibo',[ReceiptVerificationController::class, 'form'])->name('receipt.verify.form');
+Route::post('/verificar-recibo',[ReceiptVerificationController::class, 'verify'])->name('receipt.verify');
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -93,12 +100,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications/read/{id}', [NotificationController::class, 'read'])->name('notifications.read');
     Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/payments/my', [MyPaymentController::class, 'myPayments'])->name('payments.my');
-        Route::post('/payments/{payment}/confirm', [MyPaymentController::class, 'confirm'])->name('payments.confirm');
+    Route::prefix('payments')->as('payments.')->group(function () {
+        Route::get('/my', [MyPaymentController::class, 'myPayments'])->name('my');
+        Route::post('/{payment}/confirm', [MyPaymentController::class, 'confirm'])->name('confirm');
 
-        Route::get('/payments/{payment}/receipt', [PaymentReceiptController::class, 'download'])->name('payments.receipt');
-        Route::get('/payments/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('payments.receipt');
+        Route::get('/{payment}/receipt', [PaymentReceiptController::class, 'download'])->name('receipt');
+        Route::get('/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('receipt');
     });
 
     
@@ -114,6 +121,7 @@ Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, 'search'])->name('scholarshipholders.search');
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 
+// Rotas Administrativas
 Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
@@ -311,5 +319,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('class-offerings',[CourseClassOfferingController::class, 'index'])->name('class-offerings.index');
         Route::get('class-offerings/create',[CourseClassOfferingController::class, 'create'])->name('class-offerings.create');
     });
+
+    Route::resource('financial-closures', FinancialClosureController::class);
 
 });

@@ -2,6 +2,7 @@
 
 use Carbon\Carbon;
 use App\Models\Institution;
+use App\Models\FinancialClosure;
 
 if (! function_exists('formatDate')) {
     function formatDate($date, $format = 'd/m/Y')
@@ -22,5 +23,11 @@ if (!function_exists('activeInstitution')) {
     {
         $id = session('institution_id');
         return $id ? Institution::find($id) : null;
+    }
+}
+
+if (!function_exists('is_financial_closed')) {
+    function is_financial_closed($unitId, $month, $year) {
+        return FinancialClosure::isClosed($unitId, $month, $year);
     }
 }
