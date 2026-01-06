@@ -27,7 +27,7 @@ class ReportController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole(['admin','coordenador_geral'])) {
+        if ($user->hasRole(['admin','coordenador_geral', 'coordenador_adjunto_geral'])) {
             $units = Unit::all();
         } elseif ($user->hasRole('coordenador_adjunto')) {
             $units = $user->units; // relacionamento user->units()
@@ -48,7 +48,7 @@ class ReportController extends Controller
         $user  = Auth::user();
 
         $unitsQuery = match (true) {
-            $user->hasRole(['admin','coordenador_geral']) => Unit::query(),
+            $user->hasRole(['admin','coordenador_geral', 'coordenador_adjunto_geral']) => Unit::query(),
             $user->hasRole('coordenador_adjunto')         => $user->units(),
             default                                       => abort(403),
         };

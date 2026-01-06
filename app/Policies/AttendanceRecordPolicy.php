@@ -22,7 +22,7 @@ class AttendanceRecordPolicy
      */
     public function before(User $user, string $ability): bool|null
     {
-        if ($user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto', 'bolsista'])) {
+        if ($user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto', 'bolsista'])) {
             return true;
         }
 
@@ -67,7 +67,7 @@ class AttendanceRecordPolicy
     public function approve(User $user, AttendanceRecord $record): bool
     {
         // Admin e coordenador geral podem homologar qualquer registro
-        if ($user->hasRole(['admin', 'coordenador_geral'])) {
+        if ($user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
             return true;
         }
 

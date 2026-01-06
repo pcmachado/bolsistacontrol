@@ -77,6 +77,11 @@ class User extends Authenticatable
         return $this->hasRole('coordenador_geral');
     }
 
+    public function isCoordenadorAdjuntoGeral(): bool
+    {
+        return $this->hasRole('coordenador_adjunto_geral');
+    }
+
     /**
      * Verifica se o usuário tem o papel de administrador.
      */
@@ -92,7 +97,7 @@ class User extends Authenticatable
 
     public function isCoordenador(): bool
     {
-        return $this->hasAnyRole(['coordenador_geral', 'coordenador_adjunto']);
+        return $this->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto']);
     }
 
     public function activeInstitutions()

@@ -35,7 +35,7 @@
         @endrole
 
         {{-- ADMIN --}}
-        @hasanyrole('admin|coordenador_geral|coordenador_adjunto')
+        @hasanyrole('admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto')
             <h6 class="sidebar-section mt-3">Administração</h6>
 
             <a href="{{ route('admin.dashboard') }}" class="sidebar-link">
@@ -58,7 +58,7 @@
         {{-- RELATÓRIOS --}}
         <h6 class="sidebar-section mt-3">Relatórios</h6>
 
-        @role(['admin','coordenador_geral','coordenador_adjunto'])
+        @role(['admin','coordenador_geral','coordenador_adjunto_geral'])
             <a href="{{ route('admin.reports.unit_detail') }}" class="sidebar-link">
                 <i class="bi bi-funnel me-2"></i> Por Unidade
             </a>

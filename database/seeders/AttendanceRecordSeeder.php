@@ -41,7 +41,7 @@ class AttendanceRecordSeeder extends Seeder
                         'start_time' => $date->copy()->setTime(9, 0)->toTimeString(),
                         'end_time' => $date->copy()->setTime(13, 0)->toTimeString(),
                         'hours' => 4,
-                        'observation' => "Frequência gerada pelo seeder para {$date->format('d/m/Y')}",
+                        'description' => "Frequência gerada pelo seeder para {$date->format('d/m/Y')}",
                         'calculated_value' => null,
                         'approved' => false,
                         'status' => $statuses[array_rand($statuses)],

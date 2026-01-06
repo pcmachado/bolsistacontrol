@@ -100,7 +100,7 @@ class InstitutionController extends Controller
         session()->save();
 
         $user = Auth::user();
-        $route = $user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto'])
+        $route = $user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto'])
             ? 'admin.dashboard'
             : 'dashboard';
 

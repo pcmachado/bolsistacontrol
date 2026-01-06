@@ -59,6 +59,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Criar papéis
         $coordenadorGeralRole = Role::firstOrCreate(['name' => 'coordenador_geral', 'guard_name' => 'web']);
+        $coordenadorAdjuntoGeralRole = Role::firstOrCreate(['name' => 'coordenador_adjunto_geral', 'guard_name' => 'web']);
         $coordenadorAdjuntoRole = Role::firstOrCreate(['name' => 'coordenador_adjunto', 'guard_name' => 'web']);
         $bolsistaRole          = Role::firstOrCreate(['name' => 'bolsista', 'guard_name' => 'web']);
         $supervisorRole        = Role::firstOrCreate(['name' => 'supervisor', 'guard_name' => 'web']);
@@ -71,6 +72,24 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Atribuir permissões
         $coordenadorGeralRole->syncPermissions([
+            'admin_dashboard',
+            'manage_attendances',
+            'manage_reports',
+            'scholarship_holder_dashboard',
+            'manage_users',
+            'manage_scholarship_holders',
+            'manage_units',
+            'manage_positions',
+            'manage_projects',
+            'manage_institutions',
+            'manage_permissions',
+            'view_users',
+            'update_attendances',
+            'delete_attendances',
+            'submit_attendances',
+        ]);
+
+        $coordenadorAdjuntoGeralRole->syncPermissions([
             'admin_dashboard',
             'manage_attendances',
             'manage_reports',

@@ -28,12 +28,12 @@ class RouteServiceProvider extends ServiceProvider
     {
         $user = Auth::user();
 
-        if ($user->hasRole('admin|coordenador_geral|coordenador_adjunto')) {
+        if ($user->hasRole('admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto')) {
             return route('admin.dashboard');
         }
 
         if ($user->hasRole('bolsista')) {
-            return route('bolsista.dashboard');
+            return route('dashboard');
         }
 
         return '/'; // fallback

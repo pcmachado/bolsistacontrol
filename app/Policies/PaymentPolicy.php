@@ -16,6 +16,7 @@ class PaymentPolicy
         return $user->hasAnyRole([
             'admin',
             'coordenador_geral',
+            'coordenador_adjunto_geral',
             'coordenador_adjunto',
             'financeiro',
         ]);
@@ -27,7 +28,7 @@ class PaymentPolicy
     public function view(User $user, Payment $payment): bool
     {
         // Admin e coordenador geral veem tudo
-        if ($user->hasAnyRole(['admin', 'coordenador_geral', 'financeiro'])) {
+        if ($user->hasAnyRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral', 'financeiro'])) {
             return true;
         }
 
@@ -45,7 +46,7 @@ class PaymentPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['admin', 'coordenador_geral']);
+        return $user->hasAnyRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral', 'financeiro']);
     }
 
     /**
@@ -84,6 +85,6 @@ class PaymentPolicy
      */
     public function cancel(User $user, Payment $payment): bool
     {
-        return $user->hasAnyRole(['admin', 'coordenador_geral']);
+        return $user->hasAnyRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral', 'financeiro']);
     }
 }

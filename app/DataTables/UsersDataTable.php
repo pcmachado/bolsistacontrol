@@ -43,7 +43,7 @@ class UsersDataTable extends DataTable
 
             $query->where('unit_id', $logged->unit_id) // só usuários da mesma unidade
                 ->whereDoesntHave('roles', function ($q) {
-                        $q->whereIn('name', ['admin', 'coordenador_geral', 'superadmin']);
+                        $q->whereIn('name', ['admin', 'coordenador_geral', 'superadmin', 'coordenador_adjunto_geral']);
                 });
         }
 
@@ -51,7 +51,7 @@ class UsersDataTable extends DataTable
         // 🔐 RESTRIÇÃO PARA COORDENADOR GERAL (opcional)
         // Ele vê tudo, exceto admin:
         //
-        if ($logged->hasRole('coordenador_geral')) {
+        if ($logged->hasRole('coordenador_geral', 'coordenador_adjunto_geral')) {
             $query->whereDoesntHave('roles', function ($q) {
                 $q->whereIn('name', ['admin', 'superadmin']);
             });

@@ -1,6 +1,6 @@
 @php
     $user = Auth::user();
-    $isAdmin = $user->hasRole('admin') || $user->hasRole('coordenador_geral');
+    $isAdmin = $user->hasRole('admin') || $user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto_geral');
     $isCoordinator = $user->hasRole('coordenador_adjunto');
     $isScholar = $user->hasRole('bolsista');
 @endphp

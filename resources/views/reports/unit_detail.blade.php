@@ -13,7 +13,7 @@
 
 {{-- Filtros --}}
 <form method="GET" class="row g-3 mb-3 mt-3">
-    @if(auth()->user()->hasRole(['admin','coordenador_geral']))
+    @if(auth()->user()->hasRole(['admin','coordenador_geral', 'coordenador_adjunto_geral']))
         <div class="col-md-3">
             <label for="unit_id" class="form-label">Unidade</label>
             <select name="unit_id" id="unit_id" class="form-select">

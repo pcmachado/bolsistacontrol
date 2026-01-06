@@ -45,6 +45,20 @@ class UserSeeder extends Seeder
         );
             $coordenadorGeral->assignRole('coordenador_geral');
 
+            $cagEmail = "cag@{$inst->acronym}.example.com";
+            // Cria um usuário para a coordenação adjunta geral
+            $coordenadorAdjuntoGeral = User::firstOrCreate(
+                ['email' => $cagEmail],
+                [
+                    'name' => 'Coordenador Adjunto Geral',
+                    'unit_id' =>  null,
+                    'email_verified_at' => now(),
+                    'password' => static::$password ??= Hash::make('password'),
+                    'remember_token' => Str::random(10),
+                ]
+        );
+            $coordenadorAdjuntoGeral->assignRole('coordenador_adjunto_geral');
+
             foreach ($inst->units as $unit) {
                 $caEmail = "ca@{$unit->shortname}.example.com";
                 // Cria um usuário para o coordenador adjunto

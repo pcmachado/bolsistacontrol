@@ -117,7 +117,7 @@ class AttendanceRecordDataTable extends DataTable
                 break;
 
             default:
-                if ($user->hasRole(['admin', 'coordenador_geral'])) {
+                if ($user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
                     // visão total
                     break;
                 }

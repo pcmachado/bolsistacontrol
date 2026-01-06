@@ -67,7 +67,8 @@ class UserPolicy
 
         // adjunto só altera usuários comuns
         if ($logged->hasRole('coordenador_adjunto')) {
-            return ! $target->hasRole('coordenador_adjunto')
+            return ! $target->hasRole('coordenador_adjunto_geral')
+                && ! $target->hasRole('coordenador_adjunto')
                 && ! $target->hasRole('coordenador_geral')
                 && ! $target->hasRole('admin')
                 && ! $target->hasRole('superadmin');

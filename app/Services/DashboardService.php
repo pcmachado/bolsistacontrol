@@ -7,6 +7,15 @@ use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Models\Course;
 use App\Models\User;
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\Project;
+use App\Models\Payment;
+use App\Models\Discipline;
+use App\Models\ClassOffering;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -18,20 +27,7 @@ class DashboardService
     {
         $user = Auth::user();
 
-        $monthInput = $filters['month'] ?? null;
-
-        if ($monthInput && preg_match('/^\d{4}-\d{2}$/', $monthInput)) {
-            // formato vindo do <input type="month">
-            [$year, $month] = explode('-', $monthInput);
-            $year  = (int) $year;
-            $month = (int) $month;
-        } else {
-            // fallback: mês e ano separados
-            $year  = isset($filters['year']) ? (int) $filters['year'] : (int) now()->format('Y');
-            $month = isset($filters['month']) && is_numeric($filters['month'])
-                ? (int) $filters['month']
-                : (int) now()->format('m');
-        }
+        [$year, $month, $startDate, $endDate] = $this->resolvePeriod($filters);
 
         $currentMonth = now()->format('Y-m');
 
@@ -47,7 +43,7 @@ class DashboardService
             // sem filtro extra
         }
         // admin / coordenador_geral → vê todos os registros do sistema
-        elseif ($user->hasRole('admin') || $user->hasRole('coordenador_geral')) {
+        elseif ($user->hasRole('admin') || $user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto_geral')) {
             // sem filtro extra
         }
         // coordenador_adjunto / supervisor / apoio_administrativo / orientador → só unidade
@@ -94,7 +90,37 @@ class DashboardService
         ];
 
         // ================================
-        // 4) Últimos eventos
+        // Dados acadêmicos (só para admins)
+        $academic = [];
+
+        if ($user->hasAnyRole(['superAdmin', 'admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
+
+            $academic['projects_active'] = Project::where('status', 'active')->count();
+
+            $academic['projects_draft'] = Project::where('status', 'draft')->count();
+
+            $academic['courses_total'] = Course::count();
+
+            $academic['disciplines_total'] = Discipline::count();
+            $academic['class_offerings_active'] = ClassOffering::count();
+        }
+
+        // ================================
+        // Alertas (só para admins)
+        $alerts = [];
+
+        if ($user->hasAnyRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
+
+            $alerts['attendance_pending'] = $counts['submitted'];
+            $alerts['attendance_rejected'] = $counts['rejected'];
+
+            $alerts['payments_pending_execution'] = $financial['payments_sent'] ?? 0;
+            $alerts['payments_waiting_confirmation'] =
+                Payment::where('status', Payment::STATUS_PAID)->count();
+        }
+
+        // ================================
+        // Últimos eventos
         // ================================
         $lastSubmissions = (clone $query)
             ->with('scholarshipHolder.user')
@@ -215,7 +241,89 @@ class DashboardService
             'lastApprovals',
             'unitName',
             'currentMonth',
-            'recentNotifications'
+            'recentNotifications',
+            'academic',
+            'alerts',
+            'lastNotifications',
         );
     }
+
+    public function getFinancialData(array $filters): array
+    {
+        $user = auth()->user();
+
+        // período (mesma lógica que você já usa)
+        [$year, $month, $startDate, $endDate] = $this->resolvePeriod($filters);
+
+        $query = Payment::query();
+
+        // 🔐 Escopo por papel
+        if ($user->hasRole('coordenador_adjunto')) {
+            $query->where('unit_id', $user->unit_id);
+        }
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('paid_at', [$startDate, $endDate]);
+        } else {
+            $query->where('month', $month)->where('year', $year);
+        }
+
+        return [
+            'counts' => [
+                'generated'  => (clone $query)->where('status', 'sent_to_payment')->count(),
+                'paid'       => (clone $query)->where('status', 'paid')->count(),
+                'confirmed'  => (clone $query)->where('status', 'confirmed')->count(),
+            ],
+            'totals' => [
+                'generated'  => (clone $query)->where('status', 'sent_to_payment')->sum('amount'),
+                'paid'       => (clone $query)->where('status', 'paid')->sum('amount'),
+                'confirmed'  => (clone $query)->where('status', 'confirmed')->sum('amount'),
+            ],
+            'latest' => (clone $query)
+                ->with('scholarshipHolder.user')
+                ->latest()
+                ->take(5)
+                ->get(),
+        ];
+    }
+
+    protected function resolvePeriod(array $filters): array
+    {
+        $year = null;
+        $month = null;
+        $startDate = null;
+        $endDate = null;
+
+        // Caso 1: input type="month" (YYYY-MM)
+        if (!empty($filters['month']) && preg_match('/^\d{4}-\d{2}$/', $filters['month'])) {
+            [$year, $month] = explode('-', $filters['month']);
+            $year  = (int) $year;
+            $month = (int) $month;
+
+            $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+            $endDate   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+        }
+
+        // Caso 2: intervalo manual
+        elseif (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $startDate = \Carbon\Carbon::parse($filters['start_date'])->startOfDay();
+            $endDate   = \Carbon\Carbon::parse($filters['end_date'])->endOfDay();
+
+            $year  = (int) $startDate->year;
+            $month = null; // não faz sentido em range
+        }
+
+        // Caso 3: fallback (mês atual)
+        else {
+            $now = now();
+            $year  = $now->year;
+            $month = $now->month;
+
+            $startDate = $now->copy()->startOfMonth();
+            $endDate   = $now->copy()->endOfMonth();
+        }
+
+        return [$year, $month, $startDate, $endDate];
+    }
+
 }

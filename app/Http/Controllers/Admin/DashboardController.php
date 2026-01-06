@@ -45,16 +45,17 @@ class DashboardController extends Controller
     /**
      * Endpoint para AJAX (gráfico e cards)
      */
-    public function stats(Request $request)
+    public function stats(Request $request, DashboardService $service)
     {
         // AJAX sempre envia month/year
         if (!$request->has('month')) {
             return response()->json(['error' => 'Parâmetros insuficientes'], 422);
         }
 
-        $data = $this->dashboard->getDashboardData($request->all());
-
-        return response()->json($data);
+        return response()->json([
+            'general'   => $service->getDashboardData($request->all()),
+            'financial' => $service->getFinancialData($request->all()),
+        ]);
     }
 
 }

@@ -19,7 +19,7 @@ class DataScopeService
 
 
         // admin/institutional roles -> institution level
-        if ($user->hasRole(['admin','coordenador_geral'])) {
+        if ($user->hasRole(['admin','coordenador_geral', 'coordenador_adjunto_geral'])) {
             return ['type' => 'institution', 'institution_id' => $user->institution_id];
         }
 
