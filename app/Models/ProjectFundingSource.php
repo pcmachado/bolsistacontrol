@@ -16,7 +16,8 @@ class ProjectFundingSource extends pivot
     protected $fillable = [
         'project_id',
         'funding_source_id',
-        'amount',
+        'allocated_amount',
+        'used_amount',
         'start_date',
         'end_date',
         'status'

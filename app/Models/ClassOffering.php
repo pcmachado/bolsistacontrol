@@ -61,4 +61,23 @@ class ClassOffering extends Model
         return $this->hasMany(ClassSession::class);
     }
 
+    public function scopeVisibleForUser($query, $user)
+    {
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            return $query->whereHas('unit', fn ($q) =>
+                $q->where('institution_id', $user->institution_id)
+            );
+        }
+
+        if ($user->unit_id) {
+            return $query->where('unit_id', $user->unit_id);
+        }
+
+        return $query->whereRaw('1=0');
+    }
+
 }

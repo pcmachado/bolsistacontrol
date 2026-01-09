@@ -6,6 +6,8 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\Html\Button;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectsDataTable extends DataTable
 {
@@ -43,7 +45,7 @@ class ProjectsDataTable extends DataTable
 
     public function query(Project $model)
     {
-        return $model->newQuery()->with(['institution'])->select('projects.*');
+        return $model->newQuery()->byUserInstitution(Auth::user())->select('projects.*');
     }
 
     public function html()

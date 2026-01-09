@@ -46,11 +46,15 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
+        $this->authorize('view', $project);
         return view('admin.projects.show', compact('project'));
     }
 
     public function edit(Project $project)
     {
+        $this->authorize('view', $project);
+
+
         $units = Unit::all();
         $currentUnit = $project->unit_id ? Unit::find($project->unit_id) : null;
 
@@ -62,6 +66,8 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        $this->authorize('view', $project);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -73,6 +79,8 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
+        $this->authorize('view', $project);
+        
         $project->delete();
         return redirect()->route('admin.projects.index')->with('success', 'Projeto excluído com sucesso.');
     }

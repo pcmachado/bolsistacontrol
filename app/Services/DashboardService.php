@@ -31,9 +31,7 @@ class DashboardService
 
         $currentMonth = now()->format('Y-m');
 
-        $query = AttendanceRecord::query()
-            ->whereYear('date', $year)
-            ->whereMonth('date', $month);
+        $query = AttendanceRecord::query()->whereBetween('date', [$startDate, $endDate]);
 
         $role = $user->roles->pluck('name')->first();
         $unitName = null;
@@ -250,80 +248,74 @@ class DashboardService
 
     public function getFinancialData(array $filters): array
     {
-        $user = auth()->user();
-
-        // período (mesma lógica que você já usa)
         [$year, $month, $startDate, $endDate] = $this->resolvePeriod($filters);
 
-        $query = Payment::query();
+        $query = \App\Models\Payment::query()
+            ->whereBetween(
+                \DB::raw("STR_TO_DATE(CONCAT(year,'-',month,'-01'), '%Y-%m-%d')"),
+                [$startDate, $endDate]
+            );
 
-        // 🔐 Escopo por papel
-        if ($user->hasRole('coordenador_adjunto')) {
+        $user = auth()->user();
+
+        // 🔒 Escopo por papel
+        if ($user->hasRole('coordenador_adjunto') && $user->unit_id) {
             $query->where('unit_id', $user->unit_id);
         }
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('paid_at', [$startDate, $endDate]);
-        } else {
-            $query->where('month', $month)->where('year', $year);
-        }
+        $counts = [
+            'generated'  => (clone $query)->count(),
+            'sent'       => (clone $query)->where('status', 'sent_to_payment')->count(),
+            'paid'       => (clone $query)->where('status', 'paid')->count(),
+            'confirmed'  => (clone $query)->where('status', 'confirmed')->count(),
+        ];
+
+        $totals = [
+            'sent'      => (clone $query)->where('status', 'sent_to_payment')->sum('amount'),
+            'paid'      => (clone $query)->where('status', 'paid')->sum('amount'),
+            'confirmed' => (clone $query)->where('status', 'confirmed')->sum('amount'),
+        ];
 
         return [
-            'counts' => [
-                'generated'  => (clone $query)->where('status', 'sent_to_payment')->count(),
-                'paid'       => (clone $query)->where('status', 'paid')->count(),
-                'confirmed'  => (clone $query)->where('status', 'confirmed')->count(),
-            ],
-            'totals' => [
-                'generated'  => (clone $query)->where('status', 'sent_to_payment')->sum('amount'),
-                'paid'       => (clone $query)->where('status', 'paid')->sum('amount'),
-                'confirmed'  => (clone $query)->where('status', 'confirmed')->sum('amount'),
-            ],
-            'latest' => (clone $query)
-                ->with('scholarshipHolder.user')
-                ->latest()
-                ->take(5)
-                ->get(),
+            'counts' => $counts,
+            'totals' => $totals,
         ];
     }
 
-    protected function resolvePeriod(array $filters): array
+    private function resolvePeriod(array $filters): array
     {
-        $year = null;
-        $month = null;
-        $startDate = null;
-        $endDate = null;
-
-        // Caso 1: input type="month" (YYYY-MM)
+        // Caso venha month no formato YYYY-MM
         if (!empty($filters['month']) && preg_match('/^\d{4}-\d{2}$/', $filters['month'])) {
             [$year, $month] = explode('-', $filters['month']);
-            $year  = (int) $year;
-            $month = (int) $month;
 
             $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
             $endDate   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+
+            return [(int) $year, (int) $month, $startDate, $endDate];
         }
 
-        // Caso 2: intervalo manual
-        elseif (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+        // Caso venha intervalo
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $startDate = \Carbon\Carbon::parse($filters['start_date'])->startOfDay();
             $endDate   = \Carbon\Carbon::parse($filters['end_date'])->endOfDay();
 
-            $year  = (int) $startDate->year;
-            $month = null; // não faz sentido em range
+            return [
+                (int) $startDate->year,
+                null,
+                $startDate,
+                $endDate
+            ];
         }
 
-        // Caso 3: fallback (mês atual)
-        else {
-            $now = now();
-            $year  = $now->year;
-            $month = $now->month;
+        // Fallback: mês atual
+        $now = now();
 
-            $startDate = $now->copy()->startOfMonth();
-            $endDate   = $now->copy()->endOfMonth();
-        }
-
-        return [$year, $month, $startDate, $endDate];
+        return [
+            (int) $now->year,
+            (int) $now->month,
+            $now->copy()->startOfMonth(),
+            $now->copy()->endOfMonth(),
+        ];
     }
 
 }

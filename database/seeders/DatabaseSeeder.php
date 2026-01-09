@@ -81,6 +81,7 @@ class DatabaseSeeder extends Seeder
             ClassOfferingSeeder::class,
             ProjectPositionSeeder::class,
             NotificationTestSeeder::class,
+            PaymentSeeder::class,
         ]);
     }
 }

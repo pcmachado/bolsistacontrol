@@ -7,18 +7,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Http\Traits\BelongsToInstitution;
 
 class Project extends Model
 {
     use HasFactory, SoftDeletes;
-    use BelongsToInstitution;
 
     protected $fillable = [
         'name',
         'description',
         'institution_id',
-        'unit_id',
         'wizard_step',
         'start_date',
         'end_date'
@@ -27,24 +24,6 @@ class Project extends Model
     public function institution(): BelongsTo
     {
         return $this->belongsTo(institution::class);
-    }
-
-    public function courses(): BelongsToMany
-    {
-        return $this->belongsToMany(
-                        Course::class,
-                        'class_offerings',
-                        'project_id',
-                        'course_id'
-                        )
-                    ->withPivot([
-                        'semester',
-                        'year',
-                        'active',
-                        'start_date',
-                        'end_date',
-                    ])
-                    ->withTimestamps();
     }
 
     public function positions(): BelongsToMany
@@ -89,6 +68,26 @@ class Project extends Model
                     ->withTimestamps();
     }
 
+    public function classOfferings()
+    {
+        return $this->hasManyThrough(
+            ClassOffering::class,
+            Course::class,
+            'project_id', // FK em courses
+            'course_id'   // FK em class_offerings
+        );
+    }
+
+    public function units()
+    {
+        return $this->belongsToMany(
+            Unit::class,
+            'class_offerings',
+            'project_id',
+            'unit_id'
+        )->distinct();
+    }
+
     public function hourlyRateForScholarshipHolder(ScholarshipHolder $holder): float
     {
         $pivot = $this->scholarshipHolders()->where('scholarship_holder_id', $holder->id)->first()?->pivot;
@@ -103,4 +102,46 @@ class Project extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function scopeVisibleForUser($query, $user)
+    {
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            return $query->whereHas('classOfferings.unit', fn ($q) =>
+                $q->where('institution_id', $user->institution_id)
+            );
+        }
+
+        if ($user->unit_id) {
+            return $query->whereHas('classOfferings', fn ($q) =>
+                $q->where('unit_id', $user->unit_id)
+            );
+        }
+
+        return $query->whereRaw('1=0');
+    }
+
+    public function scopeByUserInstitution($query, $user)
+    {
+        // Admin vê tudo
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        // Coordenadores → só projetos da instituição
+        if (
+            $user->hasRole('coordenador_geral') ||
+            $user->hasRole('coordenador_adjunto_geral') ||
+            $user->hasRole('coordenador_adjunto')
+        ) {
+            return $query->where('institution_id', $user->institution_id);
+        }
+
+        // Outros perfis → nada
+        return $query->whereRaw('1 = 0');
+    }
+
 }

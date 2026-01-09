@@ -2,7 +2,7 @@
     <div class="col-md-3">
         <div class="card border-start border-4 border-secondary">
             <div class="card-body">
-                <small>Gerados</small>
+                <small>Pagamentos Gerados</small>
                 <h3 id="card-fin-generated">0</h3>
             </div>
         </div>
@@ -13,6 +13,15 @@
             <div class="card-body">
                 <small>Pagos</small>
                 <h3 id="card-fin-paid">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-start border-4 border-warning shadow-sm">
+            <div class="card-body">
+                <small class="text-muted">Pagamentos Pendentes</small>
+                <h3 id="card-fin-pending">0</h3>
             </div>
         </div>
     </div>
@@ -49,7 +58,7 @@
                         @endif
                     </h5>
                     <div>
-                        <button id="toggleChart" type="button" class="btn btn-sm btn-outline-secondary rounded-0">
+                        <button id="toggleFinancialChart" type="button" class="btn btn-sm btn-outline-secondary rounded-0">
                             Alternar Gráfico
                         </button>
                     </div>

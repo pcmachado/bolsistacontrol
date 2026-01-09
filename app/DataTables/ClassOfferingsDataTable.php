@@ -47,7 +47,8 @@ class ClassOfferingsDataTable extends DataTable
     public function query(ClassOffering $model)
     {
         $query = $model->newQuery()
-            ->with(['course', 'unit', 'project', 'disciplines', 'scholarshipHolders']);
+            ->visibleForUser(auth()->user())
+            ->with(['course', 'unit', 'project']);
 
         // FILTROS AVANÇADOS
         if ($course = request('filter_course')) {

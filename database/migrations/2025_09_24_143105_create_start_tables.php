@@ -118,7 +118,6 @@ return new class extends Migration
             $table->string('wizard_step')->default('step1');
             $table->string('status')->default('draft');
             $table->foreignId('institution_id')->constrained()->onDelete('cascade');
-            $table->foreignId('unit_id')->nullable()->constrained('units')->onDelete('set null');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->timestamps();
@@ -189,10 +188,16 @@ return new class extends Migration
         Schema::create('funding_sources', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('code')->nullable();
             $table->enum('type', ['internal', 'external'])->default('external');
             $table->text('description')->nullable();
             $table->text('contact_info')->nullable();
             $table->text('address')->nullable();
+            $table->decimal('total_amount', 12, 2)->default(0);
+            $table->decimal('used_amount', 12, 2)->default(0);
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->boolean('active')->default(true);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -201,7 +206,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->foreignId('funding_source_id')->constrained()->onDelete('cascade');
-            $table->decimal('amount', 12, 2)->nullable();
+            $table->decimal('allocated_amount', 12, 2)->nullable();
+            $table->decimal('used_amount', 12, 2)->default(0);
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->enum('status', ['active', 'finished'])->default('active');
@@ -308,6 +314,8 @@ return new class extends Migration
             // Projeto e unidade (ajudam na auditoria)
             $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->foreignId('funding_source_id')->nullable()->constrained();
 
             // Referência do período
             $table->unsignedTinyInteger('month'); // 1–12

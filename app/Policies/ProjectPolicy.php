@@ -19,7 +19,7 @@ class ProjectPolicy
         }
 
         // Usuário só pode ver se o projeto pertence à instituição ativa
-        return $project->institution_id === session('institution_id');
+        return $project->institution_id === $user->institution_id;
     }
 
     /**
@@ -31,7 +31,7 @@ class ProjectPolicy
             return true;
         }
 
-        return $project->institution_id === session('institution_id');
+        return $project->institution_id === $user->institution_id;
     }
 
     /**

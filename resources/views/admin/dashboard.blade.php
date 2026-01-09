@@ -238,6 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let attendanceChart = null;
     let financialChart  = null;
     let attendanceType  = 'pie';
+    let financialType   = 'pie';
 
     /* ======================================================
      * HELPERS
@@ -304,7 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (financialChart) financialChart.destroy();
 
         financialChart = new Chart(ctx, {
-            type: 'bar',
+            type: financialType,
             data: {
                 labels: ['Gerados', 'Pagos', 'Confirmados'],
                 datasets: [{
@@ -325,21 +326,21 @@ document.addEventListener("DOMContentLoaded", () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                indexAxis: financialType === 'bar' ? 'y' : 'x',
                 plugins: {
-                    legend: { display: false },
+                    legend: {
+                        display: financialType === 'pie',
+                        position: 'bottom'
+                    },
                     tooltip: {
                         callbacks: {
                             label: ctx => brl(ctx.raw)
                         }
                     }
                 },
-                scales: {
-                    y: {
-                        ticks: {
-                            callback: value => brl(value)
-                        }
-                    }
-                }
+                scales: financialType === 'bar'
+                ? { x: { grid: { display: false } }, y: { grid: { display: false } } }
+                : { y: { ticks: { callback: value => brl(value) } } }
             }
         });
     }
@@ -397,6 +398,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     toggleChart?.addEventListener('click', () => {
         attendanceType = attendanceType === 'pie' ? 'bar' : 'pie';
+        monthInput?.value && loadStats(`month=${monthInput.value}`);
+    });
+
+    toggleFinancialChart?.addEventListener('click', () => {
+        financialType  = financialType === 'pie' ? 'bar' : 'pie';
         monthInput?.value && loadStats(`month=${monthInput.value}`);
     });
 

@@ -7,6 +7,8 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Html\Button;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class CoursesDataTable extends DataTable
 {
@@ -42,15 +44,20 @@ class CoursesDataTable extends DataTable
 
     public function query(Course $model)
     {
-        $query = $model->newQuery()->with('classOfferings.unit', 'classOfferings.project');
+        $query = $model->newQuery()
+            ->visibleForUser(Auth::user())
+            ->with('classOfferings.unit', 'classOfferings.project');
 
-        // Filtros opcionais (da view)
         if ($unit = request('filter_unit')) {
-            $query->whereHas('classOfferings', fn($q) => $q->where('unit_id', $unit));
+            $query->whereHas('classOfferings', fn ($q) =>
+                $q->where('unit_id', $unit)
+            );
         }
 
         if ($project = request('filter_project')) {
-            $query->whereHas('classOfferings', fn($q) => $q->where('project_id', $project));
+            $query->whereHas('classOfferings', fn ($q) =>
+                $q->where('project_id', $project)
+            );
         }
 
         return $query;

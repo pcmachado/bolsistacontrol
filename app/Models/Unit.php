@@ -9,11 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Http\Traits\BelongsToInstitution;
 
 class Unit extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToInstitution;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'institution_id',
@@ -29,7 +28,7 @@ class Unit extends Model
 
     public function institution(): BelongsTo
     {
-        return $this->belongsTo(institution::class);
+        return $this->belongsTo(Institution::class);
     }  
 
     /**
@@ -62,5 +61,4 @@ class Unit extends Model
     {
         return $this->hasMany(Payment::class);
     }
-
 }

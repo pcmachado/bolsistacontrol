@@ -28,6 +28,12 @@ class PaymentController extends Controller
      */
     public function store(Request $request)
     {
+        if (!$fundingSource->hasBalance($amount)) {
+            throw ValidationException::withMessages([
+                'funding_source_id' => 'Saldo insuficiente na fonte de fomento.'
+            ]);
+        }
+
         $data = $request->validate([
             'scholarship_holder_id' => 'required|exists:scholarship_holders,id',
             'month' => 'required|integer|min:1|max:12',
@@ -90,33 +96,4 @@ class PaymentController extends Controller
             ->with('success', 'Pagamento enviado para execução financeira.');
     }
 
-    /**
-     * Confirmação final do pagamento (bolsista)
-     */
-    public function confirm(Payment $payment)
-    {
-        $this->authorize('confirm', $payment);
-
-        if ($payment->status !== Payment::STATUS_PAID) {
-            abort(403, 'Pagamento ainda não foi realizado.');
-        }
-
-        if (!$payment->receipt_number) {
-            $payment->receipt_number = Payment::generateReceiptNumber();
-        }
-
-        $payment->update([
-            'status' => Payment::STATUS_CONFIRMED,
-            'confirmed_at' => now(),
-        ]);
-
-        FinancialAuditService::log(
-            'confirmed',
-            'Payment',
-            $payment->id,
-            ['receipt' => $payment->receipt_number]
-        );
-
-        return back()->with('success', 'Pagamento confirmado com sucesso.');
-    }
 }

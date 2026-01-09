@@ -42,21 +42,33 @@ class Course extends Model
         return $this->hasMany(ClassOffering::class);
     }
 
-    public function units()
-    {
-        return $this->hasManyThrough(Unit::class, ClassOffering::class);
-    }
-
-    public function projects()
-    {
-        return $this->hasManyThrough(Project::class, ClassOffering::class);
-    }
-
     public function supervisors()
     {
         return $this->belongsToMany(User::class, 'supervisor_course_unit', 'course_id', 'supervisor_id')
                     ->withPivot('unit_id', 'active')
                     ->withTimestamps();
+    }
+
+    public function scopeVisibleForUser($query, $user)
+    {
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            return $query->whereHas('classOfferings.unit', fn ($q) =>
+                $q->where('institution_id', $user->institution_id)
+            );
+        }
+
+        if ($user->unit_id) {
+            return $query->whereHas('classOfferings', fn ($q) =>
+                $q->where('unit_id', $user->unit_id)
+            )
+            ->orWhereDoesntHave('classOfferings');
+        }
+
+        return $query->whereRaw('1=0');
     }
 
 }

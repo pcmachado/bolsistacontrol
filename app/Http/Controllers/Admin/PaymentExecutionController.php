@@ -78,42 +78,21 @@ class PaymentExecutionController extends Controller
     /**
      * Pagamento em lote
      */
-    public function batchPay(Request $request)
+    public function payBatch(Request $request)
     {
-        $data = $request->validate([
-            'payment_ids' => 'required|array|min:1',
-            'payment_ids.*' => 'exists:payments,id',
-        ]);
+        $this->authorize('markAsPaid', Payment::class);
 
-        $payments = Payment::whereIn('id', $data['payment_ids'])
+        $ids = $request->input('payment_ids', []);
+
+        Payment::whereIn('id', $ids)
             ->where('status', Payment::STATUS_SENT)
-            ->get();
-
-        DB::transaction(function () use ($payments) {
-            foreach ($payments as $payment) {
-
-                if (FinancialClosure::isClosed(
-                    $payment->unit_id,
-                    $payment->month,
-                    $payment->year
-                )) {
-                    continue;
-                }
-
-                $payment->update([
-                    'status' => Payment::STATUS_PAID,
-                    'paid_at' => now(),
-                    'paid_by_user_id' => auth()->id(),
-                ]);
-
-                FinancialAuditService::log(
-                    'paid',
-                    'Payment',
-                    $payment->id
-                );
-            }
-        });
+            ->update([
+                'status' => Payment::STATUS_PAID,
+                'paid_at' => now(),
+                'paid_by_user_id' => auth()->id(),
+            ]);
 
         return back()->with('success', 'Pagamentos processados em lote.');
     }
+
 }
