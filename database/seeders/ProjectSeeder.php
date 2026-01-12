@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Project;
-use App\Models\institution;
+use App\Models\Institution;
 use Faker\Factory as Faker;
 
 class ProjectSeeder extends Seeder
@@ -33,7 +33,7 @@ class ProjectSeeder extends Seeder
                 Project::create([
                     'name' => "{$inst->name} - Projeto {$i}",
                     'description' => "Projeto {$i} da {$inst->name}",
-                    'institution_id' => $inst->id, 
+                    'institution_id' => $inst->id,
                     'start_date' => now()->subMonths(5)->toDateString(),
                     'end_date' => null,
                 ]);

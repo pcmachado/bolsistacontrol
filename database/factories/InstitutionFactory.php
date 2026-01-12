@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\institution;
+use App\Models\Institution;
 
 class InstitutionFactory extends Factory
 {

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\institution;
+use App\Models\Institution;
 use Faker\Factory as Faker;
 
 class InstitutionSeeder extends Seeder

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
-use App\Models\institution;
+use App\Models\Institution;
 use App\Models\Unit;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -80,7 +80,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $this->authorize('view', $project);
-        
+
         $project->delete();
         return redirect()->route('admin.projects.index')->with('success', 'Projeto excluído com sucesso.');
     }

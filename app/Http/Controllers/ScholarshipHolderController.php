@@ -8,7 +8,7 @@ use App\Models\Position;
 use Illuminate\Notifications\DatabaseNotification as Notification;
 use App\Models\AttendanceRecord;
 use App\Models\Unit;
-use App\Models\institution;
+use App\Models\Institution;
 use App\DataTables\ScholarshipHoldersDataTable;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\Request;
@@ -77,7 +77,7 @@ class ScholarshipHolderController extends Controller
                     'password' => Hash::make(/*$validatedData['cpf']*/ 'password'), // Senha inicial é o CPF
                 ])->assignRole('bolsista');
             }
-            
+
             // 3. Cria o Bolsista e o associa ao novo Usuário
             $scholarshipHolderData = array_merge($validatedData, [
                 'user_id' => $user->id,
@@ -126,7 +126,7 @@ class ScholarshipHolderController extends Controller
             'email' => ['required', 'email', Rule::unique('scholarship_holders')->ignore($bolsista->id)],
             // ... outras validações
         ]);
-  
+
         $bolsista->update($request->all());
 
         // Atualiza a unidade e carga horária se necessário

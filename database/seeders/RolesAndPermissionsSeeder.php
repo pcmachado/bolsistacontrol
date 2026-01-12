@@ -36,7 +36,7 @@ class RolesAndPermissionsSeeder extends Seeder
         foreach ($permissions as $perm) {
             Permission::firstOrCreate(['name' => $perm]);
         }
-    
+
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Criação de Permissões
@@ -66,7 +66,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $apoioRole            = Role::firstOrCreate(['name' => 'apoio_administrativo', 'guard_name' => 'web']);
         $orientadorRole        = Role::firstOrCreate(['name' => 'orientador', 'guard_name' => 'web']);
         $professorRole        = Role::firstOrCreate(['name' => 'professor', 'guard_name' => 'web']);
-        $adminRole        = Role::firstOrCreate(['name' => 'Admin', 'guard_name' => 'web']);
+        $adminRole        = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $superadminRole        = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
         $adminRole->givePermissionTo(Permission::all());
 
