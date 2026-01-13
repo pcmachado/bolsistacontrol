@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Payment extends Model
 {
@@ -20,6 +21,7 @@ class Payment extends Model
         'scholarship_holder_id',
         'project_id',
         'unit_id',
+        'funding_source_id',
         'month',
         'year',
         'total_hours',
@@ -27,6 +29,10 @@ class Payment extends Model
         'status',
         'sent_at',
         'paid_at',
+        'payable',
+        'receipt_number',
+        'receipt_generated_at',
+        'receipt_hash',
         'confirmed_at',
         'paid_by_user_id',
         'notes',
@@ -86,7 +92,7 @@ class Payment extends Model
 
     public function periodLabel(): string
     {
-        return str_pad($this->month, 2, '0', STR_PAD_LEFT) . '/' . $this->year;
+        return str_pad($this->month, 2, '0', STR_PAD_LEFT) . '-' . $this->year;
     }
 
     public static function generateReceiptNumber()
@@ -95,6 +101,26 @@ class Payment extends Model
         $hash = strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)); // 6 chars
 
         return $prefix . '-' . $hash;
+    }
+
+    public static function generateReceiptHash(Payment $payment): string
+    {
+        $base = implode('|', [
+            $payment->id,
+            $payment->scholarship_holder_id,
+            $payment->project_id,
+            $payment->amount,
+            $payment->month,
+            $payment->year,
+            $payment->paid_at?->toDateTimeString(),
+        ]);
+
+        return hash('sha256', $base);
+    }
+
+    public function payable(): MorphTo
+    {
+        return $this->morphTo();
     }
 
 }

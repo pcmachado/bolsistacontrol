@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Policies\ProjectPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\AttendanceRecordPolicy;
+use App\Policies\PaymentPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {

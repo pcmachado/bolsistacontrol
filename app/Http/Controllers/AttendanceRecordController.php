@@ -59,7 +59,7 @@ class AttendanceRecordController extends Controller
         $units = Unit::all();
         $scholarship_holders = ScholarshipHolder::with('user')->get();
 
-        return $dataTable->setFilters($filters)->render('attendance.index', compact('projects', 'units', 'scholarship_holders'));
+        return $dataTable->setFilters($filters)->render('attendance.index', compact('projects', 'units', 'scholarship_holders'),['pagemode' => $dataTable->mode]);
     }
 
     /**
@@ -77,7 +77,7 @@ class AttendanceRecordController extends Controller
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'observation' => 'nullable|string|max:500',
+            'description' => 'nullable|string|max:500',
         ]);
 
         $holder = auth()->user()->scholarshipHolder;
@@ -98,7 +98,7 @@ class AttendanceRecordController extends Controller
             'end_time' => $request->end_time,
             'hours' => $hours,
             'calculated_value' => $hours * ($holder->scholarship->value_per_hour ?? 0),
-            'observation' => $request->observation,
+            'description' => $request->description,
             'status' => AttendanceRecord::STATUS_DRAFT,
         ]);
 
@@ -126,7 +126,7 @@ class AttendanceRecordController extends Controller
             'start_time'  => 'required|date_format:H:i',
             'end_time'    => 'nullable|date_format:H:i|after:start_time',
             'status'      => 'required|in:draft,submitted',
-            'observation' => 'nullable|string|max:1000',
+            'description' => 'nullable|string|max:1000',
         ]);
 
         $this->attendanceRecordService->update($attendanceRecord, $validated);
@@ -255,7 +255,7 @@ class AttendanceRecordController extends Controller
 
         $submissions = $query->latest('date')->paginate(15);
 
-        $units = \App\Models\Unit::orderBy('name')->get();
+        $units = Unit::orderBy('name')->get();
 
         return view('attendance.submissions', compact('submissions', 'units'));
     }
@@ -280,7 +280,7 @@ class AttendanceRecordController extends Controller
 
         $approvals = $query->latest('updated_at')->paginate(15);
 
-        $units = \App\Models\Unit::orderBy('name')->get();
+        $units = Unit::orderBy('name')->get();
 
         return view('attendance.approvals', compact('approvals', 'units'));
     }

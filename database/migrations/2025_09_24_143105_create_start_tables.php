@@ -344,6 +344,8 @@ return new class extends Migration
                   ->constrained('users')
                   ->nullOnDelete();
 
+            $table->nullableMorphs('payable'); // Polimórfico para diferentes tipos de pagamento
+
             // Observações gerais
             $table->text('notes')->nullable();
 

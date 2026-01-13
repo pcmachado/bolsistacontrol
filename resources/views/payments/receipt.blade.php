@@ -69,7 +69,7 @@
 
 <p style="font-size: 10px;">
     Este recibo pode ser verificado em:<br>
-    {{ url('/verificar-recibo') }}
+    {{ url('verificar-recibo') }}
 </p>
 
 

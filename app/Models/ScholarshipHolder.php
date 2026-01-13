@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ScholarshipHolder extends Model
 {
@@ -112,9 +113,15 @@ class ScholarshipHolder extends Model
             ->withTimestamps();
     }
 
-    public function payments()
+    public function fundingSources(): BelongsToMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->belongsToMany(FundingSource::class, 'scholarship_holder_funding_source')
+                    ->withTimestamps();
+    }
+
+    public function payments(): MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 
 }

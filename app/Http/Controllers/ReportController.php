@@ -35,7 +35,7 @@ class ReportController extends Controller
             $units = collect(); // bolsista não deve ver aqui
         }
 
-        return view('reports.index', compact('units'));
+        return view('reports.report', compact('units'));
     }
 
     /**
@@ -210,7 +210,7 @@ class ReportController extends Controller
                 return [
                     'semana'     => $semana,
                     'horas'      => $items->sum('hours'),
-                    'atividades' => $items->pluck('observation')->implode('; ')
+                    'atividades' => $items->pluck('description')->implode('; ')
                 ];
             })
             ->sortKeys();

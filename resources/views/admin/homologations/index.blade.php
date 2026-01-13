@@ -65,5 +65,15 @@
             </tr>
         </thead>
     </table>
+    {{-- DataTable --}}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {!! $dataTable->table(['class' => 'table table-striped table-bordered align-middle'], true) !!}
+        </div>
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+    {!! $dataTable->scripts() !!}
+@endpush

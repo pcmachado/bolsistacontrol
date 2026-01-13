@@ -9,17 +9,18 @@ use Illuminate\Http\Request;
 use App\Notifications\IntelligentSystemAlert;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
+use App\Services\PaymentVisibilityService;
 
 class MyPaymentController extends Controller
 {
-    public function myPayments()
+    public function myPayments(PaymentVisibilityService $visibilityService)
     {
-        $holder = auth()->user()->scholarshipHolder;
+        $query = Payment::query()
+        ->with(['payable', 'paidBy', 'project', 'unit']);
 
-        abort_unless($holder, 403);
+        $visibilityService->apply($query, Auth::user());
 
-        $payments = Payment::where('scholarship_holder_id', $holder->id)
-            ->orderByDesc('year')
+        $payments = $query->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
 
@@ -29,13 +30,6 @@ class MyPaymentController extends Controller
     public function confirm(Payment $payment)
     {
         $this->authorize('confirm', $payment);
-
-        abort_unless(
-            $payment->scholarship_holder_id === auth()->user()->scholarshipHolder->id,
-            403
-        );
-
-        abort_if(! $payment->isPaid(), 403);
 
         if (! $payment->receipt_number) {
             $payment->receipt_number = Payment::generateReceiptNumber();

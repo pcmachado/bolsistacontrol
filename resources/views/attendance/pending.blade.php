@@ -28,7 +28,7 @@
                             <tr>
                                 <td>{{ $record->date->format('d/m/Y') }}</td>
                                 <td>{{ $record->hours }}</td>
-                                <td>{{ Str::limit($record->observation, 50) }}</td>
+                                <td>{{ Str::limit($record->description, 50) }}</td>
                                 <td>
                                     <span class="badge bg-info">Pendente</span>
                                 </td>

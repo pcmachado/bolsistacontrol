@@ -190,4 +190,27 @@ class AttendanceRecord extends Model
         ]);
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        // Admin e coordenação geral → tudo
+        if ($user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
+            return $query;
+        }
+
+        // Coordenador adjunto e perfis de apoio → unidade
+        if ($user->hasRole(['coordenador_adjunto', 'supervisor', 'apoio_administrativo'])) {
+            return $query->whereHas('scholarshipHolder', function ($q) use ($user) {
+                $q->where('unit_id', $user->unit_id ?? -1);
+            });
+        }
+
+        // Bolsista → só os próprios
+        if ($user->scholarshipHolder) {
+            return $query->where('scholarship_holder_id', $user->scholarshipHolder->id);
+        }
+
+        // fallback seguro
+        return $query->whereRaw('1 = 0');
+    }
+
 }

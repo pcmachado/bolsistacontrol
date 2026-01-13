@@ -3,6 +3,7 @@
 namespace App\DataTables;
 
 use App\Models\AttendanceRecord;
+use App\Services\AttendanceVisibilityService;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
@@ -65,7 +66,7 @@ class AttendanceRecordDataTable extends DataTable
             // Ações (parciais diferentes conforme o modo)
             ->addColumn('actions', function ($attendanceRecord) {
                 if ($this->mode === 'homologation') {
-                    return view('attendance.homologation.partials.actions', compact('attendanceRecord'))->render();
+                    return view('admin.homologations.partials.actions', compact('attendanceRecord'))->render();
                 }
                 return view('attendance.partials.actions', compact('attendanceRecord'))->render();
             })
@@ -76,100 +77,38 @@ class AttendanceRecordDataTable extends DataTable
 
     public function query(AttendanceRecord $model)
     {
-        $query = $model->newQuery()->with(['scholarshipHolder.user', 'scholarshipHolder.unit']);
         $user  = Auth::user();
 
-        // --- LÓGICA DE VISIBILIDADE ---
-        switch ($this->mode) {
-            case 'approved':
-                $query->where('status', 'approved');
-                break;
+        $query = $model->newQuery()
+            ->with(['scholarshipHolder.user', 'scholarshipHolder.unit']);
 
-            case 'submitted':
-                $query->where('status', 'submitted');
-                break;
+        // aplica regras de visibilidade
+        app(AttendanceVisibilityService::class)->apply(
+            $query,
+            $user,
+            $this->mode
+        );
 
-            case 'pending':
-                $query->where('status', 'submitted');
-                break;
-
-            case 'rejected':
-                $query->where('status', 'rejected');
-                break;
-
-            case 'late':
-                $query->late(); // usa o scope que você criou
-                break;
-
-            case 'homologation':
-                $query->where('status', 
-                    AttendanceRecord::STATUS_SUBMITTED
-                );
-                break;
-
-            case 'my':
-                // Sempre só os próprios registros
-                if ($user->scholarshipHolder) {
-                    $query->where('scholarship_holder_id', $user->scholarshipHolder->id);
-                } else {
-                    $query->whereRaw('1=0');
-                }
-                break;
-
-            default:
-                if ($user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
-                    // visão total
-                    break;
-                }
-                if ($user->hasRole('coordenador_adjunto')) {
-
-                    $query->where(function ($q) use ($user) {
-                        // sempre inclui os próprios registros
-                        if ($user->scholarshipHolder) {
-                            $q->where('scholarship_holder_id', $user->scholarshipHolder->id);
-                        }
-
-                        // e também os registros dos bolsistas das suas unidades
-                        $q->orWhereHas('scholarshipHolder', function ($sq) use ($user) {
-                            $sq->where('unit_id', $user->unit_id);
-                        });
-                    });
-
-                    break;
-                }
-                
-                if ($user->scholarshipHolder) {
-                    // bolsista comum
-                    $query->where('scholarship_holder_id', $user->scholarshipHolder->id);
-                } else {
-                    // sem papel → nada
-                    $query->whereRaw('1=0');
-                }
-                break;
-        }
-        // --- FIM DA LÓGICA DE VISIBILIDADE ---
-
-        // --- APLICAÇÃO DOS FILTROS DA VIEW ---
-        if (!empty($this->filters['project_id'])) {
-            $query->whereHas('scholarshipHolder', function ($q) {
-                $q->where('project_id', $this->filters['project_id']);
-            });
-        }
-
+        // --- INÍCIO DOS FILTROS ---
         if (!empty($this->filters['unit_id'])) {
-            $query->whereHas('scholarshipHolder', fn ($q) => 
-                $q->where('unit_id', $this->filters['unit_id'])
-            );
+            $query->whereHas('scholarshipHolder', function ($q) {
+                $q->where('unit_id', $this->filters['unit_id']);
+            });
         }
 
         if (!empty($this->filters['scholarship_holder_id'])) {
             $query->where('scholarship_holder_id', $this->filters['scholarship_holder_id']);
         }
 
-        // 🔎 Filtro por período
+        if (!empty($this->filters['status'])) {
+            $query->where('status', $this->filters['status']);
+        }
+
+        // período
         if (!empty($this->filters['start_date'])) {
             $query->whereDate('date', '>=', $this->filters['start_date']);
         }
+
         if (!empty($this->filters['end_date'])) {
             $query->whereDate('date', '<=', $this->filters['end_date']);
         }
@@ -179,20 +118,17 @@ class AttendanceRecordDataTable extends DataTable
                 ->whereMonth('date', substr($this->filters['month'], 5, 2));
         }
 
-        // Filtro por mês e ano
-        if (!empty($this->filters['monthYear'])) {
-            $query->whereMonth('date', $this->filters['monthYear']);
-        }
-
         if (!empty($this->filters['year'])) {
             $query->whereYear('date', $this->filters['year']);
         }
-
-        // 🔎 Filtro por status
-        if (!empty($this->filters['status'])) {
-            $query->where('status', $this->filters['status']);
-        }
         // --- FIM DOS FILTROS ---
+        \Log::info('Attendance DT FINAL SQL', [
+        'sql' => $query->toSql(),
+        'bindings' => $query->getBindings(),
+        'mode' => $this->mode,
+        'user' => $user->id,
+        'roles' => $user->roles->pluck('name'),
+    ]);
 
         return $query;
     }

@@ -3,6 +3,7 @@
 namespace App\DataTables;
 
 use App\Models\AttendanceRecord;
+use App\Services\AttendanceVisibilityService;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
@@ -47,17 +48,18 @@ class HomologationsDataTable extends DataTable
 
     public function query(AttendanceRecord $model)
     {
+        $user = Auth::user();
+
         $query = $model->newQuery()
             ->with(['scholarshipHolder.user','scholarshipHolder.unit'])
             ->where('status', AttendanceRecord::STATUS_SUBMITTED); // só os enviados para homologação
-        $user = Auth::user();
 
         // --- regras de visibilidade ---
-        if ($user->hasRole('coordenador_adjunto')) {
-            $query->whereHas('scholarshipHolder', function ($q) use ($user) {
-                $q->where('unit_id', $user->unit_id);
-            });
-        }
+        app(AttendanceVisibilityService::class)->apply(
+            $query,
+            $user,
+            'homologation'
+        );
 
         // --- filtros adicionais ---
         if ($this->filters['unit_id'] ?? false) {

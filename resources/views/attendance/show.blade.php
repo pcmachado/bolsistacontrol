@@ -29,7 +29,7 @@
 
                 {{-- Observações --}}
                 <dt class="col-sm-3">Atividades / Observações</dt>
-                <dd class="col-sm-9">{{ $attendanceRecord->observation ?? '-' }}</dd>
+                <dd class="col-sm-9">{{ $attendanceRecord->description ?? '-' }}</dd>
 
                 {{-- Status --}}
                 <dt class="col-sm-3">Status</dt>

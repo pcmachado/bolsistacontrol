@@ -27,18 +27,17 @@ class PaymentPolicy
      */
     public function view(User $user, Payment $payment): bool
     {
-        // Admin e coordenador geral veem tudo
-        if ($user->hasAnyRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral', 'financeiro'])) {
+
+        // Admin
+        if ($user->hasRole('admin')) {
             return true;
         }
 
-        // Coordenador adjunto → apenas unidade
-        if ($user->hasRole('coordenador_adjunto')) {
-            return $user->units->contains($payment->unit_id);
+        if ($user->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'financeiro'])) {
+            return $payment->unit_id === $user->unit_id;
         }
 
-        // Bolsista → apenas o próprio
-        return $user->scholarshipHolder?->id === $payment->scholarship_holder_id;
+        return $payment->scholarship_holder_id === $user->scholarshipHolder?->id;
     }
 
     /**
@@ -54,7 +53,7 @@ class PaymentPolicy
      */
     public function markAsPaid(User $user, Payment $payment): bool
     {
-        if (!$user->hasAnyRole(['admin', 'financeiro'])) {
+        if (!$user->hasAnyRole(['admin', 'financeiro', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
             return false;
         }
 
@@ -74,10 +73,9 @@ class PaymentPolicy
      */
     public function confirm(User $user, Payment $payment): bool
     {
-        return
-            $user->scholarshipHolder &&
-            $payment->scholarship_holder_id === $user->scholarshipHolder->id &&
-            $payment->status === Payment::STATUS_PAID;
+        return $user->scholarshipHolder
+            && $payment->scholarship_holder_id === $user->scholarshipHolder->id
+            && $payment->isPaid();
     }
 
     /**

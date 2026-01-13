@@ -38,6 +38,7 @@ class UserSeeder extends Seeder
                 [
                     'name' => 'Coordenador Geral',
                     'unit_id' =>  null,
+                    'institution_id' => $inst->id,
                     'email_verified_at' => now(),
                     'password' => static::$password ??= Hash::make('password'),
                     'remember_token' => Str::random(10),
@@ -52,6 +53,7 @@ class UserSeeder extends Seeder
                 [
                     'name' => 'Coordenador Adjunto Geral',
                     'unit_id' =>  null,
+                    'institution_id' => $inst->id,
                     'email_verified_at' => now(),
                     'password' => static::$password ??= Hash::make('password'),
                     'remember_token' => Str::random(10),
@@ -67,6 +69,7 @@ class UserSeeder extends Seeder
                     [
                         'name' => "Coordenador Adjunto - {$unit->shortname}",
                         'unit_id' => $unit->id,
+                        'institution_id' => $inst->id,
                         'email_verified_at' => now(),
                         'password' => static::$password ??= Hash::make('password'),
                         'remember_token' => Str::random(10),
@@ -82,6 +85,7 @@ class UserSeeder extends Seeder
                         [
                             'name' => "Supervisor {$i} - {$unit->shortname}",
                             'unit_id' => $unit->id,
+                            'institution_id' => $inst->id,
                         'email_verified_at' => now(),
                         'password' => static::$password ??= Hash::make('password'),
                         'remember_token' => Str::random(10),

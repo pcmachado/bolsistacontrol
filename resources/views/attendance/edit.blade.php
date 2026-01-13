@@ -31,8 +31,8 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="observation" class="form-label">Atividades / Observações</label>
-                    <textarea name="observation" id="observation" rows="3" class="form-control">{{ old('observation', $attendanceRecord->observation) }}</textarea>
+                    <label for="description" class="form-label">Atividades / Observações</label>
+                    <textarea name="description" id="description" rows="3" class="form-control">{{ old('description', $attendanceRecord->description) }}</textarea>
                 </div>
 
                 <div class="d-flex justify-content-between">

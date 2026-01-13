@@ -31,7 +31,8 @@ class PaymentSeeder extends Seeder
 
                 // evita duplicidade
                 if (
-                    Payment::where('scholarship_holder_id', $holder->id)
+                    Payment::where('payable_type', ScholarshipHolder::class)
+                        ->where('payable_id', $holder->id)
                         ->where('month', $month)
                         ->where('year', $year)
                         ->exists()
@@ -49,9 +50,14 @@ class PaymentSeeder extends Seeder
                 ]);
 
                 $payment = Payment::create([
+                    // 🔹 polymorphic
+                    'payable_type'          => ScholarshipHolder::class,
+                    'payable_id'            => $holder->id,
+
                     'scholarship_holder_id' => $holder->id,
                     'project_id'            => optional($holder->projects->first())->id,
                     'unit_id'               => $holder->unit_id,
+
                     'month'                 => $month,
                     'year'                  => $year,
                     'total_hours'           => $hours,
@@ -74,6 +80,8 @@ class PaymentSeeder extends Seeder
                         'confirmed_at'  => now()->subDays(rand(1, 3)),
                         'paid_by_user_id' => $admin?->id,
                         'receipt_number' => Payment::generateReceiptNumber(),
+                        'receipt_generated_at' => Carbon::now()->subDays(rand(1, 3)),
+                        'receipt_hash' => Payment::generateReceiptHash($payment),
                     ]);
                 }
             }

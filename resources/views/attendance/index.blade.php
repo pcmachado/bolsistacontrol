@@ -4,21 +4,24 @@
 
 @section('content')
 <div class="container">
-    <h3 class="mb-4"><i class="bi bi-clock-history me-2"></i> Meus Registros de Frequência</h3>
+    <h3 class="mb-4">
+        <i class="bi bi-clock-history me-2"></i>
 
-    {{-- Botão para criar novo registro --}}
-    <div class="mb-3">
-        <a href="{{ route('attendance.create') }}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Novo Registro
-        </a>
-    </div>
+        @if(($pageMode ?? '') === 'my')
+            Meus Registros de Frequência
+        @elseif(($pageMode ?? '') === 'homologation')
+            Registros Pendentes de Homologação
+        @else
+            Registros de Frequência
+        @endif
+    </h3>
 
     {{-- ========================
         FILTROS
     ========================= --}}
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('attendance.my') }}" class="row g-3 align-items-end">
+            <form method="GET" action="{{ url()->current() }}" class="row g-3 align-items-end">
 
                 {{-- Período --}}
                 <div class="col-md-2">
