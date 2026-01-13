@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\ScholarshipHolder;
 use App\Models\Position;
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 use App\Models\AttendanceRecord;
 use App\Models\Unit;
+use App\Models\Institution;
+use App\DataTables\ScholarshipHoldersDataTable;
+use App\Services\ScholarshipHolderService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -18,61 +21,98 @@ use Illuminate\Validation\Rule;
 
 class ScholarshipHolderController extends Controller
 {
-    public function index(): View
+    protected ScholarshipHolderService $scholarshipHolderService;
+
+    public function __construct(ScholarshipHolderService $scholarshipHolderService)
     {
-        $bolsistas = ScholarshipHolder::with(/*'role',*/ 'units')->paginate(15);
-        return view('scholarship-holders.index', compact('bolsistas'));
+        $this->scholarshipHolderService = $scholarshipHolderService;
+    }
+
+    public function index(ScholarshipHoldersDataTable $dataTable)
+    {
+        return $dataTable->render('admin.scholarship_holders.index');
     }
 
     public function create(): View
     {
         $unidades = Unit::all();
-        $roles = Role::all();
-        return view('scholarship-holders.create', compact('unidades', 'roles'));
+        $users = User::all();
+        $institutions = Institution::all();
+        return view('admin.scholarship_holders.create', compact('unidades', 'users', 'institutions'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        // 1. Validação
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'cpf' => 'required|string|unique:scholarship_holders,cpf',
-            'email' => 'required|email|unique:scholarship_holders,email',
-            'role_id' => 'required|exists:roles,id',
+            'cpf' => 'required|string|unique:scholarship_holders,cpf|max:14',
+            'email' => 'required|email|unique:scholarship_holders,email|unique:users,email',
             'unit_id' => 'required|exists:units,id',
-            'monthly_workload' => 'required|integer|min:1',
-            // Validações para dados bancários
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date',
+            'position' => 'required|string|max:50',
+            'phone' => 'nullable|string|max:15',
+            'institution_link' => 'nullable|url',
             'bank' => 'nullable|string',
             'agency' => 'nullable|string',
             'account' => 'nullable|string',
+            'pix_key' => 'nullable|string',
         ]);
 
         // Cria um usuário para o bolsista (com senha padrão)
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make('password'), // Senha padrão para o primeiro acesso
-            'role' => 'bolsista',
-        ]);
+      // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
+        DB::beginTransaction();
 
-        $scholarshipHolder = ScholarshipHolder::create($request->all());
+        try {
+            // 2. Cria ou Encontra o Usuário
+            // Tenta encontrar um usuário pelo email (caso já exista uma conta)
+            $user = User::firstWhere('email', $validatedData['email']);
 
-        $scholarshipHolder->units()->attach($request->unit_id, [
-            'monthly_workload' => $request->monthly_workload,
-            'start_date' => now()->toDateString()
-        ]);
+            if (!$user) {
+                // Cria um novo usuário, necessário para login.
+                $user = User::create([
+                    'name' => $validatedData['name'],
+                    'email' => $validatedData['email'],
+                    'password' => Hash::make(/*$validatedData['cpf']*/ 'password'), // Senha inicial é o CPF
+                ])->assignRole('bolsista');
+            }
 
-        return redirect()->route('scholarship-holders.index')->with('success', 'Bolsista cadastrado com sucesso!');
+            // 3. Cria o Bolsista e o associa ao novo Usuário
+            $scholarshipHolderData = array_merge($validatedData, [
+                'user_id' => $user->id,
+                // O Model cuida da criptografia dos dados bancários
+            ]);
+
+            $scholarshipHolder = $this->scholarshipHolderService->create($scholarshipHolderData);
+
+            // Confirma a transação
+            DB::commit();
+
+            return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista e Usuário associado cadastrados com sucesso!');
+
+        } catch (\Exception $e) {
+            // Reverte a transação em caso de erro
+            DB::rollBack();
+            // Log do erro ($e->getMessage())
+            return back()->withInput()->with('error', 'Erro ao cadastrar bolsista e usuário: ' . $e->getMessage());
+        }
     }
 
     /**
      * Exibe o formulário para editar um bolsista.
      */
-    public function edit(ScholarshipHolder $bolsista): View
+    public function edit(ScholarshipHolder $scholarshipHolder): View
     {
         $unidades = Unit::all();
-        $cargos = Position::all();
-        $unidadeAtual = $bolsista->units()->first();
-        return view('scholarship-holders.edit', compact('bolsista', 'unidades', 'cargos', 'unidadeAtual'));
+        $unidadeAtual = $scholarshipHolder->units()->first();
+        return view('admin.scholarship_holders.edit', compact('bolsista', 'unidades', 'unidadeAtual'));
+    }
+
+    public function show(ScholarshipHolder $scholarshipHolder): View
+    {
+        $scholarshipHolder->load('unit', 'user');
+        return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
     }
 
     /**
@@ -86,13 +126,13 @@ class ScholarshipHolderController extends Controller
             'email' => ['required', 'email', Rule::unique('scholarship_holders')->ignore($bolsista->id)],
             // ... outras validações
         ]);
-  
+
         $bolsista->update($request->all());
 
         // Atualiza a unidade e carga horária se necessário
         $bolsista->units()->sync([$request->unidade_id => ['monthly_workload' => $request->carga_horaria]]);
 
-        return redirect()->route('scholarship-holders.index')->with('success', 'Bolsista atualizado com sucesso!');
+        return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista atualizado com sucesso!');
     }
 
     /**
@@ -104,6 +144,20 @@ class ScholarshipHolderController extends Controller
         $bolsista->user()->delete();
         $bolsista->delete();
 
-        return redirect()->route('scholarship-holders.index')->with('success', 'Bolsista removido com sucesso!');
+        return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista removido com sucesso!');
     }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('q');
+
+        $results = ScholarshipHolder::query()
+            ->where('name', 'like', "%{$term}%")
+            ->orWhere('cpf', 'like', "%{$term}%")
+            ->limit(10)
+            ->get(['id','name','cpf']);
+
+        return response()->json($results);
+    }
+
 }

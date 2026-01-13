@@ -5,24 +5,33 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles; // Importante
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, CanResetPassword, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     // Relacionamento: um usuário pertence a uma unidade
-    public function units(): BelongsToMany
+    public function unit(): BelongsTo
     {
-        return $this->belongsToMany(Unit::class, 'user_unit', 'user_id', 'unit_id');
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function scholarshipHolder(): HasOne
+    {
+        return $this->hasOne(ScholarshipHolder::class, 'user_id');
+    }
+
+    public function institutions()
+    {
+        return $this->belongsToMany(Institution::class, 'institution_user')
+            ->withPivot('active')
+            ->withTimestamps();
     }
 
     /**
@@ -34,7 +43,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'unit_id',
     ];
 
     /**
@@ -46,11 +55,6 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-
-        public function scholarshipHolder()
-    {
-        return $this->hasOne(ScholarshipHolder::class);
-    }
 
     /**
      * Get the attributes that should be cast.
@@ -65,21 +69,17 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Define o papel do usuário (método de conveniência).
-     */
-    public function setRole(string $role): self
-    {
-        $this->role = $role;
-        return $this;
-    }
-
-    /**
+        /**
      * Verifica se o usuário tem o papel de coordenador geral.
      */
     public function isCoordenadorGeral(): bool
     {
-        return $this->role === 'coordenador_geral';
+        return $this->hasRole('coordenador_geral');
+    }
+
+    public function isCoordenadorAdjuntoGeral(): bool
+    {
+        return $this->hasRole('coordenador_adjunto_geral');
     }
 
     /**
@@ -87,6 +87,44 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('admin');
     }
+
+    public function isCoordenadorAdjunto(): bool
+    {
+        return $this->hasRole('coordenador_adjunto');
+    }
+
+    public function isCoordenador(): bool
+    {
+        return $this->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto']);
+    }
+
+    public function activeInstitutions()
+    {
+        return $this->institutions()->wherePivot('active', true)->first();
+    }
+
+    public function teachingDisciplines()
+    {
+        return $this->hasMany(ClassOfferingDiscipline::class, 'teacher_id');
+    }
+
+    public function supervisedAssignments()
+    {
+        return $this->hasMany(SupervisorAssignment::class, 'supervisor_id');
+    }
+
+    public function supervisedCourses()
+    {
+        return $this->belongsToMany(Course::class, 'supervisor_course_unit', 'supervisor_id', 'course_id')
+                    ->withPivot('unit_id', 'active')
+                    ->withTimestamps();
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(ClassSession::class, 'teacher_id');
+    }
+
 }

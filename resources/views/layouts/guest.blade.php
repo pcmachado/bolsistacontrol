@@ -1,30 +1,43 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>@yield('title', 'BolsistaControl')</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+</head>
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    {{-- Navbar visitante --}}
+    <nav class="navbar navbar-light bg-white border-bottom">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold" href="{{ url('/') }}">
+                🎓 BolsistaControl
+            </a>
+
             <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
-            </div>
-
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
+                <a href="{{ route('contact') }}" class="btn btn-outline-secondary">Contato</a>
             </div>
         </div>
-    </body>
+    </nav>
+
+    {{-- Conteúdo --}}
+    <main class="flex-fill">
+        @yield('content')
+    </main>
+
+    {{-- Footer --}}
+    <footer class="bg-white border-top py-3 text-center text-muted small">
+        © 2025 — Paulo César Machado. Todos os direitos reservados.
+    </footer>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('scripts')
+</body>
 </html>

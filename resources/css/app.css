@@ -1,4 +1,284 @@
-@import "tailwindcss";
+/* ============================================================
+   BOOTSTRAP & ICONS
+============================================================ */
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
 
-@import 'datatables.net-dt/css/dataTables.dataTables.css';
-@import 'datatables.net-responsive-dt/css/responsive.dataTables.css';
+/* ============================================================
+   LAYOUT GLOBAL
+============================================================ */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #f8f9fa;
+}
+
+/* Wrapper geral */
+#wrapper {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    transition: all .25s ease;
+}
+
+/* Conteúdo principal */
+#main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+}
+
+#content-area {
+    flex-grow: 1;
+}
+
+/* ============================================================
+   SIDEBAR (DESKTOP)
+============================================================ */
+
+#sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: #1e1e1e;
+    color: #fff;
+    height: 100vh;
+    position: fixed;
+    z-index: 1000;
+    transition: width .25s ease;
+    overflow-y: auto;
+}
+
+.sidebar-collapsed #sidebar {
+    width: 78px !important;
+    min-width: 78px !important;
+}
+
+.sidebar-header {
+    height: 60px;
+    background: #141414;
+    border-bottom: 1px solid #333;
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.sidebar-logo {
+    font-size: 1.5rem;
+    color: #ffc107;
+}
+
+/* Perfil */
+.sidebar-profile img {
+    border: 2px solid #ffc107;
+}
+
+/* Links */
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 18px;
+    margin: 4px 0;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #ccc;
+    transition: background .2s ease;
+}
+
+.sidebar-link:hover {
+    background: #2b2b2b;
+    color: #fff;
+}
+
+.sidebar-link.active {
+    background: #343a40;
+    border-left: 3px solid #ffc107;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Ícones */
+.sidebar-icon {
+    font-size: 1.2rem;
+    width: 28px;
+    text-align: center;
+}
+
+/* Textos */
+.sidebar-text {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .sidebar-logo,
+.sidebar-collapsed .sidebar-title,
+.sidebar-collapsed .sidebar-profile-text,
+.sidebar-collapsed .sidebar-text,
+.sidebar-collapsed .sidebar-section-title {
+    display: none !important;
+}
+
+.sidebar-section-title {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 12px 18px;
+    color: #999;
+}
+
+/* ============================================================
+   SUBMENUS
+============================================================ */
+
+.sidebar-submenu-toggle {
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.sidebar-submenu-toggle:hover {
+    background: #2b2b2b;
+}
+
+.sidebar-submenu-items {
+    display: none;
+    flex-direction: column;
+}
+
+.sidebar-submenu.open .sidebar-submenu-items {
+    display: flex !important;
+}
+
+.sidebar-submenu-items .submenu-item {
+    padding-left: 45px !important;
+}
+
+/* Seta */
+.arrow-icon {
+    transition: transform .2s ease;
+}
+
+.sidebar-submenu.open .arrow-icon {
+    transform: rotate(180deg);
+}
+
+/* ============================================================
+   COLAPSO DO SIDEBAR
+============================================================ */
+
+.sidebar-collapsed #main-content {
+    margin-left: 78px !important;
+}
+
+#main-content {
+    margin-left: 260px;
+    transition: margin-left .25s ease;
+}
+
+/* Botão */
+/* Botão de colapsar */
+.sidebar-collapse-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    transition: background .25s ease, border-color .25s ease;
+}
+
+/* Ícone suave */
+.sidebar-collapse-btn i {
+    transition: transform 0.25s ease-in-out;
+    font-size: 1.2rem;
+}
+
+/* Gira quando sidebar colapsa */
+#wrapper.sidebar-collapsed .sidebar-collapse-btn i {
+    transform: rotate(180deg);
+}
+
+/* Hover */
+.sidebar-collapse-btn:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: #aaa;
+}
+
+
+/* ============================================================
+   MOBILE (OFFCANVAS)
+============================================================ */
+
+@media (max-width: 991px) {
+
+    #sidebar {
+        display: none !important;
+    }
+
+    #main-content {
+        margin-left: 0 !important;
+    }
+
+    /* Menu mobile só ícones */
+    #sidebarOffcanvas .sidebar-text {
+        display: none !important;
+    }
+
+    #sidebarOffcanvas .sidebar-link {
+        justify-content: center !important;
+        padding: 12px 0 !important;
+    }
+
+    #sidebarOffcanvas .sidebar-icon {
+        font-size: 1.6rem;
+    }
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+
+footer {
+    background: #fff;
+    border-top: 1px solid #ddd;
+}
+
+/* ============================================================
+   DARK MODE
+============================================================ */
+
+:root[data-theme='dark'] body {
+    background: #1b1b1b;
+    color: #eee;
+}
+
+:root[data-theme='dark'] #sidebar {
+    background: #000;
+}
+
+/* Ícone quando expandido */
+.sidebar-collapse-btn-icon::before {
+    content: "\f284"; /* chevron-double-left */
+    font-family: "bootstrap-icons";
+    display: inline-block;
+    transition: transform .25s ease-in-out;
+}
+
+/* Ícone quando colapsado */
+#wrapper.sidebar-collapsed .sidebar-collapse-btn-icon::before {
+    content: "\f285"; /* chevron-double-right */
+    transform: rotate(180deg);
+}

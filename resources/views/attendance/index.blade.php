@@ -1,58 +1,101 @@
 @extends('layouts.app')
 
-@section('title', 'Meu Histórico de Frequência')
+@section('title', 'Meus Registros de Frequência')
 
 @section('content')
-<div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-5xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Histórico de Frequência</h1>
+<div class="container">
+    <h3 class="mb-4">
+        <i class="bi bi-clock-history me-2"></i>
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('success') }}</span>
-        </div>
-    @endif
-    
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bolsista</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unidade</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entrada</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saída</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Horas</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Observação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($attendanceRecords as $record)
-                            <tr>
-                                <td>{{ $record->date }}</td>
-                                <td>{{ $record->entry_time }}</td>
-                                <td>{{ $record->exit_time }}</td>
-                                <td>{{ $record->activity }}</td>
-                                <td>
-                                    <span class="badge {{ $record->status == 'homologado_geral' ? 'bg-success' : 'bg-warning' }}">
-                                        {{ ucfirst(str_replace('_', ' ', $record->status)) }}
-                                    </span>
-                                </td>
-                        <td class="px-6 py-4">{{ $frequencia->observacao }}</td>
-                            </tr>
-                @endforeach
-                
-                {{-- Exemplo de linha para visualização --}}
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">João Silva</td>
-                    <td class="px-6 py-4 whitespace-nowrap">Unidade Central</td>
-                    <td class="px-6 py-4 whitespace-nowrap">10/11/2023</td>
-                    <td class="px-6 py-4 whitespace-nowrap">08:00</td>
-                    <td class="px-6 py-4 whitespace-nowrap">12:00</td>
-                    <td class="px-6 py-4 whitespace-nowrap">4h</td>
-                    <td class="px-6 py-4">Reunião interna</td>
-                </tr>
-                    </tbody>
-                </table>
+        @if(($pageMode ?? '') === 'my')
+            Meus Registros de Frequência
+        @elseif(($pageMode ?? '') === 'homologation')
+            Registros Pendentes de Homologação
+        @else
+            Registros de Frequência
+        @endif
+    </h3>
+
+    {{-- ========================
+        FILTROS
+    ========================= --}}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url()->current() }}" class="row g-3 align-items-end">
+
+                {{-- Período --}}
+                <div class="col-md-2">
+                    <label for="start_date" class="form-label">Data Inicial</label>
+                    <input type="date" name="start_date" id="start_date" 
+                        value="{{ request('start_date') }}" class="form-control">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="end_date" class="form-label">Data Final</label>
+                    <input type="date" name="end_date" id="end_date" 
+                        value="{{ request('end_date') }}" class="form-control">
+                </div>
+
+                {{-- Mês --}}
+                <div class="col-md-2">
+                    <label for="monthYear" class="form-label">Mês</label>
+                    <select name="monthYear" id="monthYear" class="form-select">
+                        <option value="">-- Todos --</option>
+                        @foreach(range(1,12) as $m)
+                            <option value="{{ $m }}" {{ request('monthYear') == $m ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Ano --}}
+                <div class="col-md-2">
+                    <label for="year" class="form-label">Ano</label>
+                    <select name="year" id="year" class="form-select">
+                        <option value="">-- Todos --</option>
+                        @foreach(range(date('Y')-5, date('Y')) as $y)
+                            <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Status --}}
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">-- Todos --</option>
+                        <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Aprovado</option>
+                        <option value="submitted" {{ request('status')=='submitted' ? 'selected' : '' }}>Submetido</option>
+                        <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Rejeitado</option>
+                        <option value="draft" {{ request('status')=='draft' ? 'selected' : '' }}>Rascunho</option>
+                        <option value="late" {{ request('status')=='late' ? 'selected' : '' }}>Atrasado</option>
+                    </select>
+                </div>
+
+                <div class="col-md-12 text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter"></i> Filtrar
+                    </button>
+                    <a href="{{ route('attendance.my') }}" class="btn btn-secondary">
+                        Limpar
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
+
+    {{-- DataTable --}}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {!! $dataTable->table(['class' => 'table table-striped table-bordered align-middle'], true) !!}
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+    {!! $dataTable->scripts() !!}
+@endpush

@@ -5,13 +5,20 @@ use App\Models\Unit;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
+use Yajra\DataTables\EloquentDataTable;
 
 class UnitsDataTable extends DataTable
 {
     public function dataTable($query)
     {
-        return datatables()
-            ->eloquent($query)
+        return (new EloquentDataTable($query))
+            ->setRowId('id')
+            ->addColumn('created_at', function ($unit) {
+                return formatDate($unit->created_at);
+            })
+            ->addColumn('updated_at', function ($unit) {
+                return formatDate($unit->updated_at);
+            })
             ->addColumn('actions', 'admin.units.partials.actions') // Usando uma view para as ações
             ->rawColumns(['actions']);
     }
@@ -29,11 +36,15 @@ class UnitsDataTable extends DataTable
             ->minifiedAjax()
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
+            ->parameters([
+                'responsive' => true,
+                'autoWidth' => false,
+            ])
             ->buttons([
-                Button::make('excel')->title('Exportar para Excel'),
-                Button::make('csv')->title('Exportar para CSV'),
-                Button::make('print')->title('Imprimir'),
-                Button::make('reload')->title('Recarregar'),
+                Button::make('excel')->className('btn btn-success rounded-0')->text('📊 Excel'),
+                Button::make('csv')->className('btn btn-info rounded-0')->text('📝 CSV'),
+                Button::make('pdf')->className('btn btn-warning rounded-0')->text('📄 PDF'),
+                Button::make('print')->className('btn btn-secondary rounded-0')->text('🖨️ Imprimir'),
             ]);
     }
 

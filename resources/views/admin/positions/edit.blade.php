@@ -1,29 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Cargo')
-
 @section('content')
-<div class="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800">
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">Editar Cargo</h1>
-        <a href="{{ route('admin.positions.index') }}" class="text-blue-600 hover:underline">Voltar à Listagem</a>
+<div class="row">
+    <div class="col-lg-12 margin-tb">
+        <div class="pull-left">
+            <h2>Editar Cargo</h2>
+        </div>
+        <div class="pull-right">
+            <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.positions.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
+        </div>
     </div>
-
-    <form action="{{ route('admin.positions.update', $position->id) }}" method="POST">
-        @csrf
-        @method('PUT')
-
-        <div>
-            <x-input-label for="nome" :value="__('Nome do Cargo')" />
-            <x-text-input id="nome" class="block mt-1 w-full" type="text" name="nome" :value="old('nome', $position->nome)" required autofocus />
-            <x-input-error :messages="$errors->get('nome')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-6">
-            <x-primary-button>
-                {{ __('Atualizar Cargo') }}
-            </x-primary-button>
-        </div>
-    </form>
 </div>
+
+@if (count($errors) > 0)
+    <div class="alert alert-danger">
+      <strong>Whoops!</strong> Ocorreu um problema com sua entrada.<br><br>
+      <ul>
+         @foreach ($errors->all() as $error)
+           <li>{{ $error }}</li>
+         @endforeach
+      </ul>
+    </div>
+@endif
+
+<form method="POST" action="{{ route('admin.positions.update', $position->id) }}">
+    @csrf
+    @method('PUT')
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Nome:</strong>
+                <input type="text" name="name" placeholder="Nome" class="form-control" value="{{ $position->name }}">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12 text-center">
+            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Salvar alterações</button>
+        </div>
+    </div>
+</form>
+
 @endsection

@@ -1,12 +1,29 @@
-<div class="flex items-center justify-center space-x-4">
-    <a href="{{ route('admin.users.edit', $id) }}" class="text-indigo-600 hover:text-indigo-900">
-        <i class="fas fa-edit"></i>
+<div class="d-flex justify-content-center gap-2">
+    {{-- Botão Visualizar --}}
+    <a href="{{ route('admin.users.show', $user->id) }}" 
+       class="btn btn-sm btn-info rounded-0" 
+       title="Visualizar">
+        <i class="bi bi-eye"></i>
     </a>
-    <form action="{{ route('admin.users.destroy', $id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir?');">
+    {{-- Botão Editar --}}
+    @can('update', $user)
+    <a href="{{ route('admin.users.edit', $user->id) }}" 
+       class="btn btn-sm btn-primary rounded-0" 
+       title="Editar">
+        <i class="bi bi-pencil-square"></i>
+    </a>
+    @endcan
+
+    {{-- Botão Excluir --}}
+    @can('delete', $user)
+    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" 
+          onsubmit="return confirm('Tem certeza que deseja excluir?');" 
+          style="display:inline;">
         @csrf
         @method('DELETE')
-        <button type="submit" class="text-red-600 hover:text-red-900">
-            <i class="fas fa-trash"></i>
+        <button type="submit" class="btn btn-sm btn-danger rounded-0" title="Excluir">
+            <i class="bi bi-trash"></i>
         </button>
     </form>
+    @endcan
 </div>

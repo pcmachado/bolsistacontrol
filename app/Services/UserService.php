@@ -2,96 +2,69 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Arr;
+use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class UserService
 {
     /**
      * Cria um novo usuário e atribui um papel.
      *
-     * @param array $data Dados do usuário (name, email, password, role)
+     * @param array $data Dados do usuário (name, email, password, role, unit_id)
      * @return User
      */
     public function createUser(array $data): User
     {
         $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
+            'name'     => $data['name'],
+            'email'    => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => $data['role'],
+            'unit_id'  => $data['unit_id'] ?? null, // FK direta
         ]);
 
-        // Associa as unidades se elas forem enviadas
-        if (!empty($data['units'])) {
-            $user->units()->sync($data['units']);
-        }
-
-        // Associa o papel (role) se estiver a usar o Spatie/Permission
+        // Atribui role
         if (!empty($data['role'])) {
-             $user->assignRole($data['role']);
+            $role = Role::where('name', $data['role'])->first(); // busca objeto Role
+            if ($role) {
+                $user->syncRoles([$role]); // garante apenas uma role
+            }
         }
 
         return $user;
     }
 
     /**
-     * Atualiza um utilizador existente e sincroniza as suas unidades.
+     * Atualiza um usuário existente e sua unidade.
      *
-     * @param User $user O utilizador a ser atualizado.
-     * @param array $data Os novos dados do formulário.
-     * @return User O utilizador atualizado.
+     * @param User $user
+     * @param array $data
+     * @return User
      */
     public function updateUser(User $user, array $data): User
     {
-        // 1. Atualiza os dados básicos do utilizador
+        // Atualiza dados básicos com fallback para os valores atuais
         $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
+            'name'    => Arr::get($data, 'name', $user->name),
+            'email'   => Arr::get($data, 'email', $user->email),
+            'unit_id' => Arr::get($data, 'unit_id', $user->unit_id),
         ]);
 
-        // 2. Sincroniza as unidades (a sua lógica)
-        // O segundo argumento [] garante que se 'units' não for enviado,
-        // todas as associações são removidas.
-        $user->units()->sync($data['units'] ?? []);
-
-        // 3. Opcional: Sincroniza o papel (role)
-        if (isset($data['role'])) {
-            $user->syncRoles([$data['role']]);
+        // Atualiza senha se enviada
+        if (!empty($data['password'])) {
+            $user->update([
+                'password' => Hash::make($data['password']),
+            ]);
         }
 
-        return $user;
-    }
-    
-    /**
-     * Atualiza o papel de um usuário existente.
-     *
-     * @param User $user
-     * @param string $role
-     * @return User
-     */
-    public function updateUserRole(User $user, string $role): User
-    {
-        $user->setRole($role);
-        $user->save();
-
-        return $user;
-    }
-
-    /**
-     * Atualiza as unidades de um usuário existente.
-     *
-     * @param User $user
-     * @param array $units
-     * @return User
-     */
-    public function updateUserUnits(User $user, array $units): User
-    {
-        $user->units()->sync($units);
+        // Sincroniza role (garante apenas uma)
+        if (!empty($data['role'])) {
+            $role = Role::where('name', $data['role'])->first();
+            if ($role) {
+                $user->syncRoles([$role]);
+            }
+        }
         return $user;
     }
 }

@@ -1,44 +1,61 @@
 <?php
-// app/Http/Controllers/Admin/DashboardController.php
-// Controller para a área administrativa
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ScholarshipHolder;
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 use App\Models\Unit;
+use App\Models\Course;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\AttendanceRecord;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    /**
-     * Exibe o dashboard da área administrativa.
-     * Coleta dados de alto nível para uma visão geral do sistema.
-     */
-    public function index(): View
+    protected DashboardService $dashboard;
+
+    public function __construct(DashboardService $dashboard)
     {
-        $user = Auth::user();
-        // Verifica se o usuário tem o papel de coordenador e o redireciona para a view do admin
-        if ($user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto')) {
-            // Pega dados de resumo para o dashboard do admin, se necessário
-            $totalBolsistas = User::role('bolsista')->count();
-            //$registrosPendentes = AttendanceRecord::where('status', 'pendente')->count();
-            $totalUnidades = Unit::count();
-            $unidades = Unit::all();
+        $this->dashboard = $dashboard;
 
-            $labels = Unit::pluck('name');
-            $data = Unit::withCount('scholarshipHolders')->pluck('scholarship_holders_count');
-            $notificacoesPendentes = Notification::where('read', false)->count();
+    }
 
-            // Passa os dados para a view
-            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes', 'unidades', 'labels', 'data'));
+        /**
+     * Dashboard principal com carregamento inicial
+     */
+    public function index(Request $request): View
+    {
+        // Mês atual por padrão
+        if (!$request->has('month')) {
+            $request->merge([
+                'month' => now()->month,
+                'year'  => now()->year,
+            ]);
         }
 
-        // Se não for um coordenador, retorna o dashboard padrão para o bolsista
-        return view('dashboard');
+        $data = $this->dashboard->getDashboardData($request->all());
+
+        return view('admin.dashboard', $data);
     }
+
+    /**
+     * Endpoint para AJAX (gráfico e cards)
+     */
+    public function stats(Request $request, DashboardService $service)
+    {
+        // AJAX sempre envia month/year
+        if (!$request->has('month')) {
+            return response()->json(['error' => 'Parâmetros insuficientes'], 422);
+        }
+
+        return response()->json([
+            'general'   => $service->getDashboardData($request->all()),
+            'financial' => $service->getFinancialData($request->all()),
+        ]);
+    }
+
 }

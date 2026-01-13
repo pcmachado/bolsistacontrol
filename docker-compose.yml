@@ -1,0 +1,92 @@
+services:
+    app_bolsista:
+        container_name: app_bolsista
+        build:
+            args:
+                ENABLE_XDEBUG: ${ENABLE_XDEBUG:-false}
+                XDEBUG_CLIENT_HOST: ${XDEBUG_CLIENT_HOST}
+            context: .
+            dockerfile: Dockerfile
+        image: app
+        restart: unless-stopped
+        working_dir: /var/www/
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        volumes:
+            - ./:/var/www
+            - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+        depends_on:
+            - redis
+        networks:
+            - br-api-lan
+    npm_bolsista:
+        image: node:latest
+        container_name: npm_bolsista
+        volumes:
+            - ./:/var/www
+        working_dir: /var/www
+        entrypoint: tail
+        command: ["-f", "/dev/null"]
+        networks:
+            - br-api-lan
+    nginx:
+        container_name: web_bolsista
+        image: nginx:alpine
+        restart: unless-stopped
+        ports:
+            - "9002:80"
+            - "445:443"
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/:/etc/nginx/conf.d/
+        networks:
+            - br-api-lan
+    bolsista-db-pgsql:
+       image: postgres:latest
+       restart: unless-stopped
+       environment:
+           POSTGRES_DB: ${DB_DATABASE}
+           POSTGRES_USER: ${DB_USERNAME}
+           POSTGRES_PASSWORD: ${DB_PASSWORD}
+       volumes:
+       - ./.docker/postgres/dbdata:/var/lib/postgresql/data
+       ports:
+       - "5432:5432"
+       networks:
+       - br-api-lan
+    queue:
+        image: app
+        restart: unless-stopped
+        command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=120"]
+        volumes:
+            - ./:/var/www
+            - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+        depends_on:
+            - redis
+            - app_bolsista
+        networks:
+            - br-api-lan
+    schedule-runner:
+        image: app
+        container_name: bolsista_scheduler # Adicionado para consistência
+        restart: always # 'always' é mais adequado para um serviço que não deve parar
+        working_dir: /var/www/
+        volumes:
+        - ./:/var/www
+        - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+        # Este comando usa um loop 'while' para rodar o agendador a cada 60 segundos.
+        # É uma forma simples e eficaz de simular um cron job.
+        command: >
+            sh -c "while true; do php artisan schedule:run; sleep 60; done"
+        networks:
+            - br-api-lan
+    redis:
+        image: redis:latest
+        ports:
+          - "6379:6379"
+        networks:
+            - br-api-lan
+
+networks:
+    br-api-lan:
+        external: true

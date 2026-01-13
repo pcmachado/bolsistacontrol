@@ -14,20 +14,51 @@ class Unit extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['institution_id', 'name', 'city', 'address'];
+    protected $fillable = [
+        'institution_id',
+        'name',
+        'shortname',
+        'city',
+        'address',
+        'phone',
+        'domain',
+        'email',
+        'cnpj'
+    ];
 
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
     }  
 
-    public function scholarshipHolders(): BelongsToMany
-    {
-        return $this->belongsToMany(ScholarshipHolder::class, 'scholarship_holder_units');
-    }
-
+    /**
+     * Os utilizadores que pertencem a esta unidade.
+     */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'user_unit', 'unit_id', 'user_id');
+        return $this->belongsToMany(User::class);
+    }
+
+    /**
+     * Os bolsistas que pertencem a esta unidade.
+     */
+    public function scholarshipHolders(): HasMany
+    {
+        return $this->hasMany(ScholarshipHolder::class);
+    }
+
+    public function classOfferings()
+    {
+        return $this->hasMany(ClassOffering::class);
+    }
+
+    public function supervisorAssignments()
+    {
+        return $this->hasMany(SupervisorAssignment::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 }

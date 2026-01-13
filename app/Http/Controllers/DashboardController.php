@@ -2,40 +2,78 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\ScholarshipHolder;
-use App\Models\Notification;
-use App\Models\Unit;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use App\Models\AttendanceRecord;
+use Illuminate\Notifications\DatabaseNotification as Notification;
+use Illuminate\Support\Facades\Auth;
 
-// Controller para a área do usuário (pode ser o dashboard principal após o login)
 class DashboardController extends Controller
 {
-    /**
-     * Exibe o dashboard principal do usuário logado.
-     * Este dashboard pode mostrar informações personalizadas
-     * para o bolsista ou ter links rápidos para as principais
-     * funcionalidades, como o registro de frequência.
-     */
-    public function index(): View
+    public function index()
     {
         $user = Auth::user();
-        // Verifica se o usuário tem o papel de coordenador e o redireciona para a view do admin
-        if ($user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto')) {
-            // Pega dados de resumo para o dashboard do admin, se necessário
-            $totalBolsistas = User::role('bolsista')->count();
-            //$registrosPendentes = AttendanceRecord::where('status', 'pendente')->count();
-            $totalUnidades = Unit::count();
-            $notificacoesPendentes = Notification::where('read', false)->count();
+        $sch = $user->scholarshipHolder;
 
-            // Passa os dados para a view
-            return view('admin.dashboard', compact('totalBolsistas', 'totalUnidades', 'notificacoesPendentes'));
-        }
+        // projeto do bolsista (se houver)
+        $project = $sch?->projects()->first();
 
-        // Se não for um coordenador, retorna o dashboard padrão para o bolsista
-        return view('dashboard');
+        // notificações do usuário
+        $notificacoesPendentes = $user->unreadNotifications()->count();
+        $recentNotifications = $user->notifications()
+        ->latest()
+        ->take(5)
+        ->get();
+
+        // consulta base
+        $query = AttendanceRecord::where('scholarship_holder_id', $sch?->id);
+
+        // contadores
+        $counts = [
+            'approved'  => (clone $query)->where('status', 'approved')->count(),
+            'submitted' => (clone $query)->where('status', 'submitted')->count(),
+            'late'      => (clone $query)->late()->count(),
+            'rejected'  => (clone $query)->where('status', 'rejected')->count(),
+            'draft'     => (clone $query)->where('status', 'draft')->count(),
+        ];
+
+        // gráfico
+        $labels = ['Aprovados', 'Rascunhos', 'Atrasados', 'Rejeitados', 'Enviados'];
+        $data = [
+            $counts['approved'],
+            $counts['draft'],
+            $counts['late'],
+            $counts['rejected'],
+            $counts['submitted'],
+        ];
+
+        $lastSubmissions = (clone $query)
+            ->with('scholarshipHolder.user')
+            ->where('status', 'submitted')
+            ->selectRaw('scholarship_holder_id, DATE(date) as date')
+            ->groupBy('scholarship_holder_id', 'date')
+            ->latest('date')
+            ->take(5)
+            ->get();
+
+        $lastApprovals = (clone $query)
+            ->with('scholarshipHolder.user')
+            ->where('status', 'approved')
+            ->selectRaw('scholarship_holder_id, DATE(date) as date')
+            ->groupBy('scholarship_holder_id', 'date')
+            ->latest('date')
+            ->take(5)
+            ->get();
+
+        return view('dashboard', compact(
+            'user',
+            'sch',
+            'project',
+            'counts',
+            'data',
+            'labels',
+            'notificacoesPendentes',
+            'recentNotifications',
+            'lastSubmissions',
+            'lastApprovals',
+        ));
     }
 }

@@ -3,95 +3,54 @@
 namespace App\Services;
 
 use App\Models\ScholarshipHolder;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ScholarshipHolderService
 {
     /**
-     * Cria um novo usuário e atribui um papel.
+     * Retorna uma instância de ScholarshipHolder com os dados necessários.
      *
-     * @param array $data Dados do usuário (name, email, password, role)
+     * @param int $id
+     * @return ScholarshipHolder|null
+     */
+    public function find(int $id): ?ScholarshipHolder
+    {
+        return ScholarshipHolder::with(['user', 'unit'])->findOrFail($id);
+    }
+
+    /**
+     * Cria um novo bolsista (simplificado).
+     *
+     * @param array $data
      * @return ScholarshipHolder
      */
-    public function createScholarshipHolder(array $data): ScholarshipHolder
+    public function create(array $data): ScholarshipHolder
     {
-        $scholarshipHolder = ScholarshipHolder::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => $data['role'],
-        ]);
-
-        // Associa as unidades se elas forem enviadas
-        if (!empty($data['units'])) {
-            $scholarshipHolder->units()->sync($data['units']);
-        }
-
-        // Associa o papel (role) se estiver a usar o Spatie/Permission
-        if (!empty($data['role'])) {
-             $scholarshipHolder->assignRole($data['role']);
-        }
-
-        return $scholarshipHolder;
+        // Implemente a lógica de criação e criptografia de senhas (se aplicável)
+        return ScholarshipHolder::create($data);
     }
 
     /**
-     * Atualiza um utilizador existente e sincroniza as suas unidades.
-     *
-     * @param ScholarshipHolder $user O utilizador a ser atualizado.
-     * @param array $data Os novos dados do formulário.
-     * @return ScholarshipHolder O utilizador atualizado.
-     */
-    public function updateScholarshipHolder(ScholarshipHolder $scholarshipHolder, array $data): ScholarshipHolder
-    {
-        // 1. Atualiza os dados básicos do utilizador
-        $scholarshipHolder->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-        ]);
-
-        // 2. Sincroniza as unidades (a sua lógica)
-        // O segundo argumento [] garante que se 'units' não for enviado,
-        // todas as associações são removidas.
-        $scholarshipHolder->units()->sync($data['units'] ?? []);
-
-        // 3. Opcional: Sincroniza o papel (role)
-        if (isset($data['role'])) {
-            $scholarshipHolder->syncRoles([$data['role']]);
-        }
-
-        return $scholarshipHolder;
-    }
-    
-    /**
-     * Atualiza o papel de um usuário existente.
+     * Atualiza os dados do bolsista.
      *
      * @param ScholarshipHolder $scholarshipHolder
-     * @param string $role
-     * @return ScholarshipHolder
+     * @param array $data
+     * @return bool
      */
-    public function updateScholarshipHolderRole(ScholarshipHolder $scholarshipHolder, string $role): ScholarshipHolder
+    public function update(ScholarshipHolder $scholarshipHolder, array $data): bool
     {
-        $scholarshipHolder->setRole($role);
-        $scholarshipHolder->save();
-
-        return $scholarshipHolder;
+        // O Model lida com a criptografia dos campos 'bank', 'agency', 'account'
+        return $scholarshipHolder->update($data);
     }
 
     /**
-     * Atualiza as unidades de um usuário existente.
+     * Exclui um bolsista (Soft Delete).
      *
      * @param ScholarshipHolder $scholarshipHolder
-     * @param array $units
-     * @return ScholarshipHolder
+     * @return bool|null
      */
-    public function updateUserUnits(ScholarshipHolder $scholarshipHolder, array $units): ScholarshipHolder
+    public function delete(ScholarshipHolder $scholarshipHolder): bool|null
     {
-        $scholarshipHolder->units()->sync($units);
-        return $scholarshipHolder;
+        return $scholarshipHolder->delete();
     }
 }

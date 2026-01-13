@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Notification;
+use Illuminate\Notifications\DatabaseNotification as Notification;
 use App\Models\ScholarshipHolder;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -18,23 +18,32 @@ class NotificationController extends Controller
 {
     public function index(): View
     {
-        $user = Auth::user();
-        $notificacoes = collect();
-        if ($user != null && $user->role === 'coordenador') {
-            $notificacoes = Notification::with('scholarshipHolder')->where('read', false)->latest()->get();
-        } else {
-            //$bolsista = ScholarshipHolder::where('user_id', $user->id)->first();
-            // if ($bolsista) {
-                //$notificacoes = $bolsista->notifications()->where('read', false)->latest()->get();
-            // }
-        }
-        return view('notifications.index', compact('notificacoes'));
+        $notifications = auth()->user()
+            ->notifications()               // relação nativa
+            ->latest()
+            ->paginate(20);
+
+        return view('notifications.index', compact('notifications'));
     }
 
-    public function marcarLida(Notification $notificacao)
+
+    public function read($id)
     {
-        // Adicione uma verificação de permissão aqui
-        $notificacao->update(['read' => true]);
-        return back()->with('success', 'Notificação marcada como lida!');
+        $n = auth()->user()->notifications()->findOrFail($id);
+        $n->markAsRead();
+
+        // Redirecionar para link se existir
+        if (!empty($n->data['url'])) {
+            return redirect($n->data['url']);
+        }
+
+        return back();
+    }
+
+    public function markAll()
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+
+        return back()->with('success', 'Todas as notificações foram marcadas como lidas!');
     }
 }

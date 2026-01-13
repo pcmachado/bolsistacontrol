@@ -5,15 +5,26 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
+use App\Models\AttendanceRecord;
+use App\Models\Project;
+use App\Models\User;
+use App\Models\Payment;
+use App\Policies\ProjectPolicy;
+use App\Policies\UserPolicy;
+use App\Policies\AttendanceRecordPolicy;
+use App\Policies\PaymentPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
     /**
      * The policy mappings for the application.
-     *
-     * @var array
      */
-    protected $policies = [];
+    protected $policies = [
+        AttendanceRecord::class => AttendanceRecordPolicy::class,
+        Project::class => ProjectPolicy::class,
+        User::class => UserPolicy::class,
+        Payment::class => PaymentPolicy::class,
+    ];
 
     /**
      * Register any authentication / authorization services.
@@ -27,12 +38,12 @@ class AuthServiceProvider extends ServiceProvider
         // initialize passport routes
        // Passport::routes();
 
-        // super admin get all the access
-        // Implicitly grant "Super Admin" role all permissions
+        // admin get all the access
+        // Implicitly grant "Admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()
 
         Gate::before(function ($user, $ability) {
-            return $user->hasRole('Super Admin') ? true : null;
+            return $user->hasRole('Admin') ? true : null;
         });
     }
 }
