@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\FinancialClosure;
 use App\Services\FinancialAuditService;
+use App\Notifications\IntelligentSystemAlert;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -63,7 +64,7 @@ class PaymentExecutionController extends Controller
 
             // 🔔 Notificação ao bolsista
             $payment->scholarshipHolder->user->notify(
-                new \App\Notifications\IntelligentSystemAlert(
+                new IntelligentSystemAlert(
                     title: 'Pagamento realizado',
                     message: "Seu pagamento de {$payment->periodLabel()} foi realizado.",
                     level: 'success',

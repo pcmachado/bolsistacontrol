@@ -44,13 +44,18 @@ class ProjectScholarshipHolderSeeder extends Seeder
 
         foreach ($scholarshipHolders as $holder) {
 
-            // Obtém projetos da mesma instituição
-            $projects = Project::where('institution_id', $holder->unit->institution_id)->get();
+            $institutionId =
+                $holder->unit?->institution_id
+                ?? $holder->user?->institution_id;
 
-            if ($projects->isEmpty()) {
-                echo "⚠ Nenhum projeto encontrado para Instituição ID {$holder->unit->institution_id}\n";
+            if (!$institutionId) {
+                $this->command->warn(
+                    "⚠ ScholarshipHolder {$holder->id} sem instituição definida"
+                );
                 continue;
             }
+
+            $projects = Project::where('institution_id', $institutionId)->get();
 
             // Escolhe 1 projeto aleatório
             $project = $projects->random();

@@ -25,7 +25,7 @@
           <div class="modal-body">
             <div class="mb-3">
                 <label for="bulk-reason" class="form-label">Motivo da rejeição</label>
-                <textarea name="reason" id="bulk-reason" class="form-control" rows="3" required></textarea>
+                <textarea name="reason" id="bulk-reason" class="form-control sgb-textarea" rows="3" required></textarea>
             </div>
           </div>
           <div class="modal-footer">

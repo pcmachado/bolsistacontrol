@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ScholarshipHolder;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class ScholarshipHolderService
@@ -52,5 +53,26 @@ class ScholarshipHolderService
     public function delete(ScholarshipHolder $scholarshipHolder): bool|null
     {
         return $scholarshipHolder->delete();
+    }
+
+    public function holderOrFail(User $user): ScholarshipHolder
+    {
+        if (!$user->scholarshipHolder) {
+            abort(403, 'Usuário não é bolsista.');
+        }
+
+        return $user->scholarshipHolder;
+    }
+
+    /**
+     * Restaura um bolsista excluído (Soft Delete).
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function restore(int $id): bool
+    {
+        $scholarshipHolder = ScholarshipHolder::withTrashed()->findOrFail($id);
+        return $scholarshipHolder->restore();
     }
 }

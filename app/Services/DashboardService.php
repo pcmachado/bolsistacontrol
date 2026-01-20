@@ -7,13 +7,10 @@ use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Models\Course;
 use App\Models\User;
-use App\Models\Role;
-use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Payment;
 use App\Models\Discipline;
 use App\Models\ClassOffering;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -23,299 +20,265 @@ use Illuminate\Notifications\DatabaseNotification as Notification;
 
 class DashboardService
 {
+    /* =========================================================
+     |  DASHBOARD OPERACIONAL (FREQUÊNCIA)
+     ========================================================= */
     public function getDashboardData(array $filters): array
     {
         $user = Auth::user();
 
         [$year, $month, $startDate, $endDate] = $this->resolvePeriod($filters);
-
         $currentMonth = now()->format('Y-m');
 
-        $query = AttendanceRecord::query()->whereBetween('date', [$startDate, $endDate]);
+        $scope = $this->resolveScope($user);
 
-        $role = $user->roles->pluck('name')->first();
-        $unitName = null;
+        $query = AttendanceRecord::query()
+            ->whereBetween('date', [$startDate, $endDate]);
 
-        // superAdmin → vê tudo
-        if ($user->hasRole('superAdmin')) {
-            // sem filtro extra
-        }
-        // admin / coordenador_geral → vê todos os registros do sistema
-        elseif ($user->hasRole('admin') || $user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto_geral')) {
-            // sem filtro extra
-        }
-        // coordenador_adjunto / supervisor / apoio_administrativo / orientador → só unidade
-        elseif (
-            $user->hasRole('coordenador_adjunto') ||
-            $user->hasRole('supervisor') ||
-            $user->hasRole('apoio_administrativo') ||
-            $user->hasRole('orientador')
-        ) {
-            $unitId = $user->unit_id;
-
-            if ($unitId) {
-                $query->whereHas('scholarshipHolder', function ($q) use ($unitId) {
-                    $q->where('unit_id', $unitId);
-                });
-
-                $unitName = optional($user->unit)->name;
-            } else {
-                // sem unidade vinculada → não mostra nada
-                $query->whereRaw('1 = 0');
-            }
-        }
-        // bolsista → só os próprios registros
-        elseif ($user->hasRole('bolsista')) {
-            if ($user->scholarshipHolder) {
-                $query->where('scholarship_holder_id', $user->scholarshipHolder->id);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
-        // qualquer outro papel inesperado → vazio
-        else {
-            $query->whereRaw('1 = 0');
-        }
+        $unitName = $this->applyAttendanceScope($query, $user, $scope);
 
         $total = $query->count();
 
         $counts = [
-            'approved'  => (clone $query)->where('status', 'approved')->count(),
-            'submitted' => (clone $query)->where('status', 'submitted')->count(),
-            'rejected'  => (clone $query)->where('status', 'rejected')->count(),
-            'draft'     => (clone $query)->where('status', 'draft')->count(),
-            'late'      => (clone $query)->where('status', 'late')->count(),
+            'approved'  => (clone $query)->where('status', AttendanceRecord::STATUS_APPROVED)->count(),
+            'submitted' => (clone $query)->where('status', AttendanceRecord::STATUS_SUBMITTED)->count(),
+            'rejected'  => (clone $query)->where('status', AttendanceRecord::STATUS_REJECTED)->count(),
+            'draft'     => (clone $query)->where('status', AttendanceRecord::STATUS_DRAFT)->count(),
+            'late'      => (clone $query)->where('status', AttendanceRecord::STATUS_LATE)->count(),
         ];
 
-        // ================================
-        // Dados acadêmicos (só para admins)
+        /* -------------------------------
+         | Acadêmico (somente visão ampla)
+         ------------------------------- */
         $academic = [];
-
-        if ($user->hasAnyRole(['superAdmin', 'admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
-
-            $academic['projects_active'] = Project::where('status', 'active')->count();
-
-            $academic['projects_draft'] = Project::where('status', 'draft')->count();
-
-            $academic['courses_total'] = Course::count();
-
-            $academic['disciplines_total'] = Discipline::count();
-            $academic['class_offerings_active'] = ClassOffering::count();
+        if (in_array($scope, ['all', 'institution'])) {
+            $academic = [
+                'projects_active'        => Project::where('status', 'active')->count(),
+                'projects_draft'         => Project::where('status', 'draft')->count(),
+                'courses_total'          => Course::count(),
+                'disciplines_total'      => Discipline::count(),
+                'class_offerings_active' => ClassOffering::count(),
+            ];
         }
 
-        // ================================
-        // Alertas (só para admins)
+        /* -------------------------------
+         | Alertas
+         ------------------------------- */
         $alerts = [];
-
-        if ($user->hasAnyRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
-
-            $alerts['attendance_pending'] = $counts['submitted'];
-            $alerts['attendance_rejected'] = $counts['rejected'];
-
-            $alerts['payments_pending_execution'] = $financial['payments_sent'] ?? 0;
-            $alerts['payments_waiting_confirmation'] =
-                Payment::where('status', Payment::STATUS_PAID)->count();
+        if (in_array($scope, ['all', 'institution'])) {
+            $alerts = [
+                'attendance_pending' => $counts['submitted'],
+                'attendance_rejected'=> $counts['rejected'],
+                'payments_pending_execution' =>
+                    Payment::where('status', Payment::STATUS_SENT)->count(),
+                'payments_waiting_confirmation' =>
+                    Payment::where('status', Payment::STATUS_PAID)->count(),
+            ];
         }
 
-        // ================================
-        // Últimos eventos
-        // ================================
+        /* -------------------------------
+         | Últimos eventos
+         ------------------------------- */
         $lastSubmissions = (clone $query)
             ->with('scholarshipHolder.user')
-            ->where('status', 'submitted')
-            ->selectRaw('scholarship_holder_id, DATE(date) as date')
-            ->groupBy('scholarship_holder_id', 'date')
+            ->where('status', AttendanceRecord::STATUS_SUBMITTED)
             ->latest('date')
             ->take(5)
             ->get();
 
         $lastApprovals = (clone $query)
             ->with('scholarshipHolder.user')
-            ->where('status', 'approved')
-            ->selectRaw('scholarship_holder_id, DATE(date) as date')
-            ->groupBy('scholarship_holder_id', 'date')
+            ->where('status', AttendanceRecord::STATUS_APPROVED)
             ->latest('date')
             ->take(5)
             ->get();
 
-        // ================================
-        // 5) Meus pendentes
-        // ================================
+        /* -------------------------------
+         | Meus pendentes
+         ------------------------------- */
         $myPending = 0;
         if ($user->scholarshipHolder) {
             $myPending = AttendanceRecord::query()
                 ->where('scholarship_holder_id', $user->scholarshipHolder->id)
                 ->whereYear('date', $year)
                 ->whereMonth('date', $month)
-                ->where('status', 'draft')
+                ->where('status', AttendanceRecord::STATUS_DRAFT)
                 ->count();
         }
 
-        $baseUserQuery        = User::query();
-        $baseScholarQuery     = ScholarshipHolder::query();
-        $baseUnitQuery        = Unit::query();
-        $baseCourseQuery      = Course::query();
+        /* -------------------------------
+         | Contadores globais
+         ------------------------------- */
+        [$usersCount, $scholarshipHoldersCount, $totalUnidades, $unidades] =
+            $this->resolveBaseCounters($user, $scope);
 
-        // Se quiser restringir para alguns papéis à unidade:
-        if (
-            $user->hasRole('coordenador_adjunto') ||
-            $user->hasRole('supervisor') ||
-            $user->hasRole('apoio_administrativo') ||
-            $user->hasRole('orientador')
-        ) {
-            $unitId = $user->unit_id;
-
-            if ($unitId) {
-                $baseUserQuery->where('unit_id', $unitId);
-                $baseScholarQuery->where('unit_id', $unitId);
-                $baseUnitQuery->where('id', $unitId);
-            }
-        } elseif ($user->hasRole('bolsista')) {
-            if ($user->scholarshipHolder) {
-                $baseUserQuery->where('id', $user->id);
-                $baseScholarQuery->where('id', $user->scholarshipHolder->id);
-                $baseUnitQuery->where('id', $user->scholarshipHolder->unit_id);
-            } else {
-                $baseUserQuery->where('id', $user->id);
-                $baseScholarQuery->whereRaw('1 = 0');
-                $baseUnitQuery->whereRaw('1 = 0');
-            }
-        }
-        // superAdmin / admin / coordenador_geral → veem tudo
-
-        $usersCount              = $baseUserQuery->count();
-        $scholarshipHoldersCount = $baseScholarQuery->count();
-        $coursesCount            = $baseCourseQuery->count();
-        $totalBolsistas          = $scholarshipHoldersCount;
-        $totalUnidades           = $baseUnitQuery->count();
-        $unidades                = $baseUnitQuery->get();
-
-        // Notificações — por enquanto: todas não lidas (podemos depois filtrar por user)
-        $notificacoesPendentes = $user->unreadNotifications()->count();
-        $recentNotifications = $user->notifications()
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $lastNotifications = $user->notifications()
-            ->take(5)
-            ->get();
-        
         $percentages = collect($counts)->map(
-            fn($c) => $total ? round($c / $total * 100, 1) : 0
+            fn ($c) => $total ? round($c / $total * 100, 1) : 0
         );
 
-        $labels = ['Aprovados', 'Enviados', 'Rejeitados', 'Rascunhos', 'Atrasados'];
-
-        $data = [
-            $counts['approved'],
-            $counts['submitted'],
-            $counts['rejected'],
-            $counts['draft'],
-            $counts['late'],
-        ];
-
-        // ================================
-        // 8) Retorno final
-        // ================================
         return compact(
-            'totalBolsistas',
-            'totalUnidades',
-            'notificacoesPendentes',
-            'unidades',
-            'labels',
-            'usersCount',
-            'scholarshipHoldersCount',
-            'coursesCount',
-            'data',
-            'myPending',
             'counts',
-            'user',
-            'role',
             'percentages',
-            'month',
-            'year',
-            'lastSubmissions',
-            'lastApprovals',
-            'unitName',
-            'currentMonth',
-            'recentNotifications',
             'academic',
             'alerts',
-            'lastNotifications',
+            'lastSubmissions',
+            'lastApprovals',
+            'myPending',
+            'usersCount',
+            'scholarshipHoldersCount',
+            'totalUnidades',
+            'unidades',
+            'unitName',
+            'currentMonth',
+            'month',
+            'year'
         );
     }
 
+    /* =========================================================
+     |  DASHBOARD FINANCEIRO
+     ========================================================= */
     public function getFinancialData(array $filters): array
     {
         [$year, $month, $startDate, $endDate] = $this->resolvePeriod($filters);
 
-        $query = \App\Models\Payment::query()
-            ->whereBetween(
-                \DB::raw("STR_TO_DATE(CONCAT(year,'-',month,'-01'), '%Y-%m-%d')"),
-                [$startDate, $endDate]
+        $user  = Auth::user();
+        $scope = $this->resolveScope($user);
+
+        $query = Payment::query();
+
+        if ($month) {
+            $query->where('year', $year)->where('month', $month);
+        } else {
+            $query->whereBetween(
+                DB::raw("DATE(CONCAT(year,'-',LPAD(month,2,'0'),'-01'))"),
+                [$startDate->startOfMonth(), $endDate->endOfMonth()]
             );
-
-        $user = auth()->user();
-
-        // 🔒 Escopo por papel
-        if ($user->hasRole('coordenador_adjunto') && $user->unit_id) {
-            $query->where('unit_id', $user->unit_id);
         }
 
+        $this->applyPaymentScope($query, $user, $scope);
+
         $counts = [
-            'generated'  => (clone $query)->count(),
-            'sent'       => (clone $query)->where('status', 'sent_to_payment')->count(),
-            'paid'       => (clone $query)->where('status', 'paid')->count(),
-            'confirmed'  => (clone $query)->where('status', 'confirmed')->count(),
+            'generated' => (clone $query)->count(),
+            'sent'      => (clone $query)->where('status', Payment::STATUS_SENT)->count(),
+            'paid'      => (clone $query)->where('status', Payment::STATUS_PAID)->count(),
+            'confirmed' => (clone $query)->where('status', Payment::STATUS_CONFIRMED)->count(),
         ];
 
         $totals = [
-            'sent'      => (clone $query)->where('status', 'sent_to_payment')->sum('amount'),
-            'paid'      => (clone $query)->where('status', 'paid')->sum('amount'),
-            'confirmed' => (clone $query)->where('status', 'confirmed')->sum('amount'),
+            'sent'      => (clone $query)->where('status', Payment::STATUS_SENT)->sum('amount'),
+            'paid'      => (clone $query)->where('status', Payment::STATUS_PAID)->sum('amount'),
+            'confirmed' => (clone $query)->where('status', Payment::STATUS_CONFIRMED)->sum('amount'),
         ];
 
+        return compact('counts', 'totals');
+    }
+
+    /* =========================================================
+     |  HELPERS
+     ========================================================= */
+    private function resolveScope(User $user): string
+    {
+        if ($user->hasRole('superadmin') || $user->hasRole('admin')) {
+            return 'all';
+        }
+
+        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            return 'institution';
+        }
+
+        if ($user->hasRole(['coordenador_adjunto', 'supervisor', 'apoio_administrativo', 'orientador'])) {
+            return 'unit';
+        }
+
+        return $user->scholarshipHolder ? 'self' : 'none';
+    }
+
+    private function applyAttendanceScope($query, User $user, string $scope): ?string
+    {
+        return match ($scope) {
+            'all' => null,
+
+            'institution' => $query->whereHas('scholarshipHolder.unit', fn ($q) =>
+                $q->where('institution_id', $user->institution_id)
+            ),
+
+            'unit' => $query->whereHas('scholarshipHolder', fn ($q) =>
+                $q->where('unit_id', $user->unit_id)
+            ),
+
+            'self' => $query->where('scholarship_holder_id', $user->scholarshipHolder->id),
+
+            default => $query->whereRaw('1 = 0'),
+        } ? optional($user->unit)->name : null;
+    }
+
+    private function applyPaymentScope($query, User $user, string $scope): void
+    {
+        match ($scope) {
+            'institution' =>
+                $query->whereHas('unit', fn ($q) =>
+                    $q->where('institution_id', $user->institution_id)
+                ),
+
+            'unit' =>
+                $query->where('unit_id', $user->unit_id),
+
+            'self' =>
+                $query->where('scholarship_holder_id', $user->scholarshipHolder->id),
+
+            'none' =>
+                $query->whereRaw('1 = 0'),
+
+            default => null,
+        };
+    }
+
+    private function resolveBaseCounters(User $user, string $scope): array
+    {
+        $users = User::query();
+        $holders = ScholarshipHolder::query();
+        $units = Unit::query();
+
+        if ($scope === 'unit') {
+            $users->where('unit_id', $user->unit_id);
+            $holders->where('unit_id', $user->unit_id);
+            $units->where('id', $user->unit_id);
+        }
+
+        if ($scope === 'self') {
+            $users->where('id', $user->id);
+            $holders->where('id', $user->scholarshipHolder->id);
+            $units->where('id', $user->scholarshipHolder->unit_id);
+        }
+
         return [
-            'counts' => $counts,
-            'totals' => $totals,
+            $users->count(),
+            $holders->count(),
+            $units->count(),
+            $units->get(),
         ];
     }
 
     private function resolvePeriod(array $filters): array
     {
-        // Caso venha month no formato YYYY-MM
         if (!empty($filters['month']) && preg_match('/^\d{4}-\d{2}$/', $filters['month'])) {
             [$year, $month] = explode('-', $filters['month']);
-
-            $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
-            $endDate   = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
-
-            return [(int) $year, (int) $month, $startDate, $endDate];
-        }
-
-        // Caso venha intervalo
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $startDate = \Carbon\Carbon::parse($filters['start_date'])->startOfDay();
-            $endDate   = \Carbon\Carbon::parse($filters['end_date'])->endOfDay();
-
             return [
-                (int) $startDate->year,
-                null,
-                $startDate,
-                $endDate
+                (int)$year,
+                (int)$month,
+                Carbon::create($year, $month, 1)->startOfMonth(),
+                Carbon::create($year, $month, 1)->endOfMonth(),
             ];
         }
 
-        // Fallback: mês atual
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $start = Carbon::parse($filters['start_date'])->startOfDay();
+            $end   = Carbon::parse($filters['end_date'])->endOfDay();
+            return [(int)$start->year, null, $start, $end];
+        }
+
         $now = now();
-
-        return [
-            (int) $now->year,
-            (int) $now->month,
-            $now->copy()->startOfMonth(),
-            $now->copy()->endOfMonth(),
-        ];
+        return [(int)$now->year, (int)$now->month, $now->startOfMonth(), $now->endOfMonth()];
     }
-
 }

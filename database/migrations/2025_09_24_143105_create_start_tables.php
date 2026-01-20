@@ -70,7 +70,7 @@ return new class extends Migration
             $table->text('account')->nullable();
             $table->text('pix_key')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('unit_id')->constrained()->onDelete('cascade');
+            $table->foreignId('unit_id')->nullable()->constrained()->onDelete('cascade');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->string('status')->default('active');

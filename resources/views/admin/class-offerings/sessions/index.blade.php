@@ -60,7 +60,7 @@
 
             <div class="col-12">
                 <label class="form-label">Observações</label>
-                <textarea name="notes" class="form-control" rows="2"></textarea>
+                <textarea name="notes" class="form-control sgb-textarea" rows="2"></textarea>
             </div>
 
             <div class="col-12 text-end">

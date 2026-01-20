@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Scopes\InstitutionScope;
 
 class Unit extends Model
 {
@@ -60,5 +61,10 @@ class Unit extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new InstitutionScope);
     }
 }
