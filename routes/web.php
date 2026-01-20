@@ -16,11 +16,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\HomologationController;
 use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\institutionController;
+use App\Http\Controllers\Admin\InstitutionController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\FundingSourceController;
 use App\Http\Controllers\Admin\ProjectWizardController;
-use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\DisciplineController;
 use App\Http\Controllers\MyPaymentController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -96,7 +95,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-all', [NotificationController::class, 'markAll'])->name('notifications.markAll');
-    
+
     Route::get('/notifications/read/{id}', [NotificationController::class, 'read'])->name('notifications.read');
     Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 
@@ -108,7 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('receipt');
     });
 
-    
+
 
 });
 
@@ -162,7 +161,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::resource('courses', CourseController::class);
     Route::resource('funding_sources', FundingSourceController::class);
     Route::resource('projects', ProjectController::class);
-    Route::resource('assignments', AssignmentController::class);
+    //Route::resource('assignments', AssignmentController::class);
 
     Route::resource('disciplines', DisciplineController::class);
 
