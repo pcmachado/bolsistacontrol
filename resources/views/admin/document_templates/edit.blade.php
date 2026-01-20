@@ -67,21 +67,21 @@
             <label class="form-label">Cabeçalho (HTML)</label>
             <textarea name="header_html wysiwyg"
                       rows="4"
-                      class="form-control">{{ $template->header_html }}</textarea>
+                      class="form-control sgb-textarea">{{ $template->header_html }}</textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Corpo do Documento (HTML)</label>
             <textarea name="body_html wysiwyg"
                       rows="8"
-                      class="form-control">{{ $template->body_html }}</textarea>
+                      class="form-control sgb-textarea">{{ $template->body_html }}</textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Rodapé (HTML)</label>
             <textarea name="footer_html wysiwyg"
                       rows="4"
-                      class="form-control">{{ $template->footer_html }}</textarea>
+                      class="form-control sgb-textarea">{{ $template->footer_html }}</textarea>
         </div>
 
         <div class="form-check mb-3">

@@ -7,6 +7,7 @@ use App\Http\Requests\AttendanceRecordStoreRequest;
 use App\Models\AttendanceRecord;
 use App\Models\ScholarshipHolder;
 use App\Services\AttendanceRecordService;
+use App\Services\ScholarshipHolderService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,10 +27,12 @@ use Illuminate\Support\Facades\DB;
 class AttendanceRecordController extends Controller
 {
     protected $attendanceRecordService;
+    protected $scholarshipHolderService;
 
-    public function __construct(AttendanceRecordService $attendanceRecordService)
+    public function __construct(AttendanceRecordService $attendanceRecordService, ScholarshipHolderService $scholarshipHolderService)
     {
         $this->attendanceRecordService = $attendanceRecordService;
+        $this->scholarshipHolderService = $scholarshipHolderService;
         $this->middleware('auth');
     }
 
@@ -73,6 +76,8 @@ class AttendanceRecordController extends Controller
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -80,11 +85,7 @@ class AttendanceRecordController extends Controller
             'description' => 'nullable|string|max:500',
         ]);
 
-        $holder = auth()->user()->scholarshipHolder;
-
-        if (!$holder) {
-            abort(403, 'Apenas bolsistas podem registrar frequência.');
-        }
+        $holder = $this->scholarshipHolderService->holderOrFail($user);
 
         // Calcula horas trabalhadas
         $start = \Carbon\Carbon::parse($request->start_time);
@@ -187,11 +188,9 @@ class AttendanceRecordController extends Controller
 
     public function pending(): View
     {
-        $scholarshipHolder = Auth::user()->scholarshipHolder;
-
-        if (!$scholarshipHolder) {
-            abort(403, 'Usuário não é bolsista.');
-        }
+        $user = Auth::user();
+        
+        $scholarshipHolder = $this->scholarshipHolderService->holderOrFail($user);
 
         $pendingRecords = AttendanceRecord::where('scholarship_holder_id', $scholarshipHolder->id)
             ->where('status', AttendanceRecord::STATUS_SUBMITTED) // ajuste conforme sua constante

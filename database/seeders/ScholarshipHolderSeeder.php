@@ -33,7 +33,7 @@ class ScholarshipHolderSeeder extends Seeder
                     ]
                 );
 
-                if (!$user->hasRole('bolsista')) {
+                if (!$user->scholarshipHolder !== null) {
                     $user->assignRole('bolsista');
                 }
 

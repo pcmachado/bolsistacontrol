@@ -2,7 +2,7 @@
     $user = Auth::user();
     $isAdmin = $user->hasRole('admin') || $user->hasRole('coordenador_geral') || $user->hasRole('coordenador_adjunto_geral');
     $isCoordinator = $user->hasRole('coordenador_adjunto');
-    $isScholar = $user->hasRole('bolsista');
+    $isScholar = $user->scholarshipHolder !== null;
 @endphp
 
 <form method="GET" class="mb-4 flex flex-wrap gap-4">

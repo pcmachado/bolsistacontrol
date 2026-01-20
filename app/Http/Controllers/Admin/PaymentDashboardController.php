@@ -17,6 +17,9 @@ class PaymentDashboardController extends Controller
         $month = $request->month ?? now()->month;
         $year  = $request->year  ?? now()->year;
 
+        $baseQuery = Payment::where('year', $year)
+            ->where('month', $month);
+
         // 🔹 Período atual
         $currentQuery = (clone $baseQuery);
 
@@ -62,9 +65,6 @@ class PaymentDashboardController extends Controller
         $variation = $previousTotal > 0
             ? (($currentTotal - $previousTotal) / $previousTotal) * 100
             : null;
-
-        $baseQuery = Payment::where('year', $year)
-            ->where('month', $month);
 
         // 🔒 Escopo por papel (recomendado)
         if (auth()->user()->hasRole('coordenador_adjunto')) {

@@ -17,6 +17,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
+    ->withExceptions(function ($exceptions) {
+        $exceptions->render(function (DecryptException $e, $request) {
+            Log::error('DecryptException capturada', [
+                'url' => $request->fullUrl(),
+                'input' => $request->all(),
+                'message' => $e->getMessage(),
+            ]);
+
+            dd(
+                'DecryptException capturada',
+                $e->getMessage(),
+                $request->fullUrl()
+            );
+        });
     })->create();
+    //->withExceptions(function (Exceptions $exceptions): void {
+        //
+    //})->create();

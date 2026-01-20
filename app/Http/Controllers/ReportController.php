@@ -12,6 +12,7 @@ use App\Models\Position;
 use App\Models\ProjectPosition;
 use App\Models\Institution;
 use App\Exports\ReportExport;
+use App\Services\ScholarshipHolderService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -20,6 +21,13 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+    protected $scholarshipHolderService;
+
+    public function __construct(ScholarshipHolderService $scholarshipHolderService)
+    {
+        $this->scholarshipHolderService = $scholarshipHolderService;
+    }
+
     /**
      * Tela inicial de relatórios (filtros).
      */
@@ -159,11 +167,8 @@ class ReportController extends Controller
     public function individualReport(Request $request)
     {
         $user = Auth::user();
-        $holder = $user->scholarshipHolder;
-
-        if (!$holder) {
-            abort(403, 'Apenas bolsistas podem gerar relatório individual.');
-        }
+        
+        $holder = $this->scholarshipHolderService->holderOrFail($user);
 
         if ($request->filled('month') && str_contains($request->month, '-')) {
             [$year, $month] = explode('-', $request->month);

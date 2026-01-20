@@ -31,7 +31,7 @@ class DataScopeService
 
 
         // bolsista
-        if ($user->hasRole('bolsista')) {
+        if ($user->scholarshipHolder !== null) {
             return ['type' => 'user', 'institution_id' => $user->institution_id, 'user_id' => $user->id, 'scholarship_holder_id' => optional($user->scholarshipHolder)->id];
         }
 
