@@ -24,3 +24,4 @@ Homestead.yaml
 Thumbs.db
 .docker
 /node_modules
+docker/php/custom.ini --- IGNORE ---
