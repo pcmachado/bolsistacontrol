@@ -27,13 +27,6 @@ class User extends Authenticatable
         return $this->hasOne(ScholarshipHolder::class, 'user_id');
     }
 
-    public function institutions()
-    {
-        return $this->belongsToMany(Institution::class, 'institution_user')
-            ->withPivot('active')
-            ->withTimestamps();
-    }
-
     /**
      * The attributes that are mass assignable.
      *
@@ -44,6 +37,8 @@ class User extends Authenticatable
         'email',
         'password',
         'unit_id',
+        'institution_id',
+        'remember_token',
     ];
 
     /**
@@ -87,7 +82,12 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->hasRole('admin');
+        return $this->hasRole('admin') || $this->hasRole('superadmin');
+    }
+
+    public function isAdminOnly(): bool
+    {
+        return $this->hasRole('admin') && !$this->scholarshipHolder;
     }
 
     public function isCoordenadorAdjunto(): bool
@@ -98,11 +98,6 @@ class User extends Authenticatable
     public function isCoordenador(): bool
     {
         return $this->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto']);
-    }
-
-    public function activeInstitutions()
-    {
-        return $this->institutions()->wherePivot('active', true)->first();
     }
 
     public function teachingDisciplines()
@@ -125,6 +120,15 @@ class User extends Authenticatable
     public function sessions()
     {
         return $this->hasMany(ClassSession::class, 'teacher_id');
+    }
+
+    public function resolvedInstitutionId(): ?int
+    {
+        if ($this->unit) {
+            return $this->unit->institution_id;
+        }
+
+        return $this->institution_id;
     }
 
 }

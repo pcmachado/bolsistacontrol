@@ -32,7 +32,7 @@ class RouteServiceProvider extends ServiceProvider
             return route('admin.dashboard');
         }
 
-        if ($user->hasRole('bolsista')) {
+        if ($user->scholarshipHolder !== null) {
             return route('dashboard');
         }
 

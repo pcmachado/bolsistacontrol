@@ -32,29 +32,50 @@ class UsersDataTable extends DataTable
 
     public function query(User $model)
     {
-        $query = $model->newQuery()->with(['roles', 'unit']);
-
         $logged = auth()->user();
 
-        //
-        // 🔐 RESTRIÇÃO PARA COORDENADOR ADJUNTO
-        //
-        if ($logged->hasRole('coordenador_adjunto')) {
+        $query = $model->newQuery()->with(['roles', 'unit']);
 
-            $query->where('unit_id', $logged->unit_id) // só usuários da mesma unidade
-                ->whereDoesntHave('roles', function ($q) {
-                        $q->whereIn('name', ['admin', 'coordenador_geral', 'superadmin', 'coordenador_adjunto_geral']);
-                });
+        // superadmin / admin → vê tudo
+        if ($logged->hasAnyRole(['superadmin', 'admin'])) {
+            // sem restrição
         }
+        // coordenação geral → só instituição
+        elseif ($logged->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
 
-        //
-        // 🔐 RESTRIÇÃO PARA COORDENADOR GERAL (opcional)
-        // Ele vê tudo, exceto admin:
-        //
-        if ($logged->hasRole('coordenador_geral', 'coordenador_adjunto_geral')) {
-            $query->whereDoesntHave('roles', function ($q) {
-                $q->whereIn('name', ['admin', 'superadmin']);
+            $institutionId = $logged->institution_id;
+
+            $query->where(function ($q) use ($institutionId) {
+                $q->whereHas('unit', fn ($u) =>
+                    $u->where('institution_id', $institutionId)
+                )
+                // inclui coordenadores gerais (sem unidade)
+                ->orWhere(function ($qq) use ($institutionId) {
+                    $qq->whereNull('unit_id')
+                       ->where('institution_id', $institutionId);
+                });
             });
+
+            // não vê admins
+            $query->whereDoesntHave('roles', fn ($q) =>
+                $q->whereIn('name', ['admin', 'superadmin'])
+            );
+        }
+        // coordenador adjunto → só unidade
+        elseif ($logged->hasRole('coordenador_adjunto')) {
+            $query->where('unit_id', $logged->unit_id)
+                ->whereDoesntHave('roles', fn ($q) =>
+                    $q->whereIn('name', [
+                        'admin',
+                        'superadmin',
+                        'coordenador_geral',
+                        'coordenador_adjunto_geral',
+                    ])
+                );
+        }
+        // fallback defensivo (outros papéis)
+        else {
+            $query->where('id', $logged->id);
         }
 
         // Nome

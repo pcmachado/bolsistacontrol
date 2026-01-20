@@ -58,4 +58,12 @@ class DashboardController extends Controller
         ]);
     }
 
+    /*public function stats(Request $request)
+    {
+        return response()->json([
+            'ok' => true,
+            'params' => $request->all(),
+        ]);
+    }*/
+
 }

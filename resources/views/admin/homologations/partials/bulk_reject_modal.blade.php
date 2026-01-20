@@ -9,7 +9,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <textarea name="reason" class="form-control" placeholder="Informe o motivo da recusa" required></textarea>
+                    <textarea name="reason" class="form-control sgb-textarea" placeholder="Informe o motivo da recusa" required></textarea>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-danger">Confirmar Recusa</button>

@@ -85,7 +85,7 @@ class AttendanceVisibilityService
         }
 
         // Bolsista comum
-        if ($user->hasRole('bolsista')) {
+        if ($user->scholarshipHolder !== null) {
             return $this->onlySelf($query, $user);
         }
 

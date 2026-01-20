@@ -7,7 +7,7 @@
           <h5 class="modal-title">Motivo da Rejeição</h5>
         </div>
         <div class="modal-body">
-          <textarea name="rejected_reason" class="form-control" required></textarea>
+          <textarea name="rejected_reason" class="form-control sgb-textarea" required></textarea>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-danger">Confirmar Rejeição</button>
