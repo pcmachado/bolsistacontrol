@@ -73,6 +73,7 @@ class DatabaseSeeder extends Seeder
             ScholarshipHolderSeeder::class,
             ProjectSeeder::class,
             ProjectScholarshipHolderSeeder::class,
+            AttendanceSubmissionSeeder::class,
             AttendanceRecordSeeder::class,
             FundingSourceSeeder::class,
             CourseSeeder::class,

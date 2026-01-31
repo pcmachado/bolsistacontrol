@@ -78,6 +78,26 @@ return new class extends Migration
             $table->softDeletes();
         });
 
+        Schema::create('attendance_submissions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->unsignedTinyInteger('month');
+            $table->unsignedSmallInteger('year');
+            $table->enum('status', ['draft','submitted','approved','rejected'])->default('draft');
+            $table->timestamp('submitted_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->timestamp('rejected_at')->nullable();
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->text('rejected_reason')->nullable();
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+            $table->timestamps();
+            $table->softDeletes();
+            $table->unique(
+                ['scholarship_holder_id', 'year', 'month'],
+                'unique_submission_per_month'
+            );
+        });
+
         Schema::create('attendance_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
@@ -94,6 +114,7 @@ return new class extends Migration
             $table->timestamp('rejected_at')->nullable();
             $table->text('rejected_reason')->nullable();
             $table->foreign('approved_by_user_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreignId('attendance_submission_id')->nullable()->constrained('attendance_submissions')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -431,6 +452,7 @@ return new class extends Migration
         Schema::dropIfExists('course_scholarship_holder');
         Schema::dropIfExists('disciplines');
         Schema::dropIfExists('attendance_records');
+        Schema::dropIfExists('attendance_submissions');
         Schema::dropIfExists('scholarship_holders');
         Schema::dropIfExists('units');
         Schema::dropIfExists('projects');

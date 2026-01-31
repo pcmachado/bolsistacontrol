@@ -24,3 +24,5 @@ Homestead.yaml
 Thumbs.db
 .docker
 /node_modules
+.tmp.driveupload
+

@@ -74,7 +74,7 @@
         @hasanyrole('bolsista|coordenador_adjunto_geral|coordenador_adjunto')
         <h6 class="sidebar-section-title mt-4">Minha Área</h6>
 
-        <x-sidebar-item route="attendance.my" icon="bi bi-clock-history" title="Minhas Frequências"/>
+        <x-sidebar-item route="attendance.submissions.index" icon="bi bi-clock-history" title="Minhas Frequências"/>
         <x-sidebar-item route="payments.my" icon="bi bi-wallet2" title="Meus Pagamentos"/>
         {{-- <x-sidebar-item route="payments.my.receipts" icon="bi bi-receipt-cutoff" title="Meus Recibos"/> --}}
         <x-sidebar-item route="reports.myReport" icon="bi bi-file-earmark-person" title="Meu Relatório"/>

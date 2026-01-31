@@ -82,6 +82,11 @@ class ScholarshipHolder extends Model
         return $this->hasMany(AttendanceRecord::class);
     }
 
+    public function attendanceSubmissions()
+    {
+        return $this->hasMany(AttendanceSubmission::class);
+    }
+
     // Relacionamento: um bolsista pode ter muitas notificações
     public function notifications(): HasMany
     {

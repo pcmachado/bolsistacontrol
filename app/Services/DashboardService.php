@@ -11,6 +11,9 @@ use App\Models\Project;
 use App\Models\Payment;
 use App\Models\Discipline;
 use App\Models\ClassOffering;
+use App\Models\AttendanceSubmission;
+use App\Services\AttendanceDashboardService;
+use App\Services\AttendanceVisibilityService;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -32,20 +35,7 @@ class DashboardService
 
         $scope = $this->resolveScope($user);
 
-        $query = AttendanceRecord::query()
-            ->whereBetween('date', [$startDate, $endDate]);
-
-        $unitName = $this->applyAttendanceScope($query, $user, $scope);
-
-        $total = $query->count();
-
-        $counts = [
-            'approved'  => (clone $query)->where('status', AttendanceRecord::STATUS_APPROVED)->count(),
-            'submitted' => (clone $query)->where('status', AttendanceRecord::STATUS_SUBMITTED)->count(),
-            'rejected'  => (clone $query)->where('status', AttendanceRecord::STATUS_REJECTED)->count(),
-            'draft'     => (clone $query)->where('status', AttendanceRecord::STATUS_DRAFT)->count(),
-            'late'      => (clone $query)->where('status', AttendanceRecord::STATUS_LATE)->count(),
-        ];
+        $unitName = $user->unit ? $user->unit->name : null;
 
         /* -------------------------------
          | Acadêmico (somente visão ampla)
@@ -61,14 +51,38 @@ class DashboardService
             ];
         }
 
+        $query = AttendanceSubmission::query()
+            ->with('scholarshipHolder.user');
+
+        // aplica o mesmo escopo do dashboard
+        app(\App\Services\AttendanceVisibilityService::class)
+            ->apply($query, $user);
+
+        $lastSubmissions = (clone $query)
+            ->where('status', AttendanceSubmission::STATUS_SUBMITTED)
+            ->latest('submitted_at')
+            ->take(5)
+            ->get();
+
+        $lastApprovals = (clone $query)
+            ->where('status', AttendanceSubmission::STATUS_APPROVED)
+            ->latest('approved_at')
+            ->take(5)
+            ->get();
+
         /* -------------------------------
          | Alertas
          ------------------------------- */
         $alerts = [];
+
         if (in_array($scope, ['all', 'institution'])) {
+
+            $attendance = app(AttendanceDashboardService::class)
+                ->submissionCounts($user);
+
             $alerts = [
-                'attendance_pending' => $counts['submitted'],
-                'attendance_rejected'=> $counts['rejected'],
+                'attendance_submitted'  => $attendance['submitted'],
+                'attendance_rejected' => $attendance['rejected'],
                 'payments_pending_execution' =>
                     Payment::where('status', Payment::STATUS_SENT)->count(),
                 'payments_waiting_confirmation' =>
@@ -77,38 +91,25 @@ class DashboardService
         }
 
         /* -------------------------------
-         | Últimos eventos
-         ------------------------------- */
-        $lastSubmissions = (clone $query)
-            ->with('scholarshipHolder.user')
-            ->where('status', AttendanceRecord::STATUS_SUBMITTED)
-            ->latest('date')
-            ->take(5)
-            ->get();
-
-        $lastApprovals = (clone $query)
-            ->with('scholarshipHolder.user')
-            ->where('status', AttendanceRecord::STATUS_APPROVED)
-            ->latest('date')
-            ->take(5)
-            ->get();
-
-        /* -------------------------------
-         | Meus pendentes
-         ------------------------------- */
-        $myPending = 0;
-        if ($user->scholarshipHolder) {
-            $myPending = AttendanceRecord::query()
-                ->where('scholarship_holder_id', $user->scholarshipHolder->id)
-                ->whereYear('date', $year)
-                ->whereMonth('date', $month)
-                ->where('status', AttendanceRecord::STATUS_DRAFT)
-                ->count();
-        }
-
-        /* -------------------------------
          | Contadores globais
          ------------------------------- */
+        if ($month) {
+            $query->where('year', $year)->where('month', $month);
+        } else {
+            $query->whereBetween(
+                DB::raw("DATE(CONCAT(year,'-',LPAD(month,2,'0'),'-01'))"),
+                [$startDate->startOfMonth(), $endDate->endOfMonth()]
+            );
+        }
+
+         $total = $query->count();
+
+         $counts = [
+            'approved'  => (clone $query)->where('status', AttendanceSubmission::STATUS_APPROVED)->count(),
+            'submitted' => (clone $query)->where('status', AttendanceSubmission::STATUS_SUBMITTED)->count(),
+            'rejected'  => (clone $query)->where('status', AttendanceSubmission::STATUS_REJECTED)->count(),
+        ];
+
         [$usersCount, $scholarshipHoldersCount, $totalUnidades, $unidades] =
             $this->resolveBaseCounters($user, $scope);
 
@@ -123,7 +124,6 @@ class DashboardService
             'alerts',
             'lastSubmissions',
             'lastApprovals',
-            'myPending',
             'usersCount',
             'scholarshipHoldersCount',
             'totalUnidades',
@@ -192,25 +192,6 @@ class DashboardService
         }
 
         return $user->scholarshipHolder ? 'self' : 'none';
-    }
-
-    private function applyAttendanceScope($query, User $user, string $scope): ?string
-    {
-        return match ($scope) {
-            'all' => null,
-
-            'institution' => $query->whereHas('scholarshipHolder.unit', fn ($q) =>
-                $q->where('institution_id', $user->institution_id)
-            ),
-
-            'unit' => $query->whereHas('scholarshipHolder', fn ($q) =>
-                $q->where('unit_id', $user->unit_id)
-            ),
-
-            'self' => $query->where('scholarship_holder_id', $user->scholarshipHolder->id),
-
-            default => $query->whereRaw('1 = 0'),
-        } ? optional($user->unit)->name : null;
     }
 
     private function applyPaymentScope($query, User $user, string $scope): void

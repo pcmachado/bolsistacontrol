@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AttendanceRecordController;
+use App\Http\Controllers\AttendanceSubmissionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UnitController;
@@ -70,7 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Módulo de Frequência para o Bolsista
     // --- Minhas Frequências (sempre só os próprios registros) ---
-    Route::get('/attendance/my', [AttendanceRecordController::class, 'index'])->name('attendance.my');
+    /*Route::get('/attendance/my', [AttendanceRecordController::class, 'index'])->name('attendance.index');
     Route::get('/attendance/create', [AttendanceRecordController::class, 'create'])->name('attendance.create');
     Route::post('/attendance', [AttendanceRecordController::class, 'store'])->name('attendance.store');
     Route::get('/attendance/history', [AttendanceRecordController::class, 'history'])->name('attendance.history');
@@ -86,7 +87,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'update'])->name('attendance.update');
     Route::delete('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'destroy'])->name('attendance.destroy');
     Route::post('/attendance/{attendanceRecord}/submit', [AttendanceRecordController::class, 'submit'])->name('attendance.submit');
-    Route::get('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'show'])->name('attendance.show');
+    Route::get('/attendance/{attendanceRecord}', [AttendanceRecordController::class, 'show'])->name('attendance.show');*/
+    Route::prefix('attendance')->middleware('auth')->group(function () {
+        /*
+        |--------------------------------------------------------------------------
+        | Registros individuais (rascunhos)
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/', [AttendanceRecordController::class, 'index'])->name('attendance.index');
+        Route::get('/create', [AttendanceRecordController::class, 'create'])->name('attendance.create');
+        Route::post('/', [AttendanceRecordController::class, 'store'])->name('attendance.store');
+        Route::get('/{record}', [AttendanceRecordController::class, 'show'])->name('attendance.show');
+        Route::get('/{record}/edit', [AttendanceRecordController::class, 'edit'])->name('attendance.edit');
+        Route::put('/{record}', [AttendanceRecordController::class, 'update'])->name('attendance.update');
+        Route::delete('/{record}', [AttendanceRecordController::class, 'destroy'])->name('attendance.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Submissões mensais
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/submissions', [AttendanceSubmissionController::class, 'index'])->name('attendance.submissions.index');
+        Route::post('/submissions', [AttendanceSubmissionController::class, 'store'])->name('attendance.submissions.store');
+        Route::get('/submissions/{submission}', [AttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
+        Route::post('/submissions/{submission}/submit', [AttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
+        Route::post('/submissions/{submission}/approve', [AttendanceSubmissionController::class, 'approve'])->name('attendance.submissions.approve');
+        Route::post('/submissions/{submission}/reject', [AttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
+
+        Route::get('/attendance/submissions/cards/approved', [AttendanceSubmissionController::class, 'approved'])->name('attendance.submissions.cards.approved');
+        Route::get('/attendance/submissions/cards/submitted', [AttendanceSubmissionController::class, 'submitted'])->name('attendance.submissions.cards.submitted');
+        Route::get('/attendance/submissions/cards/rejected', [AttendanceSubmissionController::class, 'rejected'])->name('attendance.submissions.cards.rejected');
+        Route::get('/attendance/submissions/cards/late', [AttendanceSubmissionController::class, 'late'])->name('attendance.submissions.cards.late');
+    });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

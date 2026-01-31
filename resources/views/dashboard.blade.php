@@ -65,45 +65,11 @@
     {{-- ========================
          CARDS RESUMO
     ========================= --}}
-    <div class="row g-3">
-
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6>Aprovadas</h6>
-                <h2 class="text-success fw-bold">{{ $counts['approved'] }}</h2>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6>Submetidas</h6>
-                <h2 class="text-info fw-bold">{{ $counts['submitted'] }}</h2>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6>Rascunhos</h6>
-                <h2 class="text-secondary fw-bold">{{ $counts['draft'] }}</h2>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6>Atrasadas</h6>
-                <h2 class="text-warning fw-bold">{{ $counts['late'] }}</h2>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body text-center">
-                    <h5>Rejeitados</h5>
-                    <h2>{{ $counts['rejected'] }}</h2>
-                </div>
-            </div>
-        </div>
-
+    <div class="row mb-4">
+        @include('attendance.submissions.cards.subbmited')
+        @include('attendance.submissions.cards.approved')
+        @include('attendance.submissions.cards.rejected')
+        @include('attendance.submissions.cards.late')
     </div>
 
     {{-- ========================

@@ -5,21 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AttendanceRecord extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $dates = ['submitted_at', 'rejected_at', 'approved_at'];
+    protected $dates = ['submitted_at', 'rejected_at'];
 
     /**
      * Define o status inicial como rascunho.
      */
     public const STATUS_DRAFT = 'draft'; // Rascunho (pode ser editado pelo bolsista)
-    public const STATUS_APPROVED = 'approved'; // Homologado pelo coordenador
     public const STATUS_REJECTED = 'rejected'; // Rejeitado (precisa de ajustes)
     public const STATUS_SUBMITTED = 'submitted'; // Enviado para homologação
     public const STATUS_LATE = 'late'; // Atrasado (não enviado em até 7 dias)
@@ -33,18 +30,12 @@ class AttendanceRecord extends Model
         'calculated_value',
         'description',
         'status',
-        'submitted_at', // Data de envio para homologação
-        'approved_at',
-        'approved_by_user_id', // ID do usuário Coordenador que aprovou/rejeitou
         'rejected_reason',
-        'rejected_at',
+        'attendance_submission_id',
     ];
 
     protected $casts = [
         'date' => 'date',
-        'submitted_at' => 'datetime',
-        'approved_at' => 'datetime',
-        'rejected_at' => 'datetime',
     ];
 
     // --- RELACIONAMENTOS ---
@@ -57,6 +48,11 @@ class AttendanceRecord extends Model
         return $this->belongsTo(ScholarshipHolder::class);
     }
 
+    public function submission()
+    {
+        return $this->belongsTo(AttendanceSubmission::class, 'attendance_submission_id');
+    }
+
     /**
      * O registro foi aprovado/rejeitado por um Coordenador Adjunto (User).
      */
@@ -64,10 +60,6 @@ class AttendanceRecord extends Model
     {
         // Relaciona-se com o Model User
         return $this->belongsTo(User::class, 'approved_by_user_id');
-    }
-
-    public function scopeApproved($q) {
-        return $q->where('status', self::STATUS_APPROVED);
     }
 
     public function scopeRejected($q) {
@@ -79,10 +71,6 @@ class AttendanceRecord extends Model
     }
 
     public function scopeSubmitted($q) {
-        return $q->where('status', self::STATUS_SUBMITTED);
-    }
-
-    public function scopePending($q) {
         return $q->where('status', self::STATUS_SUBMITTED);
     }
     
@@ -211,6 +199,29 @@ class AttendanceRecord extends Model
 
         // fallback seguro
         return $query->whereRaw('1 = 0');
+    }
+
+    /* =======================
+     |  STATUS HELPERS
+     |=======================*/
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
+    }
+
+    public function isLate(): bool
+    {
+        return $this->status === 'late';
     }
 
 }

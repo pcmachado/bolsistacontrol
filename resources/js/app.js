@@ -57,10 +57,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+    const editors = document.querySelectorAll('textarea[data-editor="tinymce"]');
+
+    if (!editors.length) return;
+
     tinymce.init({
-        selector: '#sgb-textarea', // ID do seu campo
+        selector: '#sgb-tinymce', // ID do seu campo
         license_key: 'gpl',        // Necessário nas versões mais novas para uso local
         base_url: '/js/tinymce',   // Caminho onde o Vite copiou os arquivos
-        suffix: '.min'
+        suffix: '.min',
+        height: 300,
+        menubar: false,
+        plugins: 'lists link',
+        toolbar: 'bold italic | bullist numlist | link',
     });
 });

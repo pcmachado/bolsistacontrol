@@ -3,181 +3,93 @@
 namespace App\Services;
 
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use App\Models\ScholarshipHolder;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Notifications\PendingShipment;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Auth;
+use DomainException;
 
 class AttendanceRecordService
 {
-    public function calculateDuration($start, $end)
-    {
-        return Carbon::parse($end)->diffInMinutes(Carbon::parse($start));
-    }
-
-    public function validateWeeklyLimit(ScholarshipHolder $scholarshipHolder, Carbon $date, int $newDuration)
-    {
-        $startOfWeek = $date->startOfWeek();
-        $endOfWeek = $date->endOfWeek();
-
-        $totalWeek = AttendanceRecord::where('scholarship_holder_id', $scholarshipHolder->id)
-            ->whereBetween('date', [$startOfWeek, $endOfWeek])
-            ->sum(DB::raw('TIMESTAMPDIFF(MINUTE, start_time, end_time)'));
-
-        return ($totalWeek + $newDuration) <= $scholarshipHolder->weekly_limit_minutes;
-    }
-
-    public function generatePendingShipments()
-    {
-        $dueDate = Carbon::now()->subMonth()->startOfMonth()->addDays(5);
-
-        ScholarshipHolder::whereDoesntHave('attendances', function ($query) use ($dueDate) {
-            $query->where('status', 'sent')->where('date', '<=', $dueDate);
-        })->each(function ($scholarshipHolder) {
-            Notification::send($scholarshipHolder->coordinator, new PendingShipment($scholarshipHolder));
-        });
+    /**
+     * Criação de registro
+     */
+    public function create(
+        ScholarshipHolder $holder,
+        array $data
+    ): AttendanceRecord {
+        return AttendanceRecord::create([
+            'scholarship_holder_id'       => $holder->id,
+            'date'                        => Carbon::parse($data['date']),
+            'start_time'                  => $data['start_time'],
+            'end_time'                    => $data['end_time'],
+            'description'                 => $data['description'] ?? null,
+            'hours'                       => $this->calculateHours(
+                $data['start_time'],
+                $data['end_time']
+            ),
+            'attendance_submission_id'    => null,
+        ]);
     }
 
     /**
-     * Bolsista envia registro para homologação
+     * Atualização
      */
-    public function submitRecord(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $now = Carbon::now();
-
-        // Verifica prazo (até dia 5 do mês seguinte)
-        $limitDate = Carbon::parse($attendanceRecord->date)->endOfMonth()->addDays(5);
-        if ($now->greaterThan($limitDate)) {
-            throw new \Exception("Prazo de envio expirado. Registros só podem ser enviados até o dia 5 do mês seguinte.");
+    public function update(
+        AttendanceRecord $record,
+        array $data
+    ): AttendanceRecord {
+        if (! $this->isEditable($record)) {
+            throw new DomainException(
+                'Este registro não pode ser alterado.'
+            );
         }
 
-        if ($attendanceRecord->status !== 'draft') {
-            throw new \Exception("Somente registros em rascunho podem ser enviados.");
-        }
-
-        $attendanceRecord->update([
-            'status' => 'submitted',
-            'submitted_at' => $now,
+        $record->update([
+            'date'        => Carbon::parse($data['date']),
+            'start_time'  => $data['start_time'],
+            'end_time'    => $data['end_time'],
+            'description' => $data['description'] ?? null,
+            'hours'       => $this->calculateHours(
+                $data['start_time'],
+                $data['end_time']
+            ),
         ]);
 
-        return $attendanceRecord;
+        return $record;
     }
 
     /**
-     * Coordenador aprova registro
+     * Exclusão
      */
-    public function approveRecord(AttendanceRecord $attendanceRecord): AttendanceRecord
+    public function delete(AttendanceRecord $record): void
     {
-        $now = Carbon::now();
-
-        // Verifica prazo (até dia 10 do mês seguinte)
-        $limitDate = Carbon::parse($attendanceRecord->date)->endOfMonth()->addDays(10);
-        if ($now->greaterThan($limitDate)) {
-            throw new \Exception("Prazo de homologação expirado. Registros só podem ser homologados até o dia 10 do mês seguinte.");
+        if (! $this->isEditable($record)) {
+            throw new DomainException(
+                'Este registro não pode ser removido.'
+            );
         }
 
-        if ($attendanceRecord->status !== 'submitted') {
-            throw new \Exception("Somente registros enviados podem ser aprovados.");
-        }
-
-        $attendanceRecord->update([
-            'status' => 'approved',
-            'approved' => true,
-            'approved_by_user_id' => Auth::id(),
-        ]);
-
-        return $attendanceRecord;
+        $record->delete();
     }
 
     /**
-     * Coordenador recusa registro
+     * Regra central de edição
      */
-    public function rejectRecord(AttendanceRecord $attendanceRecord, string $reason): AttendanceRecord
+    public function isEditable(AttendanceRecord $record): bool
     {
-        if ($attendanceRecord->status !== 'submitted') {
-            throw new \Exception("Somente registros enviados podem ser recusados.");
+        if (! $record->attendance_submission_id) {
+            return true;
         }
 
-        $attendanceRecord->update([
-            'status' => 'rejected',
-            'approved' => false,
-            'approved_by_user_id' => Auth::id(),
-            'rejected_reason' => $reason,
-        ]);
-
-        return $attendanceRecord;
+        return $record->submission?->status ===
+            AttendanceSubmission::STATUS_DRAFT;
     }
 
-    /**
-     * Relatório consolidado da unidade
-     */
-    public function generateReport(?int $unitId, int $month, int $year)
+    protected function calculateHours(string $start, string $end): float
     {
-        $query = AttendanceRecord::query()
-            ->where('status', 'approved')
-            ->whereMonth('date', $month)
-            ->whereYear('date', $year);
+        $startTime = Carbon::parse($start);
+        $endTime   = Carbon::parse($end);
 
-        // Se unidade for informada, filtra
-        if ($unitId) {
-            $query->whereHas('scholarshipHolder', fn($q) => $q->where('unit_id', $unitId));
-        }
-
-        return $query
-            ->selectRaw('scholarship_holder_id, SUM(hours) as total_hours, SUM(calculated_value) as total_value')
-            ->groupBy('scholarship_holder_id')
-            ->with(['scholarshipHolder' => function($q) {
-                $q->select('id','name','cpf','phone','bank','agency','account', 'user_id','unit_id')
-                ->with(['unit:id,name']);
-            }])
-            ->get();
-    }
-
-     public function listForUser($userId)
-    {
-        return AttendanceRecord::where('user_id', $userId)->latest()->get();
-    }
-
-    public function isEditable(AttendanceRecord $attendanceRecord): bool
-    {
-        // Só pode editar se estiver em rascunho ou rejeitado
-        return in_array($attendanceRecord->status, ['draft', 'rejected']);
-    }
-
-    public function create(array $data): AttendanceRecord
-    {
-        $data['scholarship_holder_id'] = Auth::user()->scholarshipHolder->id ?? null;
-        return AttendanceRecord::create($data);
-    }
-
-    public function update(AttendanceRecord $attendanceRecord, array $data): AttendanceRecord
-    {
-        $attendanceRecord->update($data);
-        return $attendanceRecord;
-    }
-
-    public function submit(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_SUBMITTED]);
-        return $attendanceRecord;
-    }
-
-    public function delete(AttendanceRecord $attendanceRecord)
-    {
-        return $attendanceRecord->delete();
-    }
-
-    public function approve(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_APPROVED]);
-        return $attendanceRecord;
-    }
-
-    public function reject(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_REJECTED]);
-        return $attendanceRecord;
+        return round($startTime->diffInMinutes($endTime) / 60, 2);
     }
 }

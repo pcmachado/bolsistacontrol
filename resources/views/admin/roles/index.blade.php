@@ -7,101 +7,102 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-dark">Gerenciamento de Funções e Permissões</h1>
         
-        <!-- Botão de Ação -->
-        <a href="{{ route('admin.roles.create') }}" class="btn btn-primary shadow-sm rounded-3">
-            <i class="bi bi-plus-lg me-2"></i> Criar Nova Função
-        </a>
+        @can('create', Spatie\Permission\Models\Role::class)
+            <a href="{{ route('admin.roles.create') }}" class="btn btn-primary shadow-sm rounded-3">
+                <i class="bi bi-plus-lg me-2"></i> Criar Nova Função
+            </a>
+        @endcan
     </div>
 
-    <!-- 1. Quadro de Permissões Disponíveis -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light fw-bold text-dark h5">
-            Permissões Disponíveis no Sistema
-        </div>
-        <div class="card-body">
-            @if (isset($permissions) && $permissions->count())
-                <p class="text-muted small mb-3">Total de permissões: <span class="fw-bold">{{ $permissions->count() }}</span></p>
-                <div class="d-flex flex-wrap gap-2">
-                    @foreach ($permissions as $permission)
-                        <span class="badge text-dark rounded-pill px-3 py-2 fw-normal">{{ $permission->name }}</span>
-                    @endforeach
-                </div>
-            @else
-                <div class="alert alert-warning mb-0">Nenhuma permissão cadastrada.</div>
-            @endif
-        </div>
-    </div>
-
-    <!-- 2. Tabela de Roles e Permissões Vinculadas -->
+    <!-- Tabela de Roles -->
     <div class="card shadow-lg">
         <div class="card-header bg-white fw-bold h5 text-dark">
-            Funções Cadastradas
+            Funções Cadastradas (Visíveis para seu Nível)
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col" style="width: 5%;">#</th>
                             <th scope="col" style="width: 20%;">Nome da Função</th>
-                            <th scope="col" style="width: 55%;">Permissões Vinculadas</th>
+                            <th scope="col" style="width: 60%;">Permissões Vinculadas</th>
                             <th scope="col" style="width: 20%;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- Simulação de loop pelas Roles --}}
-                        @forelse (isset($roles) ? $roles : [] as $role)
+                        @forelse ($roles as $role)
                             <tr>
-                                <th scope="row" class="fw-bold text-muted">{{ $role->id }}</th>
-                                <td><span class="fw-bolder text-primary">{{ $role->name }}</span></td>
-                                
-                                {{-- Permissões Vinculadas --}}
                                 <td>
-                                    <div class="d-flex flex-wrap gap-1">
-                                        @forelse ($role->permissions as $permission)
-                                            <span class="badge text-dark rounded-pill px-3 py-1 fw-normal">{{ $permission->name }}</span>
-                                        @empty
-                                            <span class="text-danger small fst-italic">Nenhuma permissão atribuída.</span>
-                                        @endforelse
-                                    </div>
+                                    <span class="fw-bolder text-primary">{{ $role->name }}</span>
+                                    @if (in_array($role->name, ['admin', 'superadmin']))
+                                        <span class="badge bg-danger ms-2">Admin</span>
+                                    @elseif (in_array($role->name, ['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto']))
+                                        <span class="badge bg-warning text-dark ms-2">Coordenação</span>
+                                    @endif
                                 </td>
                                 
-                                {{-- Botões de Ação --}}
+                                <td>
+                                    @if ($role->permissions->isEmpty())
+                                        <span class="text-muted fst-italic small">Nenhuma permissão</span>
+                                    @else
+                                        @if($role->permissions->count() > 5)
+                                            <span class="badge bg-secondary rounded-pill">
+                                                {{ $role->permissions->count() }} permissões
+                                            </span>
+                                            <small class="text-muted ms-2">(Ver detalhes)</small>
+                                        @else
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach ($role->permissions as $permission)
+                                                    <span class="badge bg-light text-dark border rounded-pill">
+                                                        {{ $permission->name }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    @endif
+                                </td>
+                                
                                 <td>
                                     <div class="btn-group" role="group">
-                                        {{-- Botão Visualizar --}}
-                                        <a href="{{ route('admin.roles.show', $role->id) }}" class="btn btn-sm btn-info text-white rounded-start" title="Visualizar">
+                                        {{-- Visualizar --}}
+                                        <a href="{{ route('admin.roles.show', $role->id) }}" class="btn btn-sm btn-info text-white" title="Visualizar">
                                             <i class="bi bi-eye-fill"></i>
                                         </a>
-                                        {{-- Botão Editar --}}
-                                        <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-sm btn-warning" title="Editar">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
-                                        {{-- Botão Excluir (Usando formulário para POST/DELETE) --}}
-                                        <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" class="d-inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger rounded-end" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir esta função?');">
-                                                <i class="bi bi-trash-fill"></i>
+
+                                        {{-- Editar: A Policy (role hierarchy) determina se aparece --}}
+                                        @can('update', $role)
+                                            <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-sm btn-warning" title="Editar">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                        @else
+                                            <button class="btn btn-sm btn-secondary" disabled title="Nível hierárquico insuficiente">
+                                                <i class="bi bi-lock-fill"></i>
                                             </button>
-                                        </form>
+                                        @endcan
+
+                                        {{-- Excluir --}}
+                                        @can('delete', $role)
+                                            <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-danger" onclick="return confirm('Confirmar exclusão?')" title="Excluir">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </button>
+                                            </form>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">Nenhuma função cadastrado.</td>
-                            </tr>
+                            <tr><td colspan="3" class="text-center py-4">Nenhuma função encontrada.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
         
-        {{-- Paginação --}}
-        @if (isset($roles) && $roles instanceof \Illuminate\Pagination\LengthAwarePaginator)
+        @if ($roles instanceof \Illuminate\Pagination\LengthAwarePaginator)
             <div class="card-footer bg-white pt-3 pb-0 border-top">
-                {{-- Aqui o helper de paginação utiliza o tema Bootstrap 5 --}}
                 {!! $roles->links('pagination::bootstrap-5') !!}
             </div>
         @endif

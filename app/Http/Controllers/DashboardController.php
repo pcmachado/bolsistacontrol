@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use Illuminate\Notifications\DatabaseNotification as Notification;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,42 +24,38 @@ class DashboardController extends Controller
         ->get();
 
         // consulta base
-        $query = AttendanceRecord::where('scholarship_holder_id', $sch?->id);
+        $query = AttendanceSubmission::where('scholarship_holder_id', $sch?->id);
 
         // contadores
         $counts = [
             'approved'  => (clone $query)->where('status', 'approved')->count(),
             'submitted' => (clone $query)->where('status', 'submitted')->count(),
-            'late'      => (clone $query)->late()->count(),
             'rejected'  => (clone $query)->where('status', 'rejected')->count(),
-            'draft'     => (clone $query)->where('status', 'draft')->count(),
         ];
 
         // gráfico
-        $labels = ['Aprovados', 'Rascunhos', 'Atrasados', 'Rejeitados', 'Enviados'];
+        $labels = ['Aprovados', 'Rejeitados', 'Enviados'];
         $data = [
             $counts['approved'],
-            $counts['draft'],
-            $counts['late'],
             $counts['rejected'],
             $counts['submitted'],
         ];
 
         $lastSubmissions = (clone $query)
             ->with('scholarshipHolder.user')
-            ->where('status', 'submitted')
+            ->where('status', AttendanceSubmission::STATUS_SUBMITTED)
             ->selectRaw('scholarship_holder_id, DATE(date) as date')
             ->groupBy('scholarship_holder_id', 'date')
-            ->latest('date')
+            ->latest('submitted_at')
             ->take(5)
             ->get();
 
         $lastApprovals = (clone $query)
             ->with('scholarshipHolder.user')
-            ->where('status', 'approved')
+            ->where('status', AttendanceSubmission::STATUS_APPROVED)
             ->selectRaw('scholarship_holder_id, DATE(date) as date')
             ->groupBy('scholarship_holder_id', 'date')
-            ->latest('date')
+            ->latest('approved_at')
             ->take(5)
             ->get();
 
