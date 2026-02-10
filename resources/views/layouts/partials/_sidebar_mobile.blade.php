@@ -65,8 +65,14 @@
         @endrole
 
         @role('bolsista')
-            <a href="{{ route('reports.myReport') }}" class="sidebar-link">
+            <a href="{{ route('attendance.reports.index') }}" class="sidebar-link">
                 <i class="bi bi-file-earmark-person me-2"></i> Meu Relatório
+            </a>
+            <a href="{{ route('payments.my') }}" class="sidebar-link">
+                <i class="bi bi-wallet2 me-2"></i> Meus Pagamentos
+            </a>
+            <a href="{{ route('attendance.reports.final.create') }}" class="sidebar-link">
+                <i class="bi bi-file-earmark-person me-2"></i> Relatório Final
             </a>
         @endrole
 

@@ -429,6 +429,25 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('final_activity_reports', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('scholarship_holder_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+
+            $table->longText('activities');      // atividades desenvolvidas
+            $table->longText('results');         // resultados alcançados
+            $table->longText('contributions');   // contribuições ao projeto
+
+            $table->timestamp('submitted_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
+
+            $table->timestamps();
+        });
+
     }
 
     /**
@@ -436,6 +455,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('final_activity_reports');
         Schema::dropIfExists('financial_logs');
         Schema::dropIfExists('financial_closures');
         Schema::dropIfExists('document_templates');

@@ -119,4 +119,14 @@ class AttendanceSubmissionController extends Controller
     {
         return $dataTable->render('attendance.submissions.my');
     }
+
+    public function removeRecord(AttendanceSubmission $submission, AttendanceRecord $record)
+    {
+        $this->authorize('submit', $submission);
+
+        $this->service->removeRecord($submission, $record);
+
+        return back()->with('success', 'Registro removido da submissão.');
+    }
+
 }

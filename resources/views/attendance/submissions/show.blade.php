@@ -9,7 +9,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2 class="mb-1">
-                Frequência de {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
+                Submissão mensal — {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
             </h2>
 
             <div class="text-muted">
@@ -98,8 +98,9 @@
                                             @csrf
                                             @method('DELETE')
 
-                                            <button class="btn btn-sm btn-outline-danger">
-                                                Remover
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                title="O registro volta para o diário">
+                                                Remover do mês
                                             </button>
                                         </form>
                                     </td>

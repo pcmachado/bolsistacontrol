@@ -13,6 +13,10 @@ use App\Policies\ProjectPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\AttendanceRecordPolicy;
 use App\Policies\PaymentPolicy;
+use App\Models\AttendanceSubmission;
+use App\Policies\AttendanceSubmissionPolicy;
+use App\Models\FinalActivityReport;
+use App\Policies\FinalActivityReportPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -25,6 +29,7 @@ class AuthServiceProvider extends ServiceProvider
         Project::class => ProjectPolicy::class,
         User::class => UserPolicy::class,
         Payment::class => PaymentPolicy::class,
+        FinalActivityReport::class => FinalActivityReportPolicy::class,
     ];
 
     /**

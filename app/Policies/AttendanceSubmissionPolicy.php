@@ -64,4 +64,20 @@ class AttendanceSubmissionPolicy
             'coordenador_adjunto',
         ]);
     }
+
+    public function report(User $user, AttendanceSubmission $submission): bool
+    {
+        // 🔒 Bolsista só pode gerar relatório da própria submissão
+        if ($user->scholarshipHolder) {
+            return $submission->scholarship_holder_id === $user->scholarshipHolder->id;
+        }
+
+        // 🔓 Coordenação / Admin pode acessar
+        return $user->hasAnyRole([
+            'admin',
+            'coordenador_geral',
+            'coordenador_adjunto_geral',
+            'coordenador_adjunto',
+        ]);
+    }
 }

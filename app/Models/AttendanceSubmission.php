@@ -92,4 +92,9 @@ class AttendanceSubmission extends Model
         return $this->status === 'late';
     }
 
+    public function records()
+    {
+        return $this->hasMany(AttendanceRecord::class, 'attendance_submission_id');
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\DataTables\AttendanceRecordDataTable;
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use App\Services\AttendanceRecordService;
 use App\Services\AttendanceSubmissionService;
 use App\Services\ScholarshipHolderService;
@@ -16,32 +17,40 @@ class AttendanceRecordController extends Controller
     public function __construct(
         protected AttendanceRecordService $records,
         protected AttendanceSubmissionService $submissions,
-        protected ScholarshipHolderService $holders
+        protected ScholarshipHolderService $scholarshipHolderService
     ) {
         $this->middleware('auth');
     }
 
     /**
-     * Lista de registros
+     * Diário de frequência (por mês)
      */
-    public function index(
-        Request $request,
-        AttendanceRecordDataTable $dataTable
-    ) {
-        $dataTable->mode = $request->routeIs('attendance.index')
-            ? 'my'
-            : 'default';
+    public function index(Request $request, AttendanceRecordDataTable $dataTable)
+    {
+        $user   = auth()->user();
+        $holder = $this->scholarshipHolderService->holderOrFail($user);
+
+        $month = $request->get('month', now()->format('Y-m'));
+        [$year, $monthNum] = explode('-', $month);
+
+        // 🔎 submissão do mês (se existir)
+        $submission = AttendanceSubmission::where('scholarship_holder_id', $holder->id)
+            ->where('year', $year)
+            ->where('month', $monthNum)
+            ->latest()
+            ->first();
+
+        $filters = [
+            'month'  => "$year-$monthNum",
+            'status' => $request->get('status'),
+        ];
 
         return $dataTable
-            ->setFilters(
-                $request->only([
-                    'month',
-                    'year',
-                    'start_date',
-                    'end_date',
-                ])
-            )
-            ->render('attendance.index');
+            ->setFilters($filters)
+            ->render('attendance.index', [
+                'month'      => "$year-$monthNum",
+                'submission' => $submission,
+            ]);
     }
 
     /**
@@ -75,9 +84,11 @@ class AttendanceRecordController extends Controller
             $date->year,
             $date->month
         )) {
-            return back()->withErrors(
+            return back()
+            ->withInput()
+            ->withErrors([
                 'Este mês já foi enviado para homologação.'
-            );
+            ]);
         }
 
         $this->records->create($holder, $validated);
@@ -116,10 +127,8 @@ class AttendanceRecordController extends Controller
     /**
      * Atualização
      */
-    public function update(
-        Request $request,
-        AttendanceRecord $attendanceRecord
-    ) {
+    public function update(Request $request, AttendanceRecord $attendanceRecord )
+    {
         $this->authorize('update', $attendanceRecord);
 
         $validated = $request->validate([
@@ -129,10 +138,7 @@ class AttendanceRecordController extends Controller
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $this->records->update(
-            $attendanceRecord,
-            $validated
-        );
+        $this->records->update($attendanceRecord, $validated);
 
         return redirect()
             ->route('attendance.index')
@@ -152,4 +158,19 @@ class AttendanceRecordController extends Controller
             ->route('attendance.index')
             ->with('success', 'Registro removido.');
     }
+
+    public function my(Request $request, AttendanceRecordDataTable $dataTable)
+    {
+        $dataTable->mode = 'my';
+
+        $filters = $request->only(['month', 'status']);
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('attendance.index', [
+                'month' => $filters['month'] ?? now()->format('Y-m'),
+                'submission' => null, // ou resolver depois
+            ]);
+    }
+
 }

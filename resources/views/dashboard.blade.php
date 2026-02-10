@@ -41,7 +41,12 @@
 
 <div class="container py-4">
 
-    <h2 class="fw-bold mb-4">👋 Olá, {{ $user->name }}</h2>
+    <h2 class="fw-bold mb-4">
+        👋 Olá, {{ $user->name }}
+        <small class="text-muted fs-6 d-block">
+            Frequência {{ str_pad($currentMonth, 2, '0', STR_PAD_LEFT) }}/{{ $currentYear }}
+        </small>
+    </h2>
 
     {{-- PROJETO --}}
     @if($project)
@@ -56,21 +61,26 @@
     @endif
 
     {{-- BOTÃO NOVO REGISTRO --}}
-    <div class="mb-3">
-        <a href="{{ route('attendance.create') }}" class="btn btn-primary">
+    @if($canCreateRecord)
+        <a href="{{ route('attendance.create') }}" class="btn btn-primary mb-3">
             <i class="bi bi-plus-circle"></i> Novo Registro de Frequência
         </a>
-    </div>
+    @else
+        <div class="alert alert-warning mb-3">
+            Este mês já foi enviado para homologação.
+        </div>
+    @endif
 
     {{-- ========================
          CARDS RESUMO
     ========================= --}}
     <div class="row mb-4">
-        @include('attendance.submissions.cards.subbmited')
-        @include('attendance.submissions.cards.approved')
-        @include('attendance.submissions.cards.rejected')
-        @include('attendance.submissions.cards.late')
+        @include('attendance.submissions.cards.scholarship_holder.submitted', ['count' => $submissionCounts['submitted'] ?? 0])
+        @include('attendance.submissions.cards.scholarship_holder.approved',  ['count' => $submissionCounts['approved'] ?? 0])
+        @include('attendance.submissions.cards.scholarship_holder.rejected',  ['count' => $submissionCounts['rejected'] ?? 0])
+        @include('attendance.submissions.cards.scholarship_holder.late',      ['count' => $submissionCounts['late'] ?? 0])
     </div>
+
 
     {{-- ========================
          GRÁFICO
@@ -100,10 +110,19 @@
                     @foreach($lastSubmissions as $sub)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>{{ $sub->scholarshipHolder->user->name }}</strong><br>
-                                <small>{{ \Carbon\Carbon::parse($sub->date)->format('d/m/Y') }}</small>
+                                <strong>
+                                    {{ str_pad($sub->month, 2, '0', STR_PAD_LEFT) }}/{{ $sub->year }}
+                                </strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ ucfirst($sub->status) }}
+                                </small>
                             </div>
-                            <span class="badge bg-info status-badge">Enviado</span>
+
+                            <a href="{{ route('attendance.submissions.show', $sub) }}"
+                            class="btn btn-sm btn-outline-primary">
+                                Abrir
+                            </a>
                         </li>
                     @endforeach
                 </ul>
@@ -143,31 +162,27 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
     const ctx = document.getElementById('attendanceChart').getContext('2d');
 
     new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
-            labels: ['Aprov.', 'Subm.', 'Rej.', 'Rasc.', 'Atr.'],
+            labels: ['Aprovadas', 'Enviadas', 'Rejeitadas', 'Atrasadas'],
             datasets: [{
-                label: 'Registros',
                 data: [
-                    {{ $counts['approved'] }},
-                    {{ $counts['submitted'] }},
-                    {{ $counts['rejected'] }},
-                    {{ $counts['draft'] }},
-                    {{ $counts['late'] }}
+                    {{ $submissionCounts['approved'] ?? 0 }},
+                    {{ $submissionCounts['submitted'] ?? 0 }},
+                    {{ $submissionCounts['rejected'] ?? 0 }},
+                    {{ $submissionCounts['late'] ?? 0 }}
                 ],
                 backgroundColor: [
-                    'rgba(25, 135, 84, .7)',
-                    'rgba(13, 202, 240, .7)',
-                    'rgba(220, 53, 69, .7)',
-                    'rgba(108, 117, 125, .7)',
-                    'rgba(255, 193, 7, .7)'
-                ],
-                borderWidth: 0
+                    '#198754',
+                    '#0dcaf0',
+                    '#dc3545',
+                    '#ffc107'
+                ]
             }]
         },
         options: {

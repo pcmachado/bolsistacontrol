@@ -18,6 +18,10 @@ class AttendanceSubmissionService
             abort(403);
         }
 
+        if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
+            throw new \InvalidArgumentException('Formato de mês inválido.');
+        }
+
         [$year, $month] = explode('-', $month);
 
         $submission = $this->getOrCreateDraft(
@@ -130,5 +134,18 @@ class AttendanceSubmissionService
                 'attendance_submission_id' => null,
             ]);
         });
+    }
+
+    public function canCreateRecord(ScholarshipHolder $holder, int $year, int $month): bool 
+    {
+        return ! AttendanceSubmission::query()
+            ->where('scholarship_holder_id', $holder->id)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->whereIn('status', [
+                AttendanceSubmission::STATUS_SUBMITTED,
+                AttendanceSubmission::STATUS_APPROVED,
+            ])
+            ->exists();
     }
 }
