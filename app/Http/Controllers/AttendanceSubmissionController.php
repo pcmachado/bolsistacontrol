@@ -20,10 +20,18 @@ class AttendanceSubmissionController extends Controller
      * Listagem (bolsista / coordenação)
      */
     public function index(AttendanceSubmissionDataTable $dataTable, AttendanceDashboardService $dashboardService) {
+        $filters = request()->only(['status', 'month', 'unit_id']);
+
+        if (auth()->user()->hasRole('bolsista')) {
+            unset($filters['month']);
+        }
+
         $submissionCounts = $dashboardService
             ->submissionCounts(auth()->user());
 
-        return $dataTable->render(
+        return $dataTable
+            ->setFilters($filters)
+            ->render(
             'attendance.submissions.index',
             compact('submissionCounts')
         );

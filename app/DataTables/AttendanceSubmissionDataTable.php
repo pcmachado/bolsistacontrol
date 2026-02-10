@@ -34,11 +34,11 @@ class AttendanceSubmissionDataTable extends DataTable
             )
 
             ->addColumn('status_label', fn ($row) =>
-                view('attendance.submissions.partials.status', ['submission' => $row])->render()
+                view('attendance.submissions.partials.status', compact('row'))->render()
             )
 
             ->addColumn('actions', fn ($row) =>
-                view('attendance.submissions.partials.actions', ['submission' => $row])->render()
+                view('attendance.submissions.partials.actions', compact('row'))->render()
             )
 
             ->rawColumns(['status_label', 'actions']);
