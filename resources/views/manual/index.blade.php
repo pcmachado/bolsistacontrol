@@ -15,7 +15,6 @@
         <div class="card-body">
             <p class="mb-0">
                 Esta pagina centraliza o acesso aos guias por perfil.
-                Voce pode evoluir o conteudo por contexto operacional no futuro.
             </p>
         </div>
     </div>
