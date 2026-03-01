@@ -25,4 +25,5 @@ Thumbs.db
 .docker
 /node_modules
 .tmp.driveupload
-
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore

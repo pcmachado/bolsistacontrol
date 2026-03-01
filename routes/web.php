@@ -52,6 +52,8 @@ use App\Http\Controllers\Admin\CourseDisciplineController;
 use App\Http\Controllers\Admin\CourseClassOfferingController;
 use App\Http\Controllers\Admin\FinancialClosureController;
 use App\Http\Controllers\ReceiptVerificationController;
+use App\Http\Controllers\MyAttendanceRecordController;
+use App\Http\Controllers\MyAttendanceSubmissionController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -79,7 +81,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         |--------------------------------------------------------------------------
         */
         Route::get('/', [AttendanceRecordController::class, 'index'])->name('attendance.index');
-        Route::get('/my', [AttendanceRecordController::class, 'my'])->name('attendance.my');
+        Route::get('/my', [MyAttendanceRecordController::class, 'index'])->name('attendance.my');
         Route::get('/create', [AttendanceRecordController::class, 'create'])->name('attendance.create');
         Route::post('/', [AttendanceRecordController::class, 'store'])->name('attendance.store');
 
@@ -91,17 +93,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('submissions')->group(function () {
             Route::get('/', [AttendanceSubmissionController::class, 'index'])->name('attendance.submissions.index');
             Route::post('/', [AttendanceSubmissionController::class, 'store'])->name('attendance.submissions.store');
-            Route::get('/{submission}', [AttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
-            Route::post('/{submission}/submit', [AttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
-            Route::post('/{submission}/approve', [AttendanceSubmissionController::class, 'approve'])->name('attendance.submissions.approve');
-            Route::post('/{submission}/reject', [AttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
-            Route::delete('/{submission}/records/{record}',[AttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
+
+            Route::get('my',[MyAttendanceSubmissionController::class, 'index'])->name('attendance.submissions.my');
+            Route::post('/', [MyAttendanceSubmissionController::class, 'store'])->name('attendance.submissions.store');
 
             // Cards (dashboard)
             Route::get('/cards/approved', fn () => null)->name('attendance.submissions.cards.approved');
             Route::get('/cards/submitted', fn () => null)->name('attendance.submissions.cards.submitted');
             Route::get('/cards/rejected', fn () => null)->name('attendance.submissions.cards.rejected');
             Route::get('/cards/late', fn () => null)->name('attendance.submissions.cards.late');
+
+            Route::get('/{submission}', [AttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
+            Route::post('/{submission}/submit', [AttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
+            Route::post('/{submission}/approve', [AttendanceSubmissionController::class, 'approve'])->name('attendance.submissions.approve');
+            Route::post('/{submission}/reject', [AttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
+            Route::delete('/{submission}/records/{record}',[AttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
+
+            Route::get('/{submission}', [MyAttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
+            Route::post('/{submission}/submit', [MyAttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
+            Route::post('/{submission}/approve', [MyAttendanceSubmissionController::class, 'approve'])->name('attendance.submissions.approve');
+            Route::post('/{submission}/reject', [MyAttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
+            Route::delete('/{submission}/records/{record}',[MyAttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
+            
+            Route::get('/cards/approved/{month}', fn ($month) => null)->name('attendance.submissions.cards.approved.month');
+            Route::get('/cards/submitted/{month}', fn ($month) => null)->name('attendance.submissions.cards.submitted.month');
+            Route::get('/cards/rejected/{month}', fn ($month) => null)->name('attendance.submissions.cards.rejected.month');
+            Route::get('/cards/late/{month}', fn ($month) => null)->name('attendance.submissions.cards.late.month');
+            
         });
 
         /*
@@ -119,6 +137,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::prefix('final')->group(function () {
                 Route::get('/create',[FinalActivityReportController::class, 'create'])->name('attendance.reports.final.create');
                 Route::post('/',[FinalActivityReportController::class, 'store'])->name('attendance.reports.final.store');
+                Route::put('/{report}',[FinalActivityReportController::class, 'update'])->name('attendance.reports.final.update');
                 Route::get('/{report}',[FinalActivityReportController::class, 'show'])->name('attendance.reports.final.show');
                 Route::get('/{report}/pdf',[FinalActivityReportController::class, 'pdf'])->name('attendance.reports.final.pdf');
                 Route::post('/{report}/submit',[FinalActivityReportController::class, 'submit'])->name('attendance.reports.final.submit');
@@ -209,7 +228,6 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::resource('courses', CourseController::class);
     Route::resource('funding_sources', FundingSourceController::class);
     Route::resource('projects', ProjectController::class);
-    Route::resource('assignments', AssignmentController::class);
 
     Route::resource('disciplines', DisciplineController::class);
 
@@ -273,6 +291,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::post('/settings/alerts',[IntelligentAlertSettingController::class, 'update'])->name('settings.alerts.update');
 
     Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('/dashboard', [PaymentDashboardController::class, 'index'])->name('dashboard');
+
         Route::get('send', [PaymentController::class, 'create'])->name('create');
         Route::post('send', [PaymentController::class, 'store'])->name('store');
 
@@ -282,8 +302,10 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::post('batch/preview', [PaymentController::class, 'batchPreview'])->name('batch.preview');
         Route::post('batch/store', [PaymentController::class, 'batchStore'])->name('batch.store');
         Route::post('{payment}/pay', [PaymentExecutionController::class, 'pay'])->name('pay');
+        Route::post('{payment}/confirm', [PaymentExecutionController::class, 'confirm'])->name('confirm');
+        Route::get('{payment}/receipt', [PaymentReceiptController::class, 'download'])->name('receipt');
 
-        Route::get('/dashboard', [PaymentDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
     });
 
     Route::prefix('projects/wizard')->name('projects.')->group(function () {

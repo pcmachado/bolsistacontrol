@@ -7,13 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class FinalReportController extends Controller
+class FinalActivityReportController extends Controller
 {
     public function create()
     {
         $this->authorize('create', FinalActivityReport::class);
 
-        return view('attendance.reports.final.create');
+        return view('attendance.reports.final.form');
     }
 
     public function store(Request $request)
@@ -46,9 +46,27 @@ class FinalReportController extends Controller
     {
         $this->authorize('update', $report);
 
-        return view('attendance.reports.final.edit', compact('report'));
+        return view('attendance.reports.final.form', compact('report'));
     }
 
+    public function update(Request $request, FinalActivityReport $report)
+    {
+        $this->authorize('update', $report);
+
+        $data = $request->validate([
+            'project_id'    => 'nullable|exists:projects,id',
+            'start_date'    => 'required|date',
+            'end_date'      => 'required|date',
+            'activities'    => 'required|string',
+            'results'       => 'required|string',
+            'contributions' => 'required|string',
+        ]);
+
+        $report->update($data);
+
+        return back()->with('success', 'Relatório final atualizado com sucesso.');
+    }
+    
     public function submit(FinalActivityReport $report)
     {
         $this->authorize('submit', $report);

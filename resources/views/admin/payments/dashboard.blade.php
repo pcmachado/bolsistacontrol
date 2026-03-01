@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid">
 
-    {{-- HEADER --}}
+    {{-- ================= HEADER ================= --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold mb-0">
             <i class="bi bi-cash-coin me-2"></i> Dashboard Financeiro
@@ -15,7 +15,7 @@
         </span>
     </div>
 
-    {{-- ALERTAS --}}
+    {{-- ================= ALERTAS ================= --}}
     @if(!empty($alerts))
         <div class="mb-4">
             @foreach($alerts as $alert)
@@ -25,7 +25,7 @@
                         {{ $alert['message'] }}
                     </div>
                     <a href="{{ $alert['action_url'] }}"
-                    class="btn btn-sm btn-outline-dark">
+                       class="btn btn-sm btn-outline-dark">
                         Ver
                     </a>
                 </div>
@@ -33,10 +33,10 @@
         </div>
     @endif
 
-    {{-- FILTROS --}}
+    {{-- ================= FILTROS ================= --}}
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            <form class="row g-3 align-items-end">
+            <form method="GET" action="{{ route('admin.payments.dashboard') }}" class="row g-3 align-items-end">
 
                 <div class="col-md-2">
                     <label class="form-label">Mês</label>
@@ -84,24 +84,36 @@
         </div>
     </div>
 
-    {{-- FECHAMENTO FINANCEIRO --}}
-    <form method="POST" action="{{ route('admin.financial-closures.store') }}">
-        @csrf
+    {{-- ================= FECHAMENTO ================= --}}
+    <div class="mb-4">
+        @if($isClosed)
+            <div class="alert alert-success">
+                <i class="bi bi-lock-fill me-1"></i>
+                Período já encerrado.
+            </div>
+        @else
+            <form method="POST" action="{{ route('admin.financial-closures.store') }}">
+                @csrf
+                <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
+                <input type="hidden" name="month" value="{{ $month }}">
+                <input type="hidden" name="year" value="{{ $year }}">
 
-        <input type="hidden" name="unit_id" value="{{ request('unit_id') }}">
-        <input type="hidden" name="month" value="{{ $month }}">
-        <input type="hidden" name="year" value="{{ $year }}">
+                <button class="btn btn-danger"
+                        onclick="return confirm('Confirmar fechamento financeiro do período?')">
+                    <i class="bi bi-lock-fill me-1"></i> Fechar período
+                </button>
+            </form>
+        @endif
+    </div>
 
-        <button class="btn btn-danger"
-            onclick="return confirm('Confirmar fechamento financeiro do período?')">
-            <i class="bi bi-lock-fill me-1"></i> Fechar período
-        </button>
-    </form>
+    {{-- ================= CARDS ================= --}}
+    @php
+        $baseTotal = $currentTotal > 0 ? $currentTotal : 1;
+    @endphp
 
-
-    {{-- CARDS --}}
     <div class="row g-3 mb-4">
 
+        {{-- TOTAL PAGO --}}
         <div class="col-md-3">
             <div class="card shadow-sm border-start border-4 border-success">
                 <div class="card-body">
@@ -112,10 +124,14 @@
                     <h4 class="fw-bold mt-2">
                         R$ {{ number_format($totalPaid, 2, ',', '.') }}
                     </h4>
+                    <div class="small text-muted">
+                        {{ number_format(($totalPaid / $baseTotal) * 100, 1) }}%
+                    </div>
                 </div>
             </div>
         </div>
 
+        {{-- CONFIRMADO --}}
         <div class="col-md-3">
             <div class="card shadow-sm border-start border-4 border-primary">
                 <div class="card-body">
@@ -126,10 +142,14 @@
                     <h4 class="fw-bold mt-2">
                         R$ {{ number_format($totalConfirmed, 2, ',', '.') }}
                     </h4>
+                    <div class="small text-muted">
+                        {{ number_format(($totalConfirmed / $baseTotal) * 100, 1) }}%
+                    </div>
                 </div>
             </div>
         </div>
 
+        {{-- PENDENTE --}}
         <div class="col-md-3">
             <div class="card shadow-sm border-start border-4 border-warning">
                 <div class="card-body">
@@ -140,10 +160,14 @@
                     <h4 class="fw-bold mt-2">
                         R$ {{ number_format($totalPending, 2, ',', '.') }}
                     </h4>
+                    <div class="small text-muted">
+                        {{ number_format(($totalPending / $baseTotal) * 100, 1) }}%
+                    </div>
                 </div>
             </div>
         </div>
 
+        {{-- QUANTIDADE PENDENTE --}}
         <div class="col-md-3">
             <div class="card shadow-sm border-start border-4 border-danger">
                 <div class="card-body">
@@ -160,8 +184,8 @@
 
     </div>
 
+    {{-- ================= COMPARAÇÃO ================= --}}
     <div class="row g-3 mb-4">
-
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -170,17 +194,10 @@
                         <span class="text-muted">Comparação mensal</span>
 
                         @if(!is_null($variation))
-                            @if($variation >= 0)
-                                <span class="text-success fw-semibold">
-                                    <i class="bi bi-arrow-up"></i>
-                                    {{ number_format($variation, 2, ',', '.') }}%
-                                </span>
-                            @else
-                                <span class="text-danger fw-semibold">
-                                    <i class="bi bi-arrow-down"></i>
-                                    {{ number_format(abs($variation), 2, ',', '.') }}%
-                                </span>
-                            @endif
+                            <span class="{{ $variation >= 0 ? 'text-success' : 'text-danger' }} fw-semibold">
+                                <i class="bi {{ $variation >= 0 ? 'bi-arrow-up' : 'bi-arrow-down' }}"></i>
+                                {{ number_format(abs($variation), 2, ',', '.') }}%
+                            </span>
                         @else
                             <span class="text-muted">—</span>
                         @endif
@@ -195,18 +212,15 @@
                     <div class="small text-muted">
                         R$ {{ number_format($previousTotal, 2, ',', '.') }}
                         →
-                        <strong>
-                            R$ {{ number_format($currentTotal, 2, ',', '.') }}
-                        </strong>
+                        <strong>R$ {{ number_format($currentTotal, 2, ',', '.') }}</strong>
                     </div>
 
                 </div>
             </div>
         </div>
-
     </div>
 
-    {{-- GRÁFICOS --}}
+    {{-- ================= GRÁFICOS ================= --}}
     <div class="row g-4 mb-4">
 
         <div class="col-md-6">
@@ -215,7 +229,7 @@
                     Pagamentos por Projeto
                 </div>
                 <div class="card-body">
-                    <canvas id="chartProject" height="200"></canvas>
+                    <canvas id="chartProject"></canvas>
                 </div>
             </div>
         </div>
@@ -226,75 +240,47 @@
                     Pagamentos por Unidade
                 </div>
                 <div class="card-body">
-                    <canvas id="chartUnit" height="200"></canvas>
+                    <canvas id="chartUnit"></canvas>
                 </div>
             </div>
         </div>
 
     </div>
-
-    {{-- TABELAS --}}
-    <div class="row g-4">
-
-        <div class="col-md-6">
+    {{-- ================= EVOLUÇÃO ANUAL ================= --}}
+    <div class="row g-4 mb-4">
+        <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-white fw-semibold">
-                    Últimos Pagamentos Realizados
+                    Evolução Financeira Anual – {{ $year }}
                 </div>
-                <ul class="list-group list-group-flush">
-                    @forelse($latestPayments as $p)
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>{{ $p->scholarshipHolder->user->name }}</span>
-                            <strong>R$ {{ number_format($p->amount,2,',','.') }}</strong>
-                        </li>
-                    @empty
-                        <li class="list-group-item text-muted">
-                            Nenhum pagamento encontrado
-                        </li>
-                    @endforelse
-                </ul>
+                <div class="card-body">
+                    <canvas id="chartYearly" height="120"></canvas>
+                </div>
             </div>
         </div>
-
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white fw-semibold">
-                    Pagamentos Pendentes
-                </div>
-                <ul class="list-group list-group-flush">
-                    @forelse($pendingPayments as $p)
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>{{ $p->scholarshipHolder->user->name }}</span>
-                            <strong>R$ {{ number_format($p->amount,2,',','.') }}</strong>
-                        </li>
-                    @empty
-                        <li class="list-group-item text-muted">
-                            Nenhum pagamento pendente
-                        </li>
-                    @endforelse
-                </ul>
-            </div>
-        </div>
-
     </div>
 
 </div>
+@endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+
 new Chart(document.getElementById('chartProject'), {
     type: 'pie',
     data: {
         labels: {!! json_encode($chartByProject->pluck('project.name')) !!},
         datasets: [{
             data: {!! json_encode($chartByProject->pluck('total')) !!},
+            backgroundColor: [
+                '#198754','#0d6efd','#ffc107','#dc3545',
+                '#6f42c1','#20c997','#fd7e14'
+            ]
         }]
     },
     options: {
-        plugins: {
-            legend: { position: 'bottom' }
-        }
+        plugins: { legend: { position: 'bottom' } }
     }
 });
 
@@ -304,14 +290,39 @@ new Chart(document.getElementById('chartUnit'), {
         labels: {!! json_encode($chartByUnit->pluck('unit.name')) !!},
         datasets: [{
             data: {!! json_encode($chartByUnit->pluck('total')) !!},
+            backgroundColor: '#0d6efd'
         }]
     },
     options: {
+        plugins: { legend: { display: false } }
+    }
+});
+
+new Chart(document.getElementById('chartYearly'), {
+    type: 'line',
+    data: {
+        labels: {!! json_encode($monthlyTotals->pluck('month')->map(fn($m)=> str_pad($m,2,'0',STR_PAD_LEFT))) !!},
+        datasets: [{
+            label: 'Total Pago (R$)',
+            data: {!! json_encode($monthlyTotals->pluck('total')) !!},
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25,135,84,0.1)',
+            tension: 0.3,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
         plugins: {
-            legend: { display: false }
+            legend: { display: true }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
         }
     }
 });
+
 </script>
 @endpush
-@endsection

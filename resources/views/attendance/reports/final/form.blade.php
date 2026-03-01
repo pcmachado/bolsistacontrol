@@ -15,8 +15,8 @@
 
     <form method="POST"
           action="{{ isset($report)
-                ? route('final-reports.update', $report)
-                : route('final-reports.store') }}">
+                ? route('attendance.reports.final.update', $report)
+                : route('attendance.reports.final.store') }}">
 
         @csrf
         @isset($report)

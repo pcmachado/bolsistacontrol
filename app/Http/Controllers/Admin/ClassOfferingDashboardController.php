@@ -48,7 +48,7 @@ class ClassOfferingDashboardController extends Controller
                 'hours' => $g->sum('duration_hours'),
             ]);
 
-        return view('admin.class_offerings.dashboard.index', [
+        return view('admin.class-offerings.dashboard.index', [
             'offering' => $offering,
             'totalHours' => $totalHours,
             'totalClasses' => $totalClasses,

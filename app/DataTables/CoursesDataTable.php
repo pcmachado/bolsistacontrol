@@ -3,12 +3,12 @@
 namespace App\DataTables;
 
 use App\Models\Course;
-use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Services\DataTable;
-use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Html\Button;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\Html\Button;
+use Yajra\DataTables\Html\Column;
+use Yajra\DataTables\Services\DataTable;
+use App\Services\VisibilityService;
 
 class CoursesDataTable extends DataTable
 {
@@ -21,42 +21,41 @@ class CoursesDataTable extends DataTable
                     ->unique()
                     ->implode('<br>');
             })
-
             ->addColumn('projects', function ($course) {
                 return $course->classOfferings
                     ->pluck('project.name')
                     ->unique()
-                    ->filter() // remove null
+                    ->filter()
                     ->implode('<br>');
             })
-
-            ->addColumn('offerings_count', function ($course) {
-                return $course->classOfferings->count();
-            })
-
-            ->addColumn('actions', function ($course) {
-                return view('admin.courses.partials.actions', compact('course'));
-            })
-
+            ->addColumn('offerings_count', fn ($course) => $course->classOfferings->count())
+            ->addColumn('actions', fn ($course) => view('admin.courses.partials.actions', compact('course')))
             ->rawColumns(['units', 'projects', 'actions'])
             ->setRowId('id');
     }
 
     public function query(Course $model)
     {
-        $query = $model->newQuery()
-            ->visibleForUser(Auth::user())
-            ->with('classOfferings.unit', 'classOfferings.project');
+        $user = Auth::user();
 
-        if ($unit = request('filter_unit')) {
-            $query->whereHas('classOfferings', fn ($q) =>
-                $q->where('unit_id', $unit)
+        $query = $model->newQuery()->with('classOfferings.unit', 'classOfferings.project');
+
+        $query = app(VisibilityService::class)
+            ->apply($query, $user, 'admin');
+
+        if (! empty($this->filters['unit_id'])) {
+            $unitId = (int) $this->filters['unit_id'];
+
+            $query->whereHas('scholarshipHolder', fn ($q) =>
+                $q->where('unit_id', $unitId)
             );
         }
 
-        if ($project = request('filter_project')) {
-            $query->whereHas('classOfferings', fn ($q) =>
-                $q->where('project_id', $project)
+        if (! empty($this->filters['project_id'])) {
+            $projectId = (int) $this->filters['project_id'];
+
+            $query->whereHas('scholarshipHolder.projects', fn ($q) =>
+                $q->where('projects.id', $projectId)
             );
         }
 
@@ -69,7 +68,6 @@ class CoursesDataTable extends DataTable
             ->setTableId('courses-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->dom('Bfrtip')
             ->orderBy(0)
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0'),
@@ -83,25 +81,21 @@ class CoursesDataTable extends DataTable
     {
         return [
             Column::make('name')->title('Curso'),
-
             Column::computed('units')
                 ->title('Unidades')
                 ->orderable(false)
                 ->searchable(false)
                 ->addClass('text-start'),
-
             Column::computed('projects')
                 ->title('Projetos')
                 ->orderable(false)
                 ->searchable(false)
                 ->addClass('text-start'),
-
             Column::computed('offerings_count')
                 ->title('Turmas')
                 ->addClass('text-center'),
-
             Column::computed('actions')
-                ->title('Ações')
+                ->title('Acoes')
                 ->exportable(false)
                 ->printable(false)
                 ->width(160)

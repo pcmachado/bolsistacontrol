@@ -13,7 +13,7 @@ use App\Models\Discipline;
 use App\Models\ClassOffering;
 use App\Models\AttendanceSubmission;
 use App\Services\AttendanceDashboardService;
-use App\Services\AttendanceVisibilityService;
+use App\Services\VisibilityService;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -55,8 +55,8 @@ class DashboardService
             ->with('scholarshipHolder.user');
 
         // aplica o mesmo escopo do dashboard
-        app(\App\Services\AttendanceVisibilityService::class)
-            ->apply($query, $user);
+        app(VisibilityService::class)
+            ->apply($query, $user, 'self');
 
         $lastSubmissions = (clone $query)
             ->where('status', AttendanceSubmission::STATUS_SUBMITTED)

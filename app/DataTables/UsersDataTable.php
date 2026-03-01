@@ -6,6 +6,7 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\Html\Button;
+use Illuminate\Support\Facades\Auth;
 
 class UsersDataTable extends DataTable
 {
@@ -32,7 +33,7 @@ class UsersDataTable extends DataTable
 
     public function query(User $model)
     {
-        $logged = auth()->user();
+        $logged = Auth::user();
 
         $query = $model->newQuery()->with(['roles', 'unit']);
 

@@ -37,17 +37,17 @@
         {{-- ================================================= --}}
         {{-- ÁREA DO BOLSISTA --}}
         {{-- ================================================= --}}
-        @role('bolsista')
+        @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral|bolsista')
             <h6 class="sidebar-section-title mt-4">Minha Área</h6>
 
             {{-- Frequências --}}
             <x-sidebar-item
-                route="attendance.index"
+                route="attendance.my"
                 icon="bi bi-calendar-week"
                 title="Registros de Frequência"/>
 
             <x-sidebar-item
-                route="attendance.submissions.index"
+                route="attendance.submissions.my"
                 icon="bi bi-send-check"
                 title="Submissões Mensais"/>
 
@@ -69,7 +69,7 @@
                 route="attendance.reports.final.create"
                 icon="bi bi-file-earmark-person"
                 title="Relatório Final"/>
-        @endrole
+        @endhasanyrole
 
         {{-- ================================================= --}}
         {{-- COORDENAÇÃO --}}
@@ -77,7 +77,7 @@
         @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral')
             <h6 class="sidebar-section-title mt-4">Coordenação</h6>
 
-            <x-sidebar-item route="admin.attendance_records.index"
+            <x-sidebar-item route="attendance.submissions.index"
                             icon="bi bi-calendar-week"
                             title="Frequências"/>
 

@@ -42,7 +42,7 @@ class ClassSessionReportController extends Controller
                 'count' => $g->count(),
             ]);
 
-        return view('admin.class_offerings.sessions.report', [
+        return view('admin.class-offerings.sessions.report', [
             'offering' => $offering,
             'sessions' => $sessions,
             'totalHours' => $totalHours,
@@ -81,7 +81,7 @@ class ClassSessionReportController extends Controller
                 'count' => $g->count(),
             ]);
 
-        $pdf = Pdf::loadView('admin.class_offerings.sessions.report_pdf', [
+        $pdf = Pdf::loadView('admin.class-offerings.sessions.report_pdf', [
             'offering' => $offering,
             'sessions' => $sessions,
             'totalHours' => $totalHours,

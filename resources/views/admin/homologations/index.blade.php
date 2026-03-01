@@ -1,29 +1,25 @@
-<h3>Homologações Pendentes</h3>
+@extends('layouts.app')
 
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th>Bolsista</th>
-            <th>Unidade</th>
-            <th>Mês</th>
-            <th>Horas</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach ($submissions as $submission)
-            <tr>
-                <td>{{ $submission->scholarshipHolder->user->name }}</td>
-                <td>{{ $submission->scholarshipHolder->unit->name }}</td>
-                <td>{{ $submission->month }}/{{ $submission->year }}</td>
-                <td>{{ $submission->total_hours }}</td>
-                <td>
-                    <a href="{{ route('admin.homologations.show', $submission) }}"
-                       class="btn btn-sm btn-primary">
-                        Analisar
-                    </a>
-                </td>
-            </tr>
-        @endforeach
-    </tbody>
-</table>
+@section('title', 'Homologações de Frequência')
+
+@section('content')
+<div class="container-fluid">
+
+    <h3 class="mb-4">
+        <i class="bi bi-calendar-check me-2"></i>
+        Homologações de Frequência
+    </h3>
+    @include('admin.homologations.partials.filters')
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {!! $dataTable->table() !!}
+        </div>
+    </div>
+
+</div>
+@endsection
+
+@push('scripts')
+    {!! $dataTable->scripts() !!}
+@endpush

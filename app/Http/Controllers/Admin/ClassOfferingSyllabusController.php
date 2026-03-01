@@ -46,7 +46,7 @@ class ClassOfferingSyllabusController extends Controller
             ];
         }
 
-        return view('admin.class_offerings.syllabus.index', [
+        return view('admin.class-offerings.syllabus.index', [
             'offering' => $offering,
             'rows' => $result,
         ]);

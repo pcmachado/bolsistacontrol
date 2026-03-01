@@ -4,8 +4,8 @@ namespace App\DataTables;
 
 use App\Models\ClassOffering;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Html\Button;
+use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 
 class ClassOfferingsDataTable extends DataTable
@@ -13,33 +13,21 @@ class ClassOfferingsDataTable extends DataTable
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
-
-            ->addColumn('course', fn($row) => $row->course->name)
-            ->addColumn('unit', fn($row) => $row->unit->name)
-            ->addColumn('project', fn($row) => $row->project->name ?? '-')
-
-            // DISCIPLINAS
-            ->addColumn('disciplines_count', fn($row) => $row->disciplines->count())
-
-            // ALUNOS / BOLSISTAS
-            ->addColumn('students_count', fn($row) => $row->scholarshipHolders->count())
-
-            // STATUS (visual)
+            ->addColumn('course', fn ($row) => $row->course?->name ?? '-')
+            ->addColumn('unit', fn ($row) => $row->unit?->name ?? '-')
+            ->addColumn('project', fn ($row) => $row->project?->name ?? '-')
+            ->addColumn('disciplines_count', fn ($row) => $row->disciplines_count ?? 0)
+            ->addColumn('students_count', fn ($row) => $row->scholarship_holders_count ?? 0)
             ->editColumn('status', function ($row) {
                 return match ($row->status) {
-                    'planned'   => '<span class="badge bg-secondary">Planejado</span>',
-                    'ongoing'   => '<span class="badge bg-primary">Em andamento</span>',
-                    'finished'  => '<span class="badge bg-success">Concluído</span>',
+                    'planned' => '<span class="badge bg-secondary">Planejado</span>',
+                    'ongoing' => '<span class="badge bg-primary">Em andamento</span>',
+                    'finished' => '<span class="badge bg-success">Concluido</span>',
                     'cancelled' => '<span class="badge bg-danger">Cancelado</span>',
-                    default     => $row->status,
+                    default => (string) $row->status,
                 };
             })
-
-            // AÇÕES
-            ->addColumn('actions', fn($row) =>
-                view('admin.class-offerings.partials.actions', compact('row'))
-            )
-
+            ->addColumn('actions', fn ($row) => view('admin.class-offerings.partials.actions', compact('row')))
             ->rawColumns(['status', 'actions'])
             ->setRowId('id');
     }
@@ -47,10 +35,9 @@ class ClassOfferingsDataTable extends DataTable
     public function query(ClassOffering $model)
     {
         $query = $model->newQuery()
-            ->visibleForUser(auth()->user())
-            ->with(['course', 'unit', 'project']);
+            ->with(['course', 'unit', 'project'])
+            ->withCount(['disciplines', 'scholarshipHolders']);
 
-        // FILTROS AVANÇADOS
         if ($course = request('filter_course')) {
             $query->where('course_id', $course);
         }
@@ -76,10 +63,7 @@ class ClassOfferingsDataTable extends DataTable
         }
 
         if ($minStudents = request('filter_min_students')) {
-            $query->whereHas('scholarshipHolders', function ($q) {
-                $q->selectRaw('count(*)')
-                  ->groupBy('class_offering_id');
-            }, '>=', $minStudents);
+            $query->has('scholarshipHolders', '>=', (int) $minStudents);
         }
 
         return $query;
@@ -90,8 +74,7 @@ class ClassOfferingsDataTable extends DataTable
         return $this->builder()
             ->setTableId('class-offerings-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
-            ->dom('Bfrtip')
+            ->minifiedAjax('', "function(d){ d.filter_course = $('#filter_course').val(); d.filter_unit = $('#filter_unit').val(); d.filter_project = $('#filter_project').val(); d.filter_status = $('#filter_status').val(); d.filter_year = $('#filter_year').val(); d.filter_semester = $('#filter_semester').val(); d.filter_min_students = $('#filter_min_students').val(); }")
             ->orderBy(0, 'asc')
             ->buttons([
                 Button::make('excel'),
@@ -105,23 +88,14 @@ class ClassOfferingsDataTable extends DataTable
     {
         return [
             Column::make('name')->title('Turma'),
-
             Column::computed('course')->title('Curso'),
             Column::computed('unit')->title('Unidade'),
             Column::computed('project')->title('Projeto'),
-
-            Column::computed('disciplines_count')
-                ->title('Disciplinas')
-                ->addClass('text-center'),
-
-            Column::computed('students_count')
-                ->title('Bolsistas')
-                ->addClass('text-center'),
-
+            Column::computed('disciplines_count')->title('Disciplinas')->addClass('text-center'),
+            Column::computed('students_count')->title('Bolsistas')->addClass('text-center'),
             Column::computed('status')->title('Status'),
-
             Column::computed('actions')
-                ->title('Ações')
+                ->title('Acoes')
                 ->exportable(false)
                 ->printable(false)
                 ->width(160)

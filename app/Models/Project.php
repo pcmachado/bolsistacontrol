@@ -5,7 +5,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Project extends Model
@@ -23,7 +22,7 @@ class Project extends Model
 
     public function institution(): BelongsTo
     {
-        return $this->belongsTo(institution::class);
+        return $this->belongsTo(Institution::class);
     }
 
     public function positions(): BelongsToMany
@@ -101,47 +100,6 @@ class Project extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
-    }
-
-    public function scopeVisibleForUser($query, $user)
-    {
-        if ($user->hasRole('admin')) {
-            return $query;
-        }
-
-        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            return $query->whereHas('classOfferings.unit', fn ($q) =>
-                $q->where('institution_id', $user->institution_id)
-            );
-        }
-
-        if ($user->unit_id) {
-            return $query->whereHas('classOfferings', fn ($q) =>
-                $q->where('unit_id', $user->unit_id)
-            );
-        }
-
-        return $query->whereRaw('1=0');
-    }
-
-    public function scopeByUserInstitution($query, $user)
-    {
-        // Admin vê tudo
-        if ($user->hasRole('admin')) {
-            return $query;
-        }
-
-        // Coordenadores → só projetos da instituição
-        if (
-            $user->hasRole('coordenador_geral') ||
-            $user->hasRole('coordenador_adjunto_geral') ||
-            $user->hasRole('coordenador_adjunto')
-        ) {
-            return $query->where('institution_id', $user->institution_id);
-        }
-
-        // Outros perfis → nada
-        return $query->whereRaw('1 = 0');
     }
 
 }

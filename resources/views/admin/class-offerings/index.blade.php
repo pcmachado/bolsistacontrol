@@ -74,56 +74,7 @@
 
                 <div class="col-md-2">
                     <label class="form-label">Mín. Bolsistas</label>
-                    <input id="filter_min_scholarship_holders" type="number" class="form-control">
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mb-3">
-        <div class="card-body">
-            <div class="row g-3">
-
-                <div class="col-md-3">
-                    <label class="form-label">Curso</label>
-                    <select id="filter_course" class="form-select">
-                        <option value="">Todos</option>
-                        @foreach(\App\Models\Course::all() as $c)
-                            <option value="{{ $c->id }}">{{ $c->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Unidade</label>
-                    <select id="filter_unit" class="form-select">
-                        <option value="">Todas</option>
-                        @foreach(\App\Models\Unit::all() as $u)
-                            <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">Status</label>
-                    <select id="filter_status" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="planned">Planejado</option>
-                        <option value="ongoing">Em andamento</option>
-                        <option value="finished">Concluído</option>
-                        <option value="cancelled">Cancelado</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">Ano</label>
-                    <input id="filter_year" type="number" class="form-control">
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">Semestre</label>
-                    <input id="filter_semester" type="text" class="form-control" placeholder="Ex: 2025/1">
+                    <input id="filter_min_students" type="number" class="form-control">
                 </div>
 
             </div>
@@ -145,7 +96,7 @@
         const table = window.LaravelDataTables["class-offerings-table"];
 
         $('#filter_course, #filter_unit, #filter_project, #filter_status').on('change', () => table.draw());
-        $('#filter_year, #filter_semester, #filter_min_scholarship_holders').on('keyup change', () => table.draw());
+        $('#filter_year, #filter_semester, #filter_min_students').on('keyup change', () => table.draw());
     </script>
 @endpush
 @endsection

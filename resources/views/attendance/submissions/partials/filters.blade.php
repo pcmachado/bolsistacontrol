@@ -17,7 +17,7 @@
             <div class="col-md-3">
                 <label for="filter-status" class="form-label mb-1">Status</label>
                 <select id="filter-status" name="status" class="form-select">
-                    <option value="">Todos</option>
+                    <option value="all" @selected(request('status') === 'all')>Todos</option>
                     <option value="submitted" @selected(request('status') === 'submitted')>Enviadas</option>
                     <option value="approved" @selected(request('status') === 'approved')>Homologadas</option>
                     <option value="rejected" @selected(request('status') === 'rejected')>Rejeitadas</option>
@@ -25,6 +25,22 @@
                     <option value="draft" @selected(request('status') === 'draft')>Rascunhos</option>
                 </select>
             </div>
+
+            {{-- UNIDADE (somente se houver unidades) --}}
+            @if(isset($units) && $units->isNotEmpty())
+                <div class="col-md-3">
+                    <label class="form-label">Unidade</label>
+                    <select name="unit_id" class="form-select">
+                        <option value="">Todas</option>
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id }}"
+                                @selected(request('unit_id') == $unit->id)>
+                                {{ $unit->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
 
             <div class="col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary">

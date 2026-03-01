@@ -3,14 +3,22 @@
 namespace App\DataTables;
 
 use App\Models\AttendanceRecord;
-use App\Services\AttendanceVisibilityService;
+use App\Services\VisibilityService;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceRecordDataTable extends DataTable
 {
-    public string $mode = 'default';
+    public string $mode = 'admin';
+
     protected array $filters = [];
+
+    public function setMode(string $mode): self
+    {
+        $this->mode = $mode;
+        return $this;
+    }
 
     public function setFilters(array $filters): self
     {
@@ -54,14 +62,18 @@ class AttendanceRecordDataTable extends DataTable
 
     public function query(AttendanceRecord $model)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $query = $model->newQuery()
             ->with(['scholarshipHolder.user', 'submission']);
 
-        // 🔐 Visibilidade centralizada
-        app(AttendanceVisibilityService::class)
-            ->apply($query, $user);
+        $visibility = app(VisibilityService::class);
+
+        if ($this->mode === 'self') {
+            $query = $visibility->apply($query, $user, 'self');
+        } else {
+            $query = $visibility->apply($query, $user, 'admin');
+        }
 
         // 🔎 Filtros
         if (!empty($this->filters['month'])) {
@@ -77,12 +89,12 @@ class AttendanceRecordDataTable extends DataTable
 
         if (!empty($this->filters['status'])) {
 
-            if ($this->filters['status'] === 'draft') {
-                $query->whereDoesntHave('submission')
-                    ->orWhereHas('submission', fn ($q) =>
-                        $q->where('status', 'draft')
-                    );
-            }
+            $query->where(function ($q) {
+                $q->whereDoesntHave('submission')
+                ->orWhereHas('submission', fn ($sub) =>
+                        $sub->where('status', 'draft')
+                );
+            });
 
             if ($this->filters['status'] === 'submitted') {
                 $query->whereHas('submission', fn ($q) =>
@@ -93,6 +105,12 @@ class AttendanceRecordDataTable extends DataTable
             if ($this->filters['status'] === 'approved') {
                 $query->whereHas('submission', fn ($q) =>
                     $q->where('status', 'approved')
+                );
+            }
+
+            if ($this->filters['status'] === 'rejected') {
+                $query->whereHas('submission', fn ($q) =>
+                    $q->where('status', 'rejected')
                 );
             }
         }

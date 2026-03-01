@@ -48,7 +48,7 @@
 
         {{-- FOOTER --}}
         <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
-            2025 — BolsistaControl © Todos os direitos reservados.
+            2025 — SofTcheWare - BolsistaControl © Todos os direitos reservados.
         </footer>
 
     </div>

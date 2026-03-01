@@ -40,7 +40,7 @@ class ClassSessionsDataTable extends DataTable
             ->addColumn('schedule', fn($row) => "{$row->start_time} - {$row->end_time}")
 
             ->addColumn('actions', fn($row) =>
-                view('admin.class_offerings.sessions.partials.actions', [
+                view('admin.class-offerings.sessions.partials.actions', [
                     'session' => $row,
                     'offering' => $this->offering,
                 ])
