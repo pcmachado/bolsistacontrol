@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'BolsistaControl')</title>
+    <title>@yield('title', 'ProBolsas - Portal de Gestão de Bolsas')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -18,7 +18,7 @@
     <nav class="navbar navbar-light bg-white border-bottom">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand fw-bold" href="{{ url('/') }}">
-                🎓 BolsistaControl
+                🎓 ProBolsas
             </a>
 
             <div>

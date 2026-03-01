@@ -10,6 +10,15 @@ use Illuminate\Support\Facades\Auth;
 
 class UsersDataTable extends DataTable
 {
+    protected array $filters = [];
+
+    public function setFilters(array $filters): self
+    {
+        $this->filters = $filters;
+
+        return $this;
+    }
+
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
@@ -80,19 +89,19 @@ class UsersDataTable extends DataTable
         }
 
         // Nome
-        if (request()->filled('filter_name')) {
-            $query->where('name', 'like', '%' . request('filter_name') . '%');
+        if (! empty($this->filters['filter_name'])) {
+            $query->where('name', 'like', '%' . $this->filters['filter_name'] . '%');
         }
 
         // Unidade
-        if (request()->filled('filter_unit')) {
-            $query->where('unit_id', request('filter_unit'));
+        if (! empty($this->filters['filter_unit'])) {
+            $query->where('unit_id', $this->filters['filter_unit']);
         }
 
         // Cargo (role)
-        if (request()->filled('filter_role')) {
+        if (! empty($this->filters['filter_role'])) {
             $query->whereHas('roles', fn($q) =>
-                $q->where('name', request('filter_role'))
+                $q->where('name', $this->filters['filter_role'])
             );
         }
 
@@ -104,7 +113,7 @@ class UsersDataTable extends DataTable
         return $this->builder()
             ->setTableId('users-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
             ->parameters([

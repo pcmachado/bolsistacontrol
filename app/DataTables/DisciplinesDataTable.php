@@ -8,9 +8,19 @@ use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
 use Illuminate\Support\Facades\Auth;
+use App\Services\VisibilityService;
 
 class DisciplinesDataTable extends DataTable
 {
+    protected array $filters = [];
+
+    public function setFilters(array $filters): self
+    {
+        $this->filters = $filters;
+
+        return $this;
+    }
+
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
@@ -28,18 +38,11 @@ class DisciplinesDataTable extends DataTable
 
         $query = $model->newQuery()->with('course');
 
-        if (! $user->hasRole('admin')) {
-            if (! $user->institution_id) {
-                return $query->whereRaw('1 = 0');
-            }
+        $query = app(VisibilityService::class)
+            ->apply($query, $user, 'admin');
 
-            $query->whereHas('unit', fn ($q) =>
-                $q->where('institution_id', $user->institution_id)
-            );
-        }
-
-        if (request()->filled('filter_course')) {
-            $query->where('course_id', request('filter_course'));
+        if (! empty($this->filters['filter_course'])) {
+            $query->where('course_id', (int) $this->filters['filter_course']);
         }
 
         return $query;
@@ -50,7 +53,7 @@ class DisciplinesDataTable extends DataTable
         return $this->builder()
             ->setTableId('disciplines-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->minifiedAjax(request()->fullUrl())
             ->orderBy(0, 'asc')
             ->parameters([
                 'responsive' => true,

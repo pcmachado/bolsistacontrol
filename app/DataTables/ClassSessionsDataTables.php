@@ -12,10 +12,18 @@ use Yajra\DataTables\Html\Button;
 class ClassSessionsDataTable extends DataTable
 {
     protected ClassOffering $offering;
+    protected array $filters = [];
 
     public function setOffering(ClassOffering $offering): self
     {
         $this->offering = $offering;
+        return $this;
+    }
+
+    public function setFilters(array $filters): self
+    {
+        $this->filters = $filters;
+
         return $this;
     }
 
@@ -56,27 +64,27 @@ class ClassSessionsDataTable extends DataTable
             ->with(['discipline', 'teacher']);
 
         // FILTROS
-        if ($disc = request('filter_discipline')) {
+        if ($disc = ($this->filters['filter_discipline'] ?? null)) {
             $query->where('discipline_id', $disc);
         }
 
-        if ($teacher = request('filter_teacher')) {
+        if ($teacher = ($this->filters['filter_teacher'] ?? null)) {
             $query->where('teacher_id', $teacher);
         }
 
-        if ($status = request('filter_status')) {
+        if ($status = ($this->filters['filter_status'] ?? null)) {
             $query->where('status', $status);
         }
 
-        if ($from = request('filter_from')) {
+        if ($from = ($this->filters['filter_from'] ?? null)) {
             $query->whereDate('date', '>=', $from);
         }
 
-        if ($to = request('filter_to')) {
+        if ($to = ($this->filters['filter_to'] ?? null)) {
             $query->whereDate('date', '<=', $to);
         }
 
-        if ($min = request('filter_min_hours')) {
+        if ($min = ($this->filters['filter_min_hours'] ?? null)) {
             $query->where('duration_hours', '>=', $min);
         }
 
@@ -88,7 +96,7 @@ class ClassSessionsDataTable extends DataTable
         return $this->builder()
             ->setTableId('class-sessions-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
             ->orderBy(0)
             ->buttons([

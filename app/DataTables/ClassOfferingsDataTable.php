@@ -3,6 +3,8 @@
 namespace App\DataTables;
 
 use App\Models\ClassOffering;
+use App\Services\VisibilityService;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
@@ -10,6 +12,15 @@ use Yajra\DataTables\Services\DataTable;
 
 class ClassOfferingsDataTable extends DataTable
 {
+    protected array $filters = [];
+
+    public function setFilters(array $filters): self
+    {
+        $this->filters = $filters;
+
+        return $this;
+    }
+
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
@@ -34,35 +45,40 @@ class ClassOfferingsDataTable extends DataTable
 
     public function query(ClassOffering $model)
     {
+        $user = Auth::user();
+
         $query = $model->newQuery()
             ->with(['course', 'unit', 'project'])
             ->withCount(['disciplines', 'scholarshipHolders']);
 
-        if ($course = request('filter_course')) {
+        $query = app(VisibilityService::class)
+            ->apply($query, $user, 'admin');
+
+        if ($course = ($this->filters['filter_course'] ?? null)) {
             $query->where('course_id', $course);
         }
 
-        if ($unit = request('filter_unit')) {
+        if ($unit = ($this->filters['filter_unit'] ?? null)) {
             $query->where('unit_id', $unit);
         }
 
-        if ($project = request('filter_project')) {
+        if ($project = ($this->filters['filter_project'] ?? null)) {
             $query->where('project_id', $project);
         }
 
-        if ($status = request('filter_status')) {
+        if ($status = ($this->filters['filter_status'] ?? null)) {
             $query->where('status', $status);
         }
 
-        if ($year = request('filter_year')) {
+        if ($year = ($this->filters['filter_year'] ?? null)) {
             $query->where('year', $year);
         }
 
-        if ($semester = request('filter_semester')) {
+        if ($semester = ($this->filters['filter_semester'] ?? null)) {
             $query->where('semester', 'like', "%$semester%");
         }
 
-        if ($minStudents = request('filter_min_students')) {
+        if ($minStudents = ($this->filters['filter_min_students'] ?? null)) {
             $query->has('scholarshipHolders', '>=', (int) $minStudents);
         }
 
@@ -74,7 +90,7 @@ class ClassOfferingsDataTable extends DataTable
         return $this->builder()
             ->setTableId('class-offerings-table')
             ->columns($this->getColumns())
-            ->minifiedAjax('', "function(d){ d.filter_course = $('#filter_course').val(); d.filter_unit = $('#filter_unit').val(); d.filter_project = $('#filter_project').val(); d.filter_status = $('#filter_status').val(); d.filter_year = $('#filter_year').val(); d.filter_semester = $('#filter_semester').val(); d.filter_min_students = $('#filter_min_students').val(); }")
+            ->minifiedAjax(request()->fullUrl())
             ->orderBy(0, 'asc')
             ->buttons([
                 Button::make('excel'),

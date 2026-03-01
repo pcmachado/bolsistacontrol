@@ -37,18 +37,6 @@
             <form action="{{ route('admin.class-offerings.store') }}" method="POST">
                 @csrf
 
-                {{-- Curso --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Curso</label>
-                    <select name="course_id" class="form-select @error('course_id') is-invalid @enderror" required>
-                        <option value="">Selecione...</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->id }}">{{ $course->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('course_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
                 {{-- Unidade --}}
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Unidade</label>
@@ -63,14 +51,25 @@
 
                 {{-- Projeto --}}
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Projeto (opcional)</label>
-                    <select name="project_id" class="form-select @error('project_id') is-invalid @enderror">
-                        <option value="">Nenhum</option>
+                    <label class="form-label fw-semibold">Projeto</label>
+                    <select id="project_id" name="project_id" class="form-select @error('project_id') is-invalid @enderror" required>
+                        <option value="">Selecione...</option>
                         @foreach($projects as $project)
-                            <option value="{{ $project->id }}">{{ $project->name }}</option>
+                            <option value="{{ $project->id }}" @selected(old('project_id') == $project->id)>
+                                {{ $project->name }}
+                            </option>
                         @endforeach
                     </select>
                     @error('project_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- Curso --}}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Curso</label>
+                    <select id="course_id" name="course_id" class="form-select @error('course_id') is-invalid @enderror" required>
+                        <option value="">Selecione um projeto primeiro...</option>
+                    </select>
+                    @error('course_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 {{-- Nome da Turma --}}
@@ -134,3 +133,39 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    const projectCourses = @json($projectCourses);
+    const projectSelect = document.getElementById('project_id');
+    const courseSelect = document.getElementById('course_id');
+    const selectedCourse = @json(old('course_id'));
+
+    function reloadCourseOptions() {
+        const projectId = projectSelect.value;
+        const courses = projectCourses[projectId] || [];
+
+        courseSelect.innerHTML = '';
+
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = courses.length
+            ? 'Selecione...'
+            : 'Nenhum curso ativo vinculado ao projeto';
+        courseSelect.appendChild(placeholder);
+
+        for (const course of courses) {
+            const option = document.createElement('option');
+            option.value = String(course.id);
+            option.textContent = course.name;
+            if (selectedCourse && String(course.id) === String(selectedCourse)) {
+                option.selected = true;
+            }
+            courseSelect.appendChild(option);
+        }
+    }
+
+    projectSelect.addEventListener('change', reloadCourseOptions);
+    reloadCourseOptions();
+</script>
+@endpush

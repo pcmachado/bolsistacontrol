@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="text-center">
-        <h1 class="mb-4">🎓 BolsistaControl</h1>
+        <h1 class="mb-4">🎓 ProBolsas</h1>
         <p class="lead mb-4">
             Bem-vindo ao sistema de gestão acadêmica.<br>
             Aqui coordenadores e bolsistas acompanham unidades, projetos e frequências de forma simples e segura.

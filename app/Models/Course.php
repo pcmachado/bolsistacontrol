@@ -38,4 +38,20 @@ class Course extends Model
         return $this->hasMany(ClassOffering::class);
     }
 
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Project::class,
+            'project_course',
+            'course_id',
+            'project_id'
+        )->withPivot([
+            'active',
+            'semester',
+            'year',
+            'start_date',
+            'end_date',
+        ])->withTimestamps();
+    }
+
 }

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', config('app.name', 'BolsistaControl'))</title>
+    <title>@yield('title', config('app.name', 'ProBolsas - Portal de Gestão de Bolsas'))</title>
 
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -30,7 +30,7 @@
         @include('layouts.partials._navbar')
 
         {{-- SIDEBAR MOBILE --}}
-        <div class="offcanvas offcanvas-start bg-dark text-white" id="sidebarOffcanvas">
+        <div class="offcanvas offcanvas-start bg-dark text-white mobile-sidebar-offcanvas" id="sidebarOffcanvas">
             <div class="offcanvas-header">
                 <h5 class="text-white">Menu</h5>
                 <button class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
@@ -48,7 +48,7 @@
 
         {{-- FOOTER --}}
         <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
-            2025 — SofTcheWare - BolsistaControl © Todos os direitos reservados.
+            2025 — ProBolsas - Portal de Gestão de Bolsas © Todos os direitos reservados.
         </footer>
 
     </div>
@@ -87,21 +87,25 @@ document.addEventListener("DOMContentLoaded", () => {
 {{-- DARK/LIGHT THEME --}}
 <script>
 (function () {
-    const KEY = 'bolsistacontrol_theme';
+    const KEY = 'probolsas_theme';
+    const LEGACY_KEY = 'bolsistacontrol_theme';
 
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
     }
 
     function toggleTheme() {
-        const current = localStorage.getItem(KEY) || 'light';
+        const current = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY) || 'light';
         const next = current === 'dark' ? 'light' : 'light';
         localStorage.setItem(KEY, next);
         applyTheme(next);
+        localStorage.removeItem(LEGACY_KEY);
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        applyTheme(localStorage.getItem(KEY) || 'light');
+        const savedTheme = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY) || 'light';
+        applyTheme(savedTheme);
+        localStorage.setItem(KEY, savedTheme);
 
         const themeButton = document.getElementById("themeToggle");
         if (themeButton) themeButton.addEventListener("click", toggleTheme);

@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\ClassOffering;
+use App\Models\Course;
+use App\Models\Discipline;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
 class VisibilityService
@@ -13,18 +16,15 @@ class VisibilityService
         User $user,
         string $context = 'admin' // self | admin
     ): Builder {
-
         $model = $query->getModel();
 
         /*
         |==================================================
-        | CONTEXTO SELF (MINHA ÁREA)
+        | CONTEXTO SELF (MINHA AREA)
         |==================================================
         */
         if ($context === 'self') {
-
             if ($user->scholarshipHolder) {
-
                 // Model tem scholarship_holder_id direto
                 if ($this->hasColumn($model, 'scholarship_holder_id')) {
                     return $query->where(
@@ -50,31 +50,85 @@ class VisibilityService
         |==================================================
         */
 
-        // ADMIN vê tudo
+        // ADMIN ve tudo
         if ($user->hasRole('admin')) {
             return $query;
         }
 
         // ------------------------------------------------
-        // MODELS COM scholarshipHolder RELAÇÃO
+        // CURSO
+        // ------------------------------------------------
+        if ($model instanceof Course) {
+            if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+                return $query->whereHas('classOfferings.unit', function ($q) use ($user) {
+                    $q->where('institution_id', $user->institution_id);
+                });
+            }
+
+            if ($user->hasRole('coordenador_adjunto')) {
+                return $query->whereHas('classOfferings', function ($q) use ($user) {
+                    $q->whereIn('unit_id', $user->units->pluck('id'));
+                });
+            }
+
+            return $query->whereRaw('1 = 0');
+        }
+
+        // ------------------------------------------------
+        // DISCIPLINA
+        // ------------------------------------------------
+        if ($model instanceof Discipline) {
+            if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+                return $query->whereHas('course.classOfferings.unit', function ($q) use ($user) {
+                    $q->where('institution_id', $user->institution_id);
+                });
+            }
+
+            if ($user->hasRole('coordenador_adjunto')) {
+                return $query->whereHas('course.classOfferings', function ($q) use ($user) {
+                    $q->whereIn('unit_id', $user->units->pluck('id'));
+                });
+            }
+
+            return $query->whereRaw('1 = 0');
+        }
+
+        // ------------------------------------------------
+        // TURMA (CLASS OFFERING)
+        // ------------------------------------------------
+        if ($model instanceof ClassOffering) {
+            if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+                return $query->whereHas('unit', function ($q) use ($user) {
+                    $q->where('institution_id', $user->institution_id);
+                });
+            }
+
+            if ($user->hasRole('coordenador_adjunto')) {
+                return $query->whereIn('unit_id', $user->units->pluck('id'));
+            }
+
+            return $query->whereRaw('1 = 0');
+        }
+
+        // ------------------------------------------------
+        // MODELS COM scholarshipHolder RELACAO
         // ------------------------------------------------
         if (method_exists($model, 'scholarshipHolder')) {
-
-            // Coordenação Geral → toda instituição
-            if ($user->hasRole(['coordenador_geral','coordenador_adjunto_geral'])) {
+            // Coordenacao Geral -> toda instituicao
+            if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
                 return $query->whereHas('scholarshipHolder.unit', function ($q) use ($user) {
                     $q->where('institution_id', $user->institution_id);
                 });
             }
 
-            // Coordenador Adjunto → apenas suas unidades
+            // Coordenador Adjunto -> apenas suas unidades
             if ($user->hasRole('coordenador_adjunto')) {
                 return $query->whereHas('scholarshipHolder', function ($q) use ($user) {
                     $q->whereIn('unit_id', $user->units->pluck('id'));
                 });
             }
 
-            // Bolsista acessando admin → apenas próprio
+            // Bolsista acessando admin -> apenas proprio
             if ($user->scholarshipHolder) {
                 return $query->where(
                     'scholarship_holder_id',
@@ -87,8 +141,7 @@ class VisibilityService
         // MODELS COM unit_id DIRETO
         // ------------------------------------------------
         if ($this->hasColumn($model, 'unit_id')) {
-
-            if ($user->hasRole(['coordenador_geral','coordenador_adjunto_geral'])) {
+            if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
                 return $query->whereHas('unit', fn($q) =>
                     $q->where('institution_id', $user->institution_id)
                 );

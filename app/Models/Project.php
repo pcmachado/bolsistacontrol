@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
@@ -67,14 +68,25 @@ class Project extends Model
                     ->withTimestamps();
     }
 
-    public function classOfferings()
+    public function courses(): BelongsToMany
     {
-        return $this->hasManyThrough(
-            ClassOffering::class,
+        return $this->belongsToMany(
             Course::class,
-            'project_id', // FK em courses
-            'course_id'   // FK em class_offerings
-        );
+            'project_course',
+            'project_id',
+            'course_id'
+        )->withPivot([
+            'active',
+            'semester',
+            'year',
+            'start_date',
+            'end_date',
+        ])->withTimestamps();
+    }
+
+    public function classOfferings(): HasMany
+    {
+        return $this->hasMany(ClassOffering::class);
     }
 
     public function units()

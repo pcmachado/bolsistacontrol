@@ -64,6 +64,25 @@ Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
 
+Route::get('/manual/{doc?}', function (?string $doc = null) {
+    $docs = [
+        'guia-executivo' => 'GUIA-EXECUTIVO.md',
+        'readme' => 'README.md',
+        'bolsista' => 'perfis/bolsista.md',
+        'coordenacao' => 'perfis/coordenacao.md',
+        'admin' => 'perfis/admin.md',
+        'professor-supervisor' => 'perfis/professor-supervisor.md',
+    ];
+
+    $selectedDoc = $doc ?: 'guia-executivo';
+    abort_unless(isset($docs[$selectedDoc]), 404);
+
+    return view('manual.index', [
+        'manualDocs' => $docs,
+        'selectedDoc' => $selectedDoc,
+    ]);
+})->middleware(['auth', 'verified'])->name('manual.index');
+
 // Receipt Verification
 Route::get('/verificar-recibo',[ReceiptVerificationController::class, 'form'])->name('receipt.verify.form');
 Route::post('/verificar-recibo',[ReceiptVerificationController::class, 'verify'])->name('receipt.verify');

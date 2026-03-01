@@ -46,17 +46,17 @@ class CoursesDataTable extends DataTable
         if (! empty($this->filters['unit_id'])) {
             $unitId = (int) $this->filters['unit_id'];
 
-            $query->whereHas('scholarshipHolder', fn ($q) =>
-                $q->where('unit_id', $unitId)
-            );
+            $query->whereHas('classOfferings', function ($q) use ($unitId) {
+                $q->where('unit_id', $unitId);
+            });
         }
 
         if (! empty($this->filters['project_id'])) {
             $projectId = (int) $this->filters['project_id'];
 
-            $query->whereHas('scholarshipHolder.projects', fn ($q) =>
-                $q->where('projects.id', $projectId)
-            );
+            $query->whereHas('classOfferings', function ($q) use ($projectId) {
+                $q->where('projects.id', $projectId);
+            });
         }
 
         return $query;

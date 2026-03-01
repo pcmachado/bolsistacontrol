@@ -1,8 +1,8 @@
-<div class="sidebar bg-dark text-white">
+<div class="sidebar mobile-sidebar bg-dark text-white">
 
     <div class="p-3 border-bottom border-secondary d-flex align-items-center">
         <i class="bi bi-calendar-check fs-4 me-2"></i>
-        <span class="fw-bold fs-5">BolsistaControl</span>
+        <span class="fw-bold fs-5">ProBolsas</span>
     </div>
 
     <div class="p-3 border-bottom border-secondary d-flex align-items-center">
@@ -10,71 +10,83 @@
              width="36" height="36" class="rounded-circle me-2">
         <div>
             <strong>{{ auth()->user()->name }}</strong>
-            <div class="text-muted small">{{ auth()->user()->email }}</div>
+            <div class="small text-muted">
+                {{ ucfirst(str_replace('_',' ', auth()->user()->roles->first()->name ?? '')) }}
+            </div>
         </div>
     </div>
 
-    <div class="mt-3">
+    <div class="sidebar-content mt-3">
+        <h6 class="sidebar-section-title">Visao Geral</h6>
+        <x-sidebar-item route="dashboard" icon="bi bi-speedometer2" title="Dashboard"/>
 
-        {{-- BOLSISTA --}}
-        @role('bolsista')
-            <h6 class="sidebar-section">Bolsista</h6>
+        @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral|bolsista')
+            <h6 class="sidebar-section-title mt-4">Minha Area</h6>
 
-            <a href="{{ route('dashboard') }}" class="sidebar-link">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard
-            </a>
-            <a href="{{ route('attendance.submissions.index') }}" class="sidebar-link">
-                <i class="bi bi-clock-history me-2"></i> Minhas Frequências
-            </a>
-            <a href="{{ route('attendance.create') }}" class="sidebar-link">
-                <i class="bi bi-plus-circle me-2"></i> Registrar
-            </a>
-            <a href="{{ route('attendance.submissions.index') }}" class="sidebar-link">
-                <i class="bi bi-hourglass-split me-2"></i> Pendentes
-            </a>
-        @endrole
+            <x-sidebar-item
+                route="attendance.my"
+                icon="bi bi-calendar-week"
+                title="Registros de Frequencia"/>
 
-        {{-- ADMIN --}}
-        @hasanyrole('admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto')
-            <h6 class="sidebar-section mt-3">Administração</h6>
+            <x-sidebar-item
+                route="attendance.submissions.my"
+                icon="bi bi-send-check"
+                title="Submissoes Mensais"/>
 
-            <a href="{{ route('admin.dashboard') }}" class="sidebar-link">
-                <i class="bi bi-speedometer me-2"></i> Dashboard Admin
-            </a>
-            <a href="{{ route('admin.units.index') }}" class="sidebar-link">
-                <i class="bi bi-building me-2"></i> Unidades
-            </a>
-            <a href="{{ route('admin.projects.index') }}" class="sidebar-link">
-                <i class="bi bi-kanban me-2"></i> Projetos
-            </a>
-            <a href="{{ route('admin.courses.index') }}" class="sidebar-link">
-                <i class="bi bi-mortarboard me-2"></i> Cursos
-            </a>
-            <a href="{{ route('admin.users.index') }}" class="sidebar-link">
-                <i class="bi bi-person-gear me-2"></i> Usuários
-            </a>
+            <x-sidebar-item
+                route="payments.my"
+                icon="bi bi-wallet2"
+                title="Meus Pagamentos"/>
+
+            <h6 class="sidebar-section-title mt-4">Relatorios</h6>
+
+            <x-sidebar-item
+                route="attendance.reports.index"
+                icon="bi bi-file-earmark-text"
+                title="Relatorio Mensal"/>
+
+            <x-sidebar-item
+                route="attendance.reports.final.create"
+                icon="bi bi-file-earmark-person"
+                title="Relatorio Final"/>
         @endhasanyrole
 
-        {{-- RELATÓRIOS --}}
-        <h6 class="sidebar-section mt-3">Relatórios</h6>
+        @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral')
+            <h6 class="sidebar-section-title mt-4">Coordenacao</h6>
 
-        @role(['admin','coordenador_geral','coordenador_adjunto_geral'])
-            <a href="{{ route('admin.reports.unit_detail') }}" class="sidebar-link">
-                <i class="bi bi-funnel me-2"></i> Por Unidade
-            </a>
-        @endrole
+            <x-sidebar-item route="attendance.submissions.index"
+                            icon="bi bi-calendar-week"
+                            title="Frequencias"/>
 
-        @role('bolsista')
-            <a href="{{ route('attendance.reports.index') }}" class="sidebar-link">
-                <i class="bi bi-file-earmark-person me-2"></i> Meu Relatório
-            </a>
-            <a href="{{ route('payments.my') }}" class="sidebar-link">
-                <i class="bi bi-wallet2 me-2"></i> Meus Pagamentos
-            </a>
-            <a href="{{ route('attendance.reports.final.create') }}" class="sidebar-link">
-                <i class="bi bi-file-earmark-person me-2"></i> Relatório Final
-            </a>
-        @endrole
+            <x-sidebar-item route="admin.homologations.index"
+                            icon="bi bi-check2-square"
+                            title="Homologacoes"/>
 
+            <x-sidebar-item route="admin.payments.dashboard"
+                            icon="bi bi-graph-up"
+                            title="Financeiro"/>
+        @endhasanyrole
+
+        @hasanyrole('admin|coordenador_geral|coordenador_adjunto_geral')
+            <h6 class="sidebar-section-title mt-4">Academico</h6>
+
+            <x-sidebar-item route="admin.projects.index" icon="bi bi-kanban" title="Projetos"/>
+            <x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/>
+            <x-sidebar-item route="admin.disciplines.index" icon="bi bi-journal-text" title="Disciplinas"/>
+            <x-sidebar-item route="admin.class-offerings.index" icon="bi bi-collection" title="Turmas"/>
+        @endhasanyrole
+
+        @hasanyrole('admin|coordenador_geral')
+            <h6 class="sidebar-section-title mt-4">Administracao</h6>
+
+            <x-sidebar-item route="admin.dashboard" icon="bi bi-speedometer" title="Dashboard Admin"/>
+            <x-sidebar-item route="admin.units.index" icon="bi bi-building" title="Unidades"/>
+            <x-sidebar-item route="admin.positions.index" icon="bi bi-briefcase" title="Cargos"/>
+            <x-sidebar-item route="admin.scholarship_holders.index" icon="bi bi-people" title="Bolsistas"/>
+            <x-sidebar-item route="admin.users.index" icon="bi bi-person-gear" title="Usuarios"/>
+            <x-sidebar-item route="admin.roles.index" icon="bi bi-key" title="Funcoes"/>
+            <x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissoes"/>
+            <x-sidebar-item route="admin.institutions.index" icon="bi bi-bank" title="Instituicoes"/>
+        @endhasanyrole
     </div>
 </div>

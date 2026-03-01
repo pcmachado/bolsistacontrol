@@ -12,9 +12,17 @@ use Illuminate\Http\Request;
 
 class SupervisorAssignmentController extends Controller
 {
-    public function index(SupervisorsDataTable $dataTable)
+    public function index(Request $request, SupervisorsDataTable $dataTable)
     {
-        return $dataTable->render('admin.supervisors.index');
+        $filters = $request->only([
+            'filter_unit',
+            'filter_course',
+            'filter_status',
+        ]);
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('admin.supervisors.index');
     }
 
     public function create()

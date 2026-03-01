@@ -4,7 +4,7 @@
     <div class="sidebar-header px-3 py-2 d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
             <i class="bi bi-calendar-check sidebar-logo me-2"></i>
-            <span class="sidebar-title">BolsistaControl</span>
+            <span class="sidebar-title">ProBolsas</span>
         </div>
 
         <button class="btn btn-sm btn-outline-light sidebar-collapse-btn" data-sidebar-toggle>

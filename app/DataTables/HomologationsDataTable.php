@@ -4,7 +4,6 @@ namespace App\DataTables;
 
 use App\Models\AttendanceSubmission;
 use App\Services\VisibilityService;
-use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 use Yajra\DataTables\EloquentDataTable;
@@ -22,7 +21,7 @@ class HomologationsDataTable extends DataTable
         return $this;
     }
 
-    public function dataTable(QueryBuilder $query)
+    public function dataTable($query)
     {
         return (new EloquentDataTable($query))
             ->addColumn('checkbox', fn ($row) =>
@@ -55,7 +54,7 @@ class HomologationsDataTable extends DataTable
             ->rawColumns(['checkbox', 'status_label', 'actions']);
     }
 
-    public function query(AttendanceSubmission $model): QueryBuilder
+    public function query(AttendanceSubmission $model)
     {
         $user = Auth::user();
 

@@ -27,7 +27,15 @@ class UserController extends Controller
      */
     public function index(UsersDataTable $dataTable)
     {
-        return $dataTable->render('admin.users.index');
+        $filters = request()->only([
+            'filter_name',
+            'filter_unit',
+            'filter_role',
+        ]);
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('admin.users.index');
     }
 
     /**
