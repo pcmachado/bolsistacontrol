@@ -42,7 +42,7 @@ services:
         networks:
             - br-api-lan
     bolsista-db-pgsql:
-       image: postgres:latest
+       image: postgres:15
        restart: unless-stopped
        environment:
            POSTGRES_DB: ${DB_DATABASE}
