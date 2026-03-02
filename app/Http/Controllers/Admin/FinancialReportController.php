@@ -8,13 +8,14 @@ use App\Models\Payment;
 use App\Models\Project;
 use App\Models\Unit;
 use App\Models\ScholarshipHolder;
+use App\DataTables\PaymentReportDataTable;
 use App\Exports\FinancialReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class FinancialReportController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, PaymentReportDataTable $dataTable)
     {
         $filters = [
             'month'   => $request->month,
@@ -26,48 +27,13 @@ class FinancialReportController extends Controller
             'end'     => $request->end_date,
         ];
 
-        $query = Payment::query()->with(['scholarshipHolder','project','unit']);
-
-        // FILTROS -----------------------------
-        if ($filters['month']) {
-            $query->where('month', $filters['month']);
-        }
-
-        if ($filters['year']) {
-            $query->where('year', $filters['year']);
-        }
-
-        if ($filters['project']) {
-            $query->where('project_id', $filters['project']);
-        }
-
-        if ($filters['unit']) {
-            $query->where('unit_id', $filters['unit']);
-        }
-
-        if ($filters['status']) {
-            $query->where('status', $filters['status']);
-        }
-
-        if ($filters['start']) {
-            $query->whereDate('created_at', '>=', $filters['start']);
-        }
-
-        if ($filters['end']) {
-            $query->whereDate('created_at', '<=', $filters['end']);
-        }
-
-        // RESULTADOS
-        $payments = $query->orderBy('year')->orderBy('month')->get();
-
-        $total = $payments->sum('amount');
-
         $projects = Project::orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
 
-        return view('admin.financial_reports.index', compact(
-            'payments','total','projects','units','filters'
-        ));
+        return $dataTable->setFilters($filters)
+            ->render('admin.financial_reports.index', compact(
+                'projects','units','filters'
+            ));
     }
 
     public function pdf(Request $request)

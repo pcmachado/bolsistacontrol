@@ -2,94 +2,122 @@
 
 namespace App\DataTables;
 
-use App\Models\AttendanceRecord;
-use App\Services\AttendanceVisibilityService;
+use App\Models\AttendanceSubmission;
+use App\Services\VisibilityService;
 use Illuminate\Support\Facades\Auth;
-use Yajra\DataTables\Services\DataTable;
+use InvalidArgumentException;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Column;
-use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use Yajra\DataTables\Services\DataTable;
 
 class HomologationsDataTable extends DataTable
 {
-    protected $filters = [];
+    protected array $filters = [];
 
     public function setFilters(array $filters): self
     {
         $this->filters = $filters;
+
         return $this;
     }
 
-    public function dataTable(QueryBuilder $query)
+    public function dataTable($query)
     {
         return (new EloquentDataTable($query))
-            ->addColumn('checkbox', fn($row) =>
-                '<input type="checkbox" name="records[]" value="'.$row->id.'">'
+            ->addColumn('checkbox', fn ($row) =>
+                '<input type="checkbox" name="submissions[]" value="'.$row->id.'">'
             )
-            ->editColumn('date', fn($row) => $row->date->format('d/m/Y'))
-            ->addColumn('scholarship_holder', fn($row) =>
-                $row->scholarshipHolder?->user?->name ?? 'Bolsista não encontrado'
+            ->addColumn('bolsista', fn ($row) =>
+                $row->scholarshipHolder?->user?->name ?? '-'
             )
-            ->addColumn('unit', fn($row) =>
-                $row->scholarshipHolder?->unit?->name ?? '-'
+            ->addColumn('project', fn ($row) =>
+                $row->scholarshipHolder?->projects?->first()?->name ?? '-'
             )
-            ->addColumn('hours', fn($row) => $row->formattedDuration())
+            ->addColumn('period', fn ($row) =>
+                sprintf('%02d/%d', $row->month, $row->year)
+            )
+            ->editColumn('records_count', fn ($row) => (int) $row->records_count)
             ->addColumn('status_label', function ($row) {
                 return match ($row->status) {
-                    'submitted' => '<span class="badge bg-info">Enviado</span>',
-                    default     => ucfirst($row->status),
+                    AttendanceSubmission::STATUS_SUBMITTED => '<span class="badge bg-info">Enviado</span>',
+                    AttendanceSubmission::STATUS_APPROVED => '<span class="badge bg-success">Homologado</span>',
+                    AttendanceSubmission::STATUS_REJECTED => '<span class="badge bg-danger">Rejeitado</span>',
+                    default => ucfirst((string) $row->status),
                 };
             })
-            ->addColumn('actions', fn($row) =>
+            ->editColumn('submitted_at', fn ($row) =>
+                $row->submitted_at?->format('d/m/Y H:i') ?? '-'
+            )
+            ->addColumn('actions', fn ($row) =>
                 view('admin.homologations.partials.actions', compact('row'))->render()
             )
-            ->rawColumns(['checkbox','status_label','actions']);
+            ->rawColumns(['checkbox', 'status_label', 'actions']);
     }
 
-    public function query(AttendanceRecord $model)
+    public function query(AttendanceSubmission $model)
     {
         $user = Auth::user();
 
         $query = $model->newQuery()
-            ->with(['scholarshipHolder.user','scholarshipHolder.unit'])
-            ->where('status', AttendanceRecord::STATUS_SUBMITTED); // só os enviados para homologação
+            ->with([
+                'scholarshipHolder.user',
+                'scholarshipHolder.unit',
+                'scholarshipHolder.projects',
+            ])
+            ->withCount('attendanceRecords')
+            ->whereIn('status', [
+                AttendanceSubmission::STATUS_SUBMITTED,
+                AttendanceSubmission::STATUS_APPROVED,
+                AttendanceSubmission::STATUS_REJECTED,
+            ]);
 
-        // --- regras de visibilidade ---
-        app(AttendanceVisibilityService::class)->apply(
-            $query,
-            $user,
-            'homologation'
-        );
+        $query = app(VisibilityService::class)
+            ->apply($query, $user, 'admin');
 
-        // --- filtros adicionais ---
-        if ($this->filters['unit_id'] ?? false) {
-            $query->whereHas('scholarshipHolder', fn($q) =>
-                $q->where('unit_id', $this->filters['unit_id'])
-            );
+        $monthFilter = $this->filters['month'] ?? now()->format('Y-m');
+
+        if (! preg_match('/^\d{4}-\d{2}$/', $monthFilter)) {
+            throw new InvalidArgumentException('Formato de mes invalido.');
         }
 
-        if ($this->filters['scholarship_holder_id'] ?? false) {
-            $query->where('scholarship_holder_id', $this->filters['scholarship_holder_id']);
-        }
+        [$year, $month] = explode('-', $monthFilter);
 
-        if ($this->filters['status'] ?? false) {
+        $query->where('year', (int) $year)
+            ->where('month', (int) $month);
+
+        if (! empty($this->filters['status']) && $this->filters['status'] !== 'all') {
             $query->where('status', $this->filters['status']);
         }
 
-        if ($this->filters['start_date'] ?? false) {
-            $query->whereDate('date', '>=', $this->filters['start_date']);
+        if (! empty($this->filters['unit_id'])) {
+            $unitId = (int) $this->filters['unit_id'];
+
+            $query->whereHas('scholarshipHolder', fn ($q) =>
+                $q->where('unit_id', $unitId)
+            );
         }
 
-        if ($this->filters['end_date'] ?? false) {
-            $query->whereDate('date', '<=', $this->filters['end_date']);
+        if (! empty($this->filters['project_id'])) {
+            $projectId = (int) $this->filters['project_id'];
+
+            $query->whereHas('scholarshipHolder.projects', fn ($q) =>
+                $q->where('projects.id', $projectId)
+            );
         }
 
-        if ($this->filters['month'] ?? false) {
-            $query->whereMonth('date', substr($this->filters['month'], 5, 2))
-                ->whereYear('date', substr($this->filters['month'], 0, 4));
+        if (! empty($this->filters['role'])) {
+            $role = $this->filters['role'];
+
+            $query->whereHas('scholarshipHolder.classOfferings', fn ($q) =>
+                $q->wherePivot('role', $role)
+            );
         }
 
-        return $query;
+        if (! empty($this->filters['scholarship_holder_id'])) {
+            $query->where('scholarship_holder_id', (int) $this->filters['scholarship_holder_id']);
+        }
+
+        return $query->latest('submitted_at');
     }
 
     public function html()
@@ -97,8 +125,8 @@ class HomologationsDataTable extends DataTable
         return $this->builder()
             ->setTableId('homologations-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
-            ->orderBy(1, 'desc')
+            ->minifiedAjax(request()->fullUrl())
+            ->orderBy(6, 'desc')
             ->parameters([
                 'responsive' => true,
                 'autoWidth' => false,
@@ -114,17 +142,18 @@ class HomologationsDataTable extends DataTable
                 ->width(30)
                 ->addClass('text-center')
                 ->title('<input type="checkbox" id="select-all">'),
-            Column::make('scholarship_holder')->title('Bolsista'),
-            Column::make('unit')->title('Unidade'),
-            Column::make('date')->title('Data'),
-            Column::make('hours')->title('Horas'),
-            Column::make('status_label')->title('Status'),
+            Column::computed('bolsista')->title('Bolsista'),
+            Column::computed('project')->title('Projeto'),
+            Column::computed('period')->title('Periodo'),
+            Column::make('records_count')->title('Registros'),
+            Column::computed('status_label')->title('Status'),
+            Column::make('submitted_at')->title('Enviado em'),
             Column::computed('actions')
                 ->exportable(false)
                 ->printable(false)
                 ->width(100)
                 ->addClass('text-center')
-                ->title('Ações'),
+                ->title('Acoes'),
         ];
     }
 }

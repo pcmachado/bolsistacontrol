@@ -9,6 +9,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use App\Services\CourseService;
 use App\DataTables\CoursesDataTable;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Project;
+use App\Models\Unit;
 
 class CourseController extends Controller
 {
@@ -21,7 +24,39 @@ class CourseController extends Controller
 
     public function index(CoursesDataTable $dataTable)
     {
-        return $dataTable->render('admin.courses.index');
+        $user = Auth::user();
+
+        if ($user->hasRole('admin')) {
+            $projects = Project::query()->orderBy('name')->get();
+        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            $projects = Project::query()
+                ->where('institution_id', $user->institution_id)
+                ->orderBy('name')
+                ->get();
+        } elseif ($user->hasRole('coordenador_adjunto')) {
+            $unitIds = $user->units()->pluck('units.id');
+            $projects = Project::query()
+                ->whereHas('units', fn ($q) => $q->whereIn('units.id', $unitIds))
+                ->orderBy('name')
+                ->get();
+        } else {
+            $projects = collect();
+        }
+
+        if ($user->hasRole('admin')) {
+            $units = Unit::query()->orderBy('name')->get();
+        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            $units = Unit::query()
+                ->where('institution_id', $user->institution_id)
+                ->orderBy('name')
+                ->get();
+        } elseif ($user->hasRole('coordenador_adjunto')) {
+            $units = $user->units()->orderBy('name')->get();
+        } else {
+            $units = collect();
+        }
+
+        return $dataTable->render('admin.courses.index', compact('projects', 'units'));
     }
 
     public function create(): View
@@ -29,7 +64,7 @@ class CourseController extends Controller
         return view('admin.courses.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
         $rules = [
             'name' => 'required|string|max:255',
@@ -38,7 +73,7 @@ class CourseController extends Controller
 
         $validated = $request->validate($rules);
 
-        $this->courseService->createCourse($validated);
+        $course = $this->courseService->createCourse($validated);
 
         if ($request->ajax()) {
             return response()->json($course);

@@ -3,96 +3,51 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Project;
-use App\Models\Course;
-use App\Models\Unit;
 use App\Models\ClassOffering;
+use App\Models\Project;
+use App\Models\Unit;
 
 class ClassOfferingSeeder extends Seeder
 {
     public function run(): void
     {
-        /*$project = Project::first();
-        $courses = Course::take(2)->get();
+        $projects = Project::with('courses')->get();
+        $units = Unit::all();
 
-        foreach ($courses as $i => $course) {
-            ClassOffering::create([
-                'project_id' => $project->id,
-                'course_id' => $course->id,
-                'semester' => 'Semester ' . ($i + 1),
-                'year' => date('Y'),
-                'active' => true,
-                'start_date' => now()->subMonths(2),
-                'end_date' => null,
-                'capacity' => rand(20, 50),
-                'status' => 'ongoing',
-            ]);
-        }*/
+        if ($projects->isEmpty() || $units->isEmpty()) {
+            $this->command?->warn('ClassOfferingSeeder: projetos/unidades ausentes.');
+            return;
+        }
 
-            ClassOffering::insert([
-            [
-                'project_id' => 1,
-                'course_id' => 1,
-                'unit_id' => 2,
-                'semester' => 'Semester ' . 1,
-                'year' => date('Y'),
-                'active' => true,
-                'start_date' => now()->subMonths(2),
-                'end_date' => null,
-                'capacity' => rand(20, 50),
-                'status' => 'ongoing',
-            ],
-            [
-                'project_id' => 1,
-                'course_id' => 2,
-                'unit_id' => 1,
-                'semester' => 'Semester ' . 1,
-                'year' => date('Y'),
-                'active' => true,
-                'start_date' => now()->subMonths(2),
-                'end_date' => null,
-                'capacity' => rand(20, 50),
-                'status' => 'ongoing',
-            ],
+        foreach ($projects as $project) {
+            $projectCourses = $project->courses->where('pivot.active', true)->values();
 
-            [
-                'project_id' => 2,
-                'course_id' => 3,
-                'unit_id' => 2,
-                'semester' => 'Semester ' . 2,
-                'year' => date('Y'),
-                'active' => true,
-                'start_date' => now()->subMonths(2),
-                'end_date' => null,
-                'capacity' => rand(20, 50),
-                'status' => 'ongoing',
-            ],
+            if ($projectCourses->isEmpty()) {
+                continue;
+            }
 
-            [
-                'project_id' => 3,
-                'course_id' => 4,
-                'unit_id' => 6,
-                'semester' => 'Semester ' . 1,
-                'year' => date('Y'),
-                'active' => true,
-                'start_date' => now()->subMonths(2),
-                'end_date' => null,
-                'capacity' => rand(20, 50),
-                'status' => 'ongoing',
-            ],
+            $sampleCourses = $projectCourses->take(min(2, $projectCourses->count()));
+            $unit = $units->firstWhere('institution_id', $project->institution_id) ?? $units->first();
 
-            [
-                'project_id' => 4,
-                'course_id' => 5,
-                'unit_id' => 6,
-                'semester' => 'Semester ' . 2,
-                'year' => date('Y'),
-                'active' => true,
-                'start_date' => now()->subMonths(2),
-                'end_date' => null,
-                'capacity' => rand(20, 50),
-                'status' => 'ongoing',
-            ],
-        ]);
+            foreach ($sampleCourses as $index => $course) {
+                ClassOffering::firstOrCreate(
+                    [
+                        'project_id' => $project->id,
+                        'course_id' => $course->id,
+                        'unit_id' => $unit->id,
+                        'year' => (int) now()->format('Y'),
+                        'semester' => '2026/' . ($index + 1),
+                    ],
+                    [
+                        'name' => "Turma {$project->id}-{$course->id}",
+                        'active' => true,
+                        'start_date' => now()->startOfMonth()->toDateString(),
+                        'end_date' => null,
+                        'capacity' => rand(20, 40),
+                        'status' => 'ongoing',
+                    ]
+                );
+            }
+        }
     }
 }

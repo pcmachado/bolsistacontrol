@@ -2,29 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\PaymentDataTable;
 use App\Models\Payment;
-use App\Policies\PaymentPolicy;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Notifications\IntelligentSystemAlert;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Str;
-use App\Services\PaymentVisibilityService;
+
 
 class MyPaymentController extends Controller
 {
-    public function myPayments(PaymentVisibilityService $visibilityService)
+    public function myPayments(PaymentDataTable $dataTable)
     {
-        $query = Payment::query()
-        ->with(['payable', 'paidBy', 'project', 'unit']);
+        $dataTable->mode = 'my';
 
-        $visibilityService->apply($query, Auth::user());
-
-        $payments = $query->orderByDesc('year')
-            ->orderByDesc('month')
-            ->get();
-
-        return view('payments.my', compact('payments'));
+        return $dataTable->render('payments.my');
     }
 
     public function confirm(Payment $payment)

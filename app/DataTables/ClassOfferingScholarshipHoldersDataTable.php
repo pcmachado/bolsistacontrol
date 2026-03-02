@@ -29,7 +29,7 @@ class ClassOfferingScholarshipHoldersDataTable extends DataTable
             ->editColumn('role', fn($row) => $row->pivot->role ?? '-')
 
             ->addColumn('actions', function ($row) {
-                return view('admin.class_offerings.scholarship_holders.partials.actions', [
+                return view('admin.class-offerings.scholarship_holders.partials.actions', [
                     'student' => $row,
                     'offering' => $this->offering,
                 ]);

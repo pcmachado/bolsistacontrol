@@ -27,29 +27,13 @@ class AttendanceRecordController extends Controller
      */
     public function index(Request $request, AttendanceRecordDataTable $dataTable)
     {
-        $user   = auth()->user();
-        $holder = $this->scholarshipHolderService->holderOrFail($user);
-
-        $month = $request->get('month', now()->format('Y-m'));
-        [$year, $monthNum] = explode('-', $month);
-
-        // 🔎 submissão do mês (se existir)
-        $submission = AttendanceSubmission::where('scholarship_holder_id', $holder->id)
-            ->where('year', $year)
-            ->where('month', $monthNum)
-            ->latest()
-            ->first();
-
-        $filters = [
-            'month'  => "$year-$monthNum",
-            'status' => $request->get('status'),
-        ];
+        $filters = $request->only(['month', 'status']);
 
         return $dataTable
             ->setFilters($filters)
             ->render('attendance.index', [
-                'month'      => "$year-$monthNum",
-                'submission' => $submission,
+                'month' => $filters['month'] ?? now()->format('Y-m'),
+                'submission' => null, // ou resolver depois
             ]);
     }
 
@@ -74,7 +58,7 @@ class AttendanceRecordController extends Controller
         ]);
 
         $user   = Auth::user();
-        $holder = $this->holders->holderOrFail($user);
+        $holder = $this->scholarshipHolderService->holderOrFail($user);
 
         $date = \Carbon\Carbon::parse($validated['date']);
 

@@ -6,6 +6,7 @@ use App\Models\AttendanceSubmission;
 use App\Models\AttendanceRecord;
 use App\Models\ScholarshipHolder;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Carbon\Carbon;
 
 class AttendanceSubmissionService
@@ -24,11 +25,7 @@ class AttendanceSubmissionService
 
         [$year, $month] = explode('-', $month);
 
-        $submission = $this->getOrCreateDraft(
-            $holder,
-            (int) $year,
-            (int) $month
-        );
+        $submission = $this->getOrCreateDraft($holder, (int) $year, (int) $month);
 
         $this->attachMonthlyRecords($submission);
 
@@ -81,7 +78,7 @@ class AttendanceSubmissionService
             throw new \DomainException('A submissão não está em rascunho.');
         }
 
-        if ($submission->records()->count() === 0) {
+        if ($submission->attendanceRecords()->count() === 0) {
             throw new \DomainException('Não é possível enviar uma submissão vazia.');
         }
 
@@ -147,5 +144,24 @@ class AttendanceSubmissionService
                 AttendanceSubmission::STATUS_APPROVED,
             ])
             ->exists();
+    }
+
+    protected function getOrCreateDraft(ScholarshipHolder $holder, int $year, int $month): AttendanceSubmission
+    {
+        return AttendanceSubmission::query()
+            ->firstOrCreate([
+                'scholarship_holder_id' => $holder->id,
+                'year'                  => $year,
+                'month'                 => $month,
+            ], [
+                'status' => AttendanceSubmission::STATUS_DRAFT,
+            ]);
+    }
+
+    public function findById($id): AttendanceSubmission
+    {
+        return AttendanceSubmission::query()
+            ->with(['scholarshipHolder.user', 'scholarshipHolder.unit'])
+            ->findOrFail($id);
     }
 }

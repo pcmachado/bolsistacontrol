@@ -14,7 +14,7 @@ class ClassOfferingScholarshipHolderController extends Controller
     {
         $dataTable->setOffering($offering);
 
-        return $dataTable->render('admin.class_offerings.scholarship_holders.index', [
+        return $dataTable->render('admin.class-offerings.scholarship_holders.index', [
             'offering' => $offering,
             'available' => ScholarshipHolder::where('unit_id', $offering->unit_id)->get(),
         ]);

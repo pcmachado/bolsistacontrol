@@ -50,7 +50,7 @@ class DisciplineDashboardController extends Controller
             'hours' => $s->duration_hours
         ]);
 
-        return view('admin.class_offerings.discipline.dashboard', [
+        return view('admin.class-offerings.disciplines.dashboard', [
             'offering' => $offering,
             'discipline' => $discipline,
             'pivot' => $pivot,

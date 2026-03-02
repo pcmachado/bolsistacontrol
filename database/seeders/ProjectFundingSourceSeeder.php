@@ -2,52 +2,33 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\ProjectFundingSource;
-use App\Models\Project;
 use App\Models\FundingSource;
+use App\Models\Project;
+use Illuminate\Database\Seeder;
 
 class ProjectFundingSourceSeeder extends Seeder
 {
     public function run(): void
     {
-        ProjectFundingSource::insert([
-            [
-                'project_id' => 1,
-                'funding_source_id' => 2,
-                'allocated_amount' => rand(5000, 20000),
-                'used_amount' => rand(1000, 5000),
-                'start_date' => now()->subMonths(rand(1, 12)),
-                'end_date' => null,
-                'status' => 'active',
-            ],
-            [
-                'project_id' => 2,
-                'funding_source_id' => 2,
-                'allocated_amount' => rand(5000, 20000),
-                'used_amount' => rand(1000, 5000),
-                'start_date' => now()->subMonths(rand(1, 12)),
-                'end_date' => null,
-                'status' => 'active',
-            ],
-            [
-                'project_id' => 3,
-                'funding_source_id' => 1,
-                'allocated_amount' => rand(5000, 20000),
-                'used_amount' => rand(1000, 5000),
-                'start_date' => now()->subMonths(rand(1, 12)),
-                'end_date' => null,
-                'status' => 'active',
-            ],
-            [
-                'project_id' => 4,
-                'funding_source_id' => 2,
-                'allocated_amount' => rand(5000, 20000),
-                'used_amount' => rand(1000, 5000),
-                'start_date' => now()->subMonths(rand(1, 12)),
-                'end_date' => null,
-                'status' => 'active',
-            ],
-        ]);
+        $projects = Project::all();
+        $sources = FundingSource::all();
+
+        if ($projects->isEmpty() || $sources->isEmpty()) {
+            $this->command?->warn('ProjectFundingSourceSeeder: projetos/fontes ausentes.');
+            return;
+        }
+
+        foreach ($projects as $project) {
+            $source = $sources->random();
+
+            $project->fundingSources()->syncWithoutDetaching([
+                $source->id => [
+                    'used_amount' => rand(5000, 25000),
+                    'start_date' => $project->start_date,
+                    'end_date' => $project->end_date,
+                    'status' => 'active',
+                ],
+            ]);
+        }
     }
 }

@@ -2,28 +2,25 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\CourseScholarshipHolder;
+use App\Models\Course;
 use App\Models\ScholarshipHolder;
+use Illuminate\Database\Seeder;
 
 class CourseScholarshipHolderSeeder extends Seeder
 {
     public function run(): void
     {
-        //CourseScholarshipHolder::factory()->count(15)->create();
+        $holders = ScholarshipHolder::all();
+        $courses = Course::all();
 
-        $holders = ScholarshipHolder::pluck('id');
-
-        if ($holders->isEmpty()) {
-            echo "Nenhum bolsista encontrado — CourseScholarshipHolderSeeder ignorado.\n";
+        if ($holders->isEmpty() || $courses->isEmpty()) {
+            $this->command?->warn('CourseScholarshipHolderSeeder: bolsistas/cursos ausentes.');
             return;
         }
 
-        foreach ($holders as $holderId) {
-            CourseScholarshipHolder::create([
-                'course_id' => rand(1, 4),
-                'scholarship_holder_id' => $holderId,
-            ]);
+        foreach ($holders as $holder) {
+            $sample = $courses->shuffle()->take(min(2, $courses->count()));
+            $holder->courses()->syncWithoutDetaching($sample->pluck('id')->all());
         }
     }
 }

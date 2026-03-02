@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use App\DataTables\ProjectsDataTable;
 use App\Services\ProjectService;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
@@ -28,8 +29,13 @@ class ProjectController extends Controller
 
     public function create()
     {
-        $units = Unit::all();
-        $institutions = institution::all();
+        $user = Auth::user();
+
+        $units = Unit::orderBy('name')->get();
+        $institutions = $user->hasRole('admin')
+            ? Institution::orderBy('name')->get()
+            : Institution::where('id', $user->institution_id)->get();
+
         return view('admin.projects.create', compact('units', 'institutions'));
     }
 
@@ -37,8 +43,15 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
+            'institution_id' => 'required|exists:institutions,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
+
+        if (! Auth::user()->hasRole('admin')) {
+            $validated['institution_id'] = Auth::user()->institution_id;
+        }
 
         Project::create($validated);
         return redirect()->route('admin.projects.index')->with('success', 'Projeto criado com sucesso.');
@@ -54,14 +67,13 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
+        $user = Auth::user();
+        $units = Unit::orderBy('name')->get();
+        $institutions = $user->hasRole('admin')
+            ? Institution::orderBy('name')->get()
+            : Institution::where('id', $user->institution_id)->get();
 
-        $units = Unit::all();
-        $currentUnit = $project->unit_id ? Unit::find($project->unit_id) : null;
-
-        $institutions = institution::all();
-        $currentinstitution = $project->institution_id ? institution::find($project->institution_id) : null;
-
-        return view('admin.projects.edit', compact('project', 'units', 'currentUnit', 'institutions', 'currentinstitution'));
+        return view('admin.projects.edit', compact('project', 'units', 'institutions'));
     }
 
     public function update(Request $request, Project $project)
@@ -70,8 +82,15 @@ class ProjectController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
+            'institution_id' => 'required|exists:institutions,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
+
+        if (! Auth::user()->hasRole('admin')) {
+            $validated['institution_id'] = Auth::user()->institution_id;
+        }
 
         $project->update($validated);
         return redirect()->route('admin.projects.index')->with('success', 'Projeto atualizado com sucesso.');

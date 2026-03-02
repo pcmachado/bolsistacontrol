@@ -1,6 +1,6 @@
 @extends('layouts.guest')
 
-@section('title', 'Entrar | BolsistaControl')
+@section('title', 'Entrar | ProBolsas')
 
 @section('content')
 <div class="container min-vh-100 d-flex align-items-center justify-content-center">

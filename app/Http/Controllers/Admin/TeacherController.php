@@ -3,16 +3,33 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassOffering;
 use App\Models\User;
 use App\DataTables\TeachersDataTable;
+use App\Services\VisibilityService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
 class TeacherController extends Controller
 {
-    public function index(TeachersDataTable $dataTable)
+    public function index(Request $request, TeachersDataTable $dataTable)
     {
-        return $dataTable->render('admin.teachers.index');
+        $user = Auth::user();
+        $filters = $request->only([
+            'filter_unit',
+            'filter_course',
+            'filter_offering',
+        ]);
+
+        $offerings = app(VisibilityService::class)
+            ->apply(ClassOffering::query(), $user, 'admin')
+            ->orderBy('name')
+            ->get();
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('admin.teachers.index', compact('offerings'));
     }
 
     public function create()

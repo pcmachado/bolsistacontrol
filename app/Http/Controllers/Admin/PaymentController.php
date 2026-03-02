@@ -10,9 +10,23 @@ use App\Models\FinancialClosure;
 use App\Services\FinancialAuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\DataTables\PaymentDataTable;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
+    public function index(Request $request, PaymentDataTable $dataTable)
+    {
+        $dataTable->setFilters($request->all());
+        $dataTable->mode = 'admin';
+        
+        return $dataTable->render('admin.payments.index', [
+            'status' => $request->get('status'),
+            'month'  => $request->get('month'),
+            'year'   => $request->get('year'),
+        ]);
+    }
+
     /**
      * Formulário de geração de pagamento
      */
@@ -23,11 +37,19 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function show(Payment $payment)
+    {
+        return view('admin.payments.show', compact('payment'));
+    }
+
     /**
      * Gera pagamento individual
      */
     public function store(Request $request)
     {
+        $fundingSource = $request->input('funding_source_id');
+        $amount = $request->input('amount');
+        
         if (!$fundingSource->hasBalance($amount)) {
             throw ValidationException::withMessages([
                 'funding_source_id' => 'Saldo insuficiente na fonte de fomento.'
@@ -94,6 +116,34 @@ class PaymentController extends Controller
         return redirect()
             ->route('admin.payments.create')
             ->with('success', 'Pagamento enviado para execução financeira.');
+    }
+
+    /**
+     * Marca pagamento como pago
+     */
+    public function pay(Payment $payment)
+    {
+        if (! $payment->canBePaid()) {
+            abort(403);
+        }
+
+        DB::transaction(function () use ($payment) {
+            $payment->update([
+                'status' => Payment::STATUS_PAID,
+                'paid_at' => now(),
+            ]);
+
+            FinancialAuditService::log(
+                'paid',
+                'Payment',
+                $payment->id,
+                ['amount' => $payment->amount]
+            );
+        });
+
+        return redirect()
+            ->back()
+            ->with('success', 'Pagamento marcado como pago.');
     }
 
 }

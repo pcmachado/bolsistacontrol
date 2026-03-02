@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Course;;
+use App\Models\Course;
 use App\Models\Discipline;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -33,8 +33,13 @@ class CourseDisciplineController extends Controller
         DB::transaction(function () use ($course, $validated) {
             $ids = $validated['disciplines'] ?? [];
 
-            // sincroniza exatamente o que foi marcado
-            $course->disciplines()->sync($ids);
+            if (empty($ids)) {
+                return;
+            }
+
+            Discipline::query()
+                ->whereIn('id', $ids)
+                ->update(['course_id' => $course->id]);
         });
 
         return redirect()

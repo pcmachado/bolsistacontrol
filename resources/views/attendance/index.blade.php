@@ -51,6 +51,9 @@
                 <option value="submitted" @selected(request('status') === 'submitted')>
                     Enviados
                 </option>
+                <option value="rejected" @selected(request('status') === 'rejected')>
+                    Rejeitados
+                </option>
             </select>
         </div>
 

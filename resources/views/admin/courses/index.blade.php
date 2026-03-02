@@ -13,34 +13,7 @@
         </a>
     </div>
 
-    {{-- FILTROS --}}
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-
-                <div class="col-md-4">
-                    <label class="form-label">Unidade</label>
-                    <select id="filter_unit" class="form-select">
-                        <option value="">Todas</option>
-                        @foreach(\App\Models\Unit::orderBy('name')->get() as $u)
-                            <option value="{{ $u->id }}">{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Projeto</label>
-                    <select id="filter_project" class="form-select">
-                        <option value="">Todos</option>
-                        @foreach(\App\Models\Project::orderBy('name')->get() as $p)
-                            <option value="{{ $p->id }}">{{ $p->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-            </div>
-        </div>
-    </div>
+    @include('admin.courses.partials.filters')
 
     {{-- TABELA --}}
     <div class="card shadow-sm">

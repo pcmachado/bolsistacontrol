@@ -3,7 +3,7 @@
 namespace App\DataTables;
 
 use App\Models\AttendanceSubmission;
-use App\Services\AttendanceVisibilityService;
+use App\Services\VisibilityService;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
@@ -12,9 +12,17 @@ class AttendanceSubmissionDataTable extends DataTable
 {
     protected array $filters = [];
 
+    public string $mode = 'admin';
+
     public function setFilters(array $filters): self
     {
         $this->filters = $filters;
+        return $this;
+    }
+
+    public function setMode(string $mode): self
+    {
+        $this->mode = $mode;
         return $this;
     }
 
@@ -22,7 +30,7 @@ class AttendanceSubmissionDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
             ->addColumn('bolsista', fn ($row) =>
-                $row->scholarshipHolder->user->name
+                $row->scholarshipHolder?->user?->name ?? '-'
             )
 
             ->addColumn('period', fn ($row) =>
@@ -53,34 +61,39 @@ class AttendanceSubmissionDataTable extends DataTable
                 'scholarshipHolder.user',
                 'scholarshipHolder.unit',
             ])
-            ->withCount('records');
+            ->withCount('attendanceRecords');
 
-        if (! request()->filled('status')) {
-            $query->where('status', AttendanceSubmission::STATUS_SUBMITTED);
-        }
+        $visibility = app(VisibilityService::class);
+        
+        $context = $this->mode === 'self' ? 'self' : 'admin';
 
-        // 🔐 Visibilidade por papel / unidade / instituição
-        app(AttendanceVisibilityService::class)
-            ->apply($query, $user);
+        $query = $visibility->apply($query, $user, $context);
 
-        // 🔎 Filtros explícitos
-        if (!empty($this->filters['status'])) {
+        if (!empty($this->filters['status']) && $this->filters['status'] !== 'all') {
             $query->where('status', $this->filters['status']);
         }
 
         if (!empty($this->filters['month'])) {
+
+            if (! preg_match('/^\d{4}-\d{2}$/', $this->filters['month'])) {
+                throw new \InvalidArgumentException('Formato de mês inválido.');
+            }
+
             [$year, $month] = explode('-', $this->filters['month']);
-            $query->where('year', $year)->where('month', $month);
+            $query->where('year', $year)
+                  ->where('month', $month);
         }
 
         if (!empty($this->filters['unit_id'])) {
-            $query->whereHas('scholarshipHolder', fn ($q) =>
-                $q->where('unit_id', $this->filters['unit_id'])
-            );
+
+            $unitId = $this->filters['unit_id'];
+
+            $query->whereHas('scholarshipHolder', function ($q) use ($unitId) {
+                $q->where('unit_id', $unitId);
+            });
         }
 
-        return $query->orderByDesc('submitted_at')
-                     ->orderByDesc('created_at');
+        return $query->latest('submitted_at');
     }
 
     public function html()

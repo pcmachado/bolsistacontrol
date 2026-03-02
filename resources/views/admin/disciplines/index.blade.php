@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-4">
         <h1 class="fw-bold">
             <i class="bi bi-journal-text me-2"></i> Disciplinas
         </h1>
@@ -16,32 +16,42 @@
     </div>
 
     {{-- FILTRO POR CURSO --}}
-    <div class="card shadow-sm mb-3">
+    <form method="GET" action="{{ route('admin.disciplines.index') }}" class="card shadow-sm mb-3">
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label">Filtrar por Curso</label>
-                    <select id="filter_course" class="form-select">
+                    <select id="filter_course" name="filter_course" class="form-select">
                         <option value="">Todos</option>
-                        @foreach(\App\Models\Course::orderBy('name')->get() as $course)
-                            <option value="{{ $course->id }}">{{ $course->name }}</option>
+                        @foreach($courses as $course)
+                            <option value="{{ $course->id }}" @selected(request('filter_course') == $course->id)>
+                                {{ $course->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="col-md-2">
-                    <button id="resetFilters" class="btn btn-outline-secondary w-100">
-                        Limpar
+                    <button type="submit" id="filter-button" class="btn btn-primary w-100">
+                        Filtrar
                     </button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="{{ route('admin.disciplines.index') }}" class="btn btn-outline-secondary w-100">
+                        Limpar
+                    </a>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 
     {{-- TABELA --}}
     <div class="card shadow-sm">
         <div class="card-body">
-            {!! $dataTable->table(['class' => 'table table-striped align-middle w-100'], true) !!}
+            <div class="table-responsive">
+                {!! $dataTable->table(['class' => 'table table-striped align-middle w-100'], true) !!}
+            </div>
         </div>
     </div>
 
@@ -49,18 +59,6 @@
 
 @push('scripts')
     {!! $dataTable->scripts() !!}
-
-    <script>
-        // Recarregar DataTable quando filtro muda
-        $('#filter_course').on('change', function () {
-            window.LaravelDataTables["disciplines-table"].draw();
-        });
-
-        $('#resetFilters').on('click', function () {
-            $('#filter_course').val('');
-            window.LaravelDataTables["disciplines-table"].draw();
-        });
-    </script>
 @endpush
 
 @endsection

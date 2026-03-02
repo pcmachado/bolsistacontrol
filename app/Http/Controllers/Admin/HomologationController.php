@@ -3,104 +3,189 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use App\Models\Unit;
 use App\Models\ScholarshipHolder;
+use App\Models\Project;
 use App\Services\HomologationService;
 use App\DataTables\HomologationsDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Gate;
 
 class HomologationController extends Controller
 {
-
-    protected $homologationService;
+    protected HomologationService $homologationService;
 
     public function __construct(HomologationService $homologationService)
     {
-        $this->homologationService = $homologationService;
         $this->middleware('auth');
+        $this->homologationService = $homologationService;
     }
 
-    public function index(HomologationsDataTable $dataTable, Request $request)
+    /*
+    |--------------------------------------------------------------------------
+    | LISTAGEM
+    |--------------------------------------------------------------------------
+    */
+
+    public function index(Request $request, HomologationsDataTable $dataTable)
     {
-        // Captura filtros enviados pela view
+        $user = Auth::user();
+
         $filters = $request->only([
-            'unit_id',
-            'scholarship_holder_id',
             'status',
-            'start_date',
-            'end_date',
             'month',
+            'unit_id',
+            'project_id',
+            'role',
+            'scholarship_holder_id',
         ]);
 
-        // Dados auxiliares para os selects
-        $units = Unit::orderBy('name')->get();
-        $scholarshipHolders = ScholarshipHolder::with('user')->orderBy('id')->get();
+        if ($user->hasRole('admin')) {
+            $projects = Project::query()->orderBy('name')->get();
+        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            $projects = Project::query()
+                ->where('institution_id', $user->institution_id)
+                ->orderBy('name')
+                ->get();
+        } elseif ($user->hasRole('coordenador_adjunto')) {
+            $unitIds = $user->units()->pluck('units.id');
+            $projects = Project::query()
+                ->whereHas('units', fn ($q) => $q->whereIn('units.id', $unitIds))
+                ->orderBy('name')
+                ->get();
+        } else {
+            $projects = collect();
+        }
 
-        // Passa filtros para o DataTable e renderiza a view
+        if ($user->hasRole('admin')) {
+            $units = Unit::query()->orderBy('name')->get();
+        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            $units = Unit::query()
+                ->where('institution_id', $user->institution_id)
+                ->orderBy('name')
+                ->get();
+        } elseif ($user->hasRole('coordenador_adjunto')) {
+            $units = $user->units()->orderBy('name')->get();
+        } else {
+            $units = collect();
+        }
+
+        $scholarship_holders = ScholarshipHolder::query()
+            ->with('user')
+            ->orderBy('name');
+
+        if ($user->hasRole('admin')) {
+            $scholarship_holders = $scholarship_holders->get();
+        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            $scholarship_holders = $scholarship_holders
+                ->whereHas('unit', fn ($q) => $q->where('institution_id', $user->institution_id))
+                ->get();
+        } elseif ($user->hasRole('coordenador_adjunto')) {
+            $unitIds = $user->units()->pluck('units.id');
+            $scholarship_holders = $scholarship_holders
+                ->whereIn('unit_id', $unitIds)
+                ->get();
+        } else {
+            $scholarship_holders = collect();
+        }
+
         return $dataTable
             ->setFilters($filters)
-            ->render('admin.homologations.index', compact('units', 'scholarshipHolders'));
+            ->render(
+                'admin.homologations.index',
+                compact('projects', 'units', 'scholarship_holders')
+            );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | APROVAÇÃO EM LOTE (POR SUBMISSÃO)
+    |--------------------------------------------------------------------------
+    */
 
     public function bulk(Request $request)
     {
         $request->validate([
-            'action'   => 'required|in:approve,reject',
-            'records'  => 'required|array',
-            'records.*'=> 'integer|exists:attendance_records,id',
-            'reason'   => 'required_if:action,reject|string',
+            'action'       => 'required|in:approve,reject',
+            'submissions'  => 'required|array',
+            'submissions.*'=> 'integer|exists:attendance_submissions,id',
+            'reason'       => 'required_if:action,reject|string|max:1000',
         ]);
 
-        $records = AttendanceRecord::whereIn('id', $request->records)->get();
+        $submissions = AttendanceSubmission::whereIn('id', $request->submissions)->get();
 
-        // Contadores
         $processed = 0;
         $skipped   = 0;
 
-        foreach ($records as $record) {
-            if ($request->action === 'approve' && \Gate::allows('approve', $record)) {
-                $this->homologationService->approve($record, auth()->id());
-                $processed++;
-            } elseif ($request->action === 'reject' && \Gate::allows('reject', $record)) {
-                $this->homologationService->reject($record, auth()->id(), $request->reason);
-                $processed++;
-            } else {
+        foreach ($submissions as $submission) {
+
+            if (!Gate::allows('approve', $submission)) {
                 $skipped++;
+                continue;
             }
+
+            if ($request->action === 'approve') {
+                $this->homologationService->approve($submission, Auth::id());
+            }
+
+            if ($request->action === 'reject') {
+                $this->homologationService->reject(
+                    $submission,
+                    Auth::id(),
+                    $request->reason
+                );
+            }
+
+            $processed++;
         }
 
         return response()->json([
             'success'   => true,
             'action'    => $request->action,
-            'requested' => count($request->records),
+            'requested' => count($request->submissions),
             'processed' => $processed,
             'skipped'   => $skipped,
-            'message'   => "Processados {$processed} registros. Ignorados {$skipped} por falta de permissão."
+            'message'   => "Processadas {$processed} submissões. {$skipped} ignoradas."
         ]);
     }
 
-    public function approve(AttendanceRecord $record)
+    /*
+    |--------------------------------------------------------------------------
+    | APROVAR INDIVIDUAL
+    |--------------------------------------------------------------------------
+    */
+
+    public function approve(AttendanceSubmission $submission)
     {
-        $this->authorize('approve', $record);
+        $this->authorize('approve', $submission);
 
-        $this->homologationService->approve($record, auth()->id());
+        $this->homologationService->approve($submission, Auth::id());
 
-        return back()->with('success', 'Registro aprovado com sucesso!');
+        return back()->with('success', 'Submissão homologada com sucesso!');
     }
 
-    public function reject(Request $request, AttendanceRecord $record)
+    /*
+    |--------------------------------------------------------------------------
+    | REJEITAR INDIVIDUAL
+    |--------------------------------------------------------------------------
+    */
+
+    public function reject(Request $request, AttendanceSubmission $submission)
     {
-        $this->authorize('reject', $record);
+        $this->authorize('reject', $submission);
 
         $request->validate([
             'reason' => 'required|string|max:1000',
         ]);
 
-        $this->homologationService->reject($record, auth()->id(), $request->reason);
+        $this->homologationService->reject(
+            $submission,
+            Auth::id(),
+            $request->reason
+        );
 
-        return back()->with('success', 'Registro rejeitado com sucesso!');
+        return back()->with('success', 'Submissão rejeitada com sucesso!');
     }
 }

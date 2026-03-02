@@ -46,19 +46,6 @@
                 @csrf
                 @method('PUT')
 
-                {{-- Curso --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Curso</label>
-                    <select name="course_id" class="form-select" required>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->id }}"
-                                {{ $offering->course_id == $course->id ? 'selected' : '' }}>
-                                {{ $course->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
                 {{-- Unidade --}}
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Unidade</label>
@@ -74,16 +61,22 @@
 
                 {{-- Projeto --}}
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Projeto (opcional)</label>
-                    <select name="project_id" class="form-select">
-                        <option value="">Nenhum</option>
+                    <label class="form-label fw-semibold">Projeto</label>
+                    <select id="project_id" name="project_id" class="form-select" required>
+                        <option value="">Selecione...</option>
                         @foreach($projects as $project)
                             <option value="{{ $project->id }}" 
-                                {{ $offering->project_id == $project->id ? 'selected' : '' }}>
+                                {{ old('project_id', $offering->project_id) == $project->id ? 'selected' : '' }}>
                                 {{ $project->name }}
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                {{-- Curso --}}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Curso</label>
+                    <select id="course_id" name="course_id" class="form-select" required></select>
                 </div>
 
                 {{-- Nome --}}
@@ -153,3 +146,39 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    const projectCourses = @json($projectCourses);
+    const projectSelect = document.getElementById('project_id');
+    const courseSelect = document.getElementById('course_id');
+    const selectedCourse = @json(old('course_id', $offering->course_id));
+
+    function reloadCourseOptions() {
+        const projectId = projectSelect.value;
+        const courses = projectCourses[projectId] || [];
+
+        courseSelect.innerHTML = '';
+
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = courses.length
+            ? 'Selecione...'
+            : 'Nenhum curso ativo vinculado ao projeto';
+        courseSelect.appendChild(placeholder);
+
+        for (const course of courses) {
+            const option = document.createElement('option');
+            option.value = String(course.id);
+            option.textContent = course.name;
+            if (selectedCourse && String(course.id) === String(selectedCourse)) {
+                option.selected = true;
+            }
+            courseSelect.appendChild(option);
+        }
+    }
+
+    projectSelect.addEventListener('change', reloadCourseOptions);
+    reloadCourseOptions();
+</script>
+@endpush
