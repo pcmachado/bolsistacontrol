@@ -27,3 +27,5 @@ Thumbs.db
 .tmp.driveupload
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
+
+docker/php/custom.ini --- IGNORE ---
