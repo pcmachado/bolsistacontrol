@@ -10,7 +10,7 @@
     <div class="row g-3 mb-4">
         
         <div class="col-md-3">
-            <a href="{{ route('attendance.card.submitted') }}" class="text-decoration-none">
+            <a href="{{ route('attendance.submissions.cards.submitted') }}" class="text-decoration-none">
                 <div class="card border-start border-4 border-info shadow-sm h-100">
                     <div class="card-body">
                         <small class="text-muted">Pendentes</small>
@@ -22,7 +22,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('attendance.card.approved') }}" class="text-decoration-none">
+            <a href="{{ route('attendance.submissions.cards.approved') }}" class="text-decoration-none">
                 <div class="card border-start border-4 border-success shadow-sm h-100">
                     <div class="card-body">
                         <small class="text-muted">Homologadas</small>
@@ -34,7 +34,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('attendance.card.rejected') }}" class="text-decoration-none">
+            <a href="{{ route('attendance.submissions.cards.rejected') }}" class="text-decoration-none">
                 <div class="card border-start border-4 border-danger shadow-sm h-100">
                     <div class="card-body">
                         <small class="text-muted">Rejeitadas</small>
@@ -46,7 +46,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('attendance.card.late') }}" class="text-decoration-none">
+            <a href="{{ route('attendance.submissions.cards.late') }}" class="text-decoration-none">
                 <div class="card border-start border-4 border-warning shadow-sm h-100">
                     <div class="card-body">
                         <small class="text-muted">Em atraso</small>
@@ -129,35 +129,6 @@
                                 id="rejected-bar"
                                 role="progressbar"
                                 style="width: {{ $percentages['rejected'] }}%;"></div>
-                        </div>
-                    </div>
-
-                    {{-- Rascunhos --}}
-                    <div>
-                        <div class="d-flex justify-content-between mb-1 small"
-                        id="draft-percent">
-                            <span class="text-secondary">Rascunhos</span>
-                            <span class="text-secondary">{{ $percentages['draft'] }}%</span>
-                        </div>
-                        <div class="progress rounded-0" style="height: 6px;">
-                            <div class="progress-bar bg-secondary-subtle text-secondary"
-                                id="draft-bar"
-                                role="progressbar"
-                                style="width: {{ $percentages['draft'] }}%;"></div>
-                        </div>
-                    </div>
-                    {{-- Atrasados --}}
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between mb-1 small"
-                        id="late-percent">
-                            <span class="text-warning">Atrasados</span>
-                            <span class="text-warning">{{ $percentages['late'] }}%</span>
-                        </div>
-                        <div class="progress rounded-0" style="height: 6px;">
-                            <div class="progress-bar bg-warning-subtle text-warning"
-                                id="late-bar"
-                                role="progressbar"
-                                style="width: {{ $percentages['late'] }}%;"></div>
                         </div>
                     </div>
                 </div>

@@ -1,101 +1,68 @@
 @extends('layouts.app')
 
-@section('title', 'Meus Registros de Frequência')
+@section('title', 'Frequências')
 
 @section('content')
-<div class="container">
-    <h3 class="mb-4">
-        <i class="bi bi-clock-history me-2"></i>
+<div class="container-fluid">
+    <h1 class="mb-3">Registros de Frequência</h1>
 
-        @if(($pageMode ?? '') === 'my')
-            Meus Registros de Frequência
-        @elseif(($pageMode ?? '') === 'homologation')
-            Registros Pendentes de Homologação
-        @else
-            Registros de Frequência
+    <h2 class="mb-3">
+        Frequência – {{ \Carbon\Carbon::createFromFormat('Y-m', $month)->translatedFormat('F/Y') }}
+    </h2>
+
+    @if($submission)
+        <span class="badge bg-{{ $submission->status === 'draft' ? 'secondary' : ($submission->status === 'submitted' ? 'info' : ($submission->status === 'approved' ? 'success' : 'danger')) }}">
+            {{ ucfirst($submission->status) }}
+        </span>
+    @else
+        <span class="badge bg-warning">Mês em edição</span>
+    @endif
+
+    <div class="d-flex gap-2 my-3">
+        @if(! $submission || in_array($submission->status, ['draft','rejected']))
+            <a href="{{ route('attendance.create') }}" class="btn btn-primary">
+                ➕ Registrar frequência
+            </a>
         @endif
-    </h3>
 
-    {{-- ========================
-        FILTROS
-    ========================= --}}
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ url()->current() }}" class="row g-3 align-items-end">
-
-                {{-- Período --}}
-                <div class="col-md-2">
-                    <label for="start_date" class="form-label">Data Inicial</label>
-                    <input type="date" name="start_date" id="start_date" 
-                        value="{{ request('start_date') }}" class="form-control">
-                </div>
-
-                <div class="col-md-2">
-                    <label for="end_date" class="form-label">Data Final</label>
-                    <input type="date" name="end_date" id="end_date" 
-                        value="{{ request('end_date') }}" class="form-control">
-                </div>
-
-                {{-- Mês --}}
-                <div class="col-md-2">
-                    <label for="monthYear" class="form-label">Mês</label>
-                    <select name="monthYear" id="monthYear" class="form-select">
-                        <option value="">-- Todos --</option>
-                        @foreach(range(1,12) as $m)
-                            <option value="{{ $m }}" {{ request('monthYear') == $m ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Ano --}}
-                <div class="col-md-2">
-                    <label for="year" class="form-label">Ano</label>
-                    <select name="year" id="year" class="form-select">
-                        <option value="">-- Todos --</option>
-                        @foreach(range(date('Y')-5, date('Y')) as $y)
-                            <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>
-                                {{ $y }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Status --}}
-                <div class="col-md-2">
-                    <label for="status" class="form-label">Status</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="">-- Todos --</option>
-                        <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Aprovado</option>
-                        <option value="submitted" {{ request('status')=='submitted' ? 'selected' : '' }}>Submetido</option>
-                        <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Rejeitado</option>
-                        <option value="draft" {{ request('status')=='draft' ? 'selected' : '' }}>Rascunho</option>
-                        <option value="late" {{ request('status')=='late' ? 'selected' : '' }}>Atrasado</option>
-                    </select>
-                </div>
-
-                <div class="col-md-12 text-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-filter"></i> Filtrar
-                    </button>
-                    <a href="{{ route('attendance.my') }}" class="btn btn-secondary">
-                        Limpar
-                    </a>
-                </div>
-            </form>
-        </div>
+        @if($submission && $submission->status === 'draft')
+            <a href="{{ route('attendance.submissions.show', $submission) }}"
+            class="btn btn-success">
+                📤 Enviar mês para homologação
+            </a>
+        @endif
     </div>
+
+    {{-- Filtros --}}
+    <form method="GET" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <input type="month"
+                   name="month"
+                   value="{{ request('month') }}"
+                   class="form-control">
+        </div>
+
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">Todos</option>
+                <option value="draft" @selected(request('status') === 'draft')>
+                    Rascunhos
+                </option>
+                <option value="submitted" @selected(request('status') === 'submitted')>
+                    Enviados
+                </option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-primary">Filtrar</button>
+        </div>
+    </form>
 
     {{-- DataTable --}}
-    <div class="card shadow-sm">
-        <div class="card-body">
-            {!! $dataTable->table(['class' => 'table table-striped table-bordered align-middle'], true) !!}
-        </div>
-    </div>
+    {!! $dataTable->table() !!}
 </div>
 @endsection
-
 @push('scripts')
     {!! $dataTable->scripts() !!}
 @endpush

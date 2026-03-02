@@ -135,7 +135,7 @@
                 <!-- Tabela de Últimas Transações (Componente de UI Pré-construído) -->
                 <section class="card shadow-lg rounded-3">
                     <div class="card-body p-4">
-                        <h2 class="h5 card-title fw-semibold mb-4">Últimos Registros</h2>
+                        <h2 class="h5 card-title fw-semibold mb-4">Últimas Submissões de Frequência</h2>
                         <div class="row">
                             <!-- Coluna 1: Últimos envios -->
                             <div class="col-md-6 mb-4 mb-md-0">
@@ -153,7 +153,7 @@
                                             @forelse($lastSubmissions as $submission)
                                                 <tr>
                                                     <td>{{ $submission->scholarshipHolder->user->name }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($submission->date)->format('d/m/Y') }}</td>
+                                                    <td>{{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}</td>
                                                     <td>
                                                         <span class="badge text-bg-info rounded-pill px-3 py-1">
                                                             Enviado
@@ -167,7 +167,7 @@
                                     </table>
                                 </div>
                                 <div class="text-end mt-2">
-                                    <a href="{{ route('attendance.submissions') }}" class="btn btn-sm btn-outline-primary rounded-0">
+                                    <a href="{{ route('attendance.submissions.index') }}" class="btn btn-sm btn-outline-primary rounded-0">
                                         Ver todos
                                     </a>
                                 </div>
@@ -189,7 +189,7 @@
                                             @forelse($lastApprovals as $approval)
                                                 <tr>
                                                     <td>{{ $approval->scholarshipHolder->user->name }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($approval->date)->format('d/m/Y') }}</td>
+                                                    <td>{{ str_pad($approval->month, 2, '0', STR_PAD_LEFT) }}/{{ $approval->year }}</td>
                                                     <td>
                                                         <span class="badge text-bg-success rounded-pill px-3 py-1">
                                                             Homologado
@@ -203,7 +203,7 @@
                                     </table>
                                 </div>
                                 <div class="text-end mt-2">
-                                    <a href="{{ route('attendance.approvals') }}" class="btn btn-sm btn-outline-success rounded-0">
+                                    <a href="{{ route('attendance.submissions.index') }}" class="btn btn-sm btn-outline-success rounded-0">
                                         Ver todos
                                     </a>
                                 </div>
@@ -250,29 +250,27 @@ document.addEventListener("DOMContentLoaded", () => {
     /* ======================================================
      * GRÁFICO DE FREQUÊNCIAS
      * ====================================================== */
-    function renderAttendanceChart(counts) {
+    function renderAttendanceChart(attendance) {
         const ctx = document.getElementById('attendanceChart');
-        if (!ctx) return;
+        if (!ctx || !attendance) return;
 
         if (attendanceChart) attendanceChart.destroy();
 
         attendanceChart = new Chart(ctx, {
             type: attendanceType,
             data: {
-                labels: ['Homologadas', 'Submetidas', 'Rejeitadas', 'Rascunhos', 'Atrasadas'],
+                labels: ['Pendentes', 'Homologadas', 'Rejeitadas', 'Atrasadas'],
                 datasets: [{
                     data: [
-                        counts.approved  ?? 0,
-                        counts.submitted ?? 0,
-                        counts.rejected  ?? 0,
-                        counts.draft     ?? 0,
-                        counts.late      ?? 0
+                        attendance.submitted  ?? 0,
+                        attendance.approved ?? 0,
+                        attendance.rejected ?? 0,
+                        attendance.late     ?? 0
                     ],
                     backgroundColor: [
-                        '#198754cc',
                         '#0dcaf0cc',
+                        '#198754cc',
                         '#dc3545cc',
-                        '#6c757dcc',
                         '#ffc107cc'
                     ],
                     borderWidth: 0
@@ -280,17 +278,9 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: attendanceType === 'bar' ? 'y' : 'x',
                 plugins: {
-                    legend: {
-                        display: attendanceType === 'pie',
-                        position: 'bottom'
-                    }
-                },
-                scales: attendanceType === 'bar'
-                    ? { x: { grid: { display: false } }, y: { grid: { display: false } } }
-                    : {}
+                    legend: { position: 'bottom' }
+                }
             }
         });
     }
@@ -311,9 +301,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 datasets: [{
                     label: 'Valor (R$)',
                     data: [
-                        financial.totals.generated  ?? 0,
-                        financial.totals.paid       ?? 0,
-                        financial.totals.confirmed  ?? 0,
+                        financial.counts.generated  ?? 0,
+                        financial.counts.paid       ?? 0,
+                        financial.counts.confirmed  ?? 0,
                     ],
                     backgroundColor: [
                         '#6c757d',
@@ -349,11 +339,11 @@ document.addEventListener("DOMContentLoaded", () => {
      * ATUALIZA UI
      * ====================================================== */
     function updateCards(data) {
-        if (data.general) {
-            document.getElementById('card-submitted').innerText = data.general.counts.submitted ?? 0;
-            document.getElementById('card-approved').innerText  = data.general.counts.approved ?? 0;
-            document.getElementById('card-rejected').innerText  = data.general.counts.rejected ?? 0;
-            document.getElementById('card-late').innerText      = data.general.counts.late ?? 0;
+        if (data.attendance) {
+            document.getElementById('card-submitted').innerText = data.attendance.submitted ?? 0;
+            document.getElementById('card-approved').innerText  = data.attendance.approved ?? 0;
+            document.getElementById('card-rejected').innerText  = data.attendance.rejected ?? 0;
+            document.getElementById('card-late').innerText      = data.attendance.late ?? 0;
         }
 
         if (data.financial) {
@@ -366,9 +356,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateIndicators(percentages) {
         ['approved','submitted','rejected','draft','late'].forEach(key => {
-            const percent = percentages[key] ?? 0;
-            document.getElementById(`${key}-percent`).innerText = percent + '%';
-            document.getElementById(`${key}-bar`).style.width   = percent + '%';
+            const percentEl = document.getElementById(`${key}-percent`);
+            const barEl     = document.getElementById(`${key}-bar`);
+
+            if (percentEl) {
+                percentEl.innerText = (percentages[key] ?? 0) + '%';
+            }
+
+            if (barEl) {
+                barEl.style.width = (percentages[key] ?? 0) + '%';
+            }
         });
     }
 
@@ -381,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(data => {
                 updateCards(data);
                 updateIndicators(data.general.percentages);
-                renderAttendanceChart(data.general.counts);
+                renderAttendanceChart(data.attendance);
                 renderFinancialChart(data.financial);
             });
     }

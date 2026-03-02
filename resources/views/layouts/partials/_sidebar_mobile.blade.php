@@ -23,13 +23,13 @@
             <a href="{{ route('dashboard') }}" class="sidebar-link">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
-            <a href="{{ route('attendance.my') }}" class="sidebar-link">
+            <a href="{{ route('attendance.submissions.index') }}" class="sidebar-link">
                 <i class="bi bi-clock-history me-2"></i> Minhas Frequências
             </a>
             <a href="{{ route('attendance.create') }}" class="sidebar-link">
                 <i class="bi bi-plus-circle me-2"></i> Registrar
             </a>
-            <a href="{{ route('attendance.pending') }}" class="sidebar-link">
+            <a href="{{ route('attendance.submissions.index') }}" class="sidebar-link">
                 <i class="bi bi-hourglass-split me-2"></i> Pendentes
             </a>
         @endrole
@@ -65,8 +65,14 @@
         @endrole
 
         @role('bolsista')
-            <a href="{{ route('reports.myReport') }}" class="sidebar-link">
+            <a href="{{ route('attendance.reports.index') }}" class="sidebar-link">
                 <i class="bi bi-file-earmark-person me-2"></i> Meu Relatório
+            </a>
+            <a href="{{ route('payments.my') }}" class="sidebar-link">
+                <i class="bi bi-wallet2 me-2"></i> Meus Pagamentos
+            </a>
+            <a href="{{ route('attendance.reports.final.create') }}" class="sidebar-link">
+                <i class="bi bi-file-earmark-person me-2"></i> Relatório Final
             </a>
         @endrole
 

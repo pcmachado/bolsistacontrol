@@ -3,285 +3,174 @@
 namespace App\Http\Controllers;
 
 use App\DataTables\AttendanceRecordDataTable;
-use App\Http\Requests\AttendanceRecordStoreRequest;
 use App\Models\AttendanceRecord;
-use App\Models\ScholarshipHolder;
+use App\Models\AttendanceSubmission;
 use App\Services\AttendanceRecordService;
+use App\Services\AttendanceSubmissionService;
 use App\Services\ScholarshipHolderService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
-use App\Notifications\PendingShipment;
-use App\Notifications\RejectedAttendance;
-use App\Notifications\ApprovedAttendance;
-use App\Services\NotificationService;
-use App\Events\ActivitySent;
-use App\Models\User;
-use App\Models\Project;
-use App\Models\Unit;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class AttendanceRecordController extends Controller
 {
-    protected $attendanceRecordService;
-    protected $scholarshipHolderService;
-
-    public function __construct(AttendanceRecordService $attendanceRecordService, ScholarshipHolderService $scholarshipHolderService)
-    {
-        $this->attendanceRecordService = $attendanceRecordService;
-        $this->scholarshipHolderService = $scholarshipHolderService;
+    public function __construct(
+        protected AttendanceRecordService $records,
+        protected AttendanceSubmissionService $submissions,
+        protected ScholarshipHolderService $scholarshipHolderService
+    ) {
         $this->middleware('auth');
     }
 
+    /**
+     * Diário de frequência (por mês)
+     */
     public function index(Request $request, AttendanceRecordDataTable $dataTable)
     {
-        if ($request->routeIs('attendance.my')) {
-            $dataTable->mode = 'my';
-        } else if ($request->routeIs('admin.homologations.index')) {
-            $dataTable->mode = 'homologation';
-        } else if ($request->routeIs('admin.attendance_records.index')) {
-            $dataTable->mode = 'default';
-        }
-        // Aplica filtros da requisição
-        $filters = $request->only([
-            'project_id',
-            'unit_id', 'role',
-            'scholarship_holder_id',
-            'month',
-            'monthYear',
-            'year',
-            'start_date',
-            'end_date',
-            'status',
-        ]);
+        $user   = auth()->user();
+        $holder = $this->scholarshipHolderService->holderOrFail($user);
 
-        $projects = Project::all();
-        $units = Unit::all();
-        $scholarship_holders = ScholarshipHolder::with('user')->get();
+        $month = $request->get('month', now()->format('Y-m'));
+        [$year, $monthNum] = explode('-', $month);
 
-        return $dataTable->setFilters($filters)->render('attendance.index', compact('projects', 'units', 'scholarship_holders'),['pagemode' => $dataTable->mode]);
+        // 🔎 submissão do mês (se existir)
+        $submission = AttendanceSubmission::where('scholarship_holder_id', $holder->id)
+            ->where('year', $year)
+            ->where('month', $monthNum)
+            ->latest()
+            ->first();
+
+        $filters = [
+            'month'  => "$year-$monthNum",
+            'status' => $request->get('status'),
+        ];
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('attendance.index', [
+                'month'      => "$year-$monthNum",
+                'submission' => $submission,
+            ]);
     }
 
     /**
-     * Exibe o formulário para registro de frequência.
-     * Apenas para bolsistas.
+     * Formulário de criação
      */
     public function create(): View
     {
         return view('attendance.create');
     }
 
+    /**
+     * Armazena novo registro (rascunho)
+     */
     public function store(Request $request)
     {
-        $user = Auth::user();
-
-        $request->validate([
-            'date' => 'required|date',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'description' => 'nullable|string|max:500',
+        $validated = $request->validate([
+            'date'        => ['required', 'date'],
+            'start_time'  => ['required', 'date_format:H:i'],
+            'end_time'    => ['required', 'date_format:H:i', 'after:start_time'],
+            'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $holder = $this->scholarshipHolderService->holderOrFail($user);
+        $user   = Auth::user();
+        $holder = $this->holders->holderOrFail($user);
 
-        // Calcula horas trabalhadas
-        $start = \Carbon\Carbon::parse($request->start_time);
-        $end   = \Carbon\Carbon::parse($request->end_time);
-        $hours = $start->diffInMinutes($end) / 60;
+        $date = \Carbon\Carbon::parse($validated['date']);
 
-        $record = AttendanceRecord::create([
-            'scholarship_holder_id' => $holder->id,
-            'date' => $request->date,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-            'hours' => $hours,
-            'calculated_value' => $hours * ($holder->scholarship->value_per_hour ?? 0),
-            'description' => $request->description,
-            'status' => AttendanceRecord::STATUS_DRAFT,
-        ]);
+        // 🔒 mês fechado?
+        if (! $this->submissions->canCreateRecord(
+            $holder,
+            $date->year,
+            $date->month
+        )) {
+            return back()
+            ->withInput()
+            ->withErrors([
+                'Este mês já foi enviado para homologação.'
+            ]);
+        }
 
-        return redirect()->route('attendance.my')->with('success', 'Registro de frequência criado como rascunho.');
+        $this->records->create($holder, $validated);
+
+        return redirect()
+            ->route('attendance.index')
+            ->with('success', 'Registro criado com sucesso.');
     }
 
+    /**
+     * Visualização individual
+     */
     public function show(AttendanceRecord $attendanceRecord): View
     {
-        $attendanceRecord->load('scholarshipHolder.user', 'scholarshipHolder.unit');
-        return view('attendance.show', compact('attendanceRecord'));
+        $this->authorize('view', $attendanceRecord);
+
+        return view(
+            'attendance.show',
+            compact('attendanceRecord')
+        );
     }
 
+    /**
+     * Edição
+     */
     public function edit(AttendanceRecord $attendanceRecord): View
     {
         $this->authorize('update', $attendanceRecord);
-        return view('attendance.edit', compact('attendanceRecord'));
+
+        return view(
+            'attendance.edit',
+            compact('attendanceRecord')
+        );
     }
 
-    public function update(Request $request, AttendanceRecord $attendanceRecord)
+    /**
+     * Atualização
+     */
+    public function update(Request $request, AttendanceRecord $attendanceRecord )
     {
         $this->authorize('update', $attendanceRecord);
 
         $validated = $request->validate([
-            'date'        => 'required|date',
-            'start_time'  => 'required|date_format:H:i',
-            'end_time'    => 'nullable|date_format:H:i|after:start_time',
-            'status'      => 'required|in:draft,submitted',
-            'description' => 'nullable|string|max:1000',
+            'date'        => ['required', 'date'],
+            'start_time'  => ['required', 'date_format:H:i'],
+            'end_time'    => ['required', 'date_format:H:i', 'after:start_time'],
+            'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $this->attendanceRecordService->update($attendanceRecord, $validated);
+        $this->records->update($attendanceRecord, $validated);
 
-        return redirect()->route('attendance.my')->with('success', 'Registro atualizado com sucesso!');
+        return redirect()
+            ->route('attendance.index')
+            ->with('success', 'Registro atualizado.');
     }
 
+    /**
+     * Exclusão
+     */
     public function destroy(AttendanceRecord $attendanceRecord)
     {
         $this->authorize('delete', $attendanceRecord);
 
-        $this->attendanceRecordService->delete($attendanceRecord);
+        $this->records->delete($attendanceRecord);
 
-        return redirect()->route('attendance.my')->with('success', 'Registro excluído com sucesso!');
+        return redirect()
+            ->route('attendance.index')
+            ->with('success', 'Registro removido.');
     }
 
-    public function submit(AttendanceRecord $attendanceRecord)
+    public function my(Request $request, AttendanceRecordDataTable $dataTable)
     {
-        $this->authorize('submit', $attendanceRecord);
-        $this->attendanceRecordService->submitRecord($attendanceRecord);
+        $dataTable->mode = 'my';
 
-        app(NotificationService::class)->sendToUser(
-            $attendanceRecord->scholarshipHolder->coordenador_adjunto,
-            "O bolsista {$user->name} enviou um registro de frequência para análise.",
-            'submitted'
-        );
+        $filters = $request->only(['month', 'status']);
 
-        return back()->with('success', 'Registro enviado para homologação.');
-    }
-
-    public function approve(AttendanceRecord $attendanceRecord)
-    {
-        $this->authorize('approve', $attendanceRecord);
-        $this->attendanceRecordService->approveRecord($attendanceRecord);
-
-        app(NotificationService::class)->sendToUser(
-            $attendanceRecord->scholarshipHolder->user,
-            "Seu registro de frequência de {$attendanceRecord->date->format('d/m/Y')} foi homologado.",
-            'approved'
-        );
-
-        return back()->with('success', 'Registro aprovado.');
-    }
-
-    public function reject(Request $request, AttendanceRecord $attendanceRecord)
-    {
-        $this->authorize('reject', $attendanceRecord);
-        $this->attendanceRecordService->rejectRecord($attendanceRecord, $request->input('reason'));
-
-        app(NotificationService::class)->sendToUser(
-            $attendanceRecord->scholarshipHolder->user,
-            "Seu registro de frequência foi rejeitado. Motivo: {$attendanceRecord->rejected_reason}.",
-            'rejected'
-        );
-
-        return back()->with('success', 'Registro recusado.');
-    }
-
-    public function pending(): View
-    {
-        $user = Auth::user();
-        
-        $scholarshipHolder = $this->scholarshipHolderService->holderOrFail($user);
-
-        $pendingRecords = AttendanceRecord::where('scholarship_holder_id', $scholarshipHolder->id)
-            ->where('status', AttendanceRecord::STATUS_SUBMITTED) // ajuste conforme sua constante
-            ->orderBy('date', 'desc')
-            ->get();
-        return view('attendance.pending', compact('pendingRecords'));
-    }
-
-    /*public function report(Request $request)
-    {
-        $unitId = Auth::user()->unit_id;
-        $month = $request->input('month', now()->month);
-        $year = $request->input('year', now()->year);
-
-        $report = $this->attendanceRecordService->generateReport($unitId, $month, $year);
-
-        return view('attendance.report', compact('report', 'month', 'year'));
-    }*/
-
-    public function approved(AttendanceRecordDataTable $dataTable)
-    {
-        $dataTable->mode = 'approved';
-        return $dataTable->render('attendance.card.approved');
-    }
-
-    public function submitted(AttendanceRecordDataTable $dataTable)
-    {
-        $dataTable->mode = 'submitted';
-        return $dataTable->render('attendance.card.submitted');
-    }
-
-    public function rejected(AttendanceRecordDataTable $dataTable)
-    {
-        $dataTable->mode = 'rejected';
-        return $dataTable->render('attendance.card.rejected');
-    }
-
-    public function late(AttendanceRecordDataTable $dataTable)
-    {
-        $dataTable->mode = 'late'; // novo modo
-        return $dataTable->render('attendance.card.late');
-    }
-
-    public function submissions(Request $request)
-    {
-        $query = AttendanceRecord::with('scholarshipHolder.user')
-        ->where('status', 'submitted');
-
-        // 🔹 Filtro por mês/ano
-        if ($request->filled('month')) {
-            [$year, $month] = explode('-', $request->month);
-            $query->whereYear('date', $year)->whereMonth('date', $month);
-        }
-
-        // 🔹 Filtro por unidade
-        if ($request->filled('unit_id')) {
-            $query->whereHas('scholarshipHolder', fn($q) =>
-                $q->where('unit_id', $request->unit_id)
-            );
-        }
-
-        $submissions = $query->latest('date')->paginate(15);
-
-        $units = Unit::orderBy('name')->get();
-
-        return view('attendance.submissions', compact('submissions', 'units'));
-    }
-
-    public function approvals(Request $request)
-    {
-        $query = AttendanceRecord::with('scholarshipHolder.user')
-        ->where('status', 'approved');
-
-        // 🔹 Filtro por mês/ano
-        if ($request->filled('month')) {
-            [$year, $month] = explode('-', $request->month);
-            $query->whereYear('date', $year)->whereMonth('date', $month);
-        }
-
-        // 🔹 Filtro por unidade
-        if ($request->filled('unit_id')) {
-            $query->whereHas('scholarshipHolder', fn($q) =>
-                $q->where('unit_id', $request->unit_id)
-            );
-        }
-
-        $approvals = $query->latest('updated_at')->paginate(15);
-
-        $units = Unit::orderBy('name')->get();
-
-        return view('attendance.approvals', compact('approvals', 'units'));
+        return $dataTable
+            ->setFilters($filters)
+            ->render('attendance.index', [
+                'month' => $filters['month'] ?? now()->format('Y-m'),
+                'submission' => null, // ou resolver depois
+            ]);
     }
 
 }

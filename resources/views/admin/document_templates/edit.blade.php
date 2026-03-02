@@ -65,21 +65,21 @@
 
         <div class="mb-3">
             <label class="form-label">Cabeçalho (HTML)</label>
-            <textarea name="header_html wysiwyg"
+            <textarea name="header_html sgb-tinymce"
                       rows="4"
                       class="form-control sgb-textarea">{{ $template->header_html }}</textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Corpo do Documento (HTML)</label>
-            <textarea name="body_html wysiwyg"
+            <textarea name="body_html sgb-tinymce"
                       rows="8"
                       class="form-control sgb-textarea">{{ $template->body_html }}</textarea>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Rodapé (HTML)</label>
-            <textarea name="footer_html wysiwyg"
+            <textarea name="footer_html sgb-tinymce"
                       rows="4"
                       class="form-control sgb-textarea">{{ $template->footer_html }}</textarea>
         </div>
@@ -118,8 +118,8 @@
 @push('scripts')
 <script>
 tinymce.init({
-    selector: 'textarea.wysiwyg',
-    height: 250,
+    selector: 'textarea.sgb-tinymce',
+    height: 300,
     menubar: false,
     plugins: [
         'lists',

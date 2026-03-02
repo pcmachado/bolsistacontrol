@@ -12,16 +12,18 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\AttendanceRecord;
 use App\Services\DashboardService;
+use App\Services\AttendanceDashboardService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     protected DashboardService $dashboard;
+    protected AttendanceDashboardService $attendanceDashboard;
 
-    public function __construct(DashboardService $dashboard)
+    public function __construct(DashboardService $dashboard, AttendanceDashboardService $attendanceDashboard)
     {
         $this->dashboard = $dashboard;
-
+        $this->attendanceDashboard = $attendanceDashboard;
     }
 
         /**
@@ -37,33 +39,36 @@ class DashboardController extends Controller
             ]);
         }
 
-        $data = $this->dashboard->getDashboardData($request->all());
+        return view('admin.dashboard', [
+            // 🔹 dados gerais / acadêmicos
+            ...$this->dashboard->getDashboardData($request->all()),
 
-        return view('admin.dashboard', $data);
+            // 🔹 cards de frequência
+            'attendanceCards' => $this->attendanceDashboard
+                ->submissionCounts(auth()->user()),
+        ]);
+
     }
 
     /**
      * Endpoint para AJAX (gráfico e cards)
      */
-    public function stats(Request $request, DashboardService $service)
+    public function stats(Request $request)
     {
-        // AJAX sempre envia month/year
-        if (!$request->has('month')) {
+        if (! $request->has('month')) {
             return response()->json(['error' => 'Parâmetros insuficientes'], 422);
         }
 
         return response()->json([
-            'general'   => $service->getDashboardData($request->all()),
-            'financial' => $service->getFinancialData($request->all()),
+            // 🔹 dados gerais
+            'general' => $this->dashboard->getDashboardData($request->all()),
+
+            // 🔹 financeiro
+            'financial' => $this->dashboard->getFinancialData($request->all()),
+
+            // 🔹 frequência (submissões)
+            'attendance' => $this->attendanceDashboard->submissionCounts(auth()->user()),
         ]);
     }
-
-    /*public function stats(Request $request)
-    {
-        return response()->json([
-            'ok' => true,
-            'params' => $request->all(),
-        ]);
-    }*/
 
 }
