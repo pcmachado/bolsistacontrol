@@ -6,15 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\ScholarshipHolder;
 use App\Models\AttendanceRecord;
+use App\Models\Unit;
 use App\Models\FinancialClosure;
 use App\Services\FinancialAuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\DataTables\PaymentDataTable;
+use App\Services\PaymentService;
 use Illuminate\Validation\ValidationException;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentController extends Controller
 {
+    protected $paymentService;
+
+    public function __construct(PaymentService $paymentService)
+    {
+        $this->paymentService = $paymentService;
+    }
+
     public function index(Request $request, PaymentDataTable $dataTable)
     {
         $dataTable->setFilters($request->all());
@@ -146,4 +156,39 @@ class PaymentController extends Controller
             ->with('success', 'Pagamento marcado como pago.');
     }
 
+    public function montly(Request $request, Unit $unit)
+    {
+
+        $month = $request->get('month', now()->month);
+        $year  = $request->get('year', now()->year);
+
+        $payments = $this->paymentService->monthly(
+            $unit,
+            $month,
+            $year
+        );
+
+        return view('admin.payments.reports.monthly', compact(
+            'payments',
+            'month',
+            'year',
+            'unit'
+        ));
+    }
+
+    public function pdf(Unit $unit, Request $request)
+    {
+
+        $month = $request->get('month');
+        $year  = $request->get('year');
+
+        $payments = $this->paymentService->monthly($unit,$month,$year);
+
+        $pdf = Pdf::loadView(
+            'payments.pdf',
+            compact('payments','unit','month','year')
+        );
+
+        return $pdf->download("pagamentos_{$month}_{$year}.pdf");
+    }
 }

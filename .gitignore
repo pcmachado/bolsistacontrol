@@ -27,3 +27,4 @@ Thumbs.db
 .tmp.driveupload
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore
+fix_laravel.bat
