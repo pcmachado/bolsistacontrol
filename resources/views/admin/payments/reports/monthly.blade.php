@@ -1,35 +1,53 @@
-<table class="table table-striped">
+@extends('layouts.pdf')
 
-<thead>
-<tr>
-<th>Bolsista</th>
-<th>CPF</th>
-<th>Banco</th>
-<th>Agência</th>
-<th>Conta</th>
-<th>Horas</th>
-<th>Valor Hora</th>
-<th>Total</th>
-</tr>
-</thead>
+@section('title', 'Relatório Consolidado')
 
-<tbody>
+@section('header-extra')
 
-@foreach($payments as $row)
+<div style="margin-top:5px;">
+    <h3>RELATÓRIO CONSOLIDADO DE PAGAMENTOS</h3>
+</div>
 
-<tr>
-<td>{{ $row['holder'] }}</td>
-<td>{{ $row['cpf'] }}</td>
-<td>{{ $row['bank'] }}</td>
-<td>{{ $row['agency'] }}</td>
-<td>{{ $row['account'] }}</td>
-<td>{{ $row['hours'] }}</td>
-<td>{{ number_format($row['rate'],2,',','.') }}</td>
-<td>{{ number_format($row['total'],2,',','.') }}</td>
-</tr>
+@endsection
+
+@section('content')
+
+@foreach($grouped as $group)
+
+    <h4>{{ $group['unit'] }}</h4>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Bolsista</th>
+                <th>Projeto</th>
+                <th>Período</th>
+                <th>Status</th>
+                <th>Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach($group['payments'] as $p)
+            <tr>
+                <td>{{ $p['holder'] }}</td>
+                <td>{{ $p['project'] }}</td>
+                <td>{{ $p['period'] }}</td>
+                <td>{{ $p['status'] }}</td>
+                <td>R$ {{ number_format($p['amount'], 2, ',', '.') }}</td>
+            </tr>
+            @endforeach
+
+            <tr>
+                <td colspan="4"><strong>Total</strong></td>
+                <td><strong>R$ {{ number_format($group['total'], 2, ',', '.') }}</strong></td>
+            </tr>
+
+        </tbody>
+    </table>
 
 @endforeach
 
-</tbody>
+<h5>Total geral: R$ {{ number_format($totalGeral, 2, ',', '.') }}</h5>
 
-</table>
+@endsection

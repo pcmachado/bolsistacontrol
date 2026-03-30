@@ -7,18 +7,24 @@ use App\Models\Payment;
 use App\Models\ScholarshipHolder;
 use App\Models\AttendanceRecord;
 use App\Models\Unit;
+use App\Models\Project;
+use App\Models\Position;
 use App\Models\FinancialClosure;
 use App\Services\FinancialAuditService;
+use App\Support\Traits\PaymentFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\DataTables\PaymentDataTable;
 use App\Services\PaymentService;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
     protected $paymentService;
+
+    use PaymentFilters;
 
     public function __construct(PaymentService $paymentService)
     {
@@ -27,10 +33,14 @@ class PaymentController extends Controller
 
     public function index(Request $request, PaymentDataTable $dataTable)
     {
-        $dataTable->setFilters($request->all());
+        $query = Payment::with(['unit', 'project', 'scholarshipHolder.projects']);
+        $query = $this->applyPaymentFilters($query, request());
         $dataTable->mode = 'admin';
         
         return $dataTable->render('admin.payments.index', [
+            'units' => Unit::all(),
+            'projects' => Project::all(),
+            'positions' => Position::all(),
             'status' => $request->get('status'),
             'month'  => $request->get('month'),
             'year'   => $request->get('year'),
@@ -156,26 +166,6 @@ class PaymentController extends Controller
             ->with('success', 'Pagamento marcado como pago.');
     }
 
-    public function montly(Request $request, Unit $unit)
-    {
-
-        $month = $request->get('month', now()->month);
-        $year  = $request->get('year', now()->year);
-
-        $payments = $this->paymentService->monthly(
-            $unit,
-            $month,
-            $year
-        );
-
-        return view('admin.payments.reports.monthly', compact(
-            'payments',
-            'month',
-            'year',
-            'unit'
-        ));
-    }
-
     public function pdf(Unit $unit, Request $request)
     {
 
@@ -190,5 +180,74 @@ class PaymentController extends Controller
         );
 
         return $pdf->download("pagamentos_{$month}_{$year}.pdf");
+    }
+
+    public function reportMonthly(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = Payment::with(['unit', 'project', 'scholarshipHolder.projects']);
+
+        $query = app(\App\Services\VisibilityService::class)
+            ->apply($query, $user, 'admin');
+
+        if ($request->filled('month')) {
+            [$year, $month] = explode('-', $request->month);
+            $query->where('year', $year)
+                ->where('month', $month);
+        }
+
+        elseif ($request->filled('year')) {
+            $query->where('year', $request->year);
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('position_id')) {
+            $query->whereHas('scholarshipHolder.projects', function ($q) use ($request) {
+                $q->where('position_id', $request->position_id);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $payments = $query->get();
+
+        $grouped = $payments->groupBy('unit_id')->map(function ($items) {
+            return [
+                'unit' => $items->first()->unit?->name,
+                'total' => $items->sum('amount'),
+                'payments' => $items->map(function ($p) {
+                    return [
+                        'holder' => $p->scholarshipHolder?->user?->name,
+                        'project' => $p->project?->name,
+                        'amount' => $p->amount,
+                        'status' => $p->status,
+                        'period' => str_pad($p->month,2,'0',STR_PAD_LEFT).'/'.$p->year,
+                    ];
+                })
+            ];
+        });
+
+        $totalGeral = $payments->sum('amount');
+
+        $isPdf = $request->boolean('pdf');
+
+        if ($isPdf) {
+            return \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                'admin.payments.reports.monthly',
+                compact('grouped', 'totalGeral', 'isPdf')
+            )->stream('relatorio_consolidado.pdf');
+        }
+
+        return view('admin.payments.reports.monthly', compact('grouped', 'totalGeral', 'isPdf'));
     }
 }

@@ -4,6 +4,7 @@ namespace App\DataTables;
 
 use App\Models\Payment;
 use App\Services\VisibilityService;
+use App\Support\Traits\PaymentFilters;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,6 +15,8 @@ class PaymentDataTable extends DataTable
     public string $mode = 'default';
     
     protected array $filters = [];
+
+    use PaymentFilters;
 
     public function setFilters(array $filters): self
     {
@@ -64,15 +67,7 @@ class PaymentDataTable extends DataTable
 
         $query = $visibility->apply($query, $user, $context);
 
-        if (!empty($this->filters['status'])) {
-            $query->where('status', $this->filters['status']);
-        }
-
-        if (!empty($this->filters['month'])) {
-            [$year, $month] = explode('-', $this->filters['month']);
-            $query->where('year', $year)
-                ->where('month', $month);
-        }
+        $query = $this->applyPaymentFilters($query, request());
 
         return $query->latest();
     }

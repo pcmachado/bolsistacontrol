@@ -7,7 +7,6 @@ use App\Models\FinancialClosure;
 use App\Models\Project;
 use App\Models\Unit;
 use App\Services\VisibilityService;
-use Illuminate\Support\Facades\Auth;
 
 class PaymentDashboardService
 {
@@ -18,19 +17,25 @@ class PaymentDashboardService
         $projectId = $filters['project_id'] ?? null;
         $unitId    = $filters['unit_id'] ?? null;
 
-        $baseQuery = Payment::query($user)
+        /*
+        |--------------------------------------------------------------------------
+        | BASE QUERY (PADRÃO ÚNICO DO SISTEMA)
+        |--------------------------------------------------------------------------
+        */
+        $baseQuery = Payment::query()
             ->where('year', $year)
             ->where('month', $month)
             ->when($projectId, fn($q) => $q->where('project_id', $projectId))
             ->when($unitId, fn($q) => $q->where('unit_id', $unitId));
 
         $baseQuery = app(VisibilityService::class)
-            ->apply($baseQuery, $user, 'self');
+            ->apply($baseQuery, $user, 'admin');
 
-        // =====================
-        // Totais principais
-        // =====================
-
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAIS (CARDS)
+        |--------------------------------------------------------------------------
+        */
         $totalPaid = (clone $baseQuery)
             ->where('status', Payment::STATUS_PAID)
             ->sum('amount');
@@ -47,18 +52,34 @@ class PaymentDashboardService
             ->where('status', Payment::STATUS_SENT)
             ->count();
 
-        // =====================
-        // Período anterior
-        // =====================
+        $countPaid = (clone $baseQuery)
+            ->where('status', Payment::STATUS_PAID)
+            ->count();
 
+        $countConfirmed = (clone $baseQuery)
+            ->where('status', Payment::STATUS_CONFIRMED)
+            ->count();
+
+        $totalCount = (clone $baseQuery)->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | COMPARAÇÃO MENSAL
+        |--------------------------------------------------------------------------
+        */
         $prevMonth = $month == 1 ? 12 : $month - 1;
         $prevYear  = $month == 1 ? $year - 1 : $year;
 
-        $previousTotal = Payment::query($user)
+        $previousQuery = Payment::query()
             ->where('year', $prevYear)
             ->where('month', $prevMonth)
             ->when($projectId, fn($q) => $q->where('project_id', $projectId))
-            ->when($unitId, fn($q) => $q->where('unit_id', $unitId))
+            ->when($unitId, fn($q) => $q->where('unit_id', $unitId));
+
+        $previousQuery = app(VisibilityService::class)
+            ->apply($previousQuery, $user, 'admin');
+
+        $previousTotal = $previousQuery
             ->whereIn('status', [
                 Payment::STATUS_PAID,
                 Payment::STATUS_CONFIRMED
@@ -71,10 +92,11 @@ class PaymentDashboardService
             ? (($currentTotal - $previousTotal) / $previousTotal) * 100
             : null;
 
-        // =====================
-        // Gráficos
-        // =====================
-
+        /*
+        |--------------------------------------------------------------------------
+        | GRÁFICOS (PADRÃO BASE QUERY)
+        |--------------------------------------------------------------------------
+        */
         $chartByProject = (clone $baseQuery)
             ->selectRaw('project_id, SUM(amount) as total')
             ->groupBy('project_id')
@@ -87,26 +109,45 @@ class PaymentDashboardService
             ->with('unit')
             ->get();
 
-        // =====================
-        // Evolução anual
-        // =====================
-
-        $yearly = Payment::query($user)
+        /*
+        |--------------------------------------------------------------------------
+        | STACKED (EVOLUÇÃO POR STATUS)
+        |--------------------------------------------------------------------------
+        */
+        $yearQuery = Payment::query()
             ->where('year', $year)
             ->when($projectId, fn($q) => $q->where('project_id', $projectId))
-            ->when($unitId, fn($q) => $q->where('unit_id', $unitId))
-            ->selectRaw('month, SUM(amount) as total')
-            ->groupBy('month')
-            ->pluck('total','month');
+            ->when($unitId, fn($q) => $q->where('unit_id', $unitId));
 
-        $monthlyTotals = collect(range(1,12))->map(fn($m) => [
-            'month' => $m,
-            'total' => $yearly[$m] ?? 0
-        ]);
+        $yearQuery = app(VisibilityService::class)
+            ->apply($yearQuery, $user, 'admin');
+
+        $yearlyRaw = $yearQuery
+            ->selectRaw('month, status, SUM(amount) as total')
+            ->groupBy('month', 'status')
+            ->get();
+
+        $months = collect(range(1,12));
+
+        $monthlyPaid = [];
+        $monthlyConfirmed = [];
+        $monthlyPending = [];
+
+        foreach ($months as $m) {
+            $monthlyPaid[] = $yearlyRaw->where('month', $m)
+                ->where('status', Payment::STATUS_PAID)->sum('total');
+
+            $monthlyConfirmed[] = $yearlyRaw->where('month', $m)
+                ->where('status', Payment::STATUS_CONFIRMED)->sum('total');
+
+            $monthlyPending[] = $yearlyRaw->where('month', $m)
+                ->where('status', Payment::STATUS_SENT)->sum('total');
+        }
 
         return [
             'month' => $month,
             'year'  => $year,
+
             'projects' => Project::orderBy('name')->get(),
             'units'    => Unit::orderBy('name')->get(),
 
@@ -114,6 +155,9 @@ class PaymentDashboardService
             'totalConfirmed' => $totalConfirmed,
             'totalPending' => $totalPending,
             'countPending' => $countPending,
+            'countPaid' => $countPaid,
+            'countConfirmed' => $countConfirmed,
+            'totalCount' => $totalCount,
 
             'previousTotal' => $previousTotal,
             'currentTotal'  => $currentTotal,
@@ -123,7 +167,13 @@ class PaymentDashboardService
 
             'chartByProject' => $chartByProject,
             'chartByUnit'    => $chartByUnit,
-            'monthlyTotals'  => $monthlyTotals,
+
+            'chartStacked' => [
+                'months' => $months->map(fn($m) => str_pad($m,2,'0',STR_PAD_LEFT)),
+                'paid' => $monthlyPaid,
+                'confirmed' => $monthlyConfirmed,
+                'pending' => $monthlyPending,
+            ],
 
             'isClosed' => FinancialClosure::isClosed($unitId, $month, $year),
         ];

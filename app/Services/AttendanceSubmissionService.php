@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Models\AttendanceSubmission;
 use App\Models\AttendanceRecord;
 use App\Models\ScholarshipHolder;
+use App\Notifications\AttendanceSubmitted;
+use App\Notifications\AttendanceApproved;
+use App\Notifications\AttendanceRejected;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Carbon\Carbon;
@@ -78,6 +81,8 @@ class AttendanceSubmissionService
             throw new \DomainException('A submissão não está em rascunho.');
         }
 
+        $this->attachMonthlyRecords($submission);
+
         if ($submission->attendanceRecords()->count() === 0) {
             throw new \DomainException('Não é possível enviar uma submissão vazia.');
         }
@@ -86,8 +91,16 @@ class AttendanceSubmissionService
             $submission->update([
                 'status'       => AttendanceSubmission::STATUS_SUBMITTED,
                 'submitted_at' => now(),
+                'rejected_at' => null,
+                'rejected_reason' => null,
             ]);
         });
+
+        $coordinator = User::role('coordinator')->get();
+
+        foreach ($coordinator as $coord) {
+            $coord->notify(new AttendanceSubmitted($submission));
+        }
     }
 
     /**
@@ -104,16 +117,15 @@ class AttendanceSubmissionService
             'approved_at'   => now(),
             'approved_by'   => $userId,
         ]);
+
+        $submission->scholarshipHolder->user->notify(new AttendanceApproved($submission));
     }
 
     /**
      * Rejeição da submissão (coordenador)
      */
-    public function reject(
-        AttendanceSubmission $submission,
-        string $reason,
-        int $userId
-    ): void {
+    public function reject(AttendanceSubmission $submission, string $reason, int $userId ): void
+    {
         if ($submission->status !== AttendanceSubmission::STATUS_SUBMITTED) {
             throw new \DomainException('Submissão não está pendente.');
         }
@@ -127,10 +139,12 @@ class AttendanceSubmissionService
             ]);
 
             // devolve os registros para edição
-            $submission->records()->update([
+            $submission->attendanceRecords()->update([
                 'attendance_submission_id' => null,
             ]);
         });
+
+        $submission->scholarshipHolder->user->notify(new AttendanceRejected($submission));
     }
 
     public function canCreateRecord(ScholarshipHolder $holder, int $year, int $month): bool 
@@ -149,13 +163,17 @@ class AttendanceSubmissionService
     protected function getOrCreateDraft(ScholarshipHolder $holder, int $year, int $month): AttendanceSubmission
     {
         return AttendanceSubmission::query()
-            ->firstOrCreate([
-                'scholarship_holder_id' => $holder->id,
-                'year'                  => $year,
-                'month'                 => $month,
-            ], [
-                'status' => AttendanceSubmission::STATUS_DRAFT,
-            ]);
+            ->where('scholarship_holder_id', $holder->id)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->firstOr(function () use ($holder, $year, $month) {
+                return AttendanceSubmission::create([
+                    'scholarship_holder_id' => $holder->id,
+                    'year'  => $year,
+                    'month' => $month,
+                    'status' => AttendanceSubmission::STATUS_DRAFT,
+                ]);
+            });
     }
 
     public function findById($id): AttendanceSubmission

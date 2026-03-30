@@ -7,7 +7,7 @@
         <i class="bi bi-eye"></i>
     </a>
 
-    @if (is_null($record->attendance_submission_id))
+    @if ($record->isEditable())
         @can('update', $record)
             <a href="{{ route('attendance.edit', $record) }}"
                class="btn btn-outline-warning"
@@ -18,17 +18,19 @@
 
         @can('delete', $record)
             <form method="POST"
-                  action="{{ route('attendance.destroy', $record) }}">
+                  action="{{ route('attendance.destroy', $record) }}"
+                  onsubmit="return confirm('Excluir este registro?')">
                 @csrf
                 @method('DELETE')
-                <button class="btn btn-outline-danger"
-                        onclick="return confirm('Excluir este registro?')">
+
+                <button class="btn btn-outline-danger">
                     <i class="bi bi-trash"></i>
                 </button>
             </form>
         @endcan
     @else
-        <button class="btn btn-outline-secondary" disabled title="Registro enviado">
+        <button class="btn btn-outline-secondary" disabled title="Registro bloqueado para edição">
+             <i class="bi bi-lock
             <i class="bi bi-lock"></i>
         </button>
     @endif

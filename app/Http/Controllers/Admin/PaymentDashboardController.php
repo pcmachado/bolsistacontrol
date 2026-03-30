@@ -11,12 +11,13 @@ use Illuminate\View\View;
 use App\Services\FinancialAlertService;
 use App\Models\FinancialClosure;
 use App\Services\PaymentDashboardService;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentDashboardController extends Controller
 {
     public function index(Request $request, PaymentDashboardService $service)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $filters = [
             'month' => $request->month ?? now()->month,

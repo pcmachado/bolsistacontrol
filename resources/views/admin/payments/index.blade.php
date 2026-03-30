@@ -12,15 +12,53 @@
     {{-- ============================= --}}
     <form method="GET" class="row g-2 mb-3 align-items-end">
 
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label class="form-label">Mês</label>
-            <input type="month"
-                   name="month"
-                   value="{{ request('month') }}"
-                   class="form-control">
+            <input type="month" name="month" value="{{ request('month') }}" class="form-control">
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <label class="form-label">Ano</label>
+            <input type="number" name="year" value="{{ request('year') }}" class="form-control">
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Unidade</label>
+            <select name="unit_id" class="form-select">
+                <option value="">Todas</option>
+                @foreach($units as $unit)
+                    <option value="{{ $unit->id }}" @selected(request('unit_id') == $unit->id)>
+                        {{ $unit->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Projeto</label>
+            <select name="project_id" class="form-select">
+                <option value="">Todos</option>
+                @foreach($projects as $project)
+                    <option value="{{ $project->id }}" @selected(request('project_id') == $project->id)>
+                        {{ $project->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Cargo</label>
+            <select name="position_id" class="form-select">
+                <option value="">Todos</option>
+                @foreach($positions as $position)
+                    <option value="{{ $position->id }}" @selected(request('position_id') == $position->id)>
+                        {{ $position->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-2">
             <label class="form-label">Status</label>
             <select name="status" class="form-select">
                 <option value="">Todos</option>
@@ -29,8 +67,7 @@
                     'paid' => 'Pagos',
                     'confirmed' => 'Confirmados'
                 ] as $key => $label)
-                    <option value="{{ $key }}"
-                        @selected(request('status') === $key)>
+                    <option value="{{ $key }}" @selected(request('status') === $key)>
                         {{ $label }}
                     </option>
                 @endforeach
@@ -38,26 +75,46 @@
         </div>
 
         <div class="col-md-2">
-            <button class="btn btn-primary w-100">
-                Filtrar
-            </button>
+            <button class="btn btn-primary w-100">Filtrar</button>
+        </div>
+        <div class="col-md-2">
+            <a href="{{ route('admin.payments.reports.monthly', array_merge(request()->all(), ['pdf' => 1])) }}" target="_blank" class="btn btn-danger w-100">📄 PDF </a>
         </div>
 
     </form>
 
     {{-- ============================= --}}
-    {{-- CARD TOTAL --}}
+    {{-- CARDS --}}
     {{-- ============================= --}}
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-light shadow-sm">
                 <div class="card-body text-center">
                     <h6>Total Geral</h6>
-                    <h4 id="total-geral">R$ 0,00</h4>
+                    <h4 id="total-geral">R$ {{ number_format($totalGeral ?? 0, 2, ',', '.') }}</h4>
                 </div>
             </div>
         </div>
     </div>
+    @if(isset($grouped))
+    <div class="row mb-4">
+
+        @foreach($grouped as $item)
+        <div class="col-md-3">
+            <div class="card shadow-sm border">
+                <div class="card-body text-center">
+                    <h6>{{ $item['unit'] }}</h6>
+                    <small>{{ $item['count'] }} pagamentos</small>
+                    <h5 class="mt-2">
+                        R$ {{ number_format($item['total'], 2, ',', '.') }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+        @endforeach
+
+    </div>
+    @endif
 
     {{-- ============================= --}}
     {{-- DATATABLE --}}

@@ -186,9 +186,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('payments')->as('payments.')->group(function () {
         Route::get('/my', [MyPaymentController::class, 'myPayments'])->name('my');
-        Route::post('/{payment}/confirm', [MyPaymentController::class, 'confirm'])->name('confirm');
 
-        Route::get('/{payment}/receipt', [PaymentReceiptController::class, 'download'])->name('receipt');
+        Route::get('/my/report', [MyPaymentController::class, 'reportMy'])->name('my.report');
+
+        Route::post('/{payment}/confirm', [MyPaymentController::class, 'confirm'])->name('confirm');
         Route::get('/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('receipt');
     });
 
@@ -196,9 +197,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-require __DIR__.'/auth.php';
+//require __DIR__.'/auth.php';
 
-//Auth::routes();
+Auth::routes();
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 
@@ -302,9 +303,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::prefix('dashboard')->as('dashboard.')->group(function () {
         Route::get('academic', [GlobalDashboardController::class, 'index'])->name('academic');
         Route::get('professor/{teacher}', [TeacherDashboardController::class, 'index'])->name('teacher');
+        Route::get('unit/{unit}',[UnitDashboardController::class, 'index'])->name('unit');
     });
-
-    Route::get('/dashboard/unit/{unit}',[UnitDashboardController::class, 'index'])->name('dashboard.unit');
 
     Route::get('/settings/alerts',[IntelligentAlertSettingController::class, 'edit'])->name('settings.alerts');
     Route::post('/settings/alerts',[IntelligentAlertSettingController::class, 'update'])->name('settings.alerts.update');
@@ -320,11 +320,14 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('batch', [PaymentController::class, 'batchForm'])->name('batch.form');
         Route::post('batch/preview', [PaymentController::class, 'batchPreview'])->name('batch.preview');
         Route::post('batch/store', [PaymentController::class, 'batchStore'])->name('batch.store');
+
+        Route::get('/report/monthly', [PaymentController::class, 'reportMonthly'])->name('reports.monthly');
+
         Route::post('{payment}/pay', [PaymentExecutionController::class, 'pay'])->name('pay');
         Route::post('{payment}/confirm', [PaymentExecutionController::class, 'confirm'])->name('confirm');
         Route::get('{payment}/receipt', [PaymentReceiptController::class, 'download'])->name('receipt');
 
-        Route::get('/{payment}', [PaymentController::class, 'show'])->name('show');
+        Route::get('/{payment}', [PaymentController::class, 'show'])->whereNumber('payment')->name('show');
     });
 
     Route::prefix('projects/wizard')->name('projects.')->group(function () {

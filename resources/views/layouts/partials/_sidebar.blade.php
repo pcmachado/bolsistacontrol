@@ -58,7 +58,7 @@
                 title="Meus Pagamentos"/>
 
             {{-- Relatórios --}}
-            <h6 class="sidebar-section-title mt-4">Relatórios</h6>
+            <h6 class="sidebar-section-title mt-4">Meus Relatórios</h6>
 
             <x-sidebar-item
                 route="attendance.reports.index"
@@ -88,6 +88,11 @@
             <x-sidebar-item route="admin.payments.dashboard"
                             icon="bi bi-graph-up"
                             title="Financeiro"/>
+                            
+            <x-sidebar-item route="admin.payments.index"
+                            icon="bi bi-wallet2"
+                            title="Pagamentos"/>
+
         @endhasanyrole
 
         {{-- ================================================= --}}

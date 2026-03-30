@@ -87,12 +87,6 @@ class ScholarshipHolder extends Model
         return $this->hasMany(AttendanceSubmission::class);
     }
 
-    // Relacionamento: um bolsista pode ter muitas notificações
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(Notification::class);
-    }
-
     public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class);
@@ -107,7 +101,7 @@ class ScholarshipHolder extends Model
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_scholarship_holder')
-                    ->withPivot('position_id')
+                    ->withPivot('position_id', 'weekly_workload','status')
                     ->withTimestamps();
     }
 

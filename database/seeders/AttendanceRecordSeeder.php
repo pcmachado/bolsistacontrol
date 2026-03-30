@@ -15,13 +15,8 @@ class AttendanceRecordSeeder extends Seeder
 
         foreach ($submissions as $submission) {
 
-            $monthStart = Carbon::create(
-                $submission->year,
-                $submission->month,
-                1
-            );
-
-            $monthEnd = $monthStart->copy()->endOfMonth();
+            $monthStart = Carbon::create($submission->year, $submission->month, 1);
+            $monthEnd   = $monthStart->copy()->endOfMonth();
 
             $days = collect();
             $cursor = $monthStart->copy();
@@ -33,23 +28,37 @@ class AttendanceRecordSeeder extends Seeder
                 $cursor->addDay();
             }
 
-            // cria de 8 a 15 registros no mês
-            $days->random(rand(8, 15))->each(function ($date) use ($submission) {
+            $selectedDays = $days->random(min($days->count(), rand(8, 15)));
 
-                $startHour = rand(8, 14);
+            foreach ($selectedDays as $date) {
+
+                $startHour = rand(8, 13);
                 $hours     = rand(2, 6);
 
+                // 🔥 REGRA PRINCIPAL
+                $submissionId = match ($submission->status) {
+
+                    // EDITÁVEIS → alguns ficam soltos
+                    'draft', 'rejected' => rand(0,1)
+                        ? null
+                        : $submission->id,
+
+                    // BLOQUEADOS → sempre vinculados
+                    'submitted', 'approved' => $submission->id,
+
+                    default => null,
+                };
+
                 AttendanceRecord::create([
-                    'scholarship_holder_id'      => $submission->scholarship_holder_id,
-                    'attendance_submission_id'   => $submission->id,
+                    'scholarship_holder_id'    => $submission->scholarship_holder_id,
+                    'attendance_submission_id' => $submissionId,
                     'date'        => $date,
                     'start_time'  => sprintf('%02d:00', $startHour),
                     'end_time'    => sprintf('%02d:00', $startHour + $hours),
                     'hours'       => $hours,
                     'description' => 'Atividades do projeto no dia',
-                    'status'      => 'draft', // status agora vive na submission
                 ]);
-            });
+            }
         }
     }
 }

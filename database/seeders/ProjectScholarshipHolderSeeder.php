@@ -22,11 +22,11 @@ class ProjectScholarshipHolderSeeder extends Seeder
         foreach ($holders as $holder) {
             $institutionId = $holder->unit?->institution_id;
 
-            if (! $institutionId) {
-                continue;
+            if ($institutionId) {
+                $project = Project::where('institution_id', $institutionId)->inRandomOrder()->first();
+            } else {
+                $project = Project::inRandomOrder()->first();
             }
-
-            $project = Project::where('institution_id', $institutionId)->inRandomOrder()->first();
 
             if (! $project) {
                 continue;

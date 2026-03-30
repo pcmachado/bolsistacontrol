@@ -31,3 +31,22 @@ if (!function_exists('is_financial_closed')) {
         return FinancialClosure::isClosed($unitId, $month, $year);
     }
 }
+
+if (!function_exists('hoursToTime')) {
+    function hoursToTime($value)
+    {
+        $h = floor($value);
+        $m = round(($value - $h) * 60);
+        return sprintf('%02d:%02d', $h, $m);
+    }
+}
+
+if (!function_exists('imageToBase64')) {
+    function imageToBase64($path)
+    {
+        if (!file_exists($path)) return null;
+
+        $type = pathinfo($path, PATHINFO_EXTENSION);
+        return 'data:image/'.$type.';base64,'.base64_encode(file_get_contents($path));
+    }
+}
