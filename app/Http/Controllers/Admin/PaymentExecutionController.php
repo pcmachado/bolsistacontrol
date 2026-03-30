@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\FinancialClosure;
 use App\Services\FinancialAuditService;
 use App\Notifications\IntelligentSystemAlert;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -51,7 +52,7 @@ class PaymentExecutionController extends Controller
             $payment->update([
                 'status' => Payment::STATUS_PAID,
                 'paid_at' => now(),
-                'paid_by_user_id' => auth()->id(),
+                'paid_by_user_id' => Auth::user()->id,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -85,15 +86,51 @@ class PaymentExecutionController extends Controller
 
         $ids = $request->input('payment_ids', []);
 
-        Payment::whereIn('id', $ids)
+        $payments = Payment::whereIn('id', $ids)
             ->where('status', Payment::STATUS_SENT)
-            ->update([
-                'status' => Payment::STATUS_PAID,
-                'paid_at' => now(),
-                'paid_by_user_id' => auth()->id(),
-            ]);
+            ->with('scholarshipHolder.user')
+            ->get();
 
-        return back()->with('success', 'Pagamentos processados em lote.');
+        DB::transaction(function () use ($payments) {
+
+            foreach ($payments as $payment) {
+
+                // 🔒 valida fechamento
+                if (FinancialClosure::isClosed(
+                    $payment->unit_id,
+                    $payment->month,
+                    $payment->year
+                )) {
+                    continue; // ou lançar erro dependendo da regra
+                }
+
+                $payment->update([
+                    'status' => Payment::STATUS_PAID,
+                    'paid_at' => now(),
+                    'paid_by_user_id' => Auth::id(),
+                ]);
+
+                // 🧾 auditoria
+                FinancialAuditService::log(
+                    'paid',
+                    'Payment',
+                    $payment->id,
+                    ['amount' => $payment->amount]
+                );
+
+                // 🔔 notificação
+                $payment->scholarshipHolder->user->notify(
+                    new IntelligentSystemAlert(
+                        title: 'Pagamento realizado',
+                        message: "Seu pagamento de {$payment->periodLabel()} foi realizado.",
+                        level: 'success',
+                        url: route('payments.my')
+                    )
+                );
+            }
+        });
+
+        return back()->with('success', 'Pagamentos processados com sucesso.');
     }
 
 }

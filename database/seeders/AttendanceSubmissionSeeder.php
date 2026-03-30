@@ -17,14 +17,16 @@ class AttendanceSubmissionSeeder extends Seeder
         $holders = ScholarshipHolder::all();
 
         foreach ($holders as $holder) {
+
             $cursor = $start->copy();
 
             while ($cursor <= $end) {
 
-                // status por regra simples
+                $monthsDiff = $cursor->diffInMonths(now());
+
                 if ($cursor->isSameMonth(now())) {
                     $status = AttendanceSubmission::STATUS_DRAFT;
-                } elseif ($cursor->diffInMonths(now()) === 1) {
+                } elseif ($monthsDiff === 1) {
                     $status = AttendanceSubmission::STATUS_SUBMITTED;
                 } else {
                     $status = collect([
@@ -33,7 +35,7 @@ class AttendanceSubmissionSeeder extends Seeder
                     ])->random();
                 }
 
-                AttendanceSubmission::firstOrCreate(
+                AttendanceSubmission::updateOrCreate(
                     [
                         'scholarship_holder_id' => $holder->id,
                         'year'  => $cursor->year,
@@ -44,14 +46,17 @@ class AttendanceSubmissionSeeder extends Seeder
                         'submitted_at'  => in_array($status, ['submitted','approved','rejected'])
                             ? $cursor->copy()->endOfMonth()
                             : null,
+
                         'approved_at'   => $status === 'approved'
                             ? $cursor->copy()->endOfMonth()->addDays(2)
                             : null,
+
                         'rejected_at'   => $status === 'rejected'
-                            ? $cursor->copy()->endOfMonth()->addDays(2)
+                            ? now()->subDays(rand(1, 5)) // 🔥 importante p/ edição
                             : null,
+
                         'rejected_reason' => $status === 'rejected'
-                            ? 'Inconsistência nas horas lançadas'
+                            ? 'Ajustar horas inconsistentes.'
                             : null,
                     ]
                 );

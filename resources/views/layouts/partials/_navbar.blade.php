@@ -45,8 +45,8 @@
 
             {{-- NOTIFICACOES --}}
             @php
-                $unreadCount = auth()->user()->unreadNotifications()->count();
-                $latestNotifications = auth()->user()->notifications()->latest()->take(5)->get();
+                $unreadCount = $navUnreadCount ?? 0;
+                $latestNotifications = $navNotifications ?? collect();
             @endphp
 
             <li class="nav-item dropdown me-2">
@@ -61,29 +61,45 @@
                     @endif
                 </a>
 
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-0" style="width: 350px; max-width: 92vw;">
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-0" style="width: 360px;">
 
-                    <li class="p-2 bg-light border-bottom fw-semibold">
+                    <li class="p-2 bg-light border-bottom fw-semibold d-flex justify-content-between">
                         Notificacoes
+                        @if($unreadCount)
+                            <span class="badge bg-danger">{{ $unreadCount }}</span>
+                        @endif
                     </li>
 
                     @forelse($latestNotifications as $n)
 
                         @php
                             $level = $n->data['level'] ?? 'info';
-                            $color = match($level) {
-                                'warning' => 'bg-warning-subtle',
-                                'danger'  => 'bg-danger-subtle text-white',
-                                default   => ''
+                            
+                            $icon = match($level) {
+                                'danger' => 'bi-x-circle text-danger',
+                                'warning' => 'bi-exclamation-triangle text-warning',
+                                'success' => 'bi-check-circle text-success',
+                                default => 'bi-info-circle text-primary'
                             };
                         @endphp
 
                         <li>
                             <a href="{{ route('notifications.read', $n->id) }}"
-                               class="dropdown-item py-2 {{ $color }} {{ is_null($n->read_at) ? 'fw-bold' : '' }}">
+                            class="dropdown-item py-2 small {{ is_null($n->read_at) ? 'fw-bold bg-light' : '' }}">
 
-                                <div>{{ $n->data['title'] ?? 'Notificacao' }}</div>
-                                <small class="text-muted">{{ $n->created_at->diffForHumans() }}</small>
+                                <div class="d-flex">
+                                    <i class="bi {{ $icon }} me-2 mt-1"></i>
+
+                                    <div>
+                                        <div>{{ $n->data['title'] ?? 'Notificação' }}</div>
+                                        <small class="text-muted">
+                                            {{ Str::limit($n->data['message'] ?? '', 60) }}
+                                        </small>
+                                        <div class="text-muted" style="font-size: 10px;">
+                                            {{ $n->created_at->diffForHumans() }}
+                                        </div>
+                                    </div>
+                                </div>
 
                             </a>
                         </li>

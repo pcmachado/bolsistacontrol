@@ -108,7 +108,7 @@
 
     {{-- ================= CARDS ================= --}}
     @php
-        $baseTotal = $currentTotal > 0 ? $currentTotal : 1;
+        $baseTotal = max($totalPaid + $totalPending + $totalConfirmed, 1);
     @endphp
 
     <div class="row g-3 mb-4">
@@ -171,17 +171,26 @@
         <div class="col-md-3">
             <div class="card shadow-sm border-start border-4 border-danger">
                 <div class="card-body">
+
                     <div class="d-flex justify-content-between">
-                        <span class="text-muted">Pagamentos Pendentes</span>
-                        <i class="bi bi-list-check text-danger fs-4"></i>
+                        <span class="text-muted">Pendentes</span>
+                        <i class="bi bi-hourglass-split text-danger fs-4"></i>
                     </div>
+
+                    {{-- DESTAQUE --}}
                     <h4 class="fw-bold mt-2">
                         {{ $countPending }}
                     </h4>
+
+                    {{-- DETALHES --}}
+                    <div class="small text-muted">
+                        Recebidos: <strong>{{ $totalCount }}</strong>
+                        Pagos: <strong>{{ $countPaid }}</strong>
+                        Confirmados: <strong>{{ $countConfirmed }}</strong>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     {{-- ================= COMPARAÇÃO ================= --}}
@@ -251,10 +260,10 @@
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-white fw-semibold">
-                    Evolução Financeira Anual – {{ $year }}
+                    Evolução Financeira (Status)
                 </div>
                 <div class="card-body">
-                    <canvas id="chartYearly" height="120"></canvas>
+                    <canvas id="chartStacked"></canvas>
                 </div>
             </div>
         </div>
@@ -298,28 +307,46 @@ new Chart(document.getElementById('chartUnit'), {
     }
 });
 
-new Chart(document.getElementById('chartYearly'), {
-    type: 'line',
+new Chart(document.getElementById('chartStacked'), {
+    type: 'bar',
     data: {
-        labels: {!! json_encode($monthlyTotals->pluck('month')->map(fn($m)=> str_pad($m,2,'0',STR_PAD_LEFT))) !!},
-        datasets: [{
-            label: 'Total Pago (R$)',
-            data: {!! json_encode($monthlyTotals->pluck('total')) !!},
-            borderColor: '#198754',
-            backgroundColor: 'rgba(25,135,84,0.1)',
-            tension: 0.3,
-            fill: true
-        }]
+        labels: {!! json_encode($chartStacked['months']) !!},
+        datasets: [
+            {
+                label: 'Pagos',
+                data: {!! json_encode($chartStacked['paid']) !!},
+                backgroundColor: '#198754'
+            },
+            {
+                label: 'Confirmados',
+                data: {!! json_encode($chartStacked['confirmed']) !!},
+                backgroundColor: '#0d6efd'
+            },
+            {
+                label: 'Pendentes',
+                data: {!! json_encode($chartStacked['pending']) !!},
+                backgroundColor: '#ffc107'
+            }
+        ]
     },
     options: {
         responsive: true,
         plugins: {
-            legend: { display: true }
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': R$ ' +
+                            context.raw.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2
+                            });
+                    }
+                }
+            }
         },
         scales: {
-            y: {
-                beginAtZero: true
-            }
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
         }
     }
 });

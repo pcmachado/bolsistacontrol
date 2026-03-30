@@ -7,30 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\User;
 use Carbon\Carbon;
 
 class AttendanceRecord extends Model
 {
     use HasFactory, SoftDeletes;
-
-    /*
-    |--------------------------------------------------------------------------
-    | STATUS
-    |--------------------------------------------------------------------------
-    */
-
-    public const STATUS_DRAFT     = 'draft';
-    public const STATUS_SUBMITTED = 'submitted';
-    public const STATUS_REJECTED  = 'rejected';
-    public const STATUS_APPROVED  = 'approved';
-    public const STATUS_LATE      = 'late';
-
-    /*
-    |--------------------------------------------------------------------------
-    | ATTRIBUTES
-    |--------------------------------------------------------------------------
-    */
 
     protected $fillable = [
         'scholarship_holder_id',
@@ -41,25 +22,16 @@ class AttendanceRecord extends Model
         'hours',
         'calculated_value',
         'description',
-        'status',
-        'rejected_reason',
-        'submitted_at',
-        'approved_at',
-        'approved_by_user_id',
-        'rejected_at',
     ];
 
     protected $casts = [
-        'date'         => 'date',
-        'submitted_at' => 'datetime',
-        'approved_at'  => 'datetime',
-        'rejected_at'  => 'datetime',
+        'date' => 'date',
     ];
 
     /*
-    |--------------------------------------------------------------------------
+    |------------------------------------------------------------------
     | RELATIONSHIPS
-    |--------------------------------------------------------------------------
+    |------------------------------------------------------------------
     */
 
     public function scholarshipHolder(): BelongsTo
@@ -72,15 +44,10 @@ class AttendanceRecord extends Model
         return $this->belongsTo(AttendanceSubmission::class, 'attendance_submission_id');
     }
 
-    public function approver(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by_user_id');
-    }
-
     /*
-    |--------------------------------------------------------------------------
-    | QUERY SCOPES
-    |--------------------------------------------------------------------------
+    |------------------------------------------------------------------
+    | SCOPES
+    |------------------------------------------------------------------
     */
 
     public function scopeByMonth(Builder $query, int $month, int $year): Builder
@@ -89,113 +56,62 @@ class AttendanceRecord extends Model
                      ->whereYear('date', $year);
     }
 
-    public function scopeDraft(Builder $query): Builder
+    /*
+    |------------------------------------------------------------------
+    | STATUS DERIVADO (CORE DO SISTEMA)
+    |------------------------------------------------------------------
+    */
+
+    public function getComputedStatusAttribute(): string
     {
-        return $query->where('status', self::STATUS_DRAFT);
+        if (! $this->submission) {
+            return 'draft';
+        }
+
+        return $this->submission->status;
     }
 
-    public function scopeSubmitted(Builder $query): Builder
+    public function getStatusLabelAttribute(): string
     {
-        return $query->where('status', self::STATUS_SUBMITTED);
-    }
-
-    public function scopeRejected(Builder $query): Builder
-    {
-        return $query->where('status', self::STATUS_REJECTED);
-    }
-
-    public function scopeApproved(Builder $query): Builder
-    {
-        return $query->where('status', self::STATUS_APPROVED);
-    }
-
-    public function scopeLate(Builder $query): Builder
-    {
-        return $query->whereIn('status', [
-                    self::STATUS_DRAFT,
-                    self::STATUS_SUBMITTED
-                ])
-                ->where('date', '<', now()->subDays(7));
+        return match ($this->computed_status) {
+            'draft'     => 'Em edição',
+            'submitted' => 'Enviado',
+            'approved'  => 'Homologado',
+            'rejected'  => 'Rejeitado',
+            default     => '-',
+        };
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | BUSINESS METHODS
-    |--------------------------------------------------------------------------
+    |------------------------------------------------------------------
+    | REGRAS DE NEGÓCIO
+    |------------------------------------------------------------------
     */
-
-    public function submit(): void
-    {
-        if ($this->status !== self::STATUS_DRAFT) {
-            return;
-        }
-
-        $this->update([
-            'status'       => self::STATUS_SUBMITTED,
-            'submitted_at' => now(),
-        ]);
-    }
-
-    public function approve(int $userId): void
-    {
-        if ($this->status !== self::STATUS_SUBMITTED) {
-            return;
-        }
-
-        $this->update([
-            'status'               => self::STATUS_APPROVED,
-            'approved_at'          => now(),
-            'approved_by_user_id'  => $userId,
-        ]);
-    }
-
-    public function reject(string $reason, int $userId): void
-    {
-        if ($this->status !== self::STATUS_SUBMITTED) {
-            return;
-        }
-
-        $this->update([
-            'status'              => self::STATUS_REJECTED,
-            'rejected_reason'     => $reason,
-            'rejected_at'         => now(),
-            'approved_by_user_id' => $userId,
-        ]);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | HELPERS
-    |--------------------------------------------------------------------------
-    */
-
-    public function isDraft(): bool
-    {
-        return $this->status === self::STATUS_DRAFT;
-    }
-
-    public function isApproved(): bool
-    {
-        return $this->status === self::STATUS_APPROVED;
-    }
-
-    public function isRejected(): bool
-    {
-        return $this->status === self::STATUS_REJECTED;
-    }
 
     public function isEditable(): bool
     {
-        if ($this->isDraft()) {
+        if (! $this->submission) {
             return true;
         }
 
-        if ($this->isRejected() && $this->rejected_at) {
-            return now()->diffInDays($this->rejected_at) <= 7;
+        if ($this->submission->status === 'draft') {
+            return true;
+        }
+
+        if ($this->submission->status === 'rejected') {
+            return $this->submission->rejected_at
+                ? now()->diffInDays($this->submission->rejected_at) <= 7
+                : true;
         }
 
         return false;
     }
+
+    /*
+    |------------------------------------------------------------------
+    | HELPERS
+    |------------------------------------------------------------------
+    */
 
     public function formattedDuration(): string
     {

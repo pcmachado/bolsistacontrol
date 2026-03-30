@@ -5,7 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class RejectedAttendance extends Notification
+class AttendanceRejected extends Notification
 {
     use Queueable;
 
@@ -20,12 +20,15 @@ class RejectedAttendance extends Notification
         return ['database'];
     }
 
-    public function toArray($notifiable)
+    public function toDatabase($notifiable)
     {
         return [
             'title' => 'Registro rejeitado',
             'message' => 'Seu registro de frequência foi rejeitado. Motivo: ' . $this->attendance->rejected_reason,
             'attendance_id' => $this->attendance->id,
+            'date' => $this->attendance->date->format('Y-m-d'),
+            'url' => route('attendance.index', ['month' => $this->attendance->date->format('Y-m')]),
+            'level' => 'error',
         ];
     }
 }

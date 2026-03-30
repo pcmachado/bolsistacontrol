@@ -44,7 +44,7 @@
                                     Visualizar
                                 </a>
 
-                                <a href="{{ route('attendance.reports.monthly.pdf', [$submission, 'pdf' => 1]) }}"
+                                <a href="{{ route('attendance.reports.monthly', [$submission, 'pdf' => 1]) }}"
                                    class="btn btn-sm btn-outline-danger"
                                    target="_blank">
                                     PDF

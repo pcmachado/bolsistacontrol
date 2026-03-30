@@ -2,25 +2,20 @@
 
 namespace App\Services;
 
-use Illuminate\Notifications\DatabaseNotification as Notification;
 use App\Models\User;
+use Illuminate\Notifications\Notification;
 
 class NotificationService
 {
-    public function sendToUser(User $user, string $message, string $type = 'info'): Notification
+    public function send(User $user, Notification $notification): void
     {
-        return Notification::create([
-            'user_id' => $user->id,
-            'message' => $message,
-            'type'    => $type,
-            'read'    => false,
-        ]);
+        $user->notify($notification);
     }
 
-    public function sendToMany($users, string $message, string $type = 'info')
+    public function sendToMany($users, Notification $notification): void
     {
         foreach ($users as $user) {
-            $this->sendToUser($user, $message, $type);
+            $user->notify(clone $notification);
         }
     }
 }

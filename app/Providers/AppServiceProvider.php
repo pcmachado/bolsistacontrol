@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Faker\Factory as FakerFactory;
 use Faker\Generator as FakerGenerator;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,6 +30,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('layouts.partials._navbar', function ($view) {
+            if (Auth::check()) {
+                $user = Auth::user();
+
+                $view->with([
+                    'navUnreadCount' => $user->unreadNotifications()->count(),
+                    'navNotifications' => $user->notifications()->latest()->limit(5)->get(),
+                ]);
+            }
+        });
     }
 }

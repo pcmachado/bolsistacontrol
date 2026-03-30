@@ -10,79 +10,69 @@ use DomainException;
 
 class AttendanceRecordService
 {
-    /**
-     * Criação de registro
-     */
-    public function create(
-        ScholarshipHolder $holder,
-        array $data
-    ): AttendanceRecord {
+    public function create(ScholarshipHolder $holder, array $data): AttendanceRecord
+    {
+        $date  = Carbon::parse($data['date']);
+        $hours = $this->calculateHours($data['start_time'], $data['end_time']);
+
+        // 🔒 valida se pode registrar nesse mês
+        if (! app(AttendanceSubmissionService::class)
+            ->canCreateRecord($holder, $date->year, $date->month)
+        ) {
+            throw new DomainException('Mês já fechado para edição.');
+        }
+
+        // 🔥 valida limite mensal
+        app(AttendanceService::class)
+            ->validateMonthlyLimit($holder, $date->year, $date->month, $hours);
+
         return AttendanceRecord::create([
-            'scholarship_holder_id'       => $holder->id,
-            'date'                        => Carbon::parse($data['date']),
-            'start_time'                  => $data['start_time'],
-            'end_time'                    => $data['end_time'],
-            'description'                 => $data['description'] ?? null,
-            'hours'                       => $this->calculateHours(
-                $data['start_time'],
-                $data['end_time']
-            ),
-            'attendance_submission_id'    => null,
+            'scholarship_holder_id'    => $holder->id,
+            'date'                     => $date,
+            'start_time'               => $data['start_time'],
+            'end_time'                 => $data['end_time'],
+            'description'              => $data['description'] ?? null,
+            'hours'                    => $hours,
+            'attendance_submission_id' => null,
         ]);
     }
 
-    /**
-     * Atualização
-     */
-    public function update(
-        AttendanceRecord $record,
-        array $data
-    ): AttendanceRecord {
-        if (! $this->isEditable($record)) {
-            throw new DomainException(
-                'Este registro não pode ser alterado.'
-            );
+    public function update(AttendanceRecord $record, array $data): AttendanceRecord
+    {
+        if (! $record->isEditable()) {
+            throw new DomainException('Este registro não pode ser alterado.');
         }
 
+        $date  = Carbon::parse($data['date']);
+        $hours = $this->calculateHours($data['start_time'], $data['end_time']);
+
+        app(AttendanceService::class)
+            ->validateMonthlyLimit(
+                $record->scholarshipHolder,
+                $date->year,
+                $date->month,
+                $hours,
+                $record->id // ignora o próprio registro
+            );
+
         $record->update([
-            'date'        => Carbon::parse($data['date']),
+            'date'        => $date,
             'start_time'  => $data['start_time'],
             'end_time'    => $data['end_time'],
             'description' => $data['description'] ?? null,
-            'hours'       => $this->calculateHours(
-                $data['start_time'],
-                $data['end_time']
-            ),
+            'hours'       => $hours,
         ]);
 
         return $record;
     }
 
-    /**
-     * Exclusão
-     */
     public function delete(AttendanceRecord $record): void
     {
-        if (! $this->isEditable($record)) {
-            throw new DomainException(
-                'Este registro não pode ser removido.'
-            );
+        if (! $record->isEditable()) {
+            throw new DomainException('Este registro não pode ser removido.');
         }
 
         $record->delete();
-    }
-
-    /**
-     * Regra central de edição
-     */
-    public function isEditable(AttendanceRecord $record): bool
-    {
-        if (! $record->attendance_submission_id) {
-            return true;
-        }
-
-        return $record->submission?->status ===
-            AttendanceSubmission::STATUS_DRAFT;
     }
 
     protected function calculateHours(string $start, string $end): float
