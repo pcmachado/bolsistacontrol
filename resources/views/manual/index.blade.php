@@ -57,6 +57,21 @@
         </div>
     </div>
 
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Turmas e Alunos</h5>
+                <p class="card-text text-muted">
+                    Lancamentos academicos, controle mensal e envio ao financeiro.
+                </p>
+                <a href="{{ route('manual.index', ['doc' => 'turmas-alunos']) }}"
+                class="btn btn-sm btn-outline-primary">
+                    Abrir guia
+                </a>
+            </div>
+        </div>
+    </div>
+
     @php
         $manualDocs = $manualDocs ?? [
             'guia-executivo' => 'GUIA-EXECUTIVO.md',
@@ -65,6 +80,7 @@
             'coordenacao' => 'perfis/coordenacao.md',
             'admin' => 'perfis/admin.md',
             'professor-supervisor' => 'perfis/professor-supervisor.md',
+            'turmas-alunos' => 'perfis/turmas-alunos.md',
         ];
         $selectedDoc = $selectedDoc ?? 'guia-executivo';
         $manualPath = base_path('docs/manual/' . ($manualDocs[$selectedDoc] ?? 'GUIA-EXECUTIVO.md'));

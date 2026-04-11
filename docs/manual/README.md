@@ -15,6 +15,15 @@ Este manual esta organizado por perfil de usuario, com foco nas funcionalidades 
 3. [Administrador](./perfis/admin.md)
 4. [Professor e Supervisor](./perfis/professor-supervisor.md)
 
+## 📊 Funcionalidades do Sistema
+
+- Gestao de bolsistas e frequencia
+- Gestao academica de turmas e alunos
+- Submissao mensal sequencial
+- Controle financeiro (bolsistas e alunos)
+- Dashboards e relatorios exportaveis
+- Filtros inteligentes (unidade → curso → turma)
+
 ## Estrutura Padrao dos Guias
 
 1. Objetivo do perfil

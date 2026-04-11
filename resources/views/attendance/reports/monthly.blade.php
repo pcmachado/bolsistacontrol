@@ -31,8 +31,8 @@
 <tr>
     <td><strong>Carga horária prevista</strong></td>
     <td>
-        {{ $submission->scholarshipHolder->weekly_limit_minutes
-            ? ($submission->scholarshipHolder->weekly_limit_minutes / 60) * 4
+        {{ $submission->scholarshipHolder?->projects->first()?->pivot->weekly_workload
+            ? ($submission->scholarshipHolder?->projects->first()?->pivot->weekly_workload) * 4
             : '—'
         }} horas mensais
     </td>

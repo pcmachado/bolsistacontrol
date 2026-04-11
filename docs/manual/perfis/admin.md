@@ -13,6 +13,20 @@ Administrar estrutura institucional, usuarios, operacao academica e fluxo financ
 5. Homologacoes e pagamentos
 6. Relatorios financeiros e institucionais
 
+## Modulo de Turmas e Alunos
+
+1. Configuracao de valor diario por projeto
+2. Criacao de turmas com periodo definido
+3. Vinculacao de alunos as turmas
+4. Controle de consistencia dos lancamentos
+
+## Financeiro de Alunos
+
+1. Geracao de pagamentos a partir de lancamentos
+2. Controle de status (pending, sent, overdue, paid)
+3. Exportacao de relatorios
+4. Auditoria de valores por periodo
+
 ## Acessos-Chave
 
 1. `admin.users.index`

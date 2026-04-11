@@ -48,7 +48,7 @@
 
         {{-- FOOTER --}}
         <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
-            2025 — ProBolsas - Portal de Gestão de Bolsas © Todos os direitos reservados.
+            2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - v1.0
         </footer>
 
     </div>

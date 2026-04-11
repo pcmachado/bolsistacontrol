@@ -133,4 +133,20 @@ Baseado nas funcionalidades atualmente disponiveis no sistema.
 3. [Guia da Coordenacao](./perfis/coordenacao.md)
 4. [Guia do Administrador](./perfis/admin.md)
 5. [Guia Professor/Supervisor](./perfis/professor-supervisor.md)
+6. [Guia Turmas/Alunos](./perfis/turmas-alunos.md)
 
+## Regras Criticas do Sistema
+
+- Fluxo mensal sequencial (nao pode pular meses)
+- Rejeicao retorna pacote completo
+- Pagamentos dependem de submissao valida
+- Filtros definem o contexto das operacoes
+
+## 📊 Funcionalidades do Sistema
+
+- Gestao de bolsistas e frequencia
+- Gestao academica de turmas e alunos
+- Submissao mensal sequencial
+- Controle financeiro (bolsistas e alunos)
+- Dashboards e relatorios exportaveis
+- Filtros inteligentes (unidade → curso → turma)

@@ -255,6 +255,8 @@
     @if($isPdf ?? false)
         Gerado em {{ now()->format('d/m/Y H:i') }}
     @endif
+    <br>
+    2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - v1.0
 </footer>
 
 @if($isPdf ?? false)

@@ -29,6 +29,20 @@ Validar frequencias, acompanhar indicadores academicos e financeiros, e manter c
 4. Execute aprovacao ou rejeicao
 5. Em lote, use acao `bulk` quando aplicavel
 
+## Financeiro de Alunos
+
+1. Acessar dashboard de pagamentos de alunos
+2. Filtrar por unidade, curso e turma
+3. Acompanhar pagamentos pendentes e atrasados
+4. Exportar relatorios (PDF/Excel)
+
+## Fluxo de Turmas
+
+1. Validar lancamentos antes do envio
+2. Garantir sequencia mensal
+3. Rejeitar com justificativa quando necessario
+4. Monitorar pagamentos derivados das turmas
+
 ## Filtros e Escopo
 
 1. Coordenacao geral: visao institucional

@@ -16,6 +16,13 @@ No estado atual do sistema, parte das funcionalidades e dashboards para professo
 4. `admin.dashboard.unit` (visao por unidade)
 5. Modulos de turmas e disciplinas conforme permissao
 
+## Acompanhamento de Turmas
+
+1. Visualizar alunos vinculados
+2. Conferir lancamentos mensais
+3. Apoiar validacao antes do envio
+4. Identificar inconsistencias academicas
+
 ## Rotina Recomendada (quando perfil operacional)
 
 1. Acompanhar turmas vinculadas
