@@ -36,6 +36,8 @@ class AttendanceSubmission extends Model
         'month',
         'year',
         'status',
+        'total_hours',
+        'calculated_value',
         'submitted_at',
         'approved_at',
         'approved_by',
@@ -95,6 +97,14 @@ class AttendanceSubmission extends Model
             return;
         }
 
+        if ($this->isLocked()) {
+            return;
+        }
+
+        $this->recalculate();
+
+        app(\App\Services\PaymentGenerationService::class)->generateFromSubmission($this);
+
         $this->update([
             'status'       => self::STATUS_SUBMITTED,
             'submitted_at' => now(),
@@ -106,6 +116,12 @@ class AttendanceSubmission extends Model
         if (! $this->isSubmitted()) {
             return;
         }
+
+        if ($this->isLocked()) {
+            return;
+        }
+
+        $this->recalculate();  
 
         $this->update([
             'status'      => self::STATUS_APPROVED,
@@ -120,12 +136,69 @@ class AttendanceSubmission extends Model
             return;
         }
 
+        if ($this->isLocked()) {
+            return;
+        }
+
         $this->update([
             'status'          => self::STATUS_REJECTED,
             'rejected_reason' => $reason,
             'rejected_at'     => now(),
             'approved_by'     => $userId,
         ]);
+
+        $this->attendanceRecords()
+            ->where('has_issue', false)
+            ->update([
+                'has_issue' => true,
+                'issue_reason' => $reason
+            ]);
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function recalculate(): void
+    {
+        if ($this->isApproved()) {
+            return;
+        }
+
+        if ($this->isLocked()) {
+            return;
+        }
+
+        $hours = $this->attendanceRecords()->sum('hours');
+
+        $holder = $this->scholarshipHolder;
+        $project = $holder?->projects->first();
+
+        $positionId = $project?->pivot->position_id;
+
+        $rate = $project?->positions
+            ->firstWhere('id', $positionId)
+            ?->pivot->hourly_rate ?? 0;
+
+        $this->update([
+            'total_hours' => $hours,
+            'calculated_value' => $hours * $rate,
+        ]);
+    }
+
+    protected function calculateValue(float $hours): float
+    {
+        $hourValue = $this->relationLoaded('scholarshipHolder')
+            ? $this->scholarshipHolder->hour_value
+            : $this->scholarshipHolder()->value('hour_value');
+
+        return round($hours * $hourValue, 2);
+    }
+
+    public function getPeriodAttribute(): string
+    {
+        return sprintf('%02d/%d', $this->month, $this->year);
     }
 
     /*
@@ -157,5 +230,14 @@ class AttendanceSubmission extends Model
     public function isLate(): bool
     {
         return $this->status === self::STATUS_LATE;
+    }
+
+    public function isLocked(): bool
+    {
+        return \App\Models\FinancialClosure::isClosed(
+            $this->scholarshipHolder->unit_id,
+            $this->month,
+            $this->year
+        );
     }
 }

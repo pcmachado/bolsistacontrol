@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\AttendanceSubmission;
 use App\Models\ScholarshipHolder;
+use App\Models\ProjectScholarshipHolder;
 use Carbon\Carbon;
 
 class AttendanceSubmissionSeeder extends Seeder
@@ -64,5 +65,7 @@ class AttendanceSubmissionSeeder extends Seeder
                 $cursor->addMonth();
             }
         }
+
+        AttendanceSubmission::all()->each(fn($s) => $s->recalculate());
     }
 }

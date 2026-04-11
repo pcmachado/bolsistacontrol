@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\FinancialClosure;
 use App\Models\Project;
 use App\Models\Unit;
+use App\Models\AttendanceSubmission;
 use App\Services\VisibilityService;
 
 class PaymentDashboardService
@@ -92,6 +93,23 @@ class PaymentDashboardService
             ? (($currentTotal - $previousTotal) / $previousTotal) * 100
             : null;
 
+        $forecastQuery = AttendanceSubmission::query()
+            ->where('month', $month)
+            ->where('year', $year)
+            ->where('status', AttendanceSubmission::STATUS_APPROVED)
+            ->when($unitId, fn($q) => 
+                $q->whereHas('scholarshipHolder', fn($h) => 
+                    $h->where('unit_id', $unitId)
+                )
+            );
+
+        $forecastTotal = (clone $forecastQuery)->sum('calculated_value');
+        $forecastCount = (clone $forecastQuery)->count();
+
+        $realTotal = $totalPaid + $totalConfirmed;
+
+        $gap = $forecastTotal - $realTotal;
+
         /*
         |--------------------------------------------------------------------------
         | GRÁFICOS (PADRÃO BASE QUERY)
@@ -176,6 +194,11 @@ class PaymentDashboardService
             ],
 
             'isClosed' => FinancialClosure::isClosed($unitId, $month, $year),
+
+            'forecastTotal' => $forecastTotal,
+            'forecastCount' => $forecastCount,
+            'realTotal' => $realTotal,
+            'gap' => $gap,
         ];
     }
 }

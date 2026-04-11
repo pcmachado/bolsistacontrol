@@ -16,7 +16,9 @@ class Project extends Model
         'name',
         'description',
         'institution_id',
+        'student_daily_rate',
         'wizard_step',
+        'status',
         'start_date',
         'end_date'
     ];

@@ -63,4 +63,24 @@ class ClassOffering extends Model
         return $this->hasMany(ClassSession::class);
     }
 
+    public function studentRecords(): HasMany
+    {
+        return $this->hasMany(StudentRecord::class);
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(ClassOfferingSubmission::class);
+    }
+
+     public function students()
+    {
+        return $this->hasMany(Student::class); 
+    }
+
+    public function classOfferingSubmissions(): HasMany
+    {
+        return $this->hasMany(ClassOfferingSubmission::class);
+    }
+
 }

@@ -24,32 +24,32 @@ class HomologationsDataTable extends DataTable
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
-            ->addColumn('checkbox', fn ($row) =>
-                '<input type="checkbox" name="submissions[]" value="'.$row->id.'">'
+            ->addColumn('checkbox', fn ($submission) =>
+                '<input type="checkbox" name="submissions[]" value="'.$submission->id.'">'
             )
-            ->addColumn('bolsista', fn ($row) =>
-                $row->scholarshipHolder?->user?->name ?? '-'
+            ->addColumn('bolsista', fn ($submission) =>
+                $submission->scholarshipHolder?->user?->name ?? '-'
             )
-            ->addColumn('project', fn ($row) =>
-                $row->scholarshipHolder?->projects?->first()?->name ?? '-'
+            ->addColumn('project', fn ($submission) =>
+                $submission->scholarshipHolder?->projects?->first()?->name ?? '-'
             )
-            ->addColumn('period', fn ($row) =>
-                sprintf('%02d/%d', $row->month, $row->year)
+            ->addColumn('period', fn ($submission) =>
+                sprintf('%02d/%d', $submission->month, $submission->year)
             )
-            ->editColumn('records_count', fn ($row) => (int) $row->records_count)
-            ->addColumn('status_label', function ($row) {
-                return match ($row->status) {
+            ->editColumn('records_count', fn ($submission) => (int) $submission->records_count)
+            ->addColumn('status_label', function ($submission) {
+                return match ($submission->status) {
                     AttendanceSubmission::STATUS_SUBMITTED => '<span class="badge bg-info">Enviado</span>',
                     AttendanceSubmission::STATUS_APPROVED => '<span class="badge bg-success">Homologado</span>',
                     AttendanceSubmission::STATUS_REJECTED => '<span class="badge bg-danger">Rejeitado</span>',
-                    default => ucfirst((string) $row->status),
+                    default => ucfirst((string) $submission->status),
                 };
             })
-            ->editColumn('submitted_at', fn ($row) =>
-                $row->submitted_at?->format('d/m/Y H:i') ?? '-'
+            ->editColumn('submitted_at', fn ($submission) =>
+                $submission->submitted_at?->format('d/m/Y H:i') ?? '-'
             )
-            ->addColumn('actions', fn ($row) =>
-                view('admin.homologations.partials.actions', compact('row'))->render()
+            ->addColumn('actions', fn ($submission) =>
+                view('admin.homologations.partials.actions', compact('submission'))->render()
             )
             ->rawColumns(['checkbox', 'status_label', 'actions']);
     }

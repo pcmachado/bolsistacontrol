@@ -53,6 +53,9 @@ use App\Http\Controllers\Admin\FinancialClosureController;
 use App\Http\Controllers\ReceiptVerificationController;
 use App\Http\Controllers\MyAttendanceRecordController;
 use App\Http\Controllers\MyAttendanceSubmissionController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\Admin\ClassOfferingStudentController;
+use App\Http\Controllers\Admin\StudentPaymentController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -193,7 +196,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('receipt');
     });
 
-
+    Route::resource('students', StudentController::class);
 
 });
 
@@ -212,17 +215,22 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
 
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
 
-    Route::post('/{record}/approve', [HomologationController::class, 'approve'])->name('homologations.approve');
-    Route::post('/{record}/reject', [HomologationController::class, 'reject'])->name('homologations.reject');
+    
 
     // 🔹 Relatório de Homologações (apenas coordenador geral e adjunto)
-    Route::get('/homologations/report', [HomologationController::class, 'report'])->name('homologations.report');
-    Route::post('/homologations/bulk', [HomologationController::class, 'bulk'])->name('homologations.bulk');
-    Route::get('/homologations/pending', [HomologationController::class, 'pending'])->name('homologations.pending');
-    Route::get('/homologations', [HomologationController::class, 'index'])->name('homologations.index');
-    Route::get('/homologations/late', [HomologationController::class, 'late'])->name('homologations.late');
+    Route::prefix('homologations')->name('homologations.')->group(function () {
+        Route::get('/report', [HomologationController::class, 'report'])->name('report');
+        Route::post('/bulk', [HomologationController::class, 'bulk'])->name('bulk');
+        Route::get('/pending', [HomologationController::class, 'pending'])->name('pending');
+        Route::get('/', [HomologationController::class, 'index'])->name('index');
+        Route::get('/late', [HomologationController::class, 'late'])->name('late');
 
-    Route::get('/homologations/{id}', [HomologationController::class, 'show'])->name('homologations.show');
+        Route::get('/{submission}', [HomologationController::class, 'show'])->name('show');
+
+        Route::post('{submission}/approve', [HomologationController::class, 'approve'])->name('approve');
+        Route::post('{submission}/reject', [HomologationController::class, 'reject'])->name('reject');
+    });
+
 
     // 🔹 Relatório Consolidado (apenas coordenador geral)
     Route::get('/reports/monthly', [ReportController::class, 'monthlyReport'])->name('reports.report');
@@ -295,6 +303,26 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::controller(ClassOfferingDisciplineController::class)->as('class-offerings.disciplines.')->group(function () {
         Route::put('class-offerings/discipline/{pivot}', 'update')->name('update');
         Route::delete('class-offerings/discipline/{pivot}', 'destroy')->name('destroy');
+    });
+
+    Route::prefix('class-offerings')->group(function () {
+        Route::get('{class}/students/list', [ClassOfferingStudentController::class, 'list'])->name('class.students.list');
+        Route::get('{class}/students', [ClassOfferingStudentController::class, 'index'])->name('class.students.index');
+        Route::post('{class}/students', [ClassOfferingStudentController::class, 'save'])->name('class.students.save');
+        Route::post('{class}/students/submit',[ClassOfferingStudentController::class, 'submit'])->name('class.students.submit');
+    });
+
+    Route::prefix('student-payments')->name('student-payments.')->group(function () {
+
+        Route::get('/', [StudentPaymentController::class, 'index'])->name('index');
+        Route::post('batch/pay', [StudentPaymentController::class, 'payBatch'])->name('payBatch');
+        Route::get('dashboard',[StudentPaymentController::class, 'dashboard'])->name('dashboard');
+
+        Route::get('report/pdf', [StudentPaymentController::class, 'reportPdf'])->name('report.pdf');
+        Route::get('report/excel', [StudentPaymentController::class, 'reportExcel'])->name('report.excel');
+
+        Route::post('{payment}/pay', [StudentPaymentController::class, 'pay'])->name('pay');
+
     });
 
     // 4. Dashboards Globais e Relatórios Gerais

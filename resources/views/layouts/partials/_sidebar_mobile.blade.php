@@ -65,6 +65,15 @@
             <x-sidebar-item route="admin.payments.dashboard"
                             icon="bi bi-graph-up"
                             title="Financeiro"/>
+
+            <x-sidebar-item route="admin.student-payments.dashboard"
+                            icon="bi bi-graph-up-arrow"
+                            title="Financeiro Alunos"/>
+
+            <x-sidebar-item route="admin.student-payments.index"
+                            icon="bi bi-cash-stack"
+                            title="Pagamentos Alunos"/>
+
         @endhasanyrole
 
         @hasanyrole('admin|coordenador_geral|coordenador_adjunto_geral')

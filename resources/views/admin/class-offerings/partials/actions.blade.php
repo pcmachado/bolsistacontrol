@@ -3,17 +3,12 @@
     <i class="bi bi-pencil"></i>
 </a>
 
-{{-- Futuro: gerenciar disciplinas --}}
+<a href="{{ route('admin.class.students.list', $row->id) }}"
+   class="btn btn-sm btn-primary">
+    <i class="bi bi-people"></i>
+</a>
+
 <a href="{{ route('admin.class-offerings.disciplines', $row->id) }}"
    class="btn btn-sm btn-info">
     <i class="bi bi-diagram-3"></i>
 </a>
-
-<form action="{{ route('admin.class-offerings.destroy', $row->id) }}"
-      method="POST" class="d-inline">
-    @csrf @method('DELETE')
-    <button onclick="return confirm('Remover turma?')"
-            class="btn btn-sm btn-danger">
-        <i class="bi bi-trash"></i>
-    </button>
-</form>
