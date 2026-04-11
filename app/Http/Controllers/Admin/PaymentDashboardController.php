@@ -30,4 +30,43 @@ class PaymentDashboardController extends Controller
 
         return view('admin.payments.dashboard', $data);
     }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'unit_id' => ['required', 'exists:units,id'],
+            'month'   => ['required', 'integer', 'between:1,12'],
+            'year'    => ['required', 'integer', 'min:2020'],
+        ]);
+
+        $hasPending = Payment::query()
+            ->where('unit_id', $data['unit_id'])
+            ->where('month', $data['month'])
+            ->where('year', $data['year'])
+            ->where('status', Payment::STATUS_SENT)
+            ->exists();
+
+        if ($hasPending) {
+            return back()->with('error', 'Existem pagamentos pendentes.');
+        }
+
+        // 🔒 evita duplicidade
+        $exists = FinancialClosure::query()
+            ->where('unit_id', $data['unit_id'])
+            ->where('month', $data['month'])
+            ->where('year', $data['year'])
+            ->exists();
+
+        if ($exists) {
+            return back()->with('warning', 'Período já está fechado.');
+        }
+
+        FinancialClosure::create([
+            ...$data,
+            'closed_by' => Auth::id(),
+            'closed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Período fechado com sucesso.');
+    }
 }

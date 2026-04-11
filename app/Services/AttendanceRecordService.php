@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSubmission;
 use App\Models\ScholarshipHolder;
+use App\Models\FinancialClosure;
 use Carbon\Carbon;
 use DomainException;
 
@@ -20,6 +21,10 @@ class AttendanceRecordService
             ->canCreateRecord($holder, $date->year, $date->month)
         ) {
             throw new DomainException('Mês já fechado para edição.');
+        }
+
+        if (FinancialClosure::isClosed($holder->unit_id, $date->month, $date->year)) {
+            throw new DomainException('Período financeiro fechado.');
         }
 
         // 🔥 valida limite mensal
@@ -41,6 +46,14 @@ class AttendanceRecordService
     {
         if (! $record->isEditable()) {
             throw new DomainException('Este registro não pode ser alterado.');
+        }
+
+        if (FinancialClosure::isClosed(
+            $record->scholarshipHolder->unit_id,
+            $record->date->month,
+            $record->date->year
+        )) {
+            throw new DomainException('Período financeiro fechado.');
         }
 
         $date  = Carbon::parse($data['date']);
@@ -70,6 +83,14 @@ class AttendanceRecordService
     {
         if (! $record->isEditable()) {
             throw new DomainException('Este registro não pode ser removido.');
+        }
+
+        if (FinancialClosure::isClosed(
+            $record->scholarshipHolder->unit_id,
+            $record->date->month,
+            $record->date->year
+        )) {
+            throw new DomainException('Período financeiro fechado.');
         }
 
         $record->delete();

@@ -33,7 +33,6 @@ class AttendanceRecordFactory extends Factory
             'start_time' => $start->format('H:i:s'),
             'end_time' => $end->format('H:i:s'),
             'hours' => $end->diff($start)->h,
-            'calculated_value' => $this->faker->randomFloat(2, 50, 200),
             'status' => $this->faker->randomElement(['draft', 'submitted', 'approved', 'rejected']),
             'description' => $this->faker->sentence(),
             'submitted_at' => null,

@@ -111,114 +111,138 @@
         $baseTotal = max($totalPaid + $totalPending + $totalConfirmed, 1);
     @endphp
 
-    <div class="row g-3 mb-4">
+    {{-- 🔹 LINHA 1 --}}
+    <div class="row g-3 mb-3">
 
         {{-- TOTAL PAGO --}}
         <div class="col-md-3">
-            <div class="card shadow-sm border-start border-4 border-success">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Total Pago</span>
-                        <i class="bi bi-check-circle text-success fs-4"></i>
-                    </div>
-                    <h4 class="fw-bold mt-2">
-                        R$ {{ number_format($totalPaid, 2, ',', '.') }}
-                    </h4>
-                    <div class="small text-muted">
-                        {{ number_format(($totalPaid / $baseTotal) * 100, 1) }}%
-                    </div>
-                </div>
-            </div>
+            @include('admin.payments.partials.card', [
+                'title' => 'Total Pago',
+                'value' => number_format($totalPaid, 2, ',', '.'),
+                'icon'  => 'bi-check-circle',
+                'color' => 'success',
+                'percent' => ($totalPaid / $baseTotal) * 100
+            ])
         </div>
 
         {{-- CONFIRMADO --}}
         <div class="col-md-3">
-            <div class="card shadow-sm border-start border-4 border-primary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Confirmado</span>
-                        <i class="bi bi-patch-check text-primary fs-4"></i>
-                    </div>
-                    <h4 class="fw-bold mt-2">
-                        R$ {{ number_format($totalConfirmed, 2, ',', '.') }}
-                    </h4>
-                    <div class="small text-muted">
-                        {{ number_format(($totalConfirmed / $baseTotal) * 100, 1) }}%
-                    </div>
-                </div>
-            </div>
+            @include('admin.payments.partials.card', [
+                'title' => 'Confirmado',
+                'value' => number_format($totalConfirmed, 2, ',', '.'),
+                'icon'  => 'bi-patch-check',
+                'color' => 'primary',
+                'percent' => ($totalConfirmed / $baseTotal) * 100
+            ])
         </div>
 
         {{-- PENDENTE --}}
         <div class="col-md-3">
-            <div class="card shadow-sm border-start border-4 border-warning">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted">Pendente</span>
-                        <i class="bi bi-hourglass-split text-warning fs-4"></i>
-                    </div>
-                    <h4 class="fw-bold mt-2">
-                        R$ {{ number_format($totalPending, 2, ',', '.') }}
-                    </h4>
-                    <div class="small text-muted">
-                        {{ number_format(($totalPending / $baseTotal) * 100, 1) }}%
-                    </div>
-                </div>
-            </div>
+            @include('admin.payments.partials.card', [
+                'title' => 'Pendente',
+                'value' => number_format($totalPending, 2, ',', '.'),
+                'icon'  => 'bi-hourglass-split',
+                'color' => 'warning',
+                'percent' => ($totalPending / $baseTotal) * 100
+            ])
         </div>
 
-        {{-- QUANTIDADE PENDENTE --}}
+        {{-- QUANTIDADE --}}
         <div class="col-md-3">
-            <div class="card shadow-sm border-start border-4 border-danger">
+            <div class="card shadow-sm border-start border-4 border-danger h-100">
                 <div class="card-body">
-
                     <div class="d-flex justify-content-between">
                         <span class="text-muted">Pendentes</span>
                         <i class="bi bi-hourglass-split text-danger fs-4"></i>
                     </div>
 
-                    {{-- DESTAQUE --}}
                     <h4 class="fw-bold mt-2">
                         {{ $countPending }}
                     </h4>
 
-                    {{-- DETALHES --}}
                     <div class="small text-muted">
-                        Recebidos: <strong>{{ $totalCount }}</strong>
-                        Pagos: <strong>{{ $countPaid }}</strong>
+                        Recebidos: <strong>{{ $totalCount }}</strong><br>
+                        Pagos: <strong>{{ $countPaid }}</strong><br>
                         Confirmados: <strong>{{ $countConfirmed }}</strong>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
-    {{-- ================= COMPARAÇÃO ================= --}}
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm">
+    {{-- 🔹 LINHA 2 --}}
+    <div class="row g-3 mb-4 justify-content-center">
+
+        {{-- PREVISTO --}}
+        <div class="col-md-3">
+            <div class="card shadow-sm border-start border-4 border-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Previsto</span>
+                        <i class="bi bi-graph-up-arrow text-dark fs-4"></i>
+                    </div>
+
+                    <h4 class="fw-bold mt-2">
+                        R$ {{ number_format($forecastTotal, 2, ',', '.') }}
+                    </h4>
+
+                    <div class="small text-muted">
+                        {{ $forecastCount }} submissões
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- GAP --}}
+        <div class="col-md-3">
+            <div class="card shadow-sm border-start border-4 
+                {{ $gap > 0 ? 'border-warning' : 'border-success' }} h-100">
+
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Saldo</span>
+                        <i class="bi 
+                            {{ $gap > 0 ? 'bi-exclamation-triangle text-warning' : 'bi-check-circle text-success' }} fs-4">
+                        </i>
+                    </div>
+
+                    <h4 class="fw-bold mt-2">
+                        R$ {{ number_format($gap, 2, ',', '.') }}
+                    </h4>
+
+                    <div class="small text-muted">
+                        {{ $gap > 0 ? 'Ainda a pagar' : 'Liquidado' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-start border-4 
+                {{ $variation >= 0 ? 'border-success' : 'border-danger' }} h-100">
+
                 <div class="card-body">
 
                     <div class="d-flex justify-content-between">
-                        <span class="text-muted">Comparação mensal</span>
+                        <span class="text-muted">Comparação</span>
 
-                        @if(!is_null($variation))
-                            <span class="{{ $variation >= 0 ? 'text-success' : 'text-danger' }} fw-semibold">
-                                <i class="bi {{ $variation >= 0 ? 'bi-arrow-up' : 'bi-arrow-down' }}"></i>
-                                {{ number_format(abs($variation), 2, ',', '.') }}%
-                            </span>
-                        @else
-                            <span class="text-muted">—</span>
-                        @endif
+                        <i class="bi 
+                            {{ $variation >= 0 ? 'bi-arrow-up text-success' : 'bi-arrow-down text-danger' }} fs-4">
+                        </i>
                     </div>
 
-                    <h6 class="mt-3 mb-1">
+                    <h4 class="fw-bold mt-2">
+                        {{ is_null($variation) ? '—' : number_format($variation, 1, ',', '.') . '%' }}
+                    </h4>
+
+                    <div class="small text-muted">
                         {{ str_pad($prevMonth,2,'0',STR_PAD_LEFT) }}/{{ $prevYear }}
                         →
                         {{ str_pad($month,2,'0',STR_PAD_LEFT) }}/{{ $year }}
-                    </h6>
+                    </div>
 
-                    <div class="small text-muted">
+                    <div class="small mt-1">
                         R$ {{ number_format($previousTotal, 2, ',', '.') }}
                         →
                         <strong>R$ {{ number_format($currentTotal, 2, ',', '.') }}</strong>
@@ -227,6 +251,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     {{-- ================= GRÁFICOS ================= --}}

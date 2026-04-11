@@ -99,6 +99,13 @@ class HomologationController extends Controller
             );
     }
 
+    public function show (AttendanceSubmission $submission)
+    {
+        $this->authorize('view', $submission);
+
+        return view('admin.homologations.show', compact('submission'));
+    }
+
     /*
     |--------------------------------------------------------------------------
     | APROVAÇÃO EM LOTE (POR SUBMISSÃO)

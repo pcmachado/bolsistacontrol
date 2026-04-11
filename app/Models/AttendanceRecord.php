@@ -20,8 +20,9 @@ class AttendanceRecord extends Model
         'start_time',
         'end_time',
         'hours',
-        'calculated_value',
         'description',
+        'has_issue',
+        'issue_reason',
     ];
 
     protected $casts = [

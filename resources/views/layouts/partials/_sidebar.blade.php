@@ -41,34 +41,16 @@
             <h6 class="sidebar-section-title mt-4">Minha Área</h6>
 
             {{-- Frequências --}}
-            <x-sidebar-item
-                route="attendance.my"
-                icon="bi bi-calendar-week"
-                title="Registros de Frequência"/>
-
-            <x-sidebar-item
-                route="attendance.submissions.my"
-                icon="bi bi-send-check"
-                title="Submissões Mensais"/>
+            <x-sidebar-item route="attendance.my" icon="bi bi-calendar-week" title="Registros de Frequência"/>
+            <x-sidebar-item route="attendance.submissions.my" icon="bi bi-send-check" title="Submissões Mensais"/>
 
             {{-- Pagamentos --}}
-            <x-sidebar-item
-                route="payments.my"
-                icon="bi bi-wallet2"
-                title="Meus Pagamentos"/>
+            <x-sidebar-item route="payments.my" icon="bi bi-wallet2" title="Meus Pagamentos"/>
 
             {{-- Relatórios --}}
             <h6 class="sidebar-section-title mt-4">Meus Relatórios</h6>
-
-            <x-sidebar-item
-                route="attendance.reports.index"
-                icon="bi bi-file-earmark-text"
-                title="Relatório Mensal"/>
-
-            <x-sidebar-item
-                route="attendance.reports.final.create"
-                icon="bi bi-file-earmark-person"
-                title="Relatório Final"/>
+            <x-sidebar-item route="attendance.reports.index" icon="bi bi-file-earmark-text" title="Relatório Mensal"/>
+            <x-sidebar-item route="attendance.reports.final.create" icon="bi bi-file-earmark-person" title="Relatório Final"/>
         @endhasanyrole
 
         {{-- ================================================= --}}
@@ -77,21 +59,19 @@
         @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral')
             <h6 class="sidebar-section-title mt-4">Coordenação</h6>
 
-            <x-sidebar-item route="attendance.submissions.index"
-                            icon="bi bi-calendar-week"
-                            title="Frequências"/>
+            {{-- Frequência --}}
+            <x-sidebar-item route="attendance.submissions.index" icon="bi bi-calendar-week" title="Frequências"/>
 
-            <x-sidebar-item route="admin.homologations.index"
-                            icon="bi bi-check2-square"
-                            title="Homologações"/>
+            {{-- Homologações --}}
+            <x-sidebar-item route="admin.homologations.index" icon="bi bi-check2-square" title="Homologações"/>
 
-            <x-sidebar-item route="admin.payments.dashboard"
-                            icon="bi bi-graph-up"
-                            title="Financeiro"/>
-                            
-            <x-sidebar-item route="admin.payments.index"
-                            icon="bi bi-wallet2"
-                            title="Pagamentos"/>
+            {{-- Financeiro Bolsistas --}}
+            <x-sidebar-item route="admin.payments.dashboard" icon="bi bi-graph-up" title="Financeiro"/>      
+            <x-sidebar-item route="admin.payments.index" icon="bi bi-wallet2" title="Pagamentos"/>
+
+            {{-- Financeiro Alunos --}}
+            <x-sidebar-item route="admin.student-payments.dashboard" icon="bi bi-graph-up-arrow" title="Financeiro (Alunos)"/>
+            <x-sidebar-item route="admin.student-payments.index" icon="bi bi-cash-stack" title="Pagamentos Alunos"/>
 
         @endhasanyrole
 
@@ -105,6 +85,7 @@
             <x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/>
             <x-sidebar-item route="admin.disciplines.index" icon="bi bi-journal-text" title="Disciplinas"/>
             <x-sidebar-item route="admin.class-offerings.index" icon="bi bi-collection" title="Turmas"/>
+
         @endhasanyrole
 
         {{-- ================================================= --}}

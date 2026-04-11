@@ -35,6 +35,7 @@ class Payment extends Model
         'project_id',
         'unit_id',
         'funding_source_id',
+        'attendance_submission_id',
         'month',
         'year',
         'total_hours',

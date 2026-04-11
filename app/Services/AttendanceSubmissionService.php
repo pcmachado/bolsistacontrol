@@ -87,6 +87,8 @@ class AttendanceSubmissionService
             throw new \DomainException('Não é possível enviar uma submissão vazia.');
         }
 
+        $submission->recalculate();
+
         DB::transaction(function () use ($submission) {
             $submission->update([
                 'status'       => AttendanceSubmission::STATUS_SUBMITTED,
@@ -182,4 +184,5 @@ class AttendanceSubmissionService
             ->with(['scholarshipHolder.user', 'scholarshipHolder.unit'])
             ->findOrFail($id);
     }
+
 }

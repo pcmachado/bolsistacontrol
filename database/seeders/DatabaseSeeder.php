@@ -82,10 +82,15 @@ class DatabaseSeeder extends Seeder
             ProjectFundingSourceSeeder::class,
             ClassOfferingSeeder::class,
             ClassOfferingDisciplineSeeder::class,
+            StudentSeeder::class,
+            StudentRecordSeeder::class,
+            ClassOfferingSubmissionSeeder::class,
             AttendanceSubmissionSeeder::class,
             AttendanceRecordSeeder::class,
+            RecalculateAttendanceSubmissionSeeder::class,
             NotificationTestSeeder::class,
             PaymentSeeder::class,
+            StudentPaymentSeeder::class,
         ]);
     }
 }

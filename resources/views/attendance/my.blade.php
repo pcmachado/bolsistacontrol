@@ -94,6 +94,12 @@
                 📤 Enviar mês para homologação
             </a>
         @endif
+
+        @if($isClosed)
+            <div class="alert alert-danger">
+                🔒 Período fechado. Alterações não permitidas.
+            </div>
+        @endif
     </div>
 
     <input type="hidden" name="month" value="{{ request('month') }}">

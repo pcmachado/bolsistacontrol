@@ -7,7 +7,16 @@
         <i class="bi bi-eye"></i>
     </a>
 
-    @if ($record->isEditable())
+    @php
+        $isClosed = \App\Models\FinancialClosure::isClosed(
+            $record->scholarshipHolder->unit_id,
+            $record->date->month,
+            $record->date->year
+        );
+    @endphp
+
+    @if ($record->isEditable() && !$isClosed)
+
         @can('update', $record)
             <a href="{{ route('attendance.edit', $record) }}"
                class="btn btn-outline-warning"
@@ -28,9 +37,10 @@
                 </button>
             </form>
         @endcan
+
     @else
-        <button class="btn btn-outline-secondary" disabled title="Registro bloqueado para edição">
-             <i class="bi bi-lock
+        <button class="btn btn-outline-secondary" disabled
+            title="{{ $isClosed ? 'Período fechado' : 'Registro bloqueado para edição' }}">
             <i class="bi bi-lock"></i>
         </button>
     @endif

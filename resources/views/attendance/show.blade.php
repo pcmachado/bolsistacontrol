@@ -102,14 +102,6 @@
                     </button>
                 </form>
             @endcan
-
-            @can('submit', $attendanceRecord)
-                <form action="{{ route('attendance.submit', $attendanceRecord) }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-info">
-                        <i class="bi bi-upload"></i> Enviar</button>
-                </form>
-            @endcan
         </div>
     </div>
 </div>
