@@ -10,6 +10,15 @@ use Yajra\DataTables\Html\Button;
 
 class TeachersDataTable extends DataTable
 {
+    protected array $filters = [];
+
+    public function setFilters(array $filters): self
+    {
+        $this->filters = $filters;
+
+        return $this;
+    }
+
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
@@ -33,17 +42,17 @@ class TeachersDataTable extends DataTable
             ->with(['unit', 'teachingAssignments.discipline', 'teachingAssignments.classOffering']);
 
         // FILTROS
-        if ($unit = request('filter_unit')) {
+        if ($unit = ($this->filters['filter_unit'] ?? null)) {
             $query->where('unit_id', $unit);
         }
 
-        if ($course = request('filter_course')) {
+        if ($course = ($this->filters['filter_course'] ?? null)) {
             $query->whereHas('teachingAssignments.discipline', function ($q) use ($course) {
                 $q->where('course_id', $course);
             });
         }
 
-        if ($offering = request('filter_offering')) {
+        if ($offering = ($this->filters['filter_offering'] ?? null)) {
             $query->whereHas('teachingAssignments.classOffering', function ($q) use ($offering) {
                 $q->where('id', $offering);
             });
@@ -57,7 +66,7 @@ class TeachersDataTable extends DataTable
         return $this->builder()
             ->setTableId('teachers-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
             ->orderBy(0)
             ->buttons([

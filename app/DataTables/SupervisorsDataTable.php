@@ -10,6 +10,15 @@ use Yajra\DataTables\Html\Button;
 
 class SupervisorsDataTable extends DataTable
 {
+    protected array $filters = [];
+
+    public function setFilters(array $filters): self
+    {
+        $this->filters = $filters;
+
+        return $this;
+    }
+
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
@@ -37,15 +46,15 @@ class SupervisorsDataTable extends DataTable
 
         // FILTROS AVANÇADOS
 
-        if ($unit = request('filter_unit')) {
+        if ($unit = ($this->filters['filter_unit'] ?? null)) {
             $query->where('unit_id', $unit);
         }
 
-        if ($course = request('filter_course')) {
+        if ($course = ($this->filters['filter_course'] ?? null)) {
             $query->where('course_id', $course);
         }
 
-        if ($status = request('filter_status')) {
+        if ($status = ($this->filters['filter_status'] ?? null)) {
             $query->where('active', $status === 'active');
         }
 
@@ -57,7 +66,7 @@ class SupervisorsDataTable extends DataTable
         return $this->builder()
             ->setTableId('supervisors-table')
             ->columns($this->getColumns())
-            ->minifiedAjax()
+            ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
             ->orderBy(0)
             ->buttons([

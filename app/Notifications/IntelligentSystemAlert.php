@@ -27,29 +27,38 @@ class IntelligentSystemAlert extends Notification
 
     public function via($notifiable)
     {
-        return ['database', 'mail']; // usa sua tabela notifications
+        return ['database'];
     }
 
     public function toDatabase($notifiable)
     {
         return [
-            'title' => $this->title,
-            'message' => $this->message,
+            'title' => trim($this->sanitize($this->title)),
+            'message' => trim($this->sanitize($this->message)),
             'level' => $this->level,
-            'url' => $this->url,
+            'url' => $this->url ? trim($this->sanitize($this->url)) : null,
         ];
     }
 
     public function toMail($notifiable)
     {
-        $mail = (new MailMessage)
-            ->subject($this->title)
-            ->line($this->message);
+        $title = $this->sanitize($this->title);
+        $message = $this->sanitize($this->message);
+        $url = $this->url ? $this->sanitize($this->url) : null;
 
-        if (!empty($this->url)) {
-            $mail->action('Ver detalhes', $this->url);
+        $mail = (new MailMessage)
+            ->subject($title)
+            ->line($message);
+
+        if (!empty($url)) {
+            $mail->action('Ver detalhes', $url);
         }
 
         return $mail;
+    }
+
+    protected function sanitize($value)
+    {
+        return preg_replace('/[\r\n]+/', ' ', $value);
     }
 }

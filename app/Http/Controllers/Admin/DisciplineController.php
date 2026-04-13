@@ -6,13 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Models\Discipline;
 use App\Models\Course;
 use App\DataTables\DisciplinesDataTable;
+use App\Services\VisibilityService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class DisciplineController extends Controller
 {
-    public function index(DisciplinesDataTable $dataTable)
+    public function index(Request $request, DisciplinesDataTable $dataTable)
     {
-        return $dataTable->render('admin.disciplines.index');
+        $user = Auth::user();
+        $filters = $request->only(['filter_course']);
+
+        $courses = app(VisibilityService::class)
+            ->apply(Course::query(), $user, 'admin')
+            ->orderBy('name')
+            ->get();
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('admin.disciplines.index', compact('courses'));
     }
 
     public function create()

@@ -33,6 +33,7 @@ class ProjectSeeder extends Seeder
                 Project::create([
                     'name' => "{$inst->name} - Projeto {$i}",
                     'description' => "Projeto {$i} da {$inst->name}",
+                    'student_daily_rate' => 5.00,
                     'institution_id' => $inst->id,
                     'start_date' => now()->subMonths(5)->toDateString(),
                     'end_date' => null,

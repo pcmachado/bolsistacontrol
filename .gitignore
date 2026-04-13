@@ -24,4 +24,8 @@ Homestead.yaml
 Thumbs.db
 .docker
 /node_modules
-docker/php/custom.ini --- IGNORE ---
+.tmp.driveupload
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+.bat
+docker/php/custom.ini

@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use App\DataTables\UsersDataTable;
 use App\Services\UserService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -27,7 +28,15 @@ class UserController extends Controller
      */
     public function index(UsersDataTable $dataTable)
     {
-        return $dataTable->render('admin.users.index');
+        $filters = request()->only([
+            'filter_name',
+            'filter_unit',
+            'filter_role',
+        ]);
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('admin.users.index');
     }
 
     /**
@@ -53,7 +62,7 @@ class UserController extends Controller
         ];
 
         // Se não for admin ou coordenador geral, exige unit_id
-        if (!auth()->user()->hasRole(['admin', 'coordenador-geral'])) {
+        if (!Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
             $rules['unit_id'] = 'required|exists:units,id';
         } else {
             $rules['unit_id'] = 'nullable|exists:units,id';
@@ -93,7 +102,7 @@ class UserController extends Controller
             'role' => 'required|string|exists:roles,name'
         ];
 
-        if (!auth()->user()->hasRole(['admin', 'coordenador-geral'])) {
+        if (!Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
             $rules['unit_id'] = 'required|exists:units,id';
         } else {
             $rules['unit_id'] = 'nullable|exists:units,id';

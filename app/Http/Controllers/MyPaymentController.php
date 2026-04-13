@@ -2,29 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\PaymentDataTable;
 use App\Models\Payment;
-use App\Policies\PaymentPolicy;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Notifications\IntelligentSystemAlert;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Str;
-use App\Services\PaymentVisibilityService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MyPaymentController extends Controller
 {
-    public function myPayments(PaymentVisibilityService $visibilityService)
+    public function myPayments(PaymentDataTable $dataTable)
     {
-        $query = Payment::query()
-        ->with(['payable', 'paidBy', 'project', 'unit']);
+        $dataTable->mode = 'my';
 
-        $visibilityService->apply($query, Auth::user());
-
-        $payments = $query->orderByDesc('year')
-            ->orderByDesc('month')
-            ->get();
-
-        return view('payments.my', compact('payments'));
+        return $dataTable->render('payments.my');
     }
 
     public function confirm(Payment $payment)
@@ -93,4 +84,37 @@ class MyPaymentController extends Controller
         return hash('sha256', $base);
     }
 
+    public function reportMy(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = Payment::with(['scholarshipHolder.user', 'unit']);
+
+        $query = app(\App\Services\VisibilityService::class)
+            ->apply($query, $user, 'self');
+
+        if ($request->filled('month')) {
+            [$year, $month] = explode('-', $request->month);
+
+            $query->where('year', $year)
+                ->where('month', $month);
+        }
+
+        elseif ($request->filled('year')) {
+            $query->where('year', $request->year);
+        }
+
+        $payments = $query->get();
+
+        $total = $payments->sum('amount');
+
+        $isPdf = $request->boolean('pdf');
+
+        if ($isPdf) {
+            $pdf = Pdf::loadView('payments.reports.my', compact('payments', 'total', 'isPdf'));
+            return $pdf->stream('relatorio_pagamentos.pdf');
+        }
+
+        return view('payments.reports.my', compact('payments', 'total', 'isPdf'));
+    }
 }

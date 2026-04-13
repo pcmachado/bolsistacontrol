@@ -1,0 +1,5 @@
+Este pacote contém partes essenciais do sistema ProBolsas,
+incluindo lógica de negócio, rotas e estrutura de dados.
+
+Versão: 1.0
+Data: 2026

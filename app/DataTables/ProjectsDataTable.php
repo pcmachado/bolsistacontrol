@@ -2,50 +2,62 @@
 namespace App\DataTables;
 
 use App\Models\Project;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
-use Yajra\DataTables\Html\Button;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 
 class ProjectsDataTable extends DataTable
 {
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
-        ->setRowId('id')
-        ->addColumn('name', function ($project) {
-            return $project->name ?? 'N/A';
-        })
-        ->addColumn('description', function ($project) {
-            return $project->description ?? 'N/A';
-        })
-        ->addColumn('institution', function ($project) {
-            return $project->institution->name ?? 'N/A';
-        })
-        ->addColumn('unit', function ($project) {
-            return $project->unit->name ?? 'N/A';
-        })
-        ->addColumn('start_date', function ($project) {
-            return formatDate($project->start_date);
-        })
-        ->addColumn('end_date', function ($project) {
-            return formatDate($project->end_date);
-        })
-        ->addColumn('created_at', function ($project) {
-            return formatDate($project->created_at);
-        })
-        ->addColumn('updated_at', function ($project) {
-            return formatDate($project->updated_at);
-        })
-        ->addColumn('actions', 'admin.projects.partials.actions')
-        ->rawColumns(['actions']);
+            ->setRowId('id')
+            ->addColumn('name', fn ($project) => $project->name ?? 'N/A')
+            ->addColumn('description', fn ($project) => $project->description ?? 'N/A')
+            ->addColumn('institution', fn ($project) => $project->institution->name ?? 'N/A')
+            ->addColumn('units', function ($project) {
+                return $project->units
+                    ->pluck('name')
+                    ->unique()
+                    ->implode('<br>') ?: '-';
+            })
+            ->addColumn('start_date', fn ($project) => formatDate($project->start_date))
+            ->addColumn('end_date', fn ($project) => formatDate($project->end_date))
+            ->addColumn('created_at', fn ($project) => formatDate($project->created_at))
+            ->addColumn('updated_at', fn ($project) => formatDate($project->updated_at))
+            ->addColumn('actions', 'admin.projects.partials.actions')
+            ->rawColumns(['units', 'actions']);
     }
 
     public function query(Project $model)
     {
-        return $model->newQuery()->byUserInstitution(Auth::user())->select('projects.*');
+        $user = Auth::user();
+
+        $query = $model->newQuery()
+            ->with(['institution', 'units'])
+            ->select('projects.*');
+
+        if ($user->hasRole('admin')) {
+            return $query;
+        }
+
+        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            return $query->where('projects.institution_id', $user->institution_id);
+        }
+
+        if ($user->hasRole('coordenador_adjunto')) {
+            $unitIds = method_exists($user, 'units')
+                ? $user->units()->pluck('units.id')
+                : collect([$user->unit_id])->filter();
+
+            return $query->whereHas('units', fn ($q) =>
+                $q->whereIn('units.id', $unitIds)
+            );
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     public function html()
@@ -57,36 +69,42 @@ class ProjectsDataTable extends DataTable
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
             ->parameters([
-            'responsive' => true,
-            'autoWidth' => false,
+                'responsive' => true,
+                'autoWidth' => false,
             ])
             ->buttons([
-                Button::make('excel')->className('btn btn-success rounded-0')->text('📊 Excel'),
-                Button::make('csv')->className('btn btn-info rounded-0')->text('📝 CSV'),
-                Button::make('pdf')->className('btn btn-warning rounded-0')->text('📄 PDF'),
-                Button::make('print')->className('btn btn-secondary rounded-0')->text('🖨️ Imprimir'),
+                Button::make('excel')->className('btn btn-success rounded-0')->text('Excel'),
+                Button::make('csv')->className('btn btn-info rounded-0')->text('CSV'),
+                Button::make('pdf')->className('btn btn-warning rounded-0')->text('PDF'),
+                Button::make('print')->className('btn btn-secondary rounded-0')->text('Imprimir'),
             ]);
     }
 
     protected function getColumns(): array
     {
         return [
-        Column::make('id'),
-        Column::make('name')->title('Nome'),
-        Column::make('description')->title('Descrição'),
-        Column::make('institution')->title('Instituição'),
-        Column::make('unit')->title('Unidade'),
-        Column::make('start_date')->title('Data de Início'),
-        Column::make('end_date')->title('Data de Término'),
-        Column::make('created_at')->title('Criado Em'),
-        Column::make('updated_at')->title('Atualizado Em'),
-        Column::computed('actions')
-              ->exportable(false)
-              ->printable(false)
-              ->width(120)
-              ->addClass('text-center')
-              ->title('Ações'),
-    ];
+            Column::make('id'),
+            Column::make('name')->title('Nome'),
+            Column::make('description')->title('Descricao'),
+            Column::computed('institution')
+                ->title('Instituicao')
+                ->orderable(false)
+                ->searchable(false),
+            Column::computed('units')
+                ->title('Unidades')
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('start_date')->title('Data de Inicio'),
+            Column::make('end_date')->title('Data de Termino'),
+            Column::make('created_at')->title('Criado Em'),
+            Column::make('updated_at')->title('Atualizado Em'),
+            Column::computed('actions')
+                ->exportable(false)
+                ->printable(false)
+                ->width(120)
+                ->addClass('text-center')
+                ->title('Acoes'),
+        ];
     }
 
     protected function filename(): string

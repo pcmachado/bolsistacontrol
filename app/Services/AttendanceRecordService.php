@@ -3,181 +3,104 @@
 namespace App\Services;
 
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use App\Models\ScholarshipHolder;
-use Illuminate\Support\Facades\DB;
+use App\Models\FinancialClosure;
 use Carbon\Carbon;
-use App\Notifications\PendingShipment;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Auth;
+use DomainException;
 
 class AttendanceRecordService
 {
-    public function calculateDuration($start, $end)
+    public function create(ScholarshipHolder $holder, array $data): AttendanceRecord
     {
-        return Carbon::parse($end)->diffInMinutes(Carbon::parse($start));
-    }
+        $date  = Carbon::parse($data['date']);
+        $hours = $this->calculateHours($data['start_time'], $data['end_time']);
 
-    public function validateWeeklyLimit(ScholarshipHolder $scholarshipHolder, Carbon $date, int $newDuration)
-    {
-        $startOfWeek = $date->startOfWeek();
-        $endOfWeek = $date->endOfWeek();
-
-        $totalWeek = AttendanceRecord::where('scholarship_holder_id', $scholarshipHolder->id)
-            ->whereBetween('date', [$startOfWeek, $endOfWeek])
-            ->sum(DB::raw('TIMESTAMPDIFF(MINUTE, start_time, end_time)'));
-
-        return ($totalWeek + $newDuration) <= $scholarshipHolder->weekly_limit_minutes;
-    }
-
-    public function generatePendingShipments()
-    {
-        $dueDate = Carbon::now()->subMonth()->startOfMonth()->addDays(5);
-
-        ScholarshipHolder::whereDoesntHave('attendances', function ($query) use ($dueDate) {
-            $query->where('status', 'sent')->where('date', '<=', $dueDate);
-        })->each(function ($scholarshipHolder) {
-            Notification::send($scholarshipHolder->coordinator, new PendingShipment($scholarshipHolder));
-        });
-    }
-
-    /**
-     * Bolsista envia registro para homologação
-     */
-    public function submitRecord(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $now = Carbon::now();
-
-        // Verifica prazo (até dia 5 do mês seguinte)
-        $limitDate = Carbon::parse($attendanceRecord->date)->endOfMonth()->addDays(5);
-        if ($now->greaterThan($limitDate)) {
-            throw new \Exception("Prazo de envio expirado. Registros só podem ser enviados até o dia 5 do mês seguinte.");
+        // 🔒 valida se pode registrar nesse mês
+        if (! app(AttendanceSubmissionService::class)
+            ->canCreateRecord($holder, $date->year, $date->month)
+        ) {
+            throw new DomainException('Mês já fechado para edição.');
         }
 
-        if ($attendanceRecord->status !== 'draft') {
-            throw new \Exception("Somente registros em rascunho podem ser enviados.");
+        if (FinancialClosure::isClosed($holder->unit_id, $date->month, $date->year)) {
+            throw new DomainException('Período financeiro fechado.');
         }
 
-        $attendanceRecord->update([
-            'status' => 'submitted',
-            'submitted_at' => $now,
+        // 🔥 valida limite mensal
+        app(AttendanceService::class)
+            ->validateMonthlyLimit($holder, $date->year, $date->month, $hours);
+
+        return AttendanceRecord::create([
+            'scholarship_holder_id'    => $holder->id,
+            'date'                     => $date,
+            'start_time'               => $data['start_time'],
+            'end_time'                 => $data['end_time'],
+            'description'              => $data['description'] ?? null,
+            'hours'                    => $hours,
+            'attendance_submission_id' => null,
+        ]);
+    }
+
+    public function update(AttendanceRecord $record, array $data): AttendanceRecord
+    {
+        if (! $record->isEditable()) {
+            throw new DomainException('Este registro não pode ser alterado.');
+        }
+
+        if (FinancialClosure::isClosed(
+            $record->scholarshipHolder->unit_id,
+            $record->date->month,
+            $record->date->year
+        )) {
+            throw new DomainException('Período financeiro fechado.');
+        }
+
+        $date  = Carbon::parse($data['date']);
+        $hours = $this->calculateHours($data['start_time'], $data['end_time']);
+
+        app(AttendanceService::class)
+            ->validateMonthlyLimit(
+                $record->scholarshipHolder,
+                $date->year,
+                $date->month,
+                $hours,
+                $record->id // ignora o próprio registro
+            );
+
+        $record->update([
+            'date'        => $date,
+            'start_time'  => $data['start_time'],
+            'end_time'    => $data['end_time'],
+            'description' => $data['description'] ?? null,
+            'hours'       => $hours,
         ]);
 
-        return $attendanceRecord;
+        return $record;
     }
 
-    /**
-     * Coordenador aprova registro
-     */
-    public function approveRecord(AttendanceRecord $attendanceRecord): AttendanceRecord
+    public function delete(AttendanceRecord $record): void
     {
-        $now = Carbon::now();
-
-        // Verifica prazo (até dia 10 do mês seguinte)
-        $limitDate = Carbon::parse($attendanceRecord->date)->endOfMonth()->addDays(10);
-        if ($now->greaterThan($limitDate)) {
-            throw new \Exception("Prazo de homologação expirado. Registros só podem ser homologados até o dia 10 do mês seguinte.");
+        if (! $record->isEditable()) {
+            throw new DomainException('Este registro não pode ser removido.');
         }
 
-        if ($attendanceRecord->status !== 'submitted') {
-            throw new \Exception("Somente registros enviados podem ser aprovados.");
+        if (FinancialClosure::isClosed(
+            $record->scholarshipHolder->unit_id,
+            $record->date->month,
+            $record->date->year
+        )) {
+            throw new DomainException('Período financeiro fechado.');
         }
 
-        $attendanceRecord->update([
-            'status' => 'approved',
-            'approved' => true,
-            'approved_by_user_id' => Auth::id(),
-        ]);
-
-        return $attendanceRecord;
+        $record->delete();
     }
 
-    /**
-     * Coordenador recusa registro
-     */
-    public function rejectRecord(AttendanceRecord $attendanceRecord, string $reason): AttendanceRecord
+    protected function calculateHours(string $start, string $end): float
     {
-        if ($attendanceRecord->status !== 'submitted') {
-            throw new \Exception("Somente registros enviados podem ser recusados.");
-        }
+        $startTime = Carbon::parse($start);
+        $endTime   = Carbon::parse($end);
 
-        $attendanceRecord->update([
-            'status' => 'rejected',
-            'approved' => false,
-            'approved_by_user_id' => Auth::id(),
-            'rejected_reason' => $reason,
-        ]);
-
-        return $attendanceRecord;
-    }
-
-    /**
-     * Relatório consolidado da unidade
-     */
-    public function generateReport(?int $unitId, int $month, int $year)
-    {
-        $query = AttendanceRecord::query()
-            ->where('status', 'approved')
-            ->whereMonth('date', $month)
-            ->whereYear('date', $year);
-
-        // Se unidade for informada, filtra
-        if ($unitId) {
-            $query->whereHas('scholarshipHolder', fn($q) => $q->where('unit_id', $unitId));
-        }
-
-        return $query
-            ->selectRaw('scholarship_holder_id, SUM(hours) as total_hours, SUM(calculated_value) as total_value')
-            ->groupBy('scholarship_holder_id')
-            ->with(['scholarshipHolder' => function($q) {
-                $q->select('id','name','cpf','phone','bank','agency','account', 'user_id','unit_id')
-                ->with(['unit:id,name']);
-            }])
-            ->get();
-    }
-
-     public function listForUser($userId)
-    {
-        return AttendanceRecord::where('user_id', $userId)->latest()->get();
-    }
-
-    public function isEditable(AttendanceRecord $attendanceRecord): bool
-    {
-        // Só pode editar se estiver em rascunho ou rejeitado
-        return in_array($attendanceRecord->status, ['draft', 'rejected']);
-    }
-
-    public function create(array $data): AttendanceRecord
-    {
-        $data['scholarship_holder_id'] = Auth::user()->scholarshipHolder->id ?? null;
-        return AttendanceRecord::create($data);
-    }
-
-    public function update(AttendanceRecord $attendanceRecord, array $data): AttendanceRecord
-    {
-        $attendanceRecord->update($data);
-        return $attendanceRecord;
-    }
-
-    public function submit(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_SUBMITTED]);
-        return $attendanceRecord;
-    }
-
-    public function delete(AttendanceRecord $attendanceRecord)
-    {
-        return $attendanceRecord->delete();
-    }
-
-    public function approve(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_APPROVED]);
-        return $attendanceRecord;
-    }
-
-    public function reject(AttendanceRecord $attendanceRecord): AttendanceRecord
-    {
-        $attendanceRecord->update(['status' => AttendanceRecord::STATUS_REJECTED]);
-        return $attendanceRecord;
+        return round($startTime->diffInMinutes($endTime) / 60, 2);
     }
 }

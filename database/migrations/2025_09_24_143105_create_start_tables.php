@@ -78,24 +78,52 @@ return new class extends Migration
             $table->softDeletes();
         });
 
+        Schema::create('attendance_submissions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+
+            $table->unsignedTinyInteger('month');
+            $table->unsignedSmallInteger('year');
+
+            $table->decimal('total_hours', 8, 2)->nullable();
+            $table->decimal('calculated_value', 10, 2)->nullable();
+
+            $table->enum('status', ['draft','submitted','approved','rejected'])->default('draft');
+
+            $table->timestamp('submitted_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->timestamp('rejected_at')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->text('rejected_reason')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+            $table->unique(
+                ['scholarship_holder_id', 'year', 'month'],
+                'unique_submission_per_month'
+            );
+
+            $table->index(['scholarship_holder_id', 'year', 'month']);
+        });
+
         Schema::create('attendance_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->foreignId('attendance_submission_id')->nullable()->constrained('attendance_submissions')->onDelete('set null');
+
             $table->date('date');
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
+            $table->decimal('hours', 5, 2);
             $table->text('description')->nullable();
-            $table->integer('hours');
-            $table->decimal('calculated_value', 10, 2)->nullable();
-            $table->boolean('approved')->default(false);
-            $table->enum('status', ['draft','submitted','approved','rejected','late'])->default('draft');
-            $table->timestamp('submitted_at')->nullable();
-            $table->unsignedBigInteger('approved_by_user_id')->nullable();
-            $table->timestamp('rejected_at')->nullable();
-            $table->text('rejected_reason')->nullable();
-            $table->foreign('approved_by_user_id')->references('id')->on('users')->onDelete('set null');
+
+            $table->boolean('has_issue')->default(false);
+            $table->text('issue_reason')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['scholarship_holder_id', 'date']);
         });
 
         Schema::create('courses', function (Blueprint $table) {
@@ -115,6 +143,7 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
             $table->text('description')->nullable();
+            $table->decimal('student_daily_rate', 10, 2)->nullable();
             $table->string('wizard_step')->default('step1');
             $table->string('status')->default('draft');
             $table->foreignId('institution_id')->constrained()->onDelete('cascade');
@@ -169,6 +198,78 @@ return new class extends Migration
             $table->enum('status', ['planned', 'ongoing', 'completed', 'cancelled', 'finished'])->default('planned'); // planned, ongoing, finished, cancelled
             $table->timestamps();
             $table->softDeletes();
+        });
+
+        Schema::create('students', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('class_offering_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->string('name');
+            $table->string('cpf')->nullable();
+            $table->string('passport')->nullable();
+
+            $table->enum('payment_type', ['pix','transfer'])->default('pix');
+
+            $table->string('pix_key')->nullable();
+            $table->string('bank')->nullable();
+            $table->string('agency')->nullable();
+            $table->string('account')->nullable();
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('student_records', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('student_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('class_offering_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->integer('total_classes');
+            $table->integer('absences')->default(0);
+            $table->integer('attended_classes')->default(0);
+
+            $table->enum('status', ['approved','failed','canceled'])
+                ->default('approved');
+
+            $table->decimal('daily_rate', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2)->default(0);
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('class_offering_submissions', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+
+            $table->integer('total_students')->default(0);
+            $table->decimal('total_amount', 12, 2)->default(0);
+
+            $table->enum('status', ['draft','submitted','approved','rejected'])->default('draft');
+
+            $table->timestamp('submitted_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->timestamp('rejected_at')->nullable();
+
+            $table->text('rejected_reason')->nullable();
+
+            $table->unsignedTinyInteger('month');
+            $table->unsignedSmallInteger('year');
+
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique(['class_offering_id', 'month', 'year']);
         });
 
         Schema::create('project_scholarship_holder', function (Blueprint $table) {
@@ -317,6 +418,8 @@ return new class extends Migration
 
             $table->foreignId('funding_source_id')->nullable()->constrained();
 
+            $table->foreignId('attendance_submission_id')->nullable()->constrained()->nullOnDelete();
+            
             // Referência do período
             $table->unsignedTinyInteger('month'); // 1–12
             $table->unsignedSmallInteger('year'); // ex: 2025
@@ -408,6 +511,62 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('final_activity_reports', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('scholarship_holder_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+
+            $table->longText('activities');      // atividades desenvolvidas
+            $table->longText('results');         // resultados alcançados
+            $table->longText('contributions');   // contribuições ao projeto
+
+            $table->timestamp('submitted_at')->nullable();
+            $table->timestamp('approved_at')->nullable();
+
+            $table->timestamps();
+        });
+
+        Schema::create('student_payments', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+
+            $table->unsignedTinyInteger('month');
+            $table->unsignedSmallInteger('year');
+
+            $table->decimal('amount', 10, 2);
+
+            $table->enum('status', [
+                'pending',
+                'sent',
+                'paid',
+                'cancelled'
+            ])->default('pending');
+
+            $table->timestamp('sent_at')->nullable();
+            $table->timestamp('paid_at')->nullable();
+
+            $table->foreignId('paid_by')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->text('notes')->nullable();
+
+            $table->timestamps();
+            $table->softDeletes();
+
+            // 🔒 evita duplicação
+            $table->unique([
+                'student_id',
+                'class_offering_id',
+                'month',
+                'year'
+            ], 'student_payment_unique');
+        });
+
     }
 
     /**
@@ -415,6 +574,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('student_payments');
+        Schema::dropIfExists('final_activity_reports');
         Schema::dropIfExists('financial_logs');
         Schema::dropIfExists('financial_closures');
         Schema::dropIfExists('document_templates');
@@ -426,11 +587,16 @@ return new class extends Migration
         Schema::dropIfExists('scholarship_holder_class_offering');
         Schema::dropIfExists('class_offering_discipline');
         Schema::dropIfExists('project_scholarship_holder');
+        Schema::dropIfExists('project_funding_source');
+        Schema::dropIfExists('class_offering_submission');
+        Schema::dropIfExists('student_records');
+        Schema::dropIfExists('students');
         Schema::dropIfExists('class_offering');
         Schema::dropIfExists('project_funding_source');
         Schema::dropIfExists('course_scholarship_holder');
         Schema::dropIfExists('disciplines');
         Schema::dropIfExists('attendance_records');
+        Schema::dropIfExists('attendance_submissions');
         Schema::dropIfExists('scholarship_holders');
         Schema::dropIfExists('units');
         Schema::dropIfExists('projects');

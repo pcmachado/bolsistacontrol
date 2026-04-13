@@ -3,52 +3,55 @@
 namespace App\Services;
 
 use App\Models\AttendanceRecord;
-use Illuminate\Support\Collection;
+use App\Models\AttendanceSubmission;
+use Illuminate\Support\Facades\DB;
 
 class HomologationService
 {
     /**
      * Aprova um registro individual
      */
-    public function approve(AttendanceRecord $record, int $userId): AttendanceRecord
+    public function approve(AttendanceSubmission $submission, int $userId): AttendanceSubmission
     {
-        $record->update([
-            'status' => AttendanceRecord::STATUS_APPROVED,
-            'approved_by_user_id' => $userId,
-            'approved_at' => now(),
-            'rejected_reason' => null,
-            'rejected_at' => null,
-        ]);
+        DB::transaction(function () use ($submission, $userId) {
+             $submission->update([
+                'status' => AttendanceSubmission::STATUS_APPROVED,
+                'approved_by' => $userId,
+                'approved_at' => now(),
+            ]);
 
-        return $record;
+            $submission->attendanceRecord()->update([
+                'status' => AttendanceRecord::STATUS_APPROVED,
+                'approved_by_user_id' => $userId,
+                'approved_at' => now(),
+                'rejected_reason' => null,
+                'rejected_at' => null,
+            ]);
+        });
+
+        return $submission;
     }
 
     /**
      * Rejeita um registro individual
      */
-    public function reject(AttendanceRecord $record, int $userId, string $reason): AttendanceRecord
+    public function reject(AttendanceSubmission $submission, int $userId, string $reason): AttendanceSubmission
     {
-        $record->update([
-            'status' => AttendanceRecord::STATUS_REJECTED,
-            'approved_by_user_id' => $userId, // ou rejected_by_user_id se quiser separar
-            'rejected_reason' => $reason,
-            'rejected_at' => now(),
-        ]);
+        DB::transaction(function () use ($submission, $userId, $reason) {
+            $submission->update([
+                'status' => AttendanceSubmission::STATUS_REJECTED,
+                'approved_by' => $userId,
+                'approved_at' => now(),
+            ]);
 
-        return $record;
-    }
+            $submission->attendanceRecord()->update([
+                'status' => AttendanceRecord::STATUS_REJECTED,
+                'approved_by_user_id' => $userId,
+                'rejected_reason' => $reason,
+                'rejected_at' => now(),
+            ]);
+        });
 
-    /**
-     * Processa registros em lote (aprovação ou rejeição)
-     */
-    public function bulk(Collection $records, string $action, int $userId, ?string $reason = null): void
-    {
-        foreach ($records as $record) {
-            if ($action === 'approve') {
-                $this->approve($record, $userId);
-            } elseif ($action === 'reject') {
-                $this->reject($record, $userId, $reason ?? 'Sem motivo informado');
-            }
-        }
+        return $submission;
     }
 }

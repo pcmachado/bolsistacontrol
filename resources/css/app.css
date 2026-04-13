@@ -12,6 +12,7 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+    max-width: 100%;
 }
 
 body {
@@ -29,6 +30,7 @@ body {
 /* Conteúdo principal */
 #main-content {
     flex-grow: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background: #f8f9fa;
@@ -36,6 +38,7 @@ body {
 
 #content-area {
     flex-grow: 1;
+    min-width: 0;
 }
 
 /* ============================================================
@@ -232,18 +235,136 @@ body {
         margin-left: 0 !important;
     }
 
-    /* Menu mobile só ícones */
-    #sidebarOffcanvas .sidebar-text {
-        display: none !important;
+    /* Header mobile */
+    .app-navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        border-bottom: 1px solid #e9ecef;
     }
 
-    #sidebarOffcanvas .sidebar-link {
-        justify-content: center !important;
-        padding: 12px 0 !important;
+    .app-navbar .navbar-brand {
+        font-size: 1rem;
     }
 
-    #sidebarOffcanvas .sidebar-icon {
-        font-size: 1.6rem;
+    .app-navbar .container-fluid,
+    .app-navbar .d-flex.d-lg-none {
+        min-width: 0;
+    }
+
+    .app-navbar .navbar-brand.text-truncate {
+        max-width: calc(100vw - 170px) !important;
+    }
+
+    /* Sidebar mobile como lista legivel (icone + texto) */
+    .mobile-sidebar-offcanvas {
+        width: min(88vw, 320px) !important;
+    }
+
+    .mobile-sidebar .sidebar-section-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        opacity: 0.75;
+        margin: 0.75rem 0 0.35rem;
+        padding: 0 1rem;
+    }
+
+    .mobile-sidebar .sidebar-link {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start !important;
+        gap: 0.65rem;
+        padding: 0.75rem 1rem !important;
+        margin: 0.1rem 0.35rem;
+        border-radius: 0.5rem;
+        color: #e9ecef;
+    }
+
+    .mobile-sidebar .sidebar-link:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .mobile-sidebar .sidebar-link:focus-visible,
+    .app-navbar .btn:focus-visible,
+    .app-navbar .nav-link:focus-visible {
+        outline: 2px solid #ffc107;
+        outline-offset: 2px;
+    }
+
+    /* Conteudo principal com respiro menor em tablet/mobile */
+    #content-area {
+        padding: 1rem !important;
+        overflow-x: clip;
+    }
+
+    /* Titulos e acoes: evita quebra ruim em larguras menores */
+    .container-fluid > .d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+
+    .container-fluid > .d-flex.justify-content-between.align-items-center > .btn {
+        width: 100%;
+    }
+
+    /* Botoes em grupos de filtros/exportacao */
+    .dt-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .dt-buttons .btn {
+        margin: 0 !important;
+    }
+
+    /* Area de tabela com rolagem horizontal segura */
+    .card .card-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .container-fluid {
+        max-width: 100%;
+        overflow-x: clip;
+    }
+}
+
+@media (max-width: 767px) {
+    /* Menos padding em telas pequenas */
+    #content-area {
+        padding: 0.75rem !important;
+    }
+
+    /* Ajuste de texto e espacamento de cards */
+    h1, .h1 { font-size: 1.5rem; }
+    h2, .h2 { font-size: 1.35rem; }
+    h3, .h3 { font-size: 1.2rem; }
+
+    .card .card-body {
+        padding: 0.875rem;
+    }
+
+    /* Inputs e botoes confortaveis para toque */
+    .form-control,
+    .form-select,
+    .btn {
+        min-height: 42px;
+    }
+
+    /* DataTables: evita aperto dos controles no topo */
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_length {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 0.5rem;
+    }
+
+    .mobile-sidebar-offcanvas {
+        width: 100vw !important;
     }
 }
 

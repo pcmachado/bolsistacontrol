@@ -1,136 +1,163 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2 px-3">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2 px-3 app-navbar">
     <div class="container-fluid">
 
-        {{-- LOGO / BRAND --}}
-        <a class="navbar-brand fw-semibold" href="{{ route('dashboard') }}">
-            BolsistaControl
+        <div class="d-flex d-lg-none align-items-center gap-2">
+            <button
+                type="button"
+                class="btn btn-outline-secondary d-lg-none"
+                data-sidebar-toggle
+                aria-label="Abrir menu">
+                <i class="bi bi-list fs-5"></i>
+            </button>
+
+            <a class="navbar-brand fw-semibold text-truncate mb-0" href="{{ route('dashboard') }}" style="max-width: 58vw;">
+                @yield('title', 'ProBolsas')
+            </a>
+        </div>
+
+        <a class="navbar-brand fw-semibold d-none d-lg-inline mb-0" href="{{ route('dashboard') }}">
+            ProBolsas
         </a>
 
-        {{-- MOBILE TOGGLER (para dropdowns colapsáveis) --}}
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <ul class="navbar-nav ms-auto align-items-center flex-row gap-1">
 
-        {{-- CONTEÚDO DA NAVBAR --}}
-        <div class="collapse navbar-collapse" id="navbarContent">
-
-            <ul class="navbar-nav ms-auto align-items-center">
-
-                {{-- INSTITUIÇÃO ATIVA (se existir) --}}
-                @if(function_exists('activeInstitution') && activeInstitution())
-                    <li class="nav-item me-3 text-muted small d-none d-md-inline">
-                        <i class="bi bi-building me-1"></i>
-                        {{ activeInstitution()->name }}
-                    </li>
-                @endif
-
-                {{-- PAPEL DO USUÁRIO --}}
+            {{-- INSTITUICAO ATIVA (se existir) --}}
+            @if(function_exists('activeInstitution') && activeInstitution())
                 <li class="nav-item me-3 text-muted small d-none d-md-inline">
-                    <i class="bi bi-person-badge me-1"></i>
-                    {{ ucfirst(str_replace('_',' ', auth()->user()->roles->pluck('name')->first())) }}
+                    <i class="bi bi-building me-1"></i>
+                    {{ activeInstitution()->name }}
                 </li>
+            @endif
+
+            {{-- PAPEL DO USUARIO --}}
+            <li class="nav-item me-3 text-muted small d-none d-md-inline">
+                <i class="bi bi-person-badge me-1"></i>
+                {{ ucfirst(str_replace('_',' ', auth()->user()->roles->pluck('name')->first())) }}
+            </li>
+
+            <li class="nav-item me-2">
+                <a class="nav-link px-2" href="{{ route('manual.index') }}" title="Manual do Sistema">
+                    <i class="bi bi-journal-bookmark fs-5"></i>
+                    <span class="d-none d-md-inline ms-1">Manual</span>
+                </a>
+            </li>
 
 
-                {{-- 🔔 NOTIFICAÇÕES --}}
-                @php
-                    $unreadCount = auth()->user()->unreadNotifications()->count();
-                    $latestNotifications = auth()->user()->notifications()->latest()->take(5)->get();
-                @endphp
+            {{-- NOTIFICACOES --}}
+            @php
+                $unreadCount = $navUnreadCount ?? 0;
+                $latestNotifications = $navNotifications ?? collect();
+            @endphp
 
-                <li class="nav-item dropdown me-3">
+            <li class="nav-item dropdown me-2">
 
-                    <a class="nav-link position-relative" href="#" data-bs-toggle="dropdown">
-                        <i class="bi bi-bell-fill fs-5"></i>
+                <a class="nav-link position-relative px-2" href="#" data-bs-toggle="dropdown">
+                    <i class="bi bi-bell-fill fs-5"></i>
 
-                        @if($unreadCount > 0)
-                        <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
-                            {{ $unreadCount }}
-                        </span>
+                    @if($unreadCount > 0)
+                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                        {{ $unreadCount }}
+                    </span>
+                    @endif
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-0" style="width: 360px;">
+
+                    <li class="p-2 bg-light border-bottom fw-semibold d-flex justify-content-between">
+                        Notificacoes
+                        @if($unreadCount)
+                            <span class="badge bg-danger">{{ $unreadCount }}</span>
                         @endif
-                    </a>
+                    </li>
 
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg p-0" style="width: 350px">
+                    @forelse($latestNotifications as $n)
 
-                        <li class="p-2 bg-light border-bottom fw-semibold">
-                            Notificações
-                        </li>
+                        @php
+                            $level = $n->data['level'] ?? 'info';
+                            
+                            $icon = match($level) {
+                                'danger' => 'bi-x-circle text-danger',
+                                'warning' => 'bi-exclamation-triangle text-warning',
+                                'success' => 'bi-check-circle text-success',
+                                default => 'bi-info-circle text-primary'
+                            };
+                        @endphp
 
-                        @forelse($latestNotifications as $n)
+                        <li>
+                            <a href="{{ route('notifications.read', $n->id) }}"
+                            class="dropdown-item py-2 small {{ is_null($n->read_at) ? 'fw-bold bg-light' : '' }}">
 
-                            @php
-                                $level = $n->data['level'] ?? 'info';
-                                $color = match($level) {
-                                    'warning' => 'bg-warning-subtle',
-                                    'danger'  => 'bg-danger-subtle text-white',
-                                    default   => ''
-                                };
-                            @endphp
+                                <div class="d-flex">
+                                    <i class="bi {{ $icon }} me-2 mt-1"></i>
 
-                            <li>
-                                <a href="{{ route('notifications.read', $n->id) }}"
-                                   class="dropdown-item py-2 {{ $color }} {{ is_null($n->read_at) ? 'fw-bold' : '' }}">
-
-                                    <div>{{ $n->data['title'] ?? 'Notificação' }}</div>
-                                    <small class="text-muted">{{ $n->created_at->diffForHumans() }}</small>
-
-                                </a>
-                            </li>
-
-                        @empty
-                            <li>
-                                <div class="dropdown-item text-muted text-center py-3">
-                                    Nenhuma notificação.
+                                    <div>
+                                        <div>{{ $n->data['title'] ?? 'Notificação' }}</div>
+                                        <small class="text-muted">
+                                            {{ Str::limit($n->data['message'] ?? '', 60) }}
+                                        </small>
+                                        <div class="text-muted" style="font-size: 10px;">
+                                            {{ $n->created_at->diffForHumans() }}
+                                        </div>
+                                    </div>
                                 </div>
-                            </li>
-                        @endforelse
 
-                        <li>
-                            <a href="{{ route('notifications.index') }}"
-                               class="dropdown-item text-center py-2 bg-light">
-                                Ver todas
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-
-                {{-- 👤 AVATAR / MENU DO USUÁRIO --}}
-                <li class="nav-item dropdown">
-
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
-
-                        <img src="https://www.gravatar.com/avatar/{{ md5(strtolower(trim(auth()->user()->email))) }}?d=mp"
-                             class="rounded-circle me-2"
-                             width="32" height="32">
-
-                        <span class="d-none d-md-inline">
-                            {{ auth()->user()->name }}
-                        </span>
-                    </a>
-
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li>
-                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                <i class="bi bi-person-circle me-2"></i> Perfil
                             </a>
                         </li>
 
-                        <li><hr class="dropdown-divider"></li>
-
+                    @empty
                         <li>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button class="dropdown-item">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Sair
-                                </button>
-                            </form>
+                            <div class="dropdown-item text-muted text-center py-3">
+                                Nenhuma notificacao.
+                            </div>
                         </li>
-                    </ul>
+                    @endforelse
 
-                </li>
+                    <li>
+                        <a href="{{ route('notifications.index') }}"
+                           class="dropdown-item text-center py-2 bg-light">
+                            Ver todas
+                        </a>
+                    </li>
+                </ul>
+            </li>
 
-            </ul>
 
-        </div>
+            {{-- AVATAR / MENU DO USUARIO --}}
+            <li class="nav-item dropdown">
+
+                <a class="nav-link dropdown-toggle d-flex align-items-center px-2" href="#" data-bs-toggle="dropdown">
+
+                    <img src="https://www.gravatar.com/avatar/{{ md5(strtolower(trim(auth()->user()->email))) }}?d=mp"
+                         class="rounded-circle me-2"
+                         width="32" height="32">
+
+                    <span class="d-none d-md-inline">
+                        {{ auth()->user()->name }}
+                    </span>
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li>
+                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                            <i class="bi bi-person-circle me-2"></i> Perfil
+                        </a>
+                    </li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="dropdown-item">
+                                <i class="bi bi-box-arrow-right me-2"></i> Sair
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+
+            </li>
+
+        </ul>
+
     </div>
 </nav>

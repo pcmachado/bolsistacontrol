@@ -11,6 +11,7 @@ class PositionSeeder extends Seeder
     {
         $positions = [
             'Coordenador Geral',
+            'Coordenador Adjunto Geral',
             'Coordenador Adjunto',
             'Bolsista',
             'Supervisor',

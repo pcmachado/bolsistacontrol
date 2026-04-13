@@ -18,32 +18,35 @@ class NotificationController extends Controller
 {
     public function index(): View
     {
-        $notifications = auth()->user()
-            ->notifications()               // relação nativa
-            ->latest()
-            ->paginate(20);
+        $user = Auth::user();
 
-        return view('notifications.index', compact('notifications'));
+        return view('notifications.index', [
+            'notifications' => $user->notifications()->latest()->paginate(20),
+            'unreadCount' => $user->unreadNotifications()->count()
+        ]);
     }
 
 
     public function read($id)
     {
-        $n = auth()->user()->notifications()->findOrFail($id);
-        $n->markAsRead();
+        $notification = Auth::user()
+            ->notifications()
+            ->where('id', $id)
+            ->firstOrFail();
 
-        // Redirecionar para link se existir
-        if (!empty($n->data['url'])) {
-            return redirect($n->data['url']);
+        if (!$notification->read_at) {
+            $notification->markAsRead();
         }
-
-        return back();
+// dd($notification->data);
+        return redirect($notification->data['url'] ?? back());
     }
 
     public function markAll()
     {
-        auth()->user()->unreadNotifications->markAsRead();
+        Auth::user()
+            ->unreadNotifications()
+            ->update(['read_at' => now()]);
 
-        return back()->with('success', 'Todas as notificações foram marcadas como lidas!');
+        return back()->with('success', 'Todas notificações foram lidas.');
     }
 }

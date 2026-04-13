@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClassOffering extends Model
 {
@@ -42,42 +44,43 @@ class ClassOffering extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function disciplines()
+    public function disciplines(): BelongsToMany
     {
         return $this->belongsToMany(Discipline::class, 'class_offering_discipline')
             ->withPivot(['teacher_id', 'workload', 'schedule', 'room'])
             ->withTimestamps();
     }
 
-    public function scholarshipHolders()
+    public function scholarshipHolders(): BelongsToMany
     {
         return $this->belongsToMany(ScholarshipHolder::class, 'scholarship_holder_class_offering')
             ->withPivot(['role'])
             ->withTimestamps();
     }
 
-    public function sessions()
+    public function sessions(): HasMany
     {
         return $this->hasMany(ClassSession::class);
     }
 
-    public function scopeVisibleForUser($query, $user)
+    public function studentRecords(): HasMany
     {
-        if ($user->hasRole('admin')) {
-            return $query;
-        }
+        return $this->hasMany(StudentRecord::class);
+    }
 
-        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            return $query->whereHas('unit', fn ($q) =>
-                $q->where('institution_id', $user->institution_id)
-            );
-        }
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(ClassOfferingSubmission::class);
+    }
 
-        if ($user->unit_id) {
-            return $query->where('unit_id', $user->unit_id);
-        }
+     public function students()
+    {
+        return $this->hasMany(Student::class); 
+    }
 
-        return $query->whereRaw('1=0');
+    public function classOfferingSubmissions(): HasMany
+    {
+        return $this->hasMany(ClassOfferingSubmission::class);
     }
 
 }
