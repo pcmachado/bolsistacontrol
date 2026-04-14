@@ -5,6 +5,7 @@ namespace App\DataTables;
 use App\Models\Payment;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
+use App\Services\FinancialReportService;
 
 class PaymentReportDataTable extends DataTable
 {
@@ -18,40 +19,9 @@ class PaymentReportDataTable extends DataTable
 
     public function query(Payment $model)
     {
-        $query = $model->newQuery()
-            ->with(['scholarshipHolder.user', 'project', 'unit']);
+        $service = app(FinancialReportService::class);
 
-        // 🎯 Aplicando filtros
-        if (!empty($this->filters['month'])) {
-            $query->where('month', $this->filters['month']);
-        }
-
-        if (!empty($this->filters['year'])) {
-            $query->where('year', $this->filters['year']);
-        }
-
-        if (!empty($this->filters['project'])) {
-            $query->where('project_id', $this->filters['project']);
-        }
-
-        if (!empty($this->filters['unit'])) {
-            $query->where('unit_id', $this->filters['unit']);
-        }
-
-        if (!empty($this->filters['status'])) {
-            $query->where('status', $this->filters['status']);
-        }
-
-        if (!empty($this->filters['start'])) {
-            $query->whereDate('created_at', '>=', $this->filters['start']);
-        }
-
-        if (!empty($this->filters['end'])) {
-            $query->whereDate('created_at', '<=', $this->filters['end']);
-        }
-
-        return $query->orderByDesc('year')
-                     ->orderByDesc('month');
+        return $service->get($this->filters)->select('payments.*');
     }
 
     public function dataTable($query)

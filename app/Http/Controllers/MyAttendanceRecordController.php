@@ -53,6 +53,8 @@ class MyAttendanceRecordController extends Controller
             'status' => $request->get('status'),
         ];
 
+        $isClosed = ! $this->submissions->canCreateRecord($holder, $year, $monthNumber);
+
         return $dataTable
             ->setFilters($filters)
             ->render('attendance.my', [
@@ -65,6 +67,7 @@ class MyAttendanceRecordController extends Controller
                 'oldestMonth'   => $oldestMonth,
                 'oldestRecord'  => $oldestRecord,
                 'submission'    => null,
+                'isClosed'      => $isClosed,
             ]);
     }
 }

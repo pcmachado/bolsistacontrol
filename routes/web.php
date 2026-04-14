@@ -115,14 +115,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/', [AttendanceSubmissionController::class, 'index'])->name('attendance.submissions.index');
             Route::post('/', [AttendanceSubmissionController::class, 'store'])->name('attendance.submissions.store');
 
-            Route::get('my',[MyAttendanceSubmissionController::class, 'index'])->name('attendance.submissions.my');
-            Route::post('/', [MyAttendanceSubmissionController::class, 'store'])->name('attendance.submissions.store');
-
-            // Cards (dashboard)
-            Route::get('/cards/approved', fn () => null)->name('attendance.submissions.cards.approved');
-            Route::get('/cards/submitted', fn () => null)->name('attendance.submissions.cards.submitted');
-            Route::get('/cards/rejected', fn () => null)->name('attendance.submissions.cards.rejected');
-            Route::get('/cards/late', fn () => null)->name('attendance.submissions.cards.late');
+            Route::get('my',[MyAttendanceSubmissionController::class, 'index'])->name('my-attendance.submissions.my');
+            Route::post('/', [MyAttendanceSubmissionController::class, 'store'])->name('my-attendance.submissions.store');
 
             Route::get('/{submission}', [AttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
             Route::post('/{submission}/submit', [AttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
@@ -130,11 +124,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/{submission}/reject', [AttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
             Route::delete('/{submission}/records/{record}',[AttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
 
-            Route::get('/{submission}', [MyAttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
-            Route::post('/{submission}/submit', [MyAttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
-            Route::post('/{submission}/approve', [MyAttendanceSubmissionController::class, 'approve'])->name('attendance.submissions.approve');
-            Route::post('/{submission}/reject', [MyAttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
-            Route::delete('/{submission}/records/{record}',[MyAttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
+            Route::get('/{submission}', [MyAttendanceSubmissionController::class, 'show'])->name('my-attendance.submissions.show');
+            Route::post('/{submission}/submit', [MyAttendanceSubmissionController::class, 'submit'])->name('my-attendance.submissions.submit');
+            Route::post('/{submission}/approve', [MyAttendanceSubmissionController::class, 'approve'])->name('my-attendance.submissions.approve');
+            Route::post('/{submission}/reject', [MyAttendanceSubmissionController::class, 'reject'])->name('my-attendance.submissions.reject');
+            Route::delete('/{submission}/records/{record}',[MyAttendanceSubmissionController::class, 'removeRecord'])->name('my-attendance.submissions.records.remove');
             
             Route::get('/cards/approved/{month}', fn ($month) => null)->name('attendance.submissions.cards.approved.month');
             Route::get('/cards/submitted/{month}', fn ($month) => null)->name('attendance.submissions.cards.submitted.month');
@@ -253,7 +247,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     //Route::resource('homologations', HomologationController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('courses', CourseController::class);
-    Route::resource('funding_sources', FundingSourceController::class);
+    Route::resource('funding-sources', FundingSourceController::class);
     Route::resource('projects', ProjectController::class);
     //Route::resource('assignments', AssignmentController::class);
 
@@ -273,18 +267,18 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('syllabus', [ClassOfferingSyllabusController::class, 'index'])->name('syllabus');
 
         // Disciplinas da Oferta
-        Route::controller(ClassOfferingDisciplineController::class)->group(function () {
-            Route::get('disciplines', 'index')->name('disciplines');
-            Route::post('disciplines', 'store')->name('disciplines.store');
+        Route::controller(ClassOfferingDisciplineController::class)->as('disciplines.')->group(function () {
+            Route::get('disciplines', [ClassOfferingDisciplineController::class, 'index'])->name('index');
+            Route::post('disciplines', [ClassOfferingDisciplineController::class, 'store'])->name('store');
             // Dashboard específico da disciplina dentro da oferta
-            Route::get('disciplines/{discipline}/dashboard', [DisciplineDashboardController::class, 'index'])->name('disciplines.dashboard');
+            Route::get('disciplines/{discipline}/dashboard', [DisciplineDashboardController::class, 'index'])->name('dashboard');
         });
 
         // Bolsistas (Scholarship Holders)
         Route::controller(ClassOfferingScholarshipHolderController::class)->as('scholarship_holders.')->group(function () {
-            Route::get('scholarship_holders', 'index')->name('index');
-            Route::post('scholarship_holders', 'store')->name('store');
-            Route::delete('scholarship_holders/{scholarshipHolder}', 'destroy')->name('destroy');
+            Route::get('scholarship_holders', [ClassOfferingScholarshipHolderController::class, 'index'])->name('index');
+            Route::post('scholarship_holders', [ClassOfferingScholarshipHolderController::class, 'store'])->name('store');
+            Route::delete('scholarship_holders/{scholarshipHolder}', [ClassOfferingScholarshipHolderController::class, 'destroy'])->name('destroy');
         });
 
         // Sessões e Relatórios de Sessão
@@ -293,16 +287,16 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::delete('sessions/{session}', [ClassSessionController::class, 'destroy'])->name('sessions.destroy');
 
         Route::controller(ClassSessionReportController::class)->as('sessions.report.')->group(function () {
-            Route::get('sessions/report', 'index')->name('index');
-            Route::get('sessions/report/pdf', 'exportPdf')->name('pdf');
-            Route::get('sessions/report/excel', 'exportExcel')->name('excel');
+            Route::get('sessions/report', [ClassSessionReportController::class, 'index'])->name('index');
+            Route::get('sessions/report/pdf', [ClassSessionReportController::class, 'exportPdf'])->name('pdf');
+            Route::get('sessions/report/excel', [ClassSessionReportController::class, 'exportExcel'])->name('excel');
         });
     });
 
     // 3. Rotas de Pivot/Individuais (fora do grupo de prefixo de oferta, se o {pivot} for único)
     Route::controller(ClassOfferingDisciplineController::class)->as('class-offerings.disciplines.')->group(function () {
-        Route::put('class-offerings/discipline/{pivot}', 'update')->name('update');
-        Route::delete('class-offerings/discipline/{pivot}', 'destroy')->name('destroy');
+        Route::put('class-offerings/discipline/{pivot}', [ClassOfferingDisciplineController::class, 'update'])->name('update');
+        Route::delete('class-offerings/discipline/{pivot}', [ClassOfferingDisciplineController::class, 'destroy'])->name('destroy');
     });
 
     Route::prefix('class-offerings')->group(function () {

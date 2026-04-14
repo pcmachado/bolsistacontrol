@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Services\StudentPaymentDashboardService;
 use App\Services\PaymentMonthService;
 use App\Models\StudentPayment;
-use App\Models\ClassOffering;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,12 +19,12 @@ class StudentPaymentController extends Controller
     /**
      * 📋 LISTAGEM
      */
-    public function index(Request $request, StudentPaymentDataTable $dataTable)
+    public function index(Request $request, StudentPaymentDataTable $dataTable, PaymentMonthService $paymentMonthService)
     {
         $month = $request->get('month', now()->month);
         $year  = $request->get('year', now()->year);
 
-        $monthsData = app(PaymentMonthService::class)->getMonths($year);
+        $monthsData = $paymentMonthService->getMonths($year);
 
         $current = \Carbon\Carbon::create($year, $month, 1);
 

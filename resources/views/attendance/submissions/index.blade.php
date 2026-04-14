@@ -10,7 +10,7 @@
         <h1 class="h3 mb-0">Submissões Mensais de Frequência</h1>
 
         @role('bolsista')
-            <form method="POST" action="{{ route('attendance.submissions.store') }}">
+            <form method="POST" action="{{ route('my-attendance.submissions.store') }}">
                 @csrf
                 <input type="hidden" name="month" value="{{ now()->format('Y-m') }}">
                 <button class="btn btn-primary">

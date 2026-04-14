@@ -39,12 +39,12 @@ class AttendanceRecordSeeder extends Seeder
                 $submissionId = match ($submission->status) {
 
                     // EDITÁVEIS → alguns ficam soltos
-                    'draft', 'rejected' => rand(0,1)
+                    'rascunho', 'rejeitado' => rand(0,1)
                         ? null
                         : $submission->id,
 
                     // BLOQUEADOS → sempre vinculados
-                    'submitted', 'approved' => $submission->id,
+                    'enviado', 'aprovado' => $submission->id,
 
                     default => null,
                 };

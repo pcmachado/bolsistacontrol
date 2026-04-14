@@ -4,20 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ScholarshipHolder;
-use App\Models\Position;
-use Illuminate\Notifications\DatabaseNotification as Notification;
-use App\Models\AttendanceRecord;
 use App\Models\Unit;
+use App\Models\User;
 use App\Models\Institution;
 use App\DataTables\ScholarshipHoldersDataTable;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
-use PDF;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
 
 class ScholarshipHolderController extends Controller
 {

@@ -1,6 +1,6 @@
 <div class="btn-group">
 
-    <a href="{{ route('attendance.submissions.show', $row) }}"
+    <a href="{{ route('my-attendance.submissions.show', $row) }}"
        class="btn btn-sm btn-primary"
        title="Visualizar">
         <i class="bi bi-eye"></i>
@@ -8,7 +8,7 @@
 
     @can('submit', $row)
         <form method="POST"
-              action="{{ route('attendance.submissions.submit', $row) }}">
+              action="{{ route('my-attendance.submissions.submit', $row) }}">
             @csrf
             <button class="btn btn-sm btn-warning"
                     title="Enviar para homologação">

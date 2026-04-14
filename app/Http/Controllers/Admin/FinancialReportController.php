@@ -17,15 +17,7 @@ class FinancialReportController extends Controller
 {
     public function index(Request $request, PaymentReportDataTable $dataTable)
     {
-        $filters = [
-            'month'   => $request->month,
-            'year'    => $request->year,
-            'project' => $request->project_id,
-            'unit'    => $request->unit_id,
-            'status'  => $request->status,
-            'start'   => $request->start_date,
-            'end'     => $request->end_date,
-        ];
+        $filters = $request->all();
 
         $projects = Project::orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
@@ -187,6 +179,98 @@ class FinancialReportController extends Controller
         return view('admin.financial_reports.institutional', compact(
             'summary', 'totals', 'payments', 'year'
         ));
+    }
+
+    protected function getReportData(Request $request): array
+    {
+        $query = Payment::with(['unit','project','scholarshipHolder']);
+
+        if ($request->year) {
+            $query->where('year', $request->year);
+        }
+
+        if ($request->month) {
+            $query->where('month', $request->month);
+        }
+
+        if ($request->project_id) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->unit_id) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $payments = $query->get();
+
+        return [
+            'payments' => $payments,
+            'total' => $payments->sum('amount'),
+        ];
+    }
+
+    public function scholarshipHolderPdf(Request $request)
+    {
+        $data = $this->getReportData($request);
+
+        $pdf = Pdf::loadView(
+            'admin.financial_reports.scholarship_holder_pdf',
+            $data
+        );
+
+        return $pdf->stream('relatorio_bolsista.pdf');
+    }
+
+    public function unitProjectPdf(Request $request)
+    {
+        $data = $this->getReportData($request);
+
+        $pdf = Pdf::loadView(
+            'admin.financial_reports.unit_project',
+            $data
+        );
+
+        return $pdf->stream('relatorio_unidade_projeto.pdf');
+    }
+
+    public function institutionalPdf(Request $request)
+    {
+        $data = $this->getReportData($request);
+
+        $pdf = Pdf::loadView(
+            'admin.financial_reports.institutional',
+            $data
+        );
+
+        return $pdf->stream('relatorio_institucional.pdf');
+    }
+
+    public function institutionalExcel(Request $request)
+    {
+        return Excel::download(
+            new FinancialReportExport($request),
+            'institucional.xlsx'
+        );
+    }
+
+    public function scholarshipHolderExcel(Request $request)
+    {
+        return Excel::download(
+            new FinancialReportExport($request),
+            'bolsista.xlsx'
+        );
+    }
+
+    public function unitProjectExcel(Request $request)
+    {
+        return Excel::download(
+            new FinancialReportExport($request),
+            'unidade_projeto.xlsx'
+        );
     }
 
 }

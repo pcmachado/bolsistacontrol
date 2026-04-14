@@ -75,10 +75,10 @@
          CARDS RESUMO
     ========================= --}}
     <div class="row mb-4">
-        @include('attendance.submissions.cards.scholarship_holder.submitted', ['count' => $submissionCounts['submitted'] ?? 0])
-        @include('attendance.submissions.cards.scholarship_holder.approved',  ['count' => $submissionCounts['approved'] ?? 0])
-        @include('attendance.submissions.cards.scholarship_holder.rejected',  ['count' => $submissionCounts['rejected'] ?? 0])
-        @include('attendance.submissions.cards.scholarship_holder.late',      ['count' => $submissionCounts['late'] ?? 0])
+        @include('attendance.submissions.cards.scholarship_holder.submitted', ['count' => $submissionCounts['enviado'] ?? 0])
+        @include('attendance.submissions.cards.scholarship_holder.approved',  ['count' => $submissionCounts['aprovado'] ?? 0])
+        @include('attendance.submissions.cards.scholarship_holder.rejected',  ['count' => $submissionCounts['rejeitado'] ?? 0])
+        @include('attendance.submissions.cards.scholarship_holder.late',      ['count' => $submissionCounts['atrasado'] ?? 0])
     </div>
 
 
@@ -119,7 +119,7 @@
                                 </small>
                             </div>
 
-                            <a href="{{ route('attendance.submissions.show', $sub) }}"
+                            <a href="{{ route('my-attendance.submissions.show', $sub) }}"
                             class="btn btn-sm btn-outline-primary">
                                 Abrir
                             </a>
@@ -172,10 +172,10 @@ document.addEventListener("DOMContentLoaded", function () {
             labels: ['Aprovadas', 'Enviadas', 'Rejeitadas', 'Atrasadas'],
             datasets: [{
                 data: [
-                    {{ $submissionCounts['approved'] ?? 0 }},
-                    {{ $submissionCounts['submitted'] ?? 0 }},
-                    {{ $submissionCounts['rejected'] ?? 0 }},
-                    {{ $submissionCounts['late'] ?? 0 }}
+                    {{ $submissionCounts['aprovado'] ?? 0 }},
+                    {{ $submissionCounts['enviado'] ?? 0 }},
+                    {{ $submissionCounts['rejeitado'] ?? 0 }},
+                    {{ $submissionCounts['atrasado'] ?? 0 }}
                 ],
                 backgroundColor: [
                     '#198754',

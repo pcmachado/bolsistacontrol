@@ -185,4 +185,17 @@ class AttendanceSubmissionService
             ->findOrFail($id);
     }
 
+    public function isClosed(ScholarshipHolder $holder, int $year, int $month): bool
+    {
+        return AttendanceSubmission::query()
+            ->where('scholarship_holder_id', $holder->id)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->whereIn('status', [
+                AttendanceSubmission::STATUS_SUBMITTED,
+                AttendanceSubmission::STATUS_APPROVED,
+            ])
+            ->exists();
+    }
+
 }

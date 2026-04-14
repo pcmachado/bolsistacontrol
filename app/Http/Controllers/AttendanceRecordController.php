@@ -140,14 +140,15 @@ class AttendanceRecordController extends Controller
     /**
      * Edição
      */
-    public function edit(AttendanceRecord $attendanceRecord): View
+    public function edit(AttendanceRecord $attendanceRecord)
     {
-        $this->authorize('update', $attendanceRecord);
+        if (!Auth::user()->can('update', $attendanceRecord)) {
+            return redirect()
+                ->route('attendance.index', ['month' => optional($attendanceRecord->date)->format('Y-m') ?? now()->format('Y-m')])
+                ->with('error', $attendanceRecord->editBlockReason() ?? 'Você não pode editar este registro, prazo de 7 dias expirado.');
+        }
 
-        return view(
-            'attendance.edit',
-            compact('attendanceRecord')
-        );
+        return view('attendance.edit', compact('attendanceRecord'));
     }
 
     /**
@@ -155,7 +156,11 @@ class AttendanceRecordController extends Controller
      */
     public function update(Request $request, AttendanceRecord $attendanceRecord )
     {
-        $this->authorize('update', $attendanceRecord);
+        if (!Auth::user()->can('update', $attendanceRecord)) {
+            return redirect()
+                ->back()
+                ->with('error', $attendanceRecord->editBlockReason() ?? 'Edição não permitida.');
+        }
 
         $validated = $request->validate([
             'date'        => ['required', 'date'],

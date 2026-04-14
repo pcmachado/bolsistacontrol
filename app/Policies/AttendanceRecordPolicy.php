@@ -31,17 +31,24 @@ class AttendanceRecordPolicy
      */
     public function update(User $user, AttendanceRecord $record): bool
     {
-        // Só o bolsista dono
+        // dono
         if ($user->scholarshipHolder?->id !== $record->scholarship_holder_id) {
             return false;
         }
 
-        // Registro já enviado no mês → bloqueado
-        if ($record->attendance_submission_id !== null) {
+        // nunca enviado → pode editar
+        if ($record->attendance_submission_id === null) {
+            return true;
+        }
+
+        // 🔥 verificar status da submissão
+        $submission = $record->submission;
+
+        if (!$submission) {
             return false;
         }
 
-        return true;
+        return $submission->status === \App\Models\AttendanceSubmission::STATUS_REJECTED;
     }
 
     /**

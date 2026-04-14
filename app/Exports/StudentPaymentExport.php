@@ -2,14 +2,13 @@
 
 namespace App\Exports;
 
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
 class StudentPaymentExport implements FromCollection
 {
-    protected $payments;
-
-    public function __construct(Collection $payments)
+    public function __construct (public Collection $payments)
     {
         $this->payments = $payments;
     }

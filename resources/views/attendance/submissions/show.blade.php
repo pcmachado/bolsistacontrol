@@ -65,7 +65,7 @@
         </div>
 
         <div class="card-body p-0">
-            @if ($submission->records->isEmpty())
+            @if ($submission->attendanceRecords->isEmpty())
                 <div class="p-3 text-muted">
                     Nenhum registro vinculado a esta submissão.
                 </div>
@@ -84,7 +84,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($submission->records as $record)
+                        @foreach ($submission->attendanceRecords as $record)
                             <tr>
                                 <td>{{ $record->date->format('d/m/Y') }}</td>
                                 <td>{{ number_format($record->hours, 2) }}</td>
@@ -93,7 +93,7 @@
                                 @if ($submission->status === 'draft')
                                     <td class="text-center">
                                         <form method="POST"
-                                              action="{{ route('attendance.submissions.records.remove', [$submission, $record]) }}"
+                                              action="{{ route('my-attendance.submissions.records.remove', [$submission, $record]) }}"
                                               onsubmit="return confirm('Remover este registro da submissão?')">
                                             @csrf
                                             @method('DELETE')
@@ -119,7 +119,7 @@
         {{-- Enviar (bolsista) --}}
         @can('submit', $submission)
             <form method="POST"
-                  action="{{ route('attendance.submissions.submit', $submission) }}">
+                  action="{{ route('my-attendance.submissions.submit', $submission) }}">
                 @csrf
                 <button class="btn btn-success">
                     Enviar para Homologação
@@ -130,7 +130,7 @@
         {{-- Aprovar / Rejeitar (coordenação) --}}
         @can('approve', $submission)
             <form method="POST"
-                  action="{{ route('attendance.submissions.approve', $submission) }}">
+                  action="{{ route('my-attendance.submissions.approve', $submission) }}">
                 @csrf
                 <button class="btn btn-primary">
                     Aprovar
@@ -144,15 +144,11 @@
             </button>
         @endcan
 
-        <a href="{{ route('attendance.submissions.index') }}"
+        <a href="{{ route('my-attendance.submissions.my') }}"
            class="btn btn-outline-secondary ms-auto">
             Voltar
         </a>
     </div>
 
 </div>
-
-{{-- Modal de rejeição --}}
-@include('attendance.submissions.partials.reject-modal')
-
 @endsection

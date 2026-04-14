@@ -60,7 +60,7 @@ class IntelligentNotificationService
                         title: "Disciplina atrasada",
                         message: "A disciplina {$d->name} da turma {$offering->name} está atrasada no plano de ensino.",
                         level: 'warning',
-                        url: route('admin.class-offerings.discipline.dashboard', [$offering->id, $d->id])
+                        url: route('admin.class-offerings.disciplines.dashboard', [$offering->id, $d->id])
                     ));
                 }
             }

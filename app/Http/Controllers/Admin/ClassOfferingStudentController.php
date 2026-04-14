@@ -7,6 +7,7 @@ use App\Models\ClassOffering;
 use App\Models\Student;
 use App\Models\StudentRecord;
 use App\Models\ClassOfferingSubmission;
+use App\Models\AttendanceSubmission;
 use App\DataTables\ClassOfferingStudentDataTable;
 use App\Services\ClassOfferingSubmissionService;
 use Illuminate\Http\Request;
@@ -84,9 +85,9 @@ class ClassOfferingStudentController extends Controller
                 ->where('year', $cursor->year)
                 ->first();
 
-            $status = $submission?->status ?? 'draft';
+            $status = $submission?->status ?? AttendanceSubmission::STATUS_DRAFT;
 
-            $canSubmit = app(\App\Services\ClassOfferingSubmissionService::class)
+            $canSubmit = app(ClassOfferingSubmissionService::class)
                 ->canSubmitMonth($class, $cursor->month, $cursor->year);
 
             $monthsData->push([

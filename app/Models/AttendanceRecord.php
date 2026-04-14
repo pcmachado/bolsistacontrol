@@ -66,7 +66,7 @@ class AttendanceRecord extends Model
     public function getComputedStatusAttribute(): string
     {
         if (! $this->submission) {
-            return 'draft';
+            return AttendanceSubmission::STATUS_DRAFT;
         }
 
         return $this->submission->status;
@@ -75,10 +75,10 @@ class AttendanceRecord extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->computed_status) {
-            'draft'     => 'Em edição',
-            'submitted' => 'Enviado',
-            'approved'  => 'Homologado',
-            'rejected'  => 'Rejeitado',
+            AttendanceSubmission::STATUS_DRAFT     => 'Em edição',
+            AttendanceSubmission::STATUS_SUBMITTED => 'Enviado',
+            AttendanceSubmission::STATUS_APPROVED  => 'Homologado',
+            AttendanceSubmission::STATUS_REJECTED  => 'Rejeitado',
             default     => '-',
         };
     }
@@ -95,11 +95,11 @@ class AttendanceRecord extends Model
             return true;
         }
 
-        if ($this->submission->status === 'draft') {
+        if ($this->submission->status === AttendanceSubmission::STATUS_DRAFT) {
             return true;
         }
 
-        if ($this->submission->status === 'rejected') {
+        if ($this->submission->status === AttendanceSubmission::STATUS_REJECTED) {
             return $this->submission->rejected_at
                 ? now()->diffInDays($this->submission->rejected_at) <= 7
                 : true;
@@ -129,5 +129,30 @@ class AttendanceRecord extends Model
             floor($minutes / 60),
             $minutes % 60
         );
+    }
+
+    public function editBlockReason(): ?string
+    {
+        if (! $this->submission) {
+            return null;
+        }
+
+        if ($this->submission->status === AttendanceSubmission::STATUS_REJECTED) {
+            if ($this->submission->rejected_at &&
+                now()->diffInDays($this->submission->rejected_at) > 7) {
+                return 'Prazo de 7 dias após rejeição expirado.';
+            }
+        }
+
+        if (in_array($this->submission->status, [AttendanceSubmission::STATUS_SUBMITTED, AttendanceSubmission::STATUS_APPROVED])) {
+            return 'Registro já enviado e não pode ser alterado.';
+        }
+
+        return null;
+    }
+
+    public function getMonthAttribute()
+    {
+        return $this->date ? Carbon::parse($this->date)->format('Y-m') : now()->format('Y-m');
     }
 }

@@ -29,6 +29,12 @@
         {{-- NAVBAR --}}
         @include('layouts.partials._navbar')
 
+        @if(session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+
         {{-- SIDEBAR MOBILE --}}
         <div class="offcanvas offcanvas-start bg-dark text-white mobile-sidebar-offcanvas" id="sidebarOffcanvas">
             <div class="offcanvas-header">

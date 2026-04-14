@@ -60,7 +60,7 @@ class ProjectWizardController extends Controller
 
         $project = Project::update($data + [
             'wizard_step' => 'step2',
-            'status'      => 'draft',
+            'status'      => Project::STATUS_DRAFT,
         ]);
 
         return redirect()->route('admin.projects.create.step2', $project);

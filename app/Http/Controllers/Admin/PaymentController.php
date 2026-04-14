@@ -36,14 +36,22 @@ class PaymentController extends Controller
         $query = Payment::with(['unit', 'project', 'scholarshipHolder.projects']);
         $query = $this->applyPaymentFilters($query, request());
         $dataTable->mode = 'admin';
+
+        $monthString = $request->get('month', now()->format('Y-m'));
+
+        [$year, $monthNumber] = explode('-', $monthString);
+
+        $year = (int) $year;
+        $monthNumber = (int) $monthNumber;
         
         return $dataTable->render('admin.payments.index', [
             'units' => Unit::all(),
             'projects' => Project::all(),
             'positions' => Position::all(),
             'status' => $request->get('status'),
-            'month'  => $request->get('month'),
-            'year'   => $request->get('year'),
+            'month'  => $monthNumber,
+            'year'   => $year,
+            'monthString' => $monthString,
         ]);
     }
 

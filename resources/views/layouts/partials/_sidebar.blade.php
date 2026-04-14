@@ -42,7 +42,7 @@
 
             {{-- Frequências --}}
             <x-sidebar-item route="attendance.my" icon="bi bi-calendar-week" title="Registros de Frequência"/>
-            <x-sidebar-item route="attendance.submissions.my" icon="bi bi-send-check" title="Submissões Mensais"/>
+            <x-sidebar-item route="my-attendance.submissions.my" icon="bi bi-send-check" title="Submissões Mensais"/>
 
             {{-- Pagamentos --}}
             <x-sidebar-item route="payments.my" icon="bi bi-wallet2" title="Meus Pagamentos"/>
@@ -65,8 +65,10 @@
             {{-- Homologações --}}
             <x-sidebar-item route="admin.homologations.index" icon="bi bi-check2-square" title="Homologações"/>
 
+            <x-sidebar-item route="admin.financial-reports.index" icon="bi bi-graph-up" title="Financeiro"/>
+
             {{-- Financeiro Bolsistas --}}
-            <x-sidebar-item route="admin.payments.dashboard" icon="bi bi-graph-up" title="Financeiro"/>      
+            <x-sidebar-item route="admin.payments.dashboard" icon="bi bi-graph-up" title="Financeiro (Bolsistas)"/>      
             <x-sidebar-item route="admin.payments.index" icon="bi bi-wallet2" title="Pagamentos"/>
 
             {{-- Financeiro Alunos --}}

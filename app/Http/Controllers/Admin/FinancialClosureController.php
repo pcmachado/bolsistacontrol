@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FinancialClosure;
 use App\Models\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class FinancialClosureController extends Controller
 {
@@ -28,7 +29,7 @@ class FinancialClosureController extends Controller
             'month'   => $data['month'],
             'year'    => $data['year'],
             'closed_at' => now(),
-            'closed_by_user_id' => auth()->id(),
+            'closed_by_user_id' => Auth::id(),
         ]);
 
         return back()->with('success', 'Fechamento financeiro realizado.');

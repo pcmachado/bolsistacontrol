@@ -29,7 +29,7 @@
                 title="Registros de Frequencia"/>
 
             <x-sidebar-item
-                route="attendance.submissions.my"
+                route="my-attendance.submissions.my"
                 icon="bi bi-send-check"
                 title="Submissoes Mensais"/>
 

@@ -3,6 +3,7 @@
 namespace App\DataTables;
 
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
 
@@ -69,11 +70,11 @@ abstract class BaseAttendanceDataTable extends DataTable
         if (!empty($this->filters['status'])) {
             $status = $this->filters['status'];
 
-            if ($status === 'draft') {
+            if ($status === AttendanceSubmission::STATUS_DRAFT) {
                 $query->where(function ($q) {
                     $q->whereDoesntHave('submission')
                       ->orWhereHas('submission', fn ($sub) =>
-                          $sub->where('status', 'draft')
+                          $sub->where('status', AttendanceSubmission::STATUS_DRAFT)
                       );
                 });
             } else {

@@ -45,7 +45,7 @@ class DashboardController extends Controller
 
             // 🔹 cards de frequência
             'attendanceCards' => $this->attendanceDashboard
-                ->submissionCounts(auth()->user()),
+                ->submissionCounts(Auth::user()),
         ]);
 
     }
@@ -67,7 +67,7 @@ class DashboardController extends Controller
             'financial' => $this->dashboard->getFinancialData($request->all()),
 
             // 🔹 frequência (submissões)
-            'attendance' => $this->attendanceDashboard->submissionCounts(auth()->user()),
+            'attendance' => $this->attendanceDashboard->submissionCounts(Auth::user()),
         ]);
     }
 

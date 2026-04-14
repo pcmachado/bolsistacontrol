@@ -41,7 +41,7 @@ class MyAttendanceSubmissionController extends Controller
         );
 
         return redirect()
-            ->route('attendance.submissions.show', $submission)
+            ->route('my-attendance.submissions.show', $submission)
             ->with('success', 'Submissão criada com sucesso.');
     }
 
@@ -52,7 +52,7 @@ class MyAttendanceSubmissionController extends Controller
         $this->authorize('view', $submission);
 
         $submission->load([
-            'records',
+            'attendanceRecords',
             'scholarshipHolder.user',
             'scholarshipHolder.unit',
         ]);

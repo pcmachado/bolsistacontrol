@@ -23,6 +23,13 @@ class Project extends Model
         'end_date'
     ];
 
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+    public const STATUS_ARCHIVED = 'archived';
+    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_DRAFT = 'draft';
+
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);

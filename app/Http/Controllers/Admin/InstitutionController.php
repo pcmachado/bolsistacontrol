@@ -14,12 +14,12 @@ class InstitutionController extends Controller
     public function index()
     {
         $institutions = Institution::paginate(10);
-        return view('institutions.index', compact('institutions'));
+        return view('admin.institutions.index', compact('institutions'));
     }
 
     public function create()
     {
-        return view('institutions.create');
+        return view('admin.institutions.create');
     }
 
     public function store(Request $request)
@@ -35,18 +35,18 @@ class InstitutionController extends Controller
 
         Institution::create($validated);
 
-        return redirect()->route('institutions.index')
+        return redirect()->route('admin.institutions.index')
                          ->with('success', 'Instituição criada com sucesso!');
     }
 
     public function show(Institution $institution)
     {
-        return view('institutions.show', compact('institution'));
+        return view('admin.institutions.show', compact('institution'));
     }
 
     public function edit(Institution $institution)
     {
-        return view('institutions.edit', compact('institution'));
+        return view('admin.institutions.edit', compact('institution'));
     }
 
     public function update(Request $request, Institution $institution)
@@ -62,7 +62,7 @@ class InstitutionController extends Controller
 
         $institution->update($validated);
 
-        return redirect()->route('institutions.index')
+        return redirect()->route('admin.institutions.index')
                          ->with('success', 'Instituição atualizada com sucesso!');
     }
 
@@ -70,7 +70,7 @@ class InstitutionController extends Controller
     {
         $institution->delete();
 
-        return redirect()->route('institutions.index')
+        return redirect()->route('admin.institutions.index')
                          ->with('success', 'Instituição removida com sucesso!');
     }
 
@@ -105,11 +105,5 @@ class InstitutionController extends Controller
             : 'dashboard';
 
         return redirect()->route($route);
-    }
-
-    public function clear(): RedirectResponse
-    {
-        session()->forget('institution_id');
-        return redirect()->route('institution.select');
     }
 }

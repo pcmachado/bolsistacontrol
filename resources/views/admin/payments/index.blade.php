@@ -13,13 +13,12 @@
     <form method="GET" class="row g-2 mb-3 align-items-end">
 
         <div class="col-md-2">
-            <label class="form-label">Mês</label>
-            <input type="month" name="month" value="{{ request('month') }}" class="form-control">
-        </div>
-
-        <div class="col-md-2">
-            <label class="form-label">Ano</label>
-            <input type="number" name="year" value="{{ request('year') }}" class="form-control">
+            <label class="form-label">Competência</label>
+            <input 
+                type="month" 
+                name="month" 
+                value="{{ request('month', now()->format('Y-m')) }}" 
+                class="form-control">
         </div>
 
         <div class="col-md-2">

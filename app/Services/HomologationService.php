@@ -21,7 +21,7 @@ class HomologationService
             ]);
 
             $submission->attendanceRecord()->update([
-                'status' => AttendanceRecord::STATUS_APPROVED,
+                'status' => AttendanceSubmission::STATUS_APPROVED,
                 'approved_by_user_id' => $userId,
                 'approved_at' => now(),
                 'rejected_reason' => null,
@@ -45,7 +45,7 @@ class HomologationService
             ]);
 
             $submission->attendanceRecord()->update([
-                'status' => AttendanceRecord::STATUS_REJECTED,
+                'status' => AttendanceSubmission::STATUS_REJECTED,
                 'approved_by_user_id' => $userId,
                 'rejected_reason' => $reason,
                 'rejected_at' => now(),
