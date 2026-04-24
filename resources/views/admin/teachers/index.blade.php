@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Professores')
+@section('title', 'Docentes')
 
 @section('content')
 <div class="container-fluid">
 
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center flex-column flex-md-row align-items-start align-items-md-center gap-2 mb-4">
-        <h1 class="fw-bold"><i class="bi bi-person-video3 me-2"></i> Professores</h1>
+        <h1 class="fw-bold"><i class="bi bi-person-video3 me-2"></i> Docentes</h1>
 
         <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary px-4">
             <i class="bi bi-plus-lg me-2"></i> Novo Professor

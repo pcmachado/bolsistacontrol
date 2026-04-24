@@ -17,6 +17,7 @@ class CourseScholarshipHolder extends Pivot
     protected $fillable = [
         'course_id',
         'scholarship_holder_id',
+        'role',
         'enrollment_date',
         'completion_date',
         'status'

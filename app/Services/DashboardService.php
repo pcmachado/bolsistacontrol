@@ -55,7 +55,7 @@ class DashboardService
             ->with('scholarshipHolder.user');
 
         // aplica o mesmo escopo do dashboard
-        app(VisibilityService::class)
+        $query = app(VisibilityService::class)
             ->apply($query, $user, 'self');
 
         $lastSubmissions = (clone $query)

@@ -4,14 +4,43 @@ namespace App\Services;
 
 use App\Models\Payment;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class FinancialReportService
 {
-    public function get(array $filters): Collection
+    
+
+    public function query(array $filters): Builder
     {
         [$year, $month] = $this->parseMonth($filters['month'] ?? null);
 
-        $query = Payment::with(['unit', 'project', 'scholarshipHolder']);
+        $user = Auth::user();
+
+        $query = Payment::with([
+            'unit',
+            'project',
+            'scholarshipHolder.user'
+        ]);
+
+        // admin vê tudo
+        if (!$user->hasRole('admin')) {
+
+            if ($user->hasAnyRole([
+                'coordenador_geral',
+                'coordenador_adjunto_geral'
+            ])) {
+
+                // 🔥 filtra pela instituição via unidade
+                $query->whereHas('unit', function ($q) use ($user) {
+                    $q->where('institution_id', $user->institution_id);
+                });
+
+            } else {
+                // 🔥 apenas unidade do usuário
+                $query->where('unit_id', $user->unit_id);
+            }
+        }
 
         if ($year) {
             $query->where('year', $year);
@@ -41,10 +70,12 @@ class FinancialReportService
             $query->whereDate('created_at', '<=', $filters['end_date']);
         }
 
-        return $query
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
+        return $query->orderBy('year')->orderBy('month');
+    }
+
+    public function get(array $filters): Collection
+    {
+        return $this->query($filters)->get();
     }
 
     public function summary(Collection $payments): array

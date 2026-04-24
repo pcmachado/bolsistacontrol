@@ -19,6 +19,7 @@ class ProjectScholarshipHolder extends Pivot
         'scholarship_holder_id',
         'position_id',
         'weekly_workload',
+        'edital_portaria',
         'start_date',
         'end_date',
         'assignments',

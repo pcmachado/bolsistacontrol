@@ -13,7 +13,7 @@ class AttendanceDashboardService
         $query = AttendanceSubmission::query();
 
         // 🔐 aplica visibilidade por papel
-        app(VisibilityService::class)
+        $query = app(VisibilityService::class)
             ->apply($query, $user);
 
         return [

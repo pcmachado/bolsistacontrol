@@ -11,7 +11,7 @@ class DashboardController extends Controller
 {
     public function index(ScholarshipHolderDashboardService $service)
     {
-        $data = $service->data(auth()->user());
+        $data = $service->data(Auth::user());
 
         return view('dashboard', $data);
     }

@@ -40,4 +40,18 @@ class StudentRecord extends Model
         $this->attended_classes = max(0, $this->total_classes - $this->absences);
         $this->total_amount = $this->attended_classes * $this->daily_rate;
     }
+
+    public function recalculateFromMonths()
+    {
+        $months = StudentMonthRecord::where([
+            'student_id' => $this->student_id,
+            'class_offering_id' => $this->class_offering_id,
+        ])->get();
+
+        $this->absences = $months->sum('absences');
+
+        $this->attended_classes = max(0, $this->total_classes - $this->absences);
+
+        $this->save();
+    }
 }

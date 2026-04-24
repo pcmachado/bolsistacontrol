@@ -8,7 +8,7 @@
     <i class="bi bi-people"></i>
 </a>
 
-<a href="{{ route('admin.class-offerings.disciplines', $row->id) }}"
+<a href="{{ route('admin.class-offerings.disciplines.index', $row->id) }}"
    class="btn btn-sm btn-info">
     <i class="bi bi-diagram-3"></i>
 </a>

@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Services\StudentPaymentDashboardService;
 use App\Services\PaymentMonthService;
 use App\Models\StudentPayment;
+use App\Models\ClassOffering;
+use App\Models\ClassOfferingSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -201,5 +203,22 @@ class StudentPaymentController extends Controller
             new StudentPaymentExport($payments),
             'pagamentos-alunos.xlsx'
         );
+    }
+
+    public function closeMonth(ClassOffering $offering, $month, $year)
+    {
+        ClassOfferingSubmission::updateOrCreate([
+            'class_offering_id' => $offering->id,
+            'month' => substr($month, 5, 2),
+            'year' => substr($month, 0, 4),
+        ], [
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+
+        // 🔥 recalcula tudo
+        app(\App\Services\StudentRecordService::class)->generate($offering);
+
+        return back()->with('success', 'Mês fechado com sucesso');
     }
 }

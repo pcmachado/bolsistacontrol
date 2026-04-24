@@ -21,7 +21,7 @@ class ClassOfferingDashboardController extends Controller
         // KPI 2 — Total de aulas registradas
         $totalClasses = $sessions->count();
 
-        // KPI 3 — Professores envolvidos
+        // KPI 3 — Docentes envolvidos
         $teachers = $sessions->pluck('teacher')->unique('id')->count();
 
         // KPI 4 — Disciplinas com aulas

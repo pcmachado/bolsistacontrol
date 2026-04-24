@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClassOfferingDiscipline extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'class_offering_discipline';
+    protected $table = 'class_offering_disciplines';
 
     protected $fillable = [
         'class_offering_id',

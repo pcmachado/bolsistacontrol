@@ -42,7 +42,7 @@ class AttendanceSubmissionController extends Controller
                         ->orderBy('name')
                         ->get();
         } elseif ($user->hasRole('coordenador_adjunto')) {
-            $units = $user->units()->orderBy('name')->get();
+            $units = $user->unit()->get();
         } else {
             $units = collect();
         }

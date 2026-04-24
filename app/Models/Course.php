@@ -25,7 +25,8 @@ class Course extends Model
     public function scholarshipHolders(): BelongsToMany
     {
         return $this->belongsToMany(ScholarshipHolder::class, 'course_scholarship_holder')
-                    ->withTimestamps();
+            ->withPivot(['role'])
+            ->withTimestamps();
     }
 
     public function disciplines(): HasMany

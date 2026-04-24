@@ -71,6 +71,7 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             //InstitutionUserSeeder::class,
             ScholarshipHolderSeeder::class,
+            StudentSeeder::class,
             ProjectSeeder::class,
             CourseSeeder::class,
             ProjectCourseSeeder::class,
@@ -82,15 +83,18 @@ class DatabaseSeeder extends Seeder
             ProjectFundingSourceSeeder::class,
             ClassOfferingSeeder::class,
             ClassOfferingDisciplineSeeder::class,
-            StudentSeeder::class,
+            ClassOfferingStudentSeeder::class,
             StudentRecordSeeder::class,
-            ClassOfferingSubmissionSeeder::class,
             AttendanceSubmissionSeeder::class,
             AttendanceRecordSeeder::class,
             RecalculateAttendanceSubmissionSeeder::class,
             NotificationTestSeeder::class,
             PaymentSeeder::class,
             StudentPaymentSeeder::class,
+            TeachingAssignmentsSeeder::class,
+            StudentMonthRecordSeeder::class,
+            ClassOfferingSubmissionSeeder::class,
+            ScholarshipHolderClassOfferingSeeder::class,
         ]);
     }
 }

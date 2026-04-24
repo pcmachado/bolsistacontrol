@@ -23,6 +23,11 @@ class Project extends Model
         'end_date'
     ];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date'   => 'date',
+    ];
+
     public const STATUS_ACTIVE = 'active';
     public const STATUS_INACTIVE = 'inactive';
     public const STATUS_ARCHIVED = 'archived';

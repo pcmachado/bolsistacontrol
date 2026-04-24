@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ClassSession;
+use App\Models\ClassOffering;
 use Illuminate\Http\Request;
 
 class TeacherDashboardController extends Controller
 {
     public function index(Request $request, User $teacher)
     {
+        //dd($teacher);
         // Garantir role de professor
         if (!$teacher->hasRole('professor')) {
             abort(403, 'Este usuário não é um professor.');
@@ -18,7 +20,9 @@ class TeacherDashboardController extends Controller
 
         // Base query das aulas
         $sessions = ClassSession::query()
-            ->where('teacher_id', $teacher->id)
+            ->whereHas('classOffering.disciplines', function ($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })
             ->with(['discipline.course', 'classOffering.unit'])
             ->orderBy('date');
 
@@ -45,7 +49,7 @@ class TeacherDashboardController extends Controller
         // KPIs
         $totalHours = $sessions->sum('duration_hours');
         $totalClasses = $sessions->count();
-        $totalCourses = $sessions->pluck('discipline.course_id')->unique()->count();
+        $totalCourses = $sessions->pluck('discipline.course.id')->unique()->count();
         $totalOfferings = $sessions->pluck('classOffering.id')->unique()->count();
 
         // Gráficos
@@ -63,14 +67,22 @@ class TeacherDashboardController extends Controller
 
         $hoursByOffering = $sessions->groupBy('class_offering_id')
             ->map(fn($g) => [
-                'label' => $g->first()->classOffering->name ?? "Turma #".$g->first()->classOffering->id,
+                'label' => optional($g->first()->classOffering)->name ?? "Turma #".$g->first()->classOffering->id,
                 'hours' => $g->sum('duration_hours'),
             ]);
 
         // Aulas recentes
         $recent = $sessions->sortByDesc('date')->take(10);
 
-        return view('admin.dashboard.teacher.index', [
+        $classes = ClassOffering::whereHas('disciplines', function ($q) use ($teacher) {
+            $q->where('teacher_id', $teacher->id);
+        })
+        ->with(['course', 'unit', 'disciplines' => fn($q) =>
+            $q->where('teacher_id', $teacher->id)
+        ])
+        ->get();dd($classes);
+
+        return view('teacher.dashboard', [
             'teacher' => $teacher,
             'sessions' => $sessions,
             'recent' => $recent,
@@ -83,6 +95,7 @@ class TeacherDashboardController extends Controller
             'hoursByOffering' => $hoursByOffering,
             'units' => \App\Models\Unit::all(),
             'courses' => \App\Models\Course::all(),
+            'classes' => $classes
         ]);
     }
 }

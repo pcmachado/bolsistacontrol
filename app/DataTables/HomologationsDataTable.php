@@ -77,7 +77,7 @@ class HomologationsDataTable extends DataTable
         $monthFilter = $this->filters['month'] ?? now()->format('Y-m');
 
         if (! preg_match('/^\d{4}-\d{2}$/', $monthFilter)) {
-            throw new InvalidArgumentException('Formato de mes invalido.');
+            return $query->whereRaw('1=0');
         }
 
         [$year, $month] = explode('-', $monthFilter);

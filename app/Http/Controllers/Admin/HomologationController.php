@@ -50,9 +50,9 @@ class HomologationController extends Controller
                 ->orderBy('name')
                 ->get();
         } elseif ($user->hasRole('coordenador_adjunto')) {
-            $unitIds = $user->units()->pluck('units.id');
+            $unitIds = $user->unit_id;
             $projects = Project::query()
-                ->whereHas('units', fn ($q) => $q->whereIn('units.id', $unitIds))
+                ->whereHas('units', fn ($q) => $q->where('units.id', $unitIds))
                 ->orderBy('name')
                 ->get();
         } else {
@@ -67,7 +67,7 @@ class HomologationController extends Controller
                 ->orderBy('name')
                 ->get();
         } elseif ($user->hasRole('coordenador_adjunto')) {
-            $units = $user->units()->orderBy('name')->get();
+            $units = $user->unit()->get();
         } else {
             $units = collect();
         }
@@ -83,9 +83,9 @@ class HomologationController extends Controller
                 ->whereHas('unit', fn ($q) => $q->where('institution_id', $user->institution_id))
                 ->get();
         } elseif ($user->hasRole('coordenador_adjunto')) {
-            $unitIds = $user->units()->pluck('units.id');
+            $unitIds = $user->unit_id;
             $scholarship_holders = $scholarship_holders
-                ->whereIn('unit_id', $unitIds)
+                ->where('unit_id', $unitIds)
                 ->get();
         } else {
             $scholarship_holders = collect();

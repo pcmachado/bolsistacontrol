@@ -45,6 +45,7 @@ use App\Http\Controllers\Admin\UnitDashboardController;
 use App\Http\Controllers\Admin\IntelligentAlertSettingController;
 use App\Http\Controllers\Admin\SupervisorAssignmentController;
 use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\Admin\TeacherClassController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ProjectEditController;
 use App\Http\Controllers\Admin\CourseDisciplineController;
@@ -56,6 +57,7 @@ use App\Http\Controllers\MyAttendanceSubmissionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Admin\ClassOfferingStudentController;
 use App\Http\Controllers\Admin\StudentPaymentController;
+use App\Http\Controllers\Admin\CourseScholarshipHolderController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -192,6 +194,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('students', StudentController::class);
 
+    // Rotas para Professores
+    Route::prefix('teacher')->name('teacher.')->group(function () {
+        Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
+
+        Route::get('/classes/{offering}', [TeacherClassController::class, 'show'])->name('classes.show');
+        Route::post('/classes/{offering}/monthly-save',[TeacherClassController::class, 'storeMonthly'])->name('classes.monthly.save');
+        Route::post('/classes/{offering}/{month}/close',[TeacherClassController::class, 'closeMonth'])->name('classes.monthly.close');
+    });
+
 });
 
 //require __DIR__.'/auth.php';
@@ -209,7 +221,18 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
 
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
 
-    
+    // 🔹 Gerenciamento de Bolsistas por Curso (apenas coordenadores)
+    Route::prefix('courses/{course}/holders')->name('courses.holders.')->group(function () {
+
+        Route::get('/', [CourseScholarshipHolderController::class, 'index'])->name('index');
+
+        Route::post('/', [CourseScholarshipHolderController::class, 'store'])->name('store');
+
+        Route::put('/{holder}', [CourseScholarshipHolderController::class, 'update'])->name('update');
+
+        Route::delete('/{holder}', [CourseScholarshipHolderController::class, 'destroy'])->name('destroy');
+
+    });
 
     // 🔹 Relatório de Homologações (apenas coordenador geral e adjunto)
     Route::prefix('homologations')->name('homologations.')->group(function () {
@@ -324,7 +347,6 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
 
     Route::prefix('dashboard')->as('dashboard.')->group(function () {
         Route::get('academic', [GlobalDashboardController::class, 'index'])->name('academic');
-        Route::get('professor/{teacher}', [TeacherDashboardController::class, 'index'])->name('teacher');
         Route::get('unit/{unit}',[UnitDashboardController::class, 'index'])->name('unit');
     });
 
@@ -389,7 +411,11 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('/general', [ProjectEditController::class, 'general'])->name('general');
 
         Route::get('/scholars', [ProjectEditController::class, 'scholars'])->name('scholars');
-        Route::post('/scholars', [ProjectEditController::class, 'updateScholars'])->name('scholars.update');
+        Route::post('/scholars', [ProjectEditController::class, 'storeScholar'])->name('scholars.store');
+        Route::put('/scholars', [ProjectEditController::class, 'updateScholar'])->name('scholars.update');
+
+        Route::get('/scholars/{holder}/edit', [ProjectEditController::class, 'editScholar'])->name('scholars.edit');
+        Route::delete('/scholars/{holder}', [ProjectEditController::class, 'destroyScholar'])->name('scholars.destroy');
 
         Route::get('/courses', [ProjectEditController::class, 'courses'])->name('courses');
         Route::post('/courses', [ProjectEditController::class, 'updateCourses'])->name('courses.update');

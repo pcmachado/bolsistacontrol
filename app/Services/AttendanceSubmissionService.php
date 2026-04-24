@@ -40,18 +40,13 @@ class AttendanceSubmissionService
      */
     public function attachMonthlyRecords(AttendanceSubmission $submission): void
     {
-        $records = AttendanceRecord::query()
+        AttendanceRecord::query()
             ->where('scholarship_holder_id', $submission->scholarship_holder_id)
             ->whereYear('date', $submission->year)
             ->whereMonth('date', $submission->month)
-            ->whereNull('attendance_submission_id')
-            ->get();
-
-        foreach ($records as $record) {
-            $record->update([
+            ->update([
                 'attendance_submission_id' => $submission->id,
             ]);
-        }
     }
 
     /**

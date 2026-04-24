@@ -34,15 +34,14 @@ class AttendanceRecordDataTable extends BaseAttendanceDataTable
 
         $query = $model->newQuery()
             ->with(['scholarshipHolder.user', 'submission']);
-
-        $visibility = app(VisibilityService::class);
         
         $context = $this->mode === 'self' ? 'self' : 'admin';
 
-        $query = $visibility->apply($query, $user, $context);
+        $query = app(VisibilityService::class)->apply($query, $user, $context);
 
-        return $this->applyFilters($query)
-            ->latest('date');
+        $query =  $this->applyFilters($query);
+            
+        return $query->latest('date');
     }
 
     protected function getColumns(): array

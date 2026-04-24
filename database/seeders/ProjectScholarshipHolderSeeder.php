@@ -13,6 +13,7 @@ class ProjectScholarshipHolderSeeder extends Seeder
     {
         $holders = ScholarshipHolder::with('unit')->get();
         $positions = Position::all();
+        $teacherPosition = Position::where('name', 'Professor')->first();
 
         if ($holders->isEmpty() || $positions->isEmpty()) {
             $this->command?->warn('ProjectScholarshipHolderSeeder: bolsistas/cargos ausentes.');
@@ -32,17 +33,28 @@ class ProjectScholarshipHolderSeeder extends Seeder
                 continue;
             }
 
-            $positionId = $positions->random()->id;
+            $isTeacher = rand(0, 1); // 50%
+
+            $position = $isTeacher && $teacherPosition
+                ? $teacherPosition
+                : $positions->random();
 
             $project->scholarshipHolders()->syncWithoutDetaching([
                 $holder->id => [
-                    'position_id' => $positionId,
+                    'position_id' => $position->id,
                     'weekly_workload' => 20,
+                    'edital_portaria' => 'Portaria XYZ/2026',
                     'start_date' => now()->subMonths(3)->toDateString(),
                     'end_date' => null,
                     'status' => 'active',
                 ],
             ]);
+
+            if ($position->is_teacher && $holder->user) {
+                if (! $holder->user->hasRole('professor')) {
+                    $holder->user->assignRole('professor');
+                }
+            }
         }
     }
 }

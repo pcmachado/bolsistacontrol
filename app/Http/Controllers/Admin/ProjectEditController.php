@@ -8,11 +8,11 @@ use App\Models\Position;
 use App\Models\ScholarshipHolder;
 use App\Models\Course;
 use App\Models\FundingSource;
-use App\Http\Requests\Project\UpdateProjectFundingRequest;
+use App\Http\Requests\UpdateProjectFundingRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\Project\UpdateProjectScholarsRequest;
-use App\Http\Requests\Project\UpdateProjectCoursesRequest;
+use App\Http\Requests\UpdateProjectScholarsRequest;
+use App\Http\Requests\UpdateProjectCoursesRequest;
 
 class ProjectEditController extends Controller
 {
@@ -46,10 +46,19 @@ class ProjectEditController extends Controller
         ));
     }
 
-    public function updateScholars(
-        UpdateProjectScholarsRequest $request,
-        Project $project
-    ) {
+    public function editScholar($projectId, $holderId)
+    {
+        $project = Project::findOrFail($projectId);
+
+        $holder = $project->scholarshipHolders()
+            ->wherePivot('id', $holderId)
+            ->firstOrFail();
+
+        return view('projects.edit.scholar-edit', compact('project', 'holder'));
+    }
+
+    public function updateScholar(UpdateProjectScholarsRequest $request, Project $project)
+    {
         DB::transaction(function () use ($project, $request) {
 
             $sync = collect($request->validated()['scholarships'])
@@ -60,30 +69,30 @@ class ProjectEditController extends Controller
                         'status'          => $s['status'],
                         'start_date'      => $s['start_date'] ?? $project->start_date,
                         'end_date'        => $s['end_date'] ?? null,
+                        'edital_portaria' => $s['edital_portaria'] ?? null,
                     ]
                 ])
                 ->toArray();
 
-            // Atualiza / cria
             $project->scholarshipHolders()->syncWithoutDetaching($sync);
 
-            // Remove desmarcados
             $selectedIds = array_keys($sync);
 
-            $project->scholarshipHolders()
+            $toDisable = $project->scholarshipHolders()
                 ->whereNotIn('scholarship_holder_id', $selectedIds)
-                ->detach();
+                ->pluck('scholarship_holder_id');
+
+            foreach ($toDisable as $id) {
+                $project->scholarshipHolders()->updateExistingPivot($id, [
+                    'status' => 'inactive'
+                ]);
+            }
         });
 
         return redirect()
             ->route('admin.projects.edit.scholars', $project)
             ->with('success', 'Bolsistas atualizados com sucesso.');
-    }
-
-    public function updateCourses(
-    UpdateProjectCoursesRequest $request,
-    Project $project
-    ) {
+    
         DB::transaction(function () use ($project, $request) {
 
             $sync = collect($request->validated()['courses'])
@@ -154,5 +163,42 @@ class ProjectEditController extends Controller
         return redirect()
             ->route('admin.projects.edit.funding', $project)
             ->with('success', 'Fontes de fomento atualizadas com sucesso.');
+    }
+
+    public function storeScholar(Request $request, Project $project)
+    {
+        $data = $request->validate([
+            'holder_id' => 'required|exists:scholarship_holders,id',
+            'position_id' => 'required|exists:positions,id',
+            'weekly_workload' => 'required|integer|min:1|max:40',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'edital_portaria' => 'nullable|string|max:255',
+        ]);
+
+        // 🔥 evita duplicidade
+        if ($project->scholarshipHolders()->where('scholarship_holder_id', $data['holder_id'])->exists()) {
+            return back()->with('error', 'Bolsista já vinculado ao projeto.');
+        }
+
+        $project->scholarshipHolders()->attach($data['holder_id'], [
+            'position_id' => $data['position_id'],
+            'weekly_workload' => $data['weekly_workload'],
+            'status' => 'active',
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+            'edital_portaria' => $data['edital_portaria'],
+        ]);
+
+        return back()->with('success', 'Bolsista adicionado com sucesso.');
+    }
+
+    public function destroyScholar(Project $project, $holderId)
+    {
+        $project->scholarshipHolders()->updateExistingPivot($holderId, [
+            'status' => 'inactive'
+        ]);
+
+        return back()->with('success', 'Bolsista desativado no projeto.');
     }
 }

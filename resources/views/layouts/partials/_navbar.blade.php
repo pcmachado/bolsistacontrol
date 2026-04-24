@@ -1,23 +1,22 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2 px-3 app-navbar">
     <div class="container-fluid">
 
-        <div class="d-flex d-lg-none align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2">
             <button
                 type="button"
-                class="btn btn-outline-secondary d-lg-none"
+                class="btn btn-outline-secondary"
                 data-sidebar-toggle
                 aria-label="Abrir menu">
                 <i class="bi bi-list fs-5"></i>
             </button>
 
-            <a class="navbar-brand fw-semibold text-truncate mb-0" href="{{ route('dashboard') }}" style="max-width: 58vw;">
-                @yield('title', 'ProBolsas')
+            <a class="navbar-brand d-flex align-items-center mb-0" href="{{ route('dashboard') }}">
+
+                <img src="{{ asset('images/probolsas_fundo_branco.png') }}"
+                    alt="ProBolsas"
+                    style="max-height: 36px; width:auto;">
             </a>
         </div>
-
-        <a class="navbar-brand fw-semibold d-none d-lg-inline mb-0" href="{{ route('dashboard') }}">
-            ProBolsas
-        </a>
 
         <ul class="navbar-nav ms-auto align-items-center flex-row gap-1">
 

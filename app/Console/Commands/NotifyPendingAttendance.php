@@ -30,14 +30,15 @@ class NotifyPendingAttendance extends Command
         foreach ($grouped as $unitId => $records) {
             // Coordenadores adjuntos da unidade
             $coordenadores = User::where('unit_id', $unitId)
-                ->whereHas('positions', fn($q) => $q->where('name', 'Coordenador Adjunto'))
+                ->role('coordenador-adjunto')
                 ->get();
 
             foreach ($coordenadores as $coord) {
-                Notification::create([
-                    'scholarship_holder_id' => null, // notificação para usuário
+                $coord->notifications()->create([
                     'type' => 'pendencia',
-                    'message' => "Existem {$records->count()} registros de frequência pendentes de homologação referentes a {$lastMonth->format('m/Y')}.",
+                    'data' => [
+                        'message' => "Existem {$records->count()} registros de frequência pendentes de homologação referentes a {$lastMonth->format('m/Y')}.",
+                    ],
                 ]);
             }
         }

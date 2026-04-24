@@ -10,21 +10,37 @@ use App\Models\Unit;
 use App\Models\ScholarshipHolder;
 use App\DataTables\PaymentReportDataTable;
 use App\Exports\FinancialReportExport;
+use App\Services\FinancialReportService;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class FinancialReportController extends Controller
 {
-    public function index(Request $request, PaymentReportDataTable $dataTable)
+    public function index(Request $request, PaymentReportDataTable $dataTable, FinancialReportService $service)
     {
-        $filters = $request->all();
+        $filters = $request->only([
+            'month',
+            'year',
+            'project_id',
+            'unit_id',
+            'status',
+            'start_date',
+            'end_date',
+        ]);
+
+        if (empty($filters['month'])) {
+            $filters['month'] = now()->format('Y-m');
+        }
+
+        $payments = $service->get($filters);
+        $total = $payments->sum('amount');
 
         $projects = Project::orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
 
         return $dataTable->setFilters($filters)
             ->render('admin.financial_reports.index', compact(
-                'projects','units','filters'
+                'projects', 'units', 'filters', 'total', 'payments'
             ));
     }
 

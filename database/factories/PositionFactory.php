@@ -18,7 +18,7 @@ class PositionFactory extends Factory
             'Bolsista',
             'Supervisor',
             'Apoio Administrativo',
-            'Docente',
+            'Professor',
         ];
 
         $name = $this->faker->unique()->randomElement($positions);

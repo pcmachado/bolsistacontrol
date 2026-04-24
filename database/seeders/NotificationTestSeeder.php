@@ -45,7 +45,7 @@ class NotificationTestSeeder extends Seeder
                     'title' => 'Ação necessária',
                     'message' => "Seu relatório foi rejeitado e precisa de ajustes.",
                     'level' => 'danger',
-                    'url' => route('attendance.submissions.my'),
+                    'url' => route('my-attendance.submissions.my'),
                 ],
             ];
 

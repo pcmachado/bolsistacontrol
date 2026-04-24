@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
                     'password' => $password,
                     'remember_token' => Str::random(10),
                 ]
-        );
+            );
             $coordenadorGeral->syncRoles(['coordenador_geral']);
             $this->ensureScholarshipHolder($coordenadorGeral);
 
@@ -64,7 +64,7 @@ class UserSeeder extends Seeder
                     'password' => $password,
                     'remember_token' => Str::random(10),
                 ]
-        );
+            );
             $coordenadorAdjuntoGeral->syncRoles(['coordenador_adjunto_geral']);
             $this->ensureScholarshipHolder($coordenadorAdjuntoGeral);
 
@@ -103,6 +103,20 @@ class UserSeeder extends Seeder
                 }
             }
         }
+
+        $docentes =User::firstOrCreate(
+            ['email' => "professor@{$inst->acronym}.example.com"],
+            [
+                'name' => 'Professor Exemplo',
+                'unit_id' => null,
+                'institution_id' => $inst->id,
+                'email_verified_at' => now(),
+                'password' => $password,
+                'remember_token' => Str::random(10),
+            ]
+        );
+        
+        $docentes->syncRoles(['professor']);
 
         $this->command->info('Usuários padrão criados com sucesso.');
     }

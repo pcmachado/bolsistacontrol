@@ -13,7 +13,9 @@ class Position extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name'
+        'name',
+        'description',
+        'is_teacher',
     ];
 
     public function projects(): BelongsToMany
@@ -21,11 +23,6 @@ class Position extends Model
         return $this->belongsToMany(Project::class, 'project_position')
                     ->withPivot(['weekly_workload', 'hourly_rate'])
                     ->withTimestamps();
-    }
-
-    public function assignments(): HasMany
-    {
-        return $this->hasMany(Assignment::class);
     }
 
     public function scholarshipHolders(): BelongsToMany

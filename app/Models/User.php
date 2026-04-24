@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,10 +12,14 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
 
-    // Relacionamento: um usuário pertence a uma unidade
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIPS
+    |--------------------------------------------------------------------------
+    */
+
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
@@ -27,11 +30,12 @@ class User extends Authenticatable
         return $this->hasOne(ScholarshipHolder::class, 'user_id');
     }
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | ATTRIBUTES
+    |--------------------------------------------------------------------------
+    */
+
     protected $fillable = [
         'name',
         'email',
@@ -41,21 +45,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -64,9 +58,17 @@ class User extends Authenticatable
         ];
     }
 
-        /**
-     * Verifica se o usuário tem o papel de coordenador geral.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE HELPERS (APENAS ACESSO GLOBAL)
+    |--------------------------------------------------------------------------
+    */
+
+    public function isAdmin(): bool
+    {
+        return $this->hasAnyRole(['admin', 'superadmin']);
+    }
+
     public function isCoordenadorGeral(): bool
     {
         return $this->hasRole('coordenador_geral');
@@ -77,19 +79,6 @@ class User extends Authenticatable
         return $this->hasRole('coordenador_adjunto_geral');
     }
 
-    /**
-     * Verifica se o usuário tem o papel de administrador.
-     */
-    public function isAdmin(): bool
-    {
-        return $this->hasRole('admin') || $this->hasRole('superadmin');
-    }
-
-    public function isAdminOnly(): bool
-    {
-        return $this->hasRole('admin') && !$this->scholarshipHolder;
-    }
-
     public function isCoordenadorAdjunto(): bool
     {
         return $this->hasRole('coordenador_adjunto');
@@ -97,38 +86,58 @@ class User extends Authenticatable
 
     public function isCoordenador(): bool
     {
-        return $this->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto']);
+        return $this->hasAnyRole([
+            'coordenador_geral',
+            'coordenador_adjunto_geral',
+            'coordenador_adjunto'
+        ]);
     }
 
-    public function teachingDisciplines()
+    public function isBolsista(): bool
     {
-        return $this->hasMany(ClassOfferingDiscipline::class, 'teacher_id');
+        return $this->hasRole('bolsista');
     }
 
-    public function supervisedAssignments()
+    public function isAdminOnly(): bool
     {
-        return $this->hasMany(SupervisorAssignment::class, 'supervisor_id');
+        return $this->isAdmin() && !$this->scholarshipHolder;
     }
 
-    public function supervisedCourses()
-    {
-        return $this->belongsToMany(Course::class, 'supervisor_course_unit', 'supervisor_id', 'course_id')
-                    ->withPivot('unit_id', 'active')
-                    ->withTimestamps();
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | CONTEXTO (NOVA LÓGICA)
+    |--------------------------------------------------------------------------
+    */
 
-    public function sessions()
-    {
-        return $this->hasMany(ClassSession::class, 'teacher_id');
-    }
-
+    /**
+     * Retorna o ID institucional correto
+     */
     public function resolvedInstitutionId(): ?int
     {
-        if ($this->unit) {
-            return $this->unit->institution_id;
-        }
-
-        return $this->institution_id;
+        return $this->unit?->institution_id ?? $this->institution_id;
     }
 
+    /**
+     * Verifica se o usuário está vinculado a uma turma (qualquer papel)
+     */
+    public function isLinkedToOffering(ClassOffering $offering): bool
+    {
+        if (!$this->scholarshipHolder) {
+            return false;
+        }
+
+        return $offering->scholarshipHolders()
+            ->where('scholarship_holder_id', $this->scholarshipHolder->id)
+            ->exists();
+    }
+
+    /**
+     * Verifica se o usuário atua como professor na turma
+     */
+    public function isProfessorInOffering(ClassOffering $offering): bool
+    {
+        return $offering->disciplines()
+            ->where('teacher_id', $this->id)
+            ->exists();
+    }
 }

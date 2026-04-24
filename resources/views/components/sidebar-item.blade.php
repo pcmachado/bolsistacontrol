@@ -1,4 +1,9 @@
-@props(['route' => null, 'icon' => '', 'title' => '', 'activeRoutes' => []])
+@props([
+    'route' => null,
+    'icon' => '',
+    'title' => '',
+    'activeRoutes' => []
+])
 
 @php
     $isActive = false;
@@ -20,11 +25,20 @@
         }
     }
 
-    $classes = 'sidebar-link d-flex align-items-center px-3 py-2';
-    $classes .= $isActive ? ' active' : '';
+    $classes = 'nav-link d-flex align-items-center rounded px-3 py-2';
+
+    $classes .= $isActive
+        ? ' active'
+        : ' link-body-emphasis';
 @endphp
 
-<a href="{{ $route ? route($route) : '#' }}" class="{{ $classes }}" data-title="{{ $title }}">
+<a href="{{ $route ? route($route) : '#' }}"
+   class="{{ $classes }}"
+   data-title="{{ $title }}">
+
     <i class="{{ $icon }} sidebar-icon me-2"></i>
-    <span class="sidebar-text">{{ $title }}</span>
+
+    <span class="sidebar-item-text text-truncate">
+        {{ $title }}
+    </span>
 </a>

@@ -95,7 +95,8 @@ class ScholarshipHolder extends Model
     public function courses(): BelongsToMany
     {
         return $this->belongsToMany(Course::class, 'course_scholarship_holder')
-                    ->withTimestamps();
+            ->withPivot(['role'])
+            ->withTimestamps();
     }
 
     public function projects(): BelongsToMany
@@ -123,4 +124,17 @@ class ScholarshipHolder extends Model
         return $this->morphMany(Payment::class, 'payable');
     }
 
+    public function isOrientador(): bool
+    {
+        return $this->classOfferings()
+            ->wherePivot('role', 'orientador')
+            ->exists();
+    }
+
+    public function isSupervisor(): bool
+    {
+        return $this->courses()
+            ->wherePivot('role', 'supervisor')
+            ->exists();
+    }
 }

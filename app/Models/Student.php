@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Student extends Model
 {
@@ -13,7 +14,6 @@ class Student extends Model
 
     protected $fillable = [
         'user_id',
-        'class_offering_id',
         'name',
         'cpf',
         'passport',
@@ -24,18 +24,18 @@ class Student extends Model
         'account'
     ];
 
-    public function classOffering(): BelongsTo
-    {
-        return $this->belongsTo(ClassOffering::class);
-    }
-
-    public function studentRecords()
+    public function studentRecords(): HasMany
     {
         return $this->hasMany(StudentRecord::class);
     }
 
-    public function students()
+    public function classOfferings(): BelongsToMany
     {
-        return $this->hasMany(Student::class);
+        return $this->belongsToMany(
+            ClassOffering::class,
+            'class_offering_student',
+            'student_id',
+            'class_offering_id'
+        );
     }
 }

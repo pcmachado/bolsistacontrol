@@ -103,6 +103,6 @@ class TeachersDataTable extends DataTable
 
     protected function filename(): string
     {
-        return 'Professores_' . date('YmdHis');
+        return 'Docentes_' . date('YmdHis');
     }
 }

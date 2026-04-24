@@ -61,11 +61,9 @@ class PaymentDataTable extends DataTable
         |--------------------------------------------------------------------------
         */
 
-        $visibility = app(VisibilityService::class);
-
         $context = $this->mode === 'my' ? 'self' : 'admin';
 
-        $query = $visibility->apply($query, $user, $context);
+        $query = app(VisibilityService::class)->apply($query, $user, $context);
 
         $query = $this->applyPaymentFilters($query, request());
 

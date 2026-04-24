@@ -15,7 +15,7 @@
             </a>
 
             {{-- Botão para gerenciar disciplinas da turma --}}
-            <a href="{{ route('admin.class-offerings.disciplines', $offering->id) }}"
+            <a href="{{ route('admin.class-offerings.disciplines.index', $offering->id) }}"
                class="btn btn-info px-3">
                 <i class="bi bi-diagram-3 me-2"></i> Disciplinas da Turma
             </a>

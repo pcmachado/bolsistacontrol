@@ -40,7 +40,7 @@ class Discipline extends Model
     {
         return $this->belongsToMany(
             ClassOffering::class,
-            'class_offering_discipline',
+            'class_offering_disciplines',
             'discipline_id',
             'class_offering_id'
             )->withPivot(['teacher_id', 'workload', 'schedule', 'room'])

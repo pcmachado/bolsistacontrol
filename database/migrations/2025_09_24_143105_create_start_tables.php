@@ -157,6 +157,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
+            $table->boolean('is_teacher')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -165,6 +166,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
+            $table->string('role')->nullable();
             $table->date('enrollment_date')->nullable();
             $table->date('completion_date')->nullable();
             $table->enum('status', ['enrolled', 'completed', 'dropped'])->default('enrolled');
@@ -203,10 +205,6 @@ return new class extends Migration
         Schema::create('students', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('class_offering_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
             $table->string('name');
             $table->string('cpf')->nullable();
             $table->string('passport')->nullable();
@@ -225,13 +223,9 @@ return new class extends Migration
         Schema::create('student_records', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('student_id')
-                ->constrained()
-                ->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
 
-            $table->foreignId('class_offering_id')
-                ->constrained()
-                ->cascadeOnDelete();
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
 
             $table->integer('total_classes');
             $table->integer('absences')->default(0);
@@ -245,6 +239,17 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
+        });
+
+        Schema::create('class_offering_student', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+
+            $table->timestamps();
+
+            $table->unique(['class_offering_id', 'student_id']);
         });
 
         Schema::create('class_offering_submissions', function (Blueprint $table) {
@@ -278,6 +283,7 @@ return new class extends Migration
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
             $table->foreignId('position_id')->constrained()->onDelete('cascade');
             $table->integer('weekly_workload')->default(20);
+            $table->text('edital_portaria')->nullable();
             $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
             $table->date('end_date')->nullable();
             $table->date('start_date');
@@ -327,7 +333,21 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('class_offering_discipline', function (Blueprint $table) {
+        Schema::create('project_course', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->boolean('active')->default(true);
+            $table->string('semester')->nullable();
+            $table->unsignedSmallInteger('year')->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->timestamps();
+
+            $table->unique(['project_id', 'course_id'], 'project_course_unique');
+        });
+
+        Schema::create('class_offering_disciplines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
             $table->foreignId('discipline_id')->constrained()->cascadeOnDelete();
@@ -358,11 +378,7 @@ return new class extends Migration
             $table->string('role')->nullable(); // ex: aluno, monitor, bolsista
             $table->timestamps();
 
-            $table->unique(
-                ['scholarship_holder_id', 'class_offering_id']
-            ,
-            'unique_scholarship_class'
-            );
+            $table->unique(['scholarship_holder_id', 'class_offering_id'],'unique_scholarship_class');
             $table->softDeletes();
         });
 
@@ -442,10 +458,7 @@ return new class extends Migration
             $table->timestamp('confirmed_at')->nullable();
 
             // Quem executou o pagamento (usuário financeiro / coord adjunto)
-            $table->foreignId('paid_by_user_id')
-                  ->nullable()
-                  ->constrained('users')
-                  ->nullOnDelete();
+            $table->foreignId('paid_by_user_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->nullableMorphs('payable'); // Polimórfico para diferentes tipos de pagamento
 
@@ -456,10 +469,7 @@ return new class extends Migration
             $table->softDeletes();
 
             // Um pagamento por bolsista por mês/ano (se quiser garantir isso)
-            $table->unique(
-                ['scholarship_holder_id', 'month', 'year', 'project_id'],
-                'payment_holder_month_year_project_unique'
-            );
+            $table->unique(['scholarship_holder_id', 'month', 'year', 'project_id'],'payment_holder_month_year_project_unique');
         });
 
         Schema::create('document_templates', function (Blueprint $table) {
@@ -541,12 +551,7 @@ return new class extends Migration
 
             $table->decimal('amount', 10, 2);
 
-            $table->enum('status', [
-                'pending',
-                'sent',
-                'paid',
-                'cancelled'
-            ])->default('pending');
+            $table->enum('status', ['pending','sent','paid','cancelled'])->default('pending');
 
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('paid_at')->nullable();
@@ -559,12 +564,37 @@ return new class extends Migration
             $table->softDeletes();
 
             // 🔒 evita duplicação
-            $table->unique([
-                'student_id',
-                'class_offering_id',
-                'month',
-                'year'
-            ], 'student_payment_unique');
+            $table->unique(['student_id','class_offering_id','month','year'], 'student_payment_unique');
+        });
+
+        Schema::create('teaching_assignments', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('discipline_id')->constrained()->cascadeOnDelete();
+
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique(['class_offering_id', 'discipline_id'], 'unique_teacher_assignment');
+        });
+
+        Schema::create('student_month_records', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+
+            $table->integer('month');
+            $table->integer('year');
+
+            $table->integer('absences')->default(0);
+            $table->integer('attended_classes')->default(0);
+
+            $table->timestamps();
+
+            $table->unique(['student_id', 'class_offering_id', 'month', 'year'], 'unique_student_month_record');
         });
 
     }
@@ -574,6 +604,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('student_month_records');
+        Schema::dropIfExists('teaching_assignments');
         Schema::dropIfExists('student_payments');
         Schema::dropIfExists('final_activity_reports');
         Schema::dropIfExists('financial_logs');
@@ -585,10 +617,12 @@ return new class extends Migration
         Schema::dropIfExists('project_position');
         Schema::dropIfExists('supervisor_course_unit');
         Schema::dropIfExists('scholarship_holder_class_offering');
-        Schema::dropIfExists('class_offering_discipline');
+        Schema::dropIfExists('class_offering_disciplines');
+        Schema::dropIfExists('project_course');
         Schema::dropIfExists('project_scholarship_holder');
         Schema::dropIfExists('project_funding_source');
         Schema::dropIfExists('class_offering_submission');
+        Schema::dropIfExists('class_offering_student');
         Schema::dropIfExists('student_records');
         Schema::dropIfExists('students');
         Schema::dropIfExists('class_offering');

@@ -5,12 +5,12 @@
 @section('content')
 <div class="container-fluid">
 
-    <h1 class="mb-3">Registros de Frequência</h1>
+    <h1 class="mb-3 text-black">Registros de Frequência</h1>
 
     {{-- ============================= --}}
     {{-- RESUMO DE HORAS --}}
     {{-- ============================= --}}
-    <div class="card mb-3 shadow-sm">
+    <div class="card mb-3 shadow-sm text-body">
         <div class="card-body">
 
             <div class="d-flex justify-content-between mb-1">
@@ -101,7 +101,7 @@
             ←
         </a>
 
-        <h4 class="mb-0">
+        <h4 class="mb-0 text-black">
             {{ \Carbon\Carbon::createFromFormat('Y-m', $month)->translatedFormat('F/Y') }}
         </h4>
 

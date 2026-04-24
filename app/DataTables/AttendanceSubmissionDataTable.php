@@ -62,12 +62,10 @@ class AttendanceSubmissionDataTable extends DataTable
                 'scholarshipHolder.unit',
             ])
             ->withCount('attendanceRecords');
-
-        $visibility = app(VisibilityService::class);
         
         $context = $this->mode === 'self' ? 'self' : 'admin';
 
-        $query = $visibility->apply($query, $user, $context);
+        $query = app(VisibilityService::class)->apply($query, $user, $context);
 
         if (!empty($this->filters['status']) && $this->filters['status'] !== 'all') {
             $query->where('status', $this->filters['status']);
@@ -76,7 +74,7 @@ class AttendanceSubmissionDataTable extends DataTable
         if (!empty($this->filters['month'])) {
 
             if (! preg_match('/^\d{4}-\d{2}$/', $this->filters['month'])) {
-                throw new \InvalidArgumentException('Formato de mês inválido.');
+                return $query->whereRaw('1=0');
             }
 
             [$year, $month] = explode('-', $this->filters['month']);

@@ -58,7 +58,7 @@ class ClassOfferingStudentController extends Controller
             ->get();
 
         $students = Student::where('class_offering_id', $class->id)
-            ->with('classOffering.project')
+            ->with('classOfferings')
             ->get();
 
         $records = StudentRecord::where('class_offering_id', $class->id)
@@ -87,14 +87,14 @@ class ClassOfferingStudentController extends Controller
 
             $status = $submission?->status ?? AttendanceSubmission::STATUS_DRAFT;
 
-            $canSubmit = app(ClassOfferingSubmissionService::class)
+            $canSubmitCurrentMonth = app(ClassOfferingSubmissionService::class)
                 ->canSubmitMonth($class, $cursor->month, $cursor->year);
 
             $monthsData->push([
                 'month' => $cursor->month,
                 'year'  => $cursor->year,
                 'status' => $status,
-                'canSubmit' => $canSubmit,
+                'canSubmit' => $canSubmitCurrentMonth,
             ]);
 
             $cursor->addMonth();
@@ -113,7 +113,8 @@ class ClassOfferingStudentController extends Controller
             'availableMonths',
             'canGoPrev',
             'canGoNext',
-            'monthsData'
+            'monthsData',
+            'canSubmitCurrentMonth'
         ));
     }
 
