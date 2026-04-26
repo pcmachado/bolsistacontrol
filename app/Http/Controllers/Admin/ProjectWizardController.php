@@ -287,8 +287,8 @@ class ProjectWizardController extends Controller
         $filtered = collect($request->input('fundings', []))
             ->filter(fn ($f) =>
                 !empty($f['funding_source_id']) &&
-                isset($f['amount']) &&
-                $f['amount'] !== ''
+                isset($f['allocated_amount']) &&
+                $f['allocated_amount'] !== ''
             )
             ->values()
             ->all();
@@ -298,7 +298,7 @@ class ProjectWizardController extends Controller
             [
                 'fundings' => 'required|array|min:1',
                 'fundings.*.funding_source_id' => 'required|exists:funding_sources,id',
-                'fundings.*.amount' => 'required|numeric|min:0',
+                'fundings.*.allocated_amount' => 'required|numeric|min:0',
             ]
         )->validate();
 
@@ -307,7 +307,7 @@ class ProjectWizardController extends Controller
             $sync = collect($validated['fundings'])
                 ->mapWithKeys(fn ($f) => [
                     $f['funding_source_id'] => [
-                        'amount'     => $f['amount'],
+                        'allocated_amount'     => $f['allocated_amount'],
                         'start_date' => $f['start_date'] ?? $project->start_date,
                         'end_date'   => $f['end_date'] ?? $project->end_date,
                         'status'     => $f['status'] ?? 'active',

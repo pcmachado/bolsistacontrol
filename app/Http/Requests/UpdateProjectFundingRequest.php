@@ -15,7 +15,7 @@ class UpdateProjectFundingRequest extends FormRequest
     {
         $filtered = collect($this->input('fundings', []))
             ->filter(fn ($f) =>
-                !empty($f['amount'])
+                !empty($f['allocated_amount'])
             )
             ->values()
             ->all();

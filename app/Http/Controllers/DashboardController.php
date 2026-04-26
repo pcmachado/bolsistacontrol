@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AttendanceSubmission;
-use Illuminate\Notifications\DatabaseNotification as Notification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ScholarshipHolderDashboardService;
 
 class DashboardController extends Controller
 {
-    public function index(ScholarshipHolderDashboardService $service)
+    public function index(Request $request, ScholarshipHolderDashboardService $service)
     {
-        $data = $service->data(Auth::user());
+        $data = $service->data(Auth::user(), $request->only(['month', 'year']));
 
         return view('dashboard', $data);
     }

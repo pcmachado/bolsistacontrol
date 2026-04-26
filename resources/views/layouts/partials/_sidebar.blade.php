@@ -62,7 +62,7 @@
 
         <ul class="nav nav-pills flex-column mb-3">
             <li><x-sidebar-item route="attendance.reports.index" icon="bi bi-file-earmark-text" title="Relatório Mensal"/></li>
-            <li><x-sidebar-item route="attendance.reports.final.create" icon="bi bi-file-earmark-person" title="Relatório Final"/></li>
+            <li><x-sidebar-item route="attendance.reports.final.index" icon="bi bi-file-earmark-person" title="Relatório Final"/></li>
         </ul>
 
         @role('professor')

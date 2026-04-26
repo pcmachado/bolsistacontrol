@@ -38,22 +38,19 @@ class AttendanceDashboardService
      * Submissões em atraso:
      * mês encerrado e nenhuma submissão criada
      */
-    protected function lateSubmissionsCount(User $user): int
+    protected function lateSubmissionsCount(User $user, string $context = 'self'): int
     {
-        if (! $user->scholarshipHolder) {
-            return 0;
-        }
+        $now = now()->subMonth();
 
-        $now = now()->subMonth(); // último mês fechado
-
-        return AttendanceSubmission::query()
-            ->where('scholarship_holder_id', $user->scholarshipHolder->id)
+        $query = AttendanceSubmission::query()
             ->where('year', $now->year)
-            ->where('month', $now->month)
-            ->whereNotIn('status', [
-                AttendanceSubmission::STATUS_APPROVED,
-                AttendanceSubmission::STATUS_SUBMITTED,
-            ])
-            ->count();
+            ->where('month', $now->month);
+
+        $query = app(VisibilityService::class)->apply($query, $user, $context);
+
+        return $query->whereNotIn('status', [
+            AttendanceSubmission::STATUS_APPROVED,
+            AttendanceSubmission::STATUS_SUBMITTED,
+        ])->count();
     }
 }

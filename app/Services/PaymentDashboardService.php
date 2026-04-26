@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Payment;
 use App\Models\FinancialClosure;
 use App\Models\Project;
+use App\Models\ProjectFundingSource;
 use App\Models\Unit;
 use App\Models\AttendanceSubmission;
 use App\Services\VisibilityService;
@@ -88,6 +89,7 @@ class PaymentDashboardService
             ->sum('amount');
 
         $currentTotal = $totalPaid + $totalConfirmed;
+        $currentTotalCount = $countPaid + $countConfirmed;
 
         $variation = $previousTotal > 0
             ? (($currentTotal - $previousTotal) / $previousTotal) * 100
@@ -109,6 +111,60 @@ class PaymentDashboardService
         $realTotal = $totalPaid + $totalConfirmed;
 
         $gap = $forecastTotal - $realTotal;
+
+/*
+        |--------------------------------------------------------------------------
+        | ORÇAMENTO DOS PROJETOS (PROJECT_FUNDING_SOURCE)
+        |--------------------------------------------------------------------------
+        */
+        $budgetQuery = ProjectFundingSource::query()
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->when($unitId, fn ($q) => $q->whereHas('project.classOfferings', fn ($sub) =>
+                $sub->where('unit_id', $unitId)
+            ));
+
+        if ($user->isCoordenadorGeral() || $user->isCoordenadorAdjuntoGeral()) {
+            $budgetQuery->whereHas('project.classOfferings.unit', fn ($q) =>
+                $q->where('institution_id', $user->resolvedInstitutionId())
+            );
+        } elseif ($user->isCoordenadorAdjunto()) {
+            $budgetQuery->whereHas('project.classOfferings', fn ($q) =>
+                $q->where('unit_id', $user->unit_id)
+            );
+        }
+
+        $budgetAllocated = (float) (clone $budgetQuery)->sum('allocated_amount');
+        $budgetUsed = (float) (clone $budgetQuery)->sum('used_amount');
+        $budgetAvailable = max($budgetAllocated - $budgetUsed, 0);
+        $budgetCommitmentPercent = $budgetAllocated > 0
+            ? min(100, round(($budgetUsed / $budgetAllocated) * 100, 1))
+            : 0;
+
+        $projectBudgetSummaries = (clone $budgetQuery)
+            ->selectRaw('project_id, SUM(COALESCE(allocated_amount, 0)) as allocated_total, SUM(COALESCE(used_amount, 0)) as used_total')
+            ->groupBy('project_id')
+            ->with('project')
+            ->get()
+            ->map(function ($row) {
+                $allocated = (float) ($row->allocated_total ?? 0);
+                $used = (float) ($row->used_total ?? 0);
+                $available = max($allocated - $used, 0);
+
+                return [
+                    'project_id' => $row->project_id,
+                    'project_name' => $row->project?->name ?? 'Projeto',
+                    'allocated_total' => $allocated,
+                    'used_total' => $used,
+                    'available_total' => $available,
+                    'commitment_percent' => $allocated > 0
+                        ? min(100, round(($used / $allocated) * 100, 1))
+                        : 0,
+                ];
+            })
+            ->sortBy('project_name')
+            ->values();
+
+        $activeProjectBudgetId = $projectId ?: $projectBudgetSummaries->first()['project_id'] ?? null;
 
         /*
         |--------------------------------------------------------------------------
@@ -179,6 +235,7 @@ class PaymentDashboardService
 
             'previousTotal' => $previousTotal,
             'currentTotal'  => $currentTotal,
+            'currentTotalCount' => $currentTotalCount,
             'variation'     => $variation,
             'prevMonth'     => $prevMonth,
             'prevYear'      => $prevYear,
@@ -199,6 +256,13 @@ class PaymentDashboardService
             'forecastCount' => $forecastCount,
             'realTotal' => $realTotal,
             'gap' => $gap,
+
+            'budgetAllocated' => $budgetAllocated,
+            'budgetUsed' => $budgetUsed,
+            'budgetAvailable' => $budgetAvailable,
+            'budgetCommitmentPercent' => $budgetCommitmentPercent,
+            'projectBudgetSummaries' => $projectBudgetSummaries,
+            'activeProjectBudgetId' => $activeProjectBudgetId,
         ];
     }
 }

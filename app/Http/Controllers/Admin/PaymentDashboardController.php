@@ -19,9 +19,20 @@ class PaymentDashboardController extends Controller
     {
         $user = Auth::user();
 
+        $monthInput = $request->input('month');
+        $resolvedMonth = now()->month;
+        $resolvedYear = now()->year;
+
+        if (is_string($monthInput) && preg_match('/^\d{4}-\d{2}$/', $monthInput)) {
+            [$resolvedYear, $resolvedMonth] = array_map('intval', explode('-', $monthInput));
+        } else {
+            $resolvedMonth = (int) ($request->month ?? $resolvedMonth);
+            $resolvedYear = (int) ($request->year ?? $resolvedYear);
+        }
+
         $filters = [
-            'month' => $request->month ?? now()->month,
-            'year'  => $request->year  ?? now()->year,
+            'month' => $resolvedMonth,
+            'year'  => $resolvedYear,
             'project_id' => $request->project_id,
             'unit_id'    => $request->unit_id,
         ];

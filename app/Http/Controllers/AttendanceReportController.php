@@ -89,4 +89,35 @@ class AttendanceReportController extends Controller
 
         return $pdf->stream($filename);
     }
+
+    public function monthlyBlank(Request $request, AttendanceSubmission $submission)
+    {
+        $this->authorize('report', $submission);
+
+        $submission->load([
+            'scholarshipHolder.user',
+            'scholarshipHolder.unit',
+            'scholarshipHolder.projects',
+        ]);
+
+        if ($request->boolean('pdf')) {
+            $pdf = Pdf::loadView('attendance.reports.monthly_blank', [
+                'submission' => $submission,
+                'isPdf' => true,
+            ]);
+
+            $filename = "relatorio_blank_{$submission->month}_{$submission->year}.pdf";
+
+            if ($request->boolean('download')) {
+                return $pdf->download($filename);
+            }
+
+            return $pdf->stream($filename);
+        }
+
+        return view('attendance.reports.monthly_blank', [
+            'submission' => $submission,
+            'isPdf' => false,
+        ]);
+    }
 }

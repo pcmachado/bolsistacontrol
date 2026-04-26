@@ -31,7 +31,7 @@
     <p>{{ nl2br(e($report->contributions)) }}</p>
 
     <div class="d-flex gap-2 mt-4">
-        <a href="{{ route('final-reports.pdf', $report) }}"
+        <a href="{{ route('attendance.reports.final.pdf', $report) }}"
            class="btn btn-danger">
             📄 Baixar PDF
         </a>

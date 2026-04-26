@@ -1,58 +1,36 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Relatório Mensal de Frequência</title>
+@extends('layouts.pdf')
 
-    <style>
-        @page {
-            size: A4 portrait;
-            margin: 2cm;
-        }
+@section('title', 'Relatório Mensal de Frequência')
 
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
-        }
+@section('header-extra')
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 14px;
-        }
+<div style="margin-top: 5px;">
+    <h3>BOLSA FORMAÇÃO – PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
+    <h4>REGISTRO DAS HORAS TRABALHADAS</h4>
+    <h5>
+        Campus {{ $submission->scholarshipHolder->unit->name ?? '—' }} –
+        {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
+    </h5>
+</div>
 
-        th, td {
-            border: 1px solid #000;
-            padding: 6px;
-        }
+@endsection
 
-        th {
-            background: #f0f0f0;
-        }
+@section('content')
 
-        .assinaturas td {
-            border: none;
-            text-align: center;
-            padding-top: 45px;
-        }
-    </style>
-</head>
-<body>
-
-<h3 style="text-align:center;">RELATÓRIO MENSAL DE FREQUÊNCIA</h3>
+<h5>1. Dados do bolsista</h5>
 
 <table>
     <tr>
         <th width="30%">Nome do Bolsista</th>
-        <td></td>
+        <td>{{ $submission->scholarshipHolder->user->name }}</td>
     </tr>
     <tr>
         <th>Projeto</th>
-        <td></td>
+        <td>{{ $submission->scholarshipHolder?->projects->first()?->name ?? '—' }}</td>
     </tr>
     <tr>
         <th>Mês/Ano</th>
-        <td></td>
+        <td>{{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}</td>
     </tr>
 </table>
 
@@ -67,7 +45,7 @@
     <tbody>
         @for($i = 0; $i < 20; $i++)
         <tr>
-            <td height="22"></td>
+            <td height="18"></td>
             <td></td>
             <td></td>
         </tr>
@@ -95,5 +73,4 @@
     </tr>
 </table>
 
-</body>
-</html>
+@endsection

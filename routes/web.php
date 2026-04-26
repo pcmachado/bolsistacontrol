@@ -118,7 +118,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/', [AttendanceSubmissionController::class, 'store'])->name('attendance.submissions.store');
 
             Route::get('my',[MyAttendanceSubmissionController::class, 'index'])->name('my-attendance.submissions.my');
-            Route::post('/', [MyAttendanceSubmissionController::class, 'store'])->name('my-attendance.submissions.store');
+            Route::post('my', [MyAttendanceSubmissionController::class, 'store'])->name('my-attendance.submissions.store');
 
             Route::get('/{submission}', [AttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
             Route::post('/{submission}/submit', [AttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
@@ -126,11 +126,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/{submission}/reject', [AttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
             Route::delete('/{submission}/records/{record}',[AttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
 
-            Route::get('/{submission}', [MyAttendanceSubmissionController::class, 'show'])->name('my-attendance.submissions.show');
-            Route::post('/{submission}/submit', [MyAttendanceSubmissionController::class, 'submit'])->name('my-attendance.submissions.submit');
-            Route::post('/{submission}/approve', [MyAttendanceSubmissionController::class, 'approve'])->name('my-attendance.submissions.approve');
-            Route::post('/{submission}/reject', [MyAttendanceSubmissionController::class, 'reject'])->name('my-attendance.submissions.reject');
-            Route::delete('/{submission}/records/{record}',[MyAttendanceSubmissionController::class, 'removeRecord'])->name('my-attendance.submissions.records.remove');
+            Route::get('/my/{submission}', [MyAttendanceSubmissionController::class, 'show'])->name('my-attendance.submissions.show');
+            Route::post('/my/{submission}/submit', [MyAttendanceSubmissionController::class, 'submit'])->name('my-attendance.submissions.submit');
+            Route::post('/my/{submission}/approve', [MyAttendanceSubmissionController::class, 'approve'])->name('my-attendance.submissions.approve');
+            Route::post('/my/{submission}/reject', [MyAttendanceSubmissionController::class, 'reject'])->name('my-attendance.submissions.reject');
+            Route::delete('/my/{submission}/records/{record}',[MyAttendanceSubmissionController::class, 'removeRecord'])->name('my-attendance.submissions.records.remove');
             
             Route::get('/cards/approved/{month}', fn ($month) => null)->name('attendance.submissions.cards.approved.month');
             Route::get('/cards/submitted/{month}', fn ($month) => null)->name('attendance.submissions.cards.submitted.month');
@@ -152,8 +152,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/monthly/{submission}/pdf',[AttendanceReportController::class, 'monthlyPdf'])->name('attendance.reports.monthly.pdf');
             
             Route::prefix('final')->group(function () {
+                Route::get('/', [FinalActivityReportController::class, 'index'])->name('attendance.reports.final.index');
+                Route::post('/blank',[FinalActivityReportController::class, 'blank'])->name('attendance.reports.final.blank');
                 Route::get('/create',[FinalActivityReportController::class, 'create'])->name('attendance.reports.final.create');
                 Route::post('/',[FinalActivityReportController::class, 'store'])->name('attendance.reports.final.store');
+          
+
+                Route::get('/{report}/edit',[FinalActivityReportController::class, 'edit'])->name('attendance.reports.final.edit');
                 Route::put('/{report}',[FinalActivityReportController::class, 'update'])->name('attendance.reports.final.update');
                 Route::get('/{report}',[FinalActivityReportController::class, 'show'])->name('attendance.reports.final.show');
                 Route::get('/{report}/pdf',[FinalActivityReportController::class, 'pdf'])->name('attendance.reports.final.pdf');

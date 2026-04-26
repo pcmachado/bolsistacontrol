@@ -102,7 +102,7 @@ class ScholarshipHolder extends Model
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_scholarship_holder')
-                    ->withPivot('position_id', 'weekly_workload','status')
+                    ->withPivot('position_id', 'weekly_workload','status', 'edital_portaria','start_date', 'end_date')
                     ->withTimestamps();
     }
 

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\AttendanceSubmission;
 use App\Models\Payment;
 use App\Models\ScholarshipHolder;
 use App\Models\User;
@@ -16,6 +17,7 @@ class PaymentSeeder extends Seeder
     {
         $holders = ScholarshipHolder::with(['projects', 'unit'])->get();
         $admin   = User::role('admin')->first();
+        $submission = AttendanceSubmission::where('status', AttendanceSubmission::STATUS_APPROVED)->first();
 
         if ($holders->isEmpty()) {
             $this->command->warn('Nenhum bolsista encontrado.');
@@ -40,9 +42,6 @@ class PaymentSeeder extends Seeder
                     continue;
                 }
 
-                $hours  = rand(20, 80);
-                $amount = $hours * rand(20, 35);
-
                 $status = Arr::random([
                     Payment::STATUS_SENT,
                     Payment::STATUS_PAID,
@@ -60,8 +59,8 @@ class PaymentSeeder extends Seeder
 
                     'month'                 => $month,
                     'year'                  => $year,
-                    'total_hours'           => $hours,
-                    'amount'                => $amount,
+                    'total_hours'           => $submission->total_hours,
+                    'amount'                => $submission->calculated_value,
                     'status'                => $status,
                     'sent_at'               => now()->subDays(rand(5, 20)),
                 ]);

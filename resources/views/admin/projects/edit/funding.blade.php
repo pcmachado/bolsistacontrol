@@ -45,9 +45,9 @@
                             <td>
                                 <input type="number"
                                        step="0.01"
-                                       name="fundings[{{ $loop->index }}][amount]"
+                                       name="fundings[{{ $loop->index }}][allocated_amount]"
                                        class="form-control form-control-sm"
-                                       value="{{ $pivot->amount ?? '' }}"
+                                       value="{{ $pivot->allocated_amount ?? '' }}"
                                        {{ $pivot ? '' : 'disabled' }}>
                             </td>
 

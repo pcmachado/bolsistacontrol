@@ -56,7 +56,8 @@ class Project extends Model
                         'funding_source_id'
                     )
                     ->withPivot([
-                        'amount',
+                        'allocated_amount',
+                        'used_amount',
                          'start_date',
                          'end_date',
                          'status',
@@ -75,6 +76,7 @@ class Project extends Model
                     ->withPivot([
                         'position_id',
                         'weekly_workload',
+                        'edital_portaria',
                         'status',
                         'start_date',
                         'end_date',

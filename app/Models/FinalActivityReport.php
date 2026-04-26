@@ -21,6 +21,7 @@ class FinalActivityReport extends Model
         'activities',
         'results',
         'contributions',
+        'status',
         'submitted_at',
         'approved_at',
         'approved_by',

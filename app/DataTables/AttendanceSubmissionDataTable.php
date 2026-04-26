@@ -38,7 +38,7 @@ class AttendanceSubmissionDataTable extends DataTable
             )
 
             ->addColumn('records_count', fn ($row) =>
-                $row->records_count
+                $row->attendance_records_count
             )
 
             ->addColumn('status_label', fn ($row) =>

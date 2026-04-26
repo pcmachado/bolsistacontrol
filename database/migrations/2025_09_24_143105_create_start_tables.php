@@ -534,10 +534,12 @@ return new class extends Migration
             $table->longText('results');         // resultados alcançados
             $table->longText('contributions');   // contribuições ao projeto
 
+            $table->enum('status', ['draft','submitted','approved','rejected'])->default('draft');
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('approved_at')->nullable();
 
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('student_payments', function (Blueprint $table) {

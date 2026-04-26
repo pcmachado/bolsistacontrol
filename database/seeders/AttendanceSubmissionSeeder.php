@@ -30,10 +30,12 @@ class AttendanceSubmissionSeeder extends Seeder
                 } elseif ($monthsDiff === 1) {
                     $status = AttendanceSubmission::STATUS_SUBMITTED;
                 } else {
-                    $status = collect([
-                        AttendanceSubmission::STATUS_APPROVED,
-                        AttendanceSubmission::STATUS_REJECTED,
-                    ])->random();
+                    $status = fake()->randomElement([
+                        'approved',
+                        'approved',
+                        'approved',
+                        'rejected',
+                    ]);
                 }
 
                 AttendanceSubmission::updateOrCreate(

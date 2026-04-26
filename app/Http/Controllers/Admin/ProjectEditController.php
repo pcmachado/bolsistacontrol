@@ -141,7 +141,7 @@ class ProjectEditController extends Controller
             $sync = collect($request->validated()['fundings'])
                 ->mapWithKeys(fn ($f) => [
                     $f['funding_source_id'] => [
-                        'amount'     => $f['amount'],
+                        'allocated_amount'     => $f['allocated_amount'],
                         'start_date' => $f['start_date'] ?? $project->start_date,
                         'end_date'   => $f['end_date'] ?? $project->end_date,
                         'status'     => $f['status'] ?? 'active',

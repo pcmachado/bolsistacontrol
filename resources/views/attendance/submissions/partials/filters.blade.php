@@ -1,9 +1,9 @@
-<form method="GET" action="{{ route('attendance.submissions.index') }}" class="card shadow-sm mb-4">
+<form method="GET" action="{{ route('attendance.submissions.index') }}" class="card filter-card">
     <div class="card-body">
-        <div class="row g-2 align-items-end">
+        <div class="row g-3 align-items-end">
             @unlessrole('bolsista')
                 <div class="col-md-3">
-                    <label for="filter-month" class="form-label mb-1">Mês</label>
+                    <label for="filter-month" class="form-label">Mês</label>
                     <input
                         id="filter-month"
                         type="month"
@@ -15,9 +15,9 @@
             @endunlessrole
 
             <div class="col-md-3">
-                <label for="filter-status" class="form-label mb-1">Status</label>
+                <label for="filter-status" class="form-label">Status</label>
                 <select id="filter-status" name="status" class="form-select">
-                    <option value="all" @selected(request('status') === 'all')>Todos</option>
+                    <option value="">Todos</option>
                     <option value="submitted" @selected(request('status') === 'submitted')>Enviadas</option>
                     <option value="approved" @selected(request('status') === 'approved')>Homologadas</option>
                     <option value="rejected" @selected(request('status') === 'rejected')>Rejeitadas</option>
@@ -26,15 +26,13 @@
                 </select>
             </div>
 
-            {{-- UNIDADE (somente se houver unidades) --}}
             @if(isset($units) && $units->isNotEmpty())
                 <div class="col-md-3">
                     <label class="form-label">Unidade</label>
                     <select name="unit_id" class="form-select">
                         <option value="">Todas</option>
                         @foreach($units as $unit)
-                            <option value="{{ $unit->id }}"
-                                @selected(request('unit_id') == $unit->id)>
+                            <option value="{{ $unit->id }}" @selected(request('unit_id') == $unit->id)>
                                 {{ $unit->name }}
                             </option>
                         @endforeach
@@ -43,9 +41,8 @@
             @endif
 
             <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-funnel"></i>
-                    Filtrar
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-funnel me-1"></i> Filtrar
                 </button>
 
                 <a href="{{ route('attendance.submissions.index') }}" class="btn btn-outline-secondary">

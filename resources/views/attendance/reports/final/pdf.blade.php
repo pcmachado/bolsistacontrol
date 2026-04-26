@@ -1,46 +1,45 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<style>
-    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-    h3, h4 { text-align: center; margin: 4px 0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    td { border: 1px solid #000; padding: 6px; vertical-align: top; }
-    .assinaturas td { border: none; padding-top: 40px; text-align: center; }
-</style>
-</head>
-<body>
+@extends('layouts.pdf')
 
-<h3>INSTITUTO FEDERAL DE EDUCAÇÃO, CIÊNCIA E TECNOLOGIA</h3>
-<h4>Relatório Final de Atividades do Bolsista</h4>
+@section('header')
+<h3>BOLSA FORMAÇÃO – PROGRAMA MULHERES MIL</h3>
+<h4>RELATÓRIO FINAL DE ATIVIDADES</h4>
+@endsection
 
+@section('content')
 <table>
-<tr>
-    <td><strong>Bolsista</strong></td>
-    <td>{{ $report->scholarshipHolder->user->name }}</td>
-</tr>
-<tr>
-    <td><strong>Projeto</strong></td>
-    <td>{{ $report->project->name ?? '-' }}</td>
-</tr>
+    <tr>
+        <td width="25%"><strong>Bolsista</strong></td>
+        <td>{{ $report->scholarshipHolder->user->name }}</td>
+    </tr>
+    <tr>
+        <td><strong>Projeto</strong></td>
+        <td>{{ $report->project->name ?? '—' }}</td>
+    </tr>
+    <tr>
+        <td><strong>Edital / Portaria</strong></td>
+        <td>{{ $report->project?->pivot?->edital_portaria ?? '-' }}</td>
+    </tr>
+    <tr>
+        <td><strong>Vigência</strong></td>
+        <td>
+            {{ optional($report->start_date)->format('d/m/Y') }}
+            até
+            {{ optional($report->end_date)->format('d/m/Y') }}
+        </td>
+    </tr>
 </table>
 
-<h4>Atividades desenvolvidas</h4>
-<p>{{ nl2br(e($report->activities)) }}</p>
+<h5>Atividades desenvolvidas</h5>
+<p>{!! nl2br(e($report->activities)) !!}</p>
 
-<h4>Resultados alcançados</h4>
-<p>{{ nl2br(e($report->results)) }}</p>
+<h5>Resultados alcançados</h5>
+<p>{!! nl2br(e($report->results)) !!}</p>
 
-<h4>Contribuições</h4>
-<p>{{ nl2br(e($report->contributions)) }}</p>
+<h5>Contribuições</h5>
+<p>{!! nl2br(e($report->contributions)) !!}</p>
 
-<table class="assinaturas">
-<tr>
-    <td>_________________________<br>Bolsista</td>
-    <td>_________________________<br>Coordenação</td>
-</tr>
-</table>
-
-</body>
-</html>
+<div class="assinatura">
+    ___________________________________<br>
+    Bolsista
+</div>
+@endsection

@@ -32,7 +32,7 @@ class AttendanceSubmissionController extends Controller
 
         $filters = $request->only(['status', 'month', 'unit_id']);
 
-        $submissionCounts = $dashboardService->submissionCounts($user);
+        $submissionCounts = $dashboardService->submissionCounts($user, 'admin');
 
         // Unidades visíveis ao usuário
         if ($user->hasRole('admin')) {
