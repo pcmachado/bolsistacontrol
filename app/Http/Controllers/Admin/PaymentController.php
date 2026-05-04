@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Payment;
-use App\Models\ScholarshipHolder;
-use App\Models\AttendanceRecord;
-use App\Models\Unit;
-use App\Models\Project;
-use App\Models\Position;
-use App\Models\FinancialClosure;
-use App\Services\FinancialAuditService;
-use App\Support\Traits\PaymentFilters;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\DataTables\PaymentDataTable;
+use App\Http\Controllers\Controller;
+use App\Models\AttendanceRecord;
+use App\Models\FinancialClosure;
+use App\Models\Payment;
+use App\Models\Position;
+use App\Models\Project;
+use App\Models\ScholarshipHolder;
+use App\Models\Unit;
+use App\Services\FinancialAuditService;
 use App\Services\PaymentService;
-use Illuminate\Validation\ValidationException;
+use App\Support\Traits\PaymentFilters;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
@@ -33,25 +33,25 @@ class PaymentController extends Controller
 
     public function index(Request $request, PaymentDataTable $dataTable)
     {
-        $query = Payment::with(['unit', 'project', 'scholarshipHolder.projects']);
-        $query = $this->applyPaymentFilters($query, request());
+        $user = Auth::user();
+
+        $summary = $this->paymentService->summary($user, $request);
+
         $dataTable->mode = 'admin';
 
         $monthString = $request->get('month', now()->format('Y-m'));
 
         [$year, $monthNumber] = explode('-', $monthString);
 
-        $year = (int) $year;
-        $monthNumber = (int) $monthNumber;
-        
         return $dataTable->render('admin.payments.index', [
             'units' => Unit::all(),
             'projects' => Project::all(),
             'positions' => Position::all(),
             'status' => $request->get('status'),
-            'month'  => $monthNumber,
-            'year'   => $year,
+            'month' => (int) $monthNumber,
+            'year' => (int) $year,
             'monthString' => $monthString,
+            ...$summary,
         ]);
     }
 
@@ -77,17 +77,17 @@ class PaymentController extends Controller
     {
         $fundingSource = $request->input('funding_source_id');
         $amount = $request->input('amount');
-        
-        if (!$fundingSource->hasBalance($amount)) {
+
+        if (! $fundingSource->hasBalance($amount)) {
             throw ValidationException::withMessages([
-                'funding_source_id' => 'Saldo insuficiente na fonte de fomento.'
+                'funding_source_id' => 'Saldo insuficiente na fonte de fomento.',
             ]);
         }
 
         $data = $request->validate([
             'scholarship_holder_id' => 'required|exists:scholarship_holders,id',
             'month' => 'required|integer|min:1|max:12',
-            'year'  => 'required|integer|min:2000|max:2100',
+            'year' => 'required|integer|min:2000|max:2100',
         ]);
 
         $holder = ScholarshipHolder::with(['unit', 'projects'])->findOrFail($data['scholarship_holder_id']);
@@ -178,13 +178,13 @@ class PaymentController extends Controller
     {
 
         $month = $request->get('month');
-        $year  = $request->get('year');
+        $year = $request->get('year');
 
-        $payments = $this->paymentService->monthly($unit,$month,$year);
+        $payments = $this->paymentService->monthly($unit, $month, $year);
 
         $pdf = Pdf::loadView(
             'payments.pdf',
-            compact('payments','unit','month','year')
+            compact('payments', 'unit', 'month', 'year')
         );
 
         return $pdf->download("pagamentos_{$month}_{$year}.pdf");
@@ -203,9 +203,7 @@ class PaymentController extends Controller
             [$year, $month] = explode('-', $request->month);
             $query->where('year', $year)
                 ->where('month', $month);
-        }
-
-        elseif ($request->filled('year')) {
+        } elseif ($request->filled('year')) {
             $query->where('year', $request->year);
         }
 
@@ -239,9 +237,9 @@ class PaymentController extends Controller
                         'project' => $p->project?->name,
                         'amount' => $p->amount,
                         'status' => $p->status,
-                        'period' => str_pad($p->month,2,'0',STR_PAD_LEFT).'/'.$p->year,
+                        'period' => str_pad($p->month, 2, '0', STR_PAD_LEFT).'/'.$p->year,
                     ];
-                })
+                }),
             ];
         });
 

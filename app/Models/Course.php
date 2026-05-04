@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
@@ -20,7 +21,13 @@ class Course extends Model
         'start_date',
         'end_date',
         'active',
+        'institution_id',
     ];
+
+    public function institution(): BelongsTo
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
     public function scholarshipHolders(): BelongsToMany
     {
@@ -54,5 +61,4 @@ class Course extends Model
             'end_date',
         ])->withTimestamps();
     }
-
 }

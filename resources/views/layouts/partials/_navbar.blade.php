@@ -19,6 +19,61 @@
         </div>
 
         <ul class="navbar-nav ms-auto align-items-center flex-row gap-1">
+            @hasanyrole('admin|superadmin')
+                @php
+                    // Busca as instituições para montar o menu
+                    $linkedInstitutionIds = auth()->user()->accessibleInstitutionIds();
+                    $institutions = \App\Models\Institution::query()
+                        ->whereIn('id', $linkedInstitutionIds)
+                        ->orderBy('name')
+                        ->get();
+                    // Pega a escolha atual da sessão
+                    $currentContextId = session('admin_institution_context');
+                    $currentContext = $currentContextId ? $institutions->firstWhere('id', $currentContextId) : null;
+                @endphp
+
+                <!-- O ms-auto empurra o item para a direita se estiver num flexbox -->
+                <li class="nav-item dropdown list-unstyled ms-auto me-3">
+                    <a class="nav-link dropdown-toggle btn btn-light border text-dark shadow-sm px-3 d-flex align-items-center gap-2" 
+                    href="#" 
+                    role="button" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false">
+                        <i class="bi bi-building text-primary"></i>
+                        <span class="fw-bold text-truncate" style="max-width: 200px;">
+                            {{ $currentContext ? $currentContext->name : 'Todas as Instituições' }}
+                        </span>
+                    </a>
+                    
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        {{-- Opção de Ver Tudo --}}
+                        <li>
+                            <form action="{{ route('admin.context.switch') }}" method="POST" class="m-0">
+                                @csrf
+                                <input type="hidden" name="institution_id" value="">
+                                <button type="submit" class="dropdown-item {{ !$currentContextId ? 'active' : '' }}">
+                                    <i class="bi bi-globe me-2"></i> Ver Todas
+                                </button>
+                            </form>
+                        </li>
+                        
+                        <li><hr class="dropdown-divider"></li>
+
+                        {{-- Lista de Instituições Dinâmicas --}}
+                        @foreach($institutions as $inst)
+                            <li>
+                                <form action="{{ route('admin.context.switch') }}" method="POST" class="m-0">
+                                    @csrf
+                                    <input type="hidden" name="institution_id" value="{{ $inst->id }}">
+                                    <button type="submit" class="dropdown-item {{ $currentContextId == $inst->id ? 'active' : '' }}">
+                                        {{ $inst->name }}
+                                    </button>
+                                </form>
+                            </li>
+                        @endforeach
+                    </ul>
+                </li>
+            @endhasanyrole
 
             {{-- INSTITUICAO ATIVA (se existir) --}}
             @if(function_exists('activeInstitution') && activeInstitution())

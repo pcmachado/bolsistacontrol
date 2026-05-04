@@ -12,12 +12,12 @@ class RolePolicy
      * Quanto maior o número, mais poder a role tem.
      */
     protected array $roleHierarchy = [
-        'superadmin'          => 100,
-        'admin'               => 90,
-        'coordenador_geral'   => 70,
-        'coordenador_adjunto_geral'   => 60,
+        'superadmin' => 100,
+        'admin' => 90,
+        'coordenador_geral' => 70,
+        'coordenador_adjunto_geral' => 60,
         'coordenador_adjunto' => 30,
-        'bolsista'            => 10,
+        'bolsista' => 10,
         // Roles não listadas assumem valor 0
     ];
 
@@ -35,7 +35,7 @@ class RolePolicy
     private function getUserWeight(User $user): int
     {
         // Pega todas as roles do usuário e encontra o maior peso
-        return $user->roles->map(fn($role) => $this->getRoleWeight($role->name))->max() ?? 0;
+        return $user->roles->map(fn ($role) => $this->getRoleWeight($role->name))->max() ?? 0;
     }
 
     /**
@@ -69,7 +69,7 @@ class RolePolicy
 
         // Usuários normais só veem roles de nível inferior ou igual
         // (Opcional: se quiser que eles vejam que existe Admin, remova o if abaixo)
-        return $user->hasPermissionTo('roles.view'); 
+        return $user->hasPermissionTo('roles.view');
     }
 
     public function create(User $user): bool
@@ -80,7 +80,7 @@ class RolePolicy
     public function update(User $user, Role $role): bool
     {
         // 1. Verifica permissão básica no banco
-        if (!$user->hasPermissionTo('roles.edit')) {
+        if (! $user->hasPermissionTo('roles.edit')) {
             return false;
         }
 
@@ -93,9 +93,9 @@ class RolePolicy
         return $this->canManageRole($user, $role);
     }
 
-    public function delete(User $user, Role $role): bool
+    public function deleteRole(User $user, Role $role): bool
     {
-        if (!$user->hasPermissionTo('roles.delete')) {
+        if (! $user->hasPermissionTo('roles.delete')) {
             return false;
         }
 

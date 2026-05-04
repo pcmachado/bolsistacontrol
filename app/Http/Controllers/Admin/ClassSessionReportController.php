@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ClassSessionsExport;
 use App\Http\Controllers\Controller;
 use App\Models\ClassOffering;
 use App\Models\ClassSession;
-use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ClassSessionsExport;
 
 class ClassSessionReportController extends Controller
 {
@@ -17,10 +18,8 @@ class ClassSessionReportController extends Controller
     {
         $sessions = ClassSession::with(['discipline', 'teacher'])
             ->where('class_offering_id', $offering->id)
-            ->when($request->filled('filter_from'), fn($q) =>
-                $q->whereDate('date', '>=', $request->filter_from))
-            ->when($request->filled('filter_to'), fn($q) =>
-                $q->whereDate('date', '<=', $request->filter_to))
+            ->when($request->filled('filter_from'), fn ($q) => $q->whereDate('date', '>=', $request->filter_from))
+            ->when($request->filled('filter_to'), fn ($q) => $q->whereDate('date', '<=', $request->filter_to))
             ->orderBy('date')
             ->get();
 
@@ -29,14 +28,14 @@ class ClassSessionReportController extends Controller
 
         // Agrupamentos
         $hoursByDiscipline = $sessions->groupBy('discipline_id')
-            ->map(fn($g) => [
+            ->map(fn ($g) => [
                 'discipline' => $g->first()->discipline->name,
                 'hours' => $g->sum('duration_hours'),
                 'count' => $g->count(),
             ]);
 
         $hoursByTeacher = $sessions->groupBy('teacher_id')
-            ->map(fn($g) => [
+            ->map(fn ($g) => [
                 'teacher' => $g->first()->teacher->name,
                 'hours' => $g->sum('duration_hours'),
                 'count' => $g->count(),
@@ -54,12 +53,86 @@ class ClassSessionReportController extends Controller
     // Relatório geral (opcional)
     public function global(Request $request)
     {
-        // Podemos implementar depois
+        $user = Auth::user();
+
+        $query = ClassSession::with([
+            'discipline',
+            'teacher',
+            'classOffering.unit',
+            'classOffering.course',
+        ]);
+
+        // filtros
+        if ($request->filled('filter_from')) {
+            $query->whereDate('date', '>=', $request->filter_from);
+        }
+
+        if ($request->filled('filter_to')) {
+            $query->whereDate('date', '<=', $request->filter_to);
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->whereHas('classOffering', fn ($q) => $q->where('unit_id', $request->unit_id));
+        }
+
+        if ($request->filled('course_id')) {
+            $query->whereHas('classOffering', fn ($q) => $q->where('course_id', $request->course_id));
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | VISIBILIDADE
+        |--------------------------------------------------------------------------
+        */
+        $query = app(\App\Services\VisibilityService::class)
+            ->apply($query, $user, 'admin');
+
+        $sessions = $query->orderBy('date')->get();
+
+        // totais
+        $totalHours = $sessions->sum('duration_hours');
+        $totalClasses = $sessions->count();
+
+        // por turma
+        $hoursByClass = $sessions->groupBy('class_offering_id')
+            ->map(fn ($g) => [
+                'class' => $g->first()->classOffering->name,
+                'hours' => $g->sum('duration_hours'),
+                'count' => $g->count(),
+            ]);
+
+        // por disciplina
+        $hoursByDiscipline = $sessions->groupBy('discipline_id')
+            ->map(fn ($g) => [
+                'discipline' => $g->first()->discipline->name,
+                'hours' => $g->sum('duration_hours'),
+                'count' => $g->count(),
+            ]);
+
+        // por professor
+        $hoursByTeacher = $sessions->groupBy('teacher_id')
+            ->map(fn ($g) => [
+                'teacher' => $g->first()->teacher->name,
+                'hours' => $g->sum('duration_hours'),
+                'count' => $g->count(),
+            ]);
+
+        return view('admin.class-offerings.sessions.global', compact(
+            'sessions',
+            'totalHours',
+            'totalClasses',
+            'hoursByClass',
+            'hoursByDiscipline',
+            'hoursByTeacher'
+        ));
     }
+
+    public function show(ClassOffering $offering) {}
 
     public function exportPdf(ClassOffering $offering)
     {
-        $sessions = ClassSession::where('class_offering_id', $offering->id)
+        $sessions = ClassSession::query()
+            ->where('class_offering_id', $offering->id)
             ->with(['discipline', 'teacher'])
             ->orderBy('date')
             ->get();
@@ -68,14 +141,14 @@ class ClassSessionReportController extends Controller
         $totalHours = $sessions->sum('duration_hours');
 
         $hoursByDiscipline = $sessions->groupBy('discipline_id')
-            ->map(fn($g) => [
+            ->map(fn ($g) => [
                 'discipline' => $g->first()->discipline->name,
                 'hours' => $g->sum('duration_hours'),
                 'count' => $g->count(),
             ]);
 
         $hoursByTeacher = $sessions->groupBy('teacher_id')
-            ->map(fn($g) => [
+            ->map(fn ($g) => [
                 'teacher' => $g->first()->teacher->name,
                 'hours' => $g->sum('duration_hours'),
                 'count' => $g->count(),

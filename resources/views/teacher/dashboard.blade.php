@@ -5,10 +5,15 @@
 @section('content')
 <div class="container-fluid">
 
-    <h2 class="fw-bold mb-4">
-        <i class="bi bi-person-badge me-2"></i>
-        Dashboard — {{ $teacher->name }}
-    </h2>
+    {{-- HERO --}}
+    <div class="dashboard-hero mb-4">
+        <h2 class="fw-bold mb-1">
+            👨‍🏫 Dashboard do Professor
+        </h2>
+        <p class="text-muted mb-0">
+            {{ $teacher->name }}
+        </p>
+    </div>
 
     {{-- FILTROS --}}
     <div class="card shadow-sm mb-4">
@@ -53,7 +58,7 @@
 
                 <div class="col-md-2 align-self-end">
                     <button class="btn btn-primary w-100">
-                        <i class="bi bi-search me-2"></i> Filtrar
+                        🔍 Filtrar
                     </button>
                 </div>
 
@@ -62,41 +67,66 @@
     </div>
 
     {{-- KPIs --}}
-    <div class="row mb-4 text-center">
+    <div class="row g-3 mb-4">
 
         <div class="col-md-3">
-            <x-kpi-card title="Horas Ministradas" value="{{ number_format($totalHours, 1) }}" />
+            <x-dashboard.summary-card
+                title="Horas Ministradas"
+                :value="number_format($totalHours, 1)"
+                icon="bi-clock-history"
+            />
         </div>
 
         <div class="col-md-3">
-            <x-kpi-card title="Aulas Ministradas" value="{{ $totalClasses }}" />
+            <x-dashboard.summary-card
+                title="Aulas Ministradas"
+                :value="$totalClasses"
+                icon="bi-journal-check"
+            />
         </div>
 
         <div class="col-md-3">
-            <x-kpi-card title="Cursos" value="{{ $totalCourses }}" />
+            <x-dashboard.summary-card
+                title="Cursos"
+                :value="$totalCourses"
+                icon="bi-mortarboard"
+            />
         </div>
 
         <div class="col-md-3">
-            <x-kpi-card title="Turmas" value="{{ $totalOfferings }}" />
+            <x-dashboard.summary-card
+                title="Turmas"
+                :value="$totalOfferings"
+                icon="bi-collection"
+            />
         </div>
 
     </div>
 
-    {{-- GRÁFICO — Horas por mês --}}
-    <x-chart-card title="Horas por Mês" id="hoursByMonthChart" />
+    {{-- GRÁFICOS --}}
+    <div class="row g-3">
 
-    {{-- GRÁFICO — Horas por disciplina --}}
-    <x-chart-card title="Horas por Disciplina" id="hoursByDisciplineChart" />
+        <div class="col-md-6">
+            <x-dashboard.chart-card title="Horas por Mês" id="hoursByMonthChart" />
+        </div>
 
-    {{-- GRÁFICO — Horas por Turma --}}
-    <x-chart-card title="Horas por Turma" id="hoursByOfferingChart" />
+        <div class="col-md-6">
+            <x-dashboard.chart-card title="Horas por Disciplina" id="hoursByDisciplineChart" />
+        </div>
 
-    {{-- Últimas aulas --}}
+        <div class="col-md-12">
+            <x-dashboard.chart-card title="Horas por Turma" id="hoursByOfferingChart" />
+        </div>
+
+    </div>
+
+    {{-- TABELA --}}
     <div class="card shadow-sm mt-4">
         <div class="card-header bg-white fw-semibold">
-            <i class="bi bi-clock-history me-2"></i> Últimas Aulas
+            Últimas Aulas
         </div>
-        <div class="card-body p-0">
+
+        <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
@@ -106,20 +136,26 @@
                         <th>Horas</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    @foreach($recent as $s)
-                    <tr>
-                        <td>{{ $s->date->format('d/m/Y') }}</td>
-                        <td>{{ $s->discipline->name }}</td>
-                        <td>{{ $s->classOffering->name }}</td>
-                        <td>{{ number_format($s->duration_hours, 1) }}</td>
-                    </tr>
-                    @endforeach
+                    @forelse($recent as $s)
+                        <tr>
+                            <td>{{ $s->date->format('d/m/Y') }}</td>
+                            <td>{{ $s->discipline->name }}</td>
+                            <td>{{ $s->classOffering->name }}</td>
+                            <td>{{ number_format($s->duration_hours, 1) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                Nenhuma aula encontrada
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
-
 </div>
 @endsection
 

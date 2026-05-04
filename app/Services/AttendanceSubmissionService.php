@@ -2,15 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\AttendanceSubmission;
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use App\Models\ScholarshipHolder;
-use App\Notifications\AttendanceSubmitted;
+use App\Models\User;
 use App\Notifications\AttendanceApproved;
 use App\Notifications\AttendanceRejected;
+use App\Notifications\AttendanceSubmitted;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use Carbon\Carbon;
 
 class AttendanceSubmissionService
 {
@@ -86,7 +85,7 @@ class AttendanceSubmissionService
 
         DB::transaction(function () use ($submission) {
             $submission->update([
-                'status'       => AttendanceSubmission::STATUS_SUBMITTED,
+                'status' => AttendanceSubmission::STATUS_SUBMITTED,
                 'submitted_at' => now(),
                 'rejected_at' => null,
                 'rejected_reason' => null,
@@ -110,9 +109,9 @@ class AttendanceSubmissionService
         }
 
         $submission->update([
-            'status'        => AttendanceSubmission::STATUS_APPROVED,
-            'approved_at'   => now(),
-            'approved_by'   => $userId,
+            'status' => AttendanceSubmission::STATUS_APPROVED,
+            'approved_at' => now(),
+            'approved_by' => $userId,
         ]);
 
         $submission->scholarshipHolder->user->notify(new AttendanceApproved($submission));
@@ -121,7 +120,7 @@ class AttendanceSubmissionService
     /**
      * Rejeição da submissão (coordenador)
      */
-    public function reject(AttendanceSubmission $submission, string $reason, int $userId ): void
+    public function reject(AttendanceSubmission $submission, string $reason, int $userId): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_SUBMITTED) {
             throw new \DomainException('Submissão não está pendente.');
@@ -129,10 +128,10 @@ class AttendanceSubmissionService
 
         DB::transaction(function () use ($submission, $reason, $userId) {
             $submission->update([
-                'status'          => AttendanceSubmission::STATUS_REJECTED,
+                'status' => AttendanceSubmission::STATUS_REJECTED,
                 'rejected_reason' => $reason,
-                'rejected_at'     => now(),
-                'approved_by'     => $userId,
+                'rejected_at' => now(),
+                'approved_by' => $userId,
             ]);
 
             // devolve os registros para edição
@@ -144,7 +143,7 @@ class AttendanceSubmissionService
         $submission->scholarshipHolder->user->notify(new AttendanceRejected($submission));
     }
 
-    public function canCreateRecord(ScholarshipHolder $holder, int $year, int $month): bool 
+    public function canCreateRecord(ScholarshipHolder $holder, int $year, int $month): bool
     {
         return ! AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
@@ -157,7 +156,7 @@ class AttendanceSubmissionService
             ->exists();
     }
 
-    protected function getOrCreateDraft(ScholarshipHolder $holder, int $year, int $month): AttendanceSubmission
+    protected function getOrCreateDraft(Request $request, ScholarshipHolder $holder, int $year, int $month): AttendanceSubmission
     {
         return AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
@@ -166,7 +165,8 @@ class AttendanceSubmissionService
             ->firstOr(function () use ($holder, $year, $month) {
                 return AttendanceSubmission::create([
                     'scholarship_holder_id' => $holder->id,
-                    'year'  => $year,
+                    'project_id' => $holder->projects()->first()?->id,
+                    'year' => $year,
                     'month' => $month,
                     'status' => AttendanceSubmission::STATUS_DRAFT,
                 ]);
@@ -192,5 +192,4 @@ class AttendanceSubmissionService
             ])
             ->exists();
     }
-
 }

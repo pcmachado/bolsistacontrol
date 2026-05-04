@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Position;
+use Illuminate\Database\Seeder;
 
 class PositionSeeder extends Seeder
 {
@@ -16,14 +16,14 @@ class PositionSeeder extends Seeder
             ['name' => 'Bolsista', 'is_teacher' => false],
             ['name' => 'Supervisor', 'is_teacher' => false],
             ['name' => 'Apoio Administrativo', 'is_teacher' => false],
-            ['name' => 'Docente', 'is_teacher' => true], // 🔥 chave
+            ['name' => 'Professor', 'is_teacher' => true], // 🔥 chave
         ];
 
         foreach ($positions as $p) {
             Position::updateOrCreate(
                 ['name' => $p['name']],
                 [
-                    'description' => 'Descrição do cargo ' . $p['name'],
+                    'description' => 'Descrição do cargo '.$p['name'],
                     'is_teacher' => $p['is_teacher'],
                 ]
             );

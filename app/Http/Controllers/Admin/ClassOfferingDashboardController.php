@@ -21,7 +21,7 @@ class ClassOfferingDashboardController extends Controller
         // KPI 2 — Total de aulas registradas
         $totalClasses = $sessions->count();
 
-        // KPI 3 — Docentes envolvidos
+        // KPI 3 — Professores envolvidos
         $teachers = $sessions->pluck('teacher')->unique('id')->count();
 
         // KPI 4 — Disciplinas com aulas
@@ -29,21 +29,21 @@ class ClassOfferingDashboardController extends Controller
 
         // Gráfico — Horas por disciplina
         $hoursByDiscipline = $sessions->groupBy('discipline_id')
-            ->map(fn($g) => [
+            ->map(fn ($g) => [
                 'label' => $g->first()->discipline->name,
                 'hours' => $g->sum('duration_hours'),
             ]);
 
         // Gráfico — Horas por professor
         $hoursByTeacher = $sessions->groupBy('teacher_id')
-            ->map(fn($g) => [
+            ->map(fn ($g) => [
                 'label' => $g->first()->teacher->name,
                 'hours' => $g->sum('duration_hours'),
             ]);
 
         // Gráfico — Horas por mês
-        $hoursByMonth = $sessions->groupBy(fn($s) => $s->date->format('Y-m'))
-            ->map(fn($g) => [
+        $hoursByMonth = $sessions->groupBy(fn ($s) => $s->date->format('Y-m'))
+            ->map(fn ($g) => [
                 'label' => $g->first()->date->format('m/Y'),
                 'hours' => $g->sum('duration_hours'),
             ]);

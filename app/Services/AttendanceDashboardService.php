@@ -4,40 +4,28 @@ namespace App\Services;
 
 use App\Models\AttendanceSubmission;
 use App\Models\User;
-use Illuminate\Support\Carbon;
 
 class AttendanceDashboardService
 {
-    public function submissionCounts(User $user): array
+    public function submissionCounts(User $user, string $context = 'admin'): array
     {
-        $query = AttendanceSubmission::query();
-
-        // 🔐 aplica visibilidade por papel
         $query = app(VisibilityService::class)
-            ->apply($query, $user);
+            ->apply(AttendanceSubmission::query(), $user, $context);
 
         return [
-            'submitted'  => (clone $query)
+            'submitted' => (clone $query)
                 ->where('status', AttendanceSubmission::STATUS_SUBMITTED)
                 ->count(),
-
             'approved' => (clone $query)
                 ->where('status', AttendanceSubmission::STATUS_APPROVED)
                 ->count(),
-
             'rejected' => (clone $query)
                 ->where('status', AttendanceSubmission::STATUS_REJECTED)
                 ->count(),
-
-            // opcional – atraso
-            'late' => $this->lateSubmissionsCount($user),
+            'late' => $this->lateSubmissionsCount($user, $context),
         ];
     }
 
-    /**
-     * Submissões em atraso:
-     * mês encerrado e nenhuma submissão criada
-     */
     protected function lateSubmissionsCount(User $user, string $context = 'self'): int
     {
         $now = now()->subMonth();

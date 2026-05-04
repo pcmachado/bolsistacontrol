@@ -14,17 +14,26 @@ class DashboardController extends Controller
     public function __construct(
         protected DashboardService $dashboard,
         protected AttendanceDashboardService $attendanceDashboard
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): View
     {
+        $projectId = $request->input('project_id');
+
         $filters = $request->only(['month', 'start_date', 'end_date']);
-        $general = $this->dashboard->getDashboardData($filters);
-        $financial = $this->dashboard->getFinancialData($filters);
+
+        $data = $this->dashboard->getDashboardData(
+            $filters,
+            $projectId
+        );
+
+        $financial = $this->dashboard->getFinancialData(
+            $filters,
+            $projectId
+        );
 
         return view('admin.dashboard', [
-            ...$general,
+            ...$data,
             'financialOverview' => $financial,
             'attendanceCards' => $this->attendanceDashboard->submissionCounts(Auth::user()),
             'selectedMonthInput' => $request->filled('month') ? $request->input('month') : now()->format('Y-m'),

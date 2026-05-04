@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\AttendanceRecord;
 use App\Models\AttendanceSubmission;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +13,7 @@ class HomologationService
     public function approve(AttendanceSubmission $submission, int $userId): AttendanceSubmission
     {
         DB::transaction(function () use ($submission, $userId) {
-             $submission->update([
+            $submission->update([
                 'status' => AttendanceSubmission::STATUS_APPROVED,
                 'approved_by' => $userId,
                 'approved_at' => now(),
@@ -49,6 +48,19 @@ class HomologationService
                 'approved_by_user_id' => $userId,
                 'rejected_reason' => $reason,
                 'rejected_at' => now(),
+            ]);
+        });
+
+        return $submission;
+    }
+
+    public function markAsLate(AttendanceSubmission $submission, int $userId): AttendanceSubmission
+    {
+        DB::transaction(function () use ($submission, $userId) {
+            $submission->update([
+                'status' => AttendanceSubmission::STATUS_LATE,
+                'approved_by' => $userId,
+                'approved_at' => now(),
             ]);
         });
 

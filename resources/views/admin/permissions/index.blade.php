@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h1>Permissões</h1>
+    <h1>Ações/Permissões do Sistema</h1>
 
     <a href="{{ route('admin.permissions.create') }}" class="btn btn-success mb-3">
         <i class="bi bi-plus-circle"></i> Nova Permissão

@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Models\Project;
-use App\Models\Institution;
-use App\Models\Unit;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use App\DataTables\ProjectsDataTable;
+use App\Http\Controllers\Controller;
+use App\Models\Institution;
+use App\Models\Project;
+use App\Models\Unit;
 use App\Services\ProjectService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
@@ -31,10 +29,16 @@ class ProjectController extends Controller
     {
         $user = Auth::user();
 
-        $units = Unit::orderBy('name')->get();
-        $institutions = $user->hasRole('admin')
-            ? Institution::orderBy('name')->get()
-            : Institution::where('id', $user->institution_id)->get();
+        $units = Unit::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleUnitIds())
+            ->orderBy('name')
+            ->get();
+
+        $institutions = Institution::query()
+            ->whereIn('id', $user->accessibleInstitutionIds())
+            ->orderBy('name')
+            ->get();
 
         return view('admin.projects.create', compact('units', 'institutions'));
     }
@@ -49,17 +53,19 @@ class ProjectController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        if (! Auth::user()->hasRole('admin')) {
-            $validated['institution_id'] = Auth::user()->institution_id;
+        if (! Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            $validated['institution_id'] = Auth::user()->resolvedInstitutionId();
         }
 
         Project::create($validated);
+
         return redirect()->route('admin.projects.index')->with('success', 'Projeto criado com sucesso.');
     }
 
     public function show(Project $project)
     {
         $this->authorize('view', $project);
+
         return view('admin.projects.show', compact('project'));
     }
 
@@ -68,10 +74,15 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         $user = Auth::user();
-        $units = Unit::orderBy('name')->get();
-        $institutions = $user->hasRole('admin')
-            ? Institution::orderBy('name')->get()
-            : Institution::where('id', $user->institution_id)->get();
+        $units = Unit::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleUnitIds())
+            ->orderBy('name')
+            ->get();
+        $institutions = Institution::query()
+            ->whereIn('id', $user->accessibleInstitutionIds())
+            ->orderBy('name')
+            ->get();
 
         return view('admin.projects.edit', compact('project', 'units', 'institutions'));
     }
@@ -88,11 +99,12 @@ class ProjectController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        if (! Auth::user()->hasRole('admin')) {
-            $validated['institution_id'] = Auth::user()->institution_id;
+        if (! Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            $validated['institution_id'] = Auth::user()->resolvedInstitutionId();
         }
 
         $project->update($validated);
+
         return redirect()->route('admin.projects.index')->with('success', 'Projeto atualizado com sucesso.');
     }
 
@@ -101,6 +113,7 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         $project->delete();
+
         return redirect()->route('admin.projects.index')->with('success', 'Projeto excluído com sucesso.');
     }
 }

@@ -9,7 +9,7 @@ Administrar estrutura institucional, usuarios, operacao academica e fluxo financ
 1. Usuarios, papeis e permissoes
 2. Instituicoes e unidades
 3. Projetos, cursos, disciplinas e turmas
-4. Bolsistas, docentes e supervisores
+4. Bolsistas, professores e supervisores
 5. Homologacoes e pagamentos
 6. Relatorios financeiros e institucionais
 

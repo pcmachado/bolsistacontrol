@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\StudentPayment;
-use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 class PaymentMonthService
 {
@@ -14,7 +12,7 @@ class PaymentMonthService
 
         return collect(range(1, 12))->map(function ($month) use ($year) {
 
-            $payments = StudentPayment::where('month', $month)
+            $payments = StudentPayment::query()->where('month', $month)
                 ->where('year', $year);
 
             $hasAny = (clone $payments)->exists();
@@ -22,11 +20,11 @@ class PaymentMonthService
 
             return [
                 'month' => $month,
-                'year'  => $year,
+                'year' => $year,
                 'hasData' => $hasAny,
                 'status' => $hasAny
                     ? ($allPaid ? 'paid' : 'pending')
-                    : 'empty'
+                    : 'empty',
             ];
         });
     }

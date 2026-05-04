@@ -4,25 +4,27 @@ namespace App\Services;
 
 use App\Models\ClassOffering;
 use App\Models\ClassOfferingSubmission;
-use App\Models\StudentRecord;
 use App\Models\StudentPayment;
+use App\Models\StudentRecord;
 use Illuminate\Support\Facades\DB;
 
 class ClassOfferingPaymentService
 {
     public function generate(ClassOffering $class, int $month, int $year)
     {
-        $submission = ClassOfferingSubmission::where([
-            'class_offering_id' => $class->id,
-            'month' => $month,
-            'year'  => $year,
-        ])->firstOrFail();
+        $submission = ClassOfferingSubmission::query()
+            ->where([
+                'class_offering_id' => $class->id,
+                'month' => $month,
+                'year' => $year,
+            ])->firstOrFail();
 
         if ($submission->status !== 'submitted') {
             throw new \DomainException('A submissão não está pronta para pagamento.');
         }
 
-        $records = StudentRecord::where('class_offering_id', $class->id)
+        $records = StudentRecord::query()
+            ->where('class_offering_id', $class->id)
             ->whereMonth('created_at', $month)
             ->whereYear('created_at', $year)
             ->get();
@@ -40,7 +42,7 @@ class ClassOfferingPaymentService
                         'student_id' => $record->student_id,
                         'class_offering_id' => $class->id,
                         'month' => $month,
-                        'year'  => $year,
+                        'year' => $year,
                     ],
                     [
                         'amount' => $record->total_amount,
@@ -55,7 +57,7 @@ class ClassOfferingPaymentService
 
     public function reject(ClassOfferingSubmission $submission, string $reason, int $userId)
     {
-        DB::transaction(function () use ($submission, $reason, $userId) {
+        DB::transaction(function () use ($submission, $reason) {
 
             $submission->update([
                 'status' => 'rejected',
@@ -64,11 +66,12 @@ class ClassOfferingPaymentService
             ]);
 
             // 🔥 remove pagamentos gerados
-            StudentPayment::where([
-                'class_offering_id' => $submission->class_offering_id,
-                'month' => $submission->month,
-                'year'  => $submission->year,
-            ])->delete();
+            StudentPayment::query()
+                ->where([
+                    'class_offering_id' => $submission->class_offering_id,
+                    'month' => $submission->month,
+                    'year' => $submission->year,
+                ])->delete();
         });
     }
 }

@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\ClassOffering;
 use App\Models\Discipline;
 use App\Models\TeachingAssignment;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class TeachingAssignmentsSeeder extends Seeder
 {
     public function run(): void
     {
-        // pega docentes
+        // pega professores
         $teachers = User::role('professor')->get();
 
         $offerings = ClassOffering::all();
@@ -20,6 +20,7 @@ class TeachingAssignmentsSeeder extends Seeder
 
         if ($teachers->isEmpty() || $offerings->isEmpty()) {
             $this->command->warn('Sem dados para TeachingAssignmentsSeeder');
+
             return;
         }
 

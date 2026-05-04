@@ -19,12 +19,12 @@
     </div>
 
     <div class="d-flex justify-content-end mb-3">
-        <a href="{{ route('admin.class-offerings.sessions.report.pdf', $offering->id) }}"
+        <a href="{{ route('admin.class-offerings.sessions.reports.pdf', $offering->id) }}"
         class="btn btn-danger me-2">
         <i class="bi bi-file-earmark-pdf me-1"></i> PDF
         </a>
 
-        <a href="{{ route('admin.class-offerings.sessions.report.excel', $offering->id) }}"
+        <a href="{{ route('admin.class-offerings.sessions.reports.excel', $offering->id) }}"
         class="btn btn-success">
         <i class="bi bi-file-earmark-excel me-1"></i> Excel
         </a>

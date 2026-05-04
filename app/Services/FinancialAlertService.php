@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Payment;
 use App\Models\Unit;
-use Carbon\Carbon;
 
 class FinancialAlertService
 {
@@ -21,7 +20,8 @@ class FinancialAlertService
     {
         $limitDays = 7;
 
-        $query = Payment::where('status', Payment::STATUS_SENT)
+        $query = Payment::query()
+            ->where('status', Payment::STATUS_SENT)
             ->whereDate('sent_at', '<=', now()->subDays($limitDays));
 
         // 🔒 Escopo por unidade (adjunto)
@@ -56,7 +56,8 @@ class FinancialAlertService
         $alerts = [];
 
         foreach ($units as $unit) {
-            $hasPayments = Payment::where('unit_id', $unit->id)
+            $hasPayments = Payment::query()
+                ->where('unit_id', $unit->id)
                 ->where('month', $month)
                 ->where('year', $year)
                 ->exists();
@@ -77,10 +78,10 @@ class FinancialAlertService
     protected function financialDropAlert($month, $year, $user)
     {
         $prevMonth = $month == 1 ? 12 : $month - 1;
-        $prevYear  = $month == 1 ? $year - 1 : $year;
+        $prevYear = $month == 1 ? $year - 1 : $year;
 
-        $currentQuery = Payment::where('month', $month)->where('year', $year);
-        $previousQuery = Payment::where('month', $prevMonth)->where('year', $prevYear);
+        $currentQuery = Payment::query()->where('month', $month)->where('year', $year);
+        $previousQuery = Payment::query()->where('month', $prevMonth)->where('year', $prevYear);
 
         if ($user->hasRole('coordenador_adjunto')) {
             $units = $user->units->pluck('id');
@@ -116,5 +117,4 @@ class FinancialAlertService
             'action_url' => route('admin.payments.dashboard'),
         ]];
     }
-
 }

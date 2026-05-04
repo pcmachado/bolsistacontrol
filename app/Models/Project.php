@@ -1,12 +1,13 @@
 <?php
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
@@ -20,19 +21,24 @@ class Project extends Model
         'wizard_step',
         'status',
         'start_date',
-        'end_date'
+        'end_date',
     ];
 
     protected $casts = [
         'start_date' => 'date',
-        'end_date'   => 'date',
+        'end_date' => 'date',
     ];
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_INACTIVE = 'inactive';
+
     public const STATUS_ARCHIVED = 'archived';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_DRAFT = 'draft';
 
     public function institution(): BelongsTo
@@ -43,45 +49,45 @@ class Project extends Model
     public function positions(): BelongsToMany
     {
         return $this->belongsToMany(Position::class, 'project_position')
-                    ->withPivot(['weekly_workload', 'hourly_rate'])
-                    ->withTimestamps();
+            ->withPivot(['weekly_workload', 'hourly_rate'])
+            ->withTimestamps();
     }
 
     public function fundingSources(): BelongsToMany
     {
         return $this->belongsToMany(
-                        FundingSource::class,
-                        'project_funding_source',
-                        'project_id',
-                        'funding_source_id'
-                    )
-                    ->withPivot([
-                        'allocated_amount',
-                        'used_amount',
-                         'start_date',
-                         'end_date',
-                         'status',
-                         ])
-                    ->withTimestamps();
+            FundingSource::class,
+            'project_funding_source',
+            'project_id',
+            'funding_source_id'
+        )
+            ->withPivot([
+                'allocated_amount',
+                'used_amount',
+                'start_date',
+                'end_date',
+                'status',
+            ])
+            ->withTimestamps();
     }
 
     public function scholarshipHolders(): BelongsToMany
     {
         return $this->belongsToMany(
-                        ScholarshipHolder::class,
-                        'project_scholarship_holder',
-                        'project_id',
-                        'scholarship_holder_id'
-                    )
-                    ->withPivot([
-                        'position_id',
-                        'weekly_workload',
-                        'edital_portaria',
-                        'status',
-                        'start_date',
-                        'end_date',
-                    ])
-                    ->withTimestamps();
+            ScholarshipHolder::class,
+            'project_scholarship_holder',
+            'project_id',
+            'scholarship_holder_id'
+        )
+            ->withPivot([
+                'position_id',
+                'weekly_workload',
+                'edital_portaria',
+                'status',
+                'start_date',
+                'end_date',
+            ])
+            ->withTimestamps();
     }
 
     public function courses(): BelongsToMany
@@ -118,16 +124,18 @@ class Project extends Model
     public function hourlyRateForScholarshipHolder(ScholarshipHolder $holder): float
     {
         $pivot = $this->scholarshipHolders()->where('scholarship_holder_id', $holder->id)->first()?->pivot;
-        if (!$pivot) return 0;
+        if (! $pivot) {
+            return 0;
+        }
         $positionId = $pivot->position_id;
 
         $positionPivot = $this->positions()->where('position_id', $positionId)->first()?->pivot;
-        return (float)($positionPivot?->hourly_rate ?? 0);
+
+        return (float) ($positionPivot?->hourly_rate ?? 0);
     }
 
     public function payments()
     {
         return $this->hasMany(Payment::class);
     }
-
 }

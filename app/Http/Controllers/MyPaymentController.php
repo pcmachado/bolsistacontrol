@@ -26,7 +26,7 @@ class MyPaymentController extends Controller
             $payment->receipt_number = Payment::generateReceiptNumber();
         }
 
-        if (!$payment->receipt_hash) {
+        if (! $payment->receipt_hash) {
             $payment->receipt_hash = $this->generateReceiptHash($payment);
         }
 
@@ -50,7 +50,7 @@ class MyPaymentController extends Controller
     {
         $this->authorize('view', $payment);
 
-        if (!$payment->isConfirmed()) {
+        if (! $payment->isConfirmed()) {
             abort(403, 'Recibo disponível somente após confirmação.');
         }
 
@@ -65,7 +65,11 @@ class MyPaymentController extends Controller
             'payments.receipt',
             compact('payment')
         )->stream(
-            'recibo_'.$payment->periodLabel().'.pdf'
+            'recibo_'.\Str::slug(
+                $payment->scholarshipHolder->user->name.'_'
+                .$payment->receipt_number
+                .$payment->safePeriodLabel()
+            ).'.pdf'
         );
     }
 
@@ -81,7 +85,7 @@ class MyPaymentController extends Controller
             config('app.key'), // aumenta segurança
         ]);
 
-        return hash('sha256', $base);
+        return hash_hmac('sha256', $base, config('app.key'));
     }
 
     public function reportMy(Request $request)
@@ -98,9 +102,7 @@ class MyPaymentController extends Controller
 
             $query->where('year', $year)
                 ->where('month', $month);
-        }
-
-        elseif ($request->filled('year')) {
+        } elseif ($request->filled('year')) {
             $query->where('year', $request->year);
         }
 
@@ -112,6 +114,7 @@ class MyPaymentController extends Controller
 
         if ($isPdf) {
             $pdf = Pdf::loadView('payments.reports.my', compact('payments', 'total', 'isPdf'));
+
             return $pdf->stream('relatorio_pagamentos.pdf');
         }
 

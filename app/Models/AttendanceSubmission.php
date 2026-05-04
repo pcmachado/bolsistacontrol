@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
 
 class AttendanceSubmission extends Model
 {
@@ -19,11 +19,15 @@ class AttendanceSubmission extends Model
     |--------------------------------------------------------------------------
     */
 
-    public const STATUS_DRAFT     = 'draft';
+    public const STATUS_DRAFT = 'draft';
+
     public const STATUS_SUBMITTED = 'submitted';
-    public const STATUS_APPROVED  = 'approved';
-    public const STATUS_REJECTED  = 'rejected';
-    public const STATUS_LATE      = 'late';
+
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_REJECTED = 'rejected';
+
+    public const STATUS_LATE = 'late';
 
     /*
     |--------------------------------------------------------------------------
@@ -33,6 +37,7 @@ class AttendanceSubmission extends Model
 
     protected $fillable = [
         'scholarship_holder_id',
+        'project_id',
         'month',
         'year',
         'status',
@@ -47,8 +52,8 @@ class AttendanceSubmission extends Model
 
     protected $casts = [
         'submitted_at' => 'datetime',
-        'approved_at'  => 'datetime',
-        'rejected_at'  => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     /*
@@ -70,6 +75,11 @@ class AttendanceSubmission extends Model
         );
     }
 
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | QUERY SCOPES
@@ -82,7 +92,7 @@ class AttendanceSubmission extends Model
         int $year
     ): Builder {
         return $query->where('month', $month)
-                     ->where('year', $year);
+            ->where('year', $year);
     }
 
     /*
@@ -106,7 +116,7 @@ class AttendanceSubmission extends Model
         app(\App\Services\PaymentGenerationService::class)->generateFromSubmission($this);
 
         $this->update([
-            'status'       => self::STATUS_SUBMITTED,
+            'status' => self::STATUS_SUBMITTED,
             'submitted_at' => now(),
         ]);
     }
@@ -121,10 +131,10 @@ class AttendanceSubmission extends Model
             return;
         }
 
-        $this->recalculate();  
+        $this->recalculate();
 
         $this->update([
-            'status'      => self::STATUS_APPROVED,
+            'status' => self::STATUS_APPROVED,
             'approved_at' => now(),
             'approved_by' => $userId,
         ]);
@@ -141,17 +151,17 @@ class AttendanceSubmission extends Model
         }
 
         $this->update([
-            'status'          => self::STATUS_REJECTED,
+            'status' => self::STATUS_REJECTED,
             'rejected_reason' => $reason,
-            'rejected_at'     => now(),
-            'approved_by'     => $userId,
+            'rejected_at' => now(),
+            'approved_by' => $userId,
         ]);
 
         $this->attendanceRecords()
             ->where('has_issue', false)
             ->update([
                 'has_issue' => true,
-                'issue_reason' => $reason
+                'issue_reason' => $reason,
             ]);
     }
 

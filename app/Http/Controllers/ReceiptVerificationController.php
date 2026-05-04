@@ -15,19 +15,21 @@ class ReceiptVerificationController extends Controller
     public function verify(Request $request)
     {
         $data = $request->validate([
-            'receipt_hash' => 'required|string|size:64',
+            'hash' => 'required|string',
         ]);
 
-        $payment = Payment::where('receipt_hash', $data['receipt_hash'])
+        $payment = Payment::where('receipt_hash', $data['hash'])
             ->where('status', Payment::STATUS_CONFIRMED)
             ->first();
 
-        if (!$payment) {
+        if (! $payment) {
             return back()->withErrors([
-                'receipt_hash' => 'Recibo inválido ou não encontrado.',
+                'hash' => 'Recibo inválido ou não encontrado.',
             ]);
         }
 
-        return view('payments.verify_result', compact('payment'));
+        $searched = true;
+
+        return view('payments.verify_result', compact('payment', 'searched'));
     }
 }

@@ -106,10 +106,31 @@
 
 <div class="container-fluid py-2">
     <div class="dashboard-shell">
+
         @if($unitName)
             <div class="alert alert-info mb-0">
                 <i class="bi bi-building me-1"></i>
                 Você está visualizando os dados da <strong>{{ $unitName }}</strong>.
+            </div>
+        @endif
+
+        @if($projects->count() > 1)
+        <ul class="nav nav-tabs mb-3">
+            @foreach($projects as $project)
+                <li class="nav-item">
+                    <a class="nav-link @if($project->id == $activeProjectId) active @endif"
+                    href="{{ route('admin.dashboard', ['project_id' => $project->id]) }}">
+                        {{ $project->name }}
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+        @endif
+
+        @if($activeProject)
+            <div class="alert alert-info">
+                <i class="bi bi-kanban"></i>
+                Projeto: <strong>{{ $activeProject->name }}</strong>
             </div>
         @endif
 
@@ -139,6 +160,9 @@
         <section class="card filter-card">
             <div class="card-body">
                 <form method="GET" class="row g-3 align-items-end">
+
+                    <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
+
                     <div class="col-md-2">
                         <label class="form-label">Competência</label>
                         <input type="month" name="month" value="{{ $selectedMonthInput }}" class="form-control">
@@ -202,7 +226,7 @@
                             <i class="bi bi-arrow-right text-muted"></i>
                         </div>
                         <h5 class="mb-1">Acadêmico</h5>
-                        <p class="text-muted mb-0 small">Aulas, carga horária, docentes, cursos e turmas.</p>
+                        <p class="text-muted mb-0 small">Aulas, carga horária, professores, cursos e turmas.</p>
                     </div>
                 </a>
             </div>

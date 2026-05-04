@@ -3,9 +3,8 @@
 namespace App\Services;
 
 use App\Models\AttendanceRecord;
-use App\Models\AttendanceSubmission;
-use App\Models\ScholarshipHolder;
 use App\Models\FinancialClosure;
+use App\Models\ScholarshipHolder;
 use Carbon\Carbon;
 use DomainException;
 
@@ -13,7 +12,7 @@ class AttendanceRecordService
 {
     public function create(ScholarshipHolder $holder, array $data): AttendanceRecord
     {
-        $date  = Carbon::parse($data['date']);
+        $date = Carbon::parse($data['date']);
         $hours = $this->calculateHours($data['start_time'], $data['end_time']);
 
         // 🔒 valida se pode registrar nesse mês
@@ -32,12 +31,12 @@ class AttendanceRecordService
             ->validateMonthlyLimit($holder, $date->year, $date->month, $hours);
 
         return AttendanceRecord::create([
-            'scholarship_holder_id'    => $holder->id,
-            'date'                     => $date,
-            'start_time'               => $data['start_time'],
-            'end_time'                 => $data['end_time'],
-            'description'              => $data['description'] ?? null,
-            'hours'                    => $hours,
+            'scholarship_holder_id' => $holder->id,
+            'date' => $date,
+            'start_time' => $data['start_time'],
+            'end_time' => $data['end_time'],
+            'description' => $data['description'] ?? null,
+            'hours' => $hours,
             'attendance_submission_id' => null,
         ]);
     }
@@ -56,7 +55,7 @@ class AttendanceRecordService
             throw new DomainException('Período financeiro fechado.');
         }
 
-        $date  = Carbon::parse($data['date']);
+        $date = Carbon::parse($data['date']);
         $hours = $this->calculateHours($data['start_time'], $data['end_time']);
 
         app(AttendanceService::class)
@@ -69,17 +68,17 @@ class AttendanceRecordService
             );
 
         $record->update([
-            'date'        => $date,
-            'start_time'  => $data['start_time'],
-            'end_time'    => $data['end_time'],
+            'date' => $date,
+            'start_time' => $data['start_time'],
+            'end_time' => $data['end_time'],
             'description' => $data['description'] ?? null,
-            'hours'       => $hours,
+            'hours' => $hours,
         ]);
 
         return $record;
     }
 
-    public function delete(AttendanceRecord $record): void
+    public function deleteAttendance(AttendanceRecord $record): void
     {
         if (! $record->isEditable()) {
             throw new DomainException('Este registro não pode ser removido.');
@@ -99,7 +98,7 @@ class AttendanceRecordService
     protected function calculateHours(string $start, string $end): float
     {
         $startTime = Carbon::parse($start);
-        $endTime   = Carbon::parse($end);
+        $endTime = Carbon::parse($end);
 
         return round($startTime->diffInMinutes($endTime) / 60, 2);
     }

@@ -2,61 +2,84 @@
 
 namespace App\Services;
 
-use App\Models\AttendanceRecord;
-use App\Models\ScholarshipHolder; 
-use App\Models\Unit;
-use App\Models\Course;
-use App\Models\User;
-use App\Models\Project;
-use App\Models\Payment;
-use App\Models\Discipline;
-use App\Models\ClassOffering;
 use App\Models\AttendanceSubmission;
-use App\Services\AttendanceDashboardService;
-use App\Services\VisibilityService;
-use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use App\Models\ClassOffering;
+use App\Models\Course;
+use App\Models\Discipline;
+use App\Models\Payment;
+use App\Models\Project;
+use App\Models\ScholarshipHolder;
+use App\Models\Unit;
+use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Notifications\DatabaseNotification as Notification;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardService
 {
-    /* =========================================================
-     |  DASHBOARD OPERACIONAL (FREQUÊNCIA)
-     ========================================================= */
-    public function getDashboardData(array $filters): array
+    public function getDashboardData(array $filters, ?int $projectId = null): array
     {
         $user = Auth::user();
+        $visibility = app(VisibilityService::class);
 
         [$year, $month, $startDate, $endDate] = $this->resolvePeriod($filters);
+
         $currentMonth = now()->format('Y-m');
-
         $scope = $this->resolveScope($user);
+        $unitName = $user->unit?->name;
 
-        $unitName = $user->unit ? $user->unit->name : null;
+        $projects = $this->resolveUserProjects($user);
+        $activeProjectId = $projectId ?? request('project_id') ?? $projects->first()?->id;
+        $activeProject = $projects->firstWhere('id', $activeProjectId);
 
-        /* -------------------------------
-         | Acadêmico (somente visão ampla)
-         ------------------------------- */
-        $academic = [];
-        if (in_array($scope, ['all', 'institution'])) {
-            $academic = [
-                'projects_active'        => Project::where('status', 'active')->count(),
-                'projects_draft'         => Project::where('status', 'draft')->count(),
-                'courses_total'          => Course::count(),
-                'disciplines_total'      => Discipline::count(),
-                'class_offerings_active' => ClassOffering::count(),
+        $query = $visibility->apply(
+            AttendanceSubmission::query()->with('scholarshipHolder.user'),
+            $user,
+            'admin'
+        );
+
+        if ($activeProjectId) {
+            $query->where('project_id', $activeProjectId);
+        }
+
+        $alerts = [];
+
+        if (in_array($scope, ['all', 'institution'], true)) {
+            $attendance = app(AttendanceDashboardService::class)->submissionCounts($user);
+
+            $alerts = [
+                'attendance_submitted' => $attendance['submitted'],
+                'attendance_rejected' => $attendance['rejected'],
+                'payments_pending_execution' => $visibility
+                    ->apply(Payment::query(), $user, 'admin')
+                    ->where('status', Payment::STATUS_SENT)
+                    ->count(),
+                'payments_waiting_confirmation' => $visibility
+                    ->apply(Payment::query(), $user, 'admin')
+                    ->where('status', Payment::STATUS_PAID)
+                    ->count(),
             ];
         }
 
-        $query = AttendanceSubmission::query()
-            ->with('scholarshipHolder.user');
+        if ($month) {
+            $query->where('year', $year)->where('month', $month);
+        } else {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
 
-        // aplica o mesmo escopo do dashboard
-        $query = app(VisibilityService::class)
-            ->apply($query, $user, 'self');
+        $total = $query->count();
+
+        $counts = [
+            'approved' => (clone $query)->where('status', AttendanceSubmission::STATUS_APPROVED)->count(),
+            'submitted' => (clone $query)->where('status', AttendanceSubmission::STATUS_SUBMITTED)->count(),
+            'rejected' => (clone $query)->where('status', AttendanceSubmission::STATUS_REJECTED)->count(),
+        ];
+
+        [$usersCount, $scholarshipHoldersCount, $totalUnidades, $unidades] = $this->resolveBaseCounters($user, $scope);
+
+        $percentages = collect($counts)->map(
+            fn ($count) => $total ? round($count / $total * 100, 1) : 0
+        );
 
         $lastSubmissions = (clone $query)
             ->where('status', AttendanceSubmission::STATUS_SUBMITTED)
@@ -70,172 +93,132 @@ class DashboardService
             ->take(5)
             ->get();
 
-        /* -------------------------------
-         | Alertas
-         ------------------------------- */
-        $alerts = [];
-
-        if (in_array($scope, ['all', 'institution'])) {
-
-            $attendance = app(AttendanceDashboardService::class)
-                ->submissionCounts($user);
-
-            $alerts = [
-                'attendance_submitted'  => $attendance['submitted'],
-                'attendance_rejected' => $attendance['rejected'],
-                'payments_pending_execution' =>
-                    Payment::where('status', Payment::STATUS_SENT)->count(),
-                'payments_waiting_confirmation' =>
-                    Payment::where('status', Payment::STATUS_PAID)->count(),
-            ];
-        }
-
-        /* -------------------------------
-         | Contadores globais
-         ------------------------------- */
-        if ($month) {
-            $query->where('year', $year)->where('month', $month);
-        } else {
-            $query->whereBetween(
-                DB::raw("DATE(CONCAT(year,'-',LPAD(month,2,'0'),'-01'))"),
-                [$startDate->startOfMonth(), $endDate->endOfMonth()]
-            );
-        }
-
-         $total = $query->count();
-
-         $counts = [
-            'approved'  => (clone $query)->where('status', AttendanceSubmission::STATUS_APPROVED)->count(),
-            'submitted' => (clone $query)->where('status', AttendanceSubmission::STATUS_SUBMITTED)->count(),
-            'rejected'  => (clone $query)->where('status', AttendanceSubmission::STATUS_REJECTED)->count(),
+        return [
+            'counts' => $counts,
+            'percentages' => $percentages,
+            'projects' => $projects,
+            'activeProject' => $activeProject,
+            'activeProjectId' => $activeProjectId,
+            'academic' => [
+                'projects_active' => $visibility
+                    ->apply(Project::query(), $user, 'admin')
+                    ->where('status', Project::STATUS_ACTIVE)
+                    ->count(),
+                'projects_draft' => $visibility
+                    ->apply(Project::query(), $user, 'admin')
+                    ->where('status', Project::STATUS_DRAFT)
+                    ->count(),
+                'courses_total' => $visibility
+                    ->apply(Course::query(), $user, 'admin')
+                    ->count(),
+                'disciplines_total' => $visibility
+                    ->apply(Discipline::query(), $user, 'admin')
+                    ->count('id'),
+                'class_offerings_active' => $visibility
+                    ->apply(ClassOffering::query(), $user, 'admin')
+                    ->where('active', true)
+                    ->count(),
+            ],
+            'lastSubmissions' => $lastSubmissions,
+            'lastApprovals' => $lastApprovals,
+            'alerts' => $alerts,
+            'unitName' => $unitName,
+            'usersCount' => $usersCount,
+            'scholarshipHoldersCount' => $scholarshipHoldersCount,
+            'totalUnidades' => $totalUnidades,
+            'unidades' => $unidades,
+            'currentMonth' => $currentMonth,
+            'month' => $month,
+            'year' => $year,
         ];
-
-        [$usersCount, $scholarshipHoldersCount, $totalUnidades, $unidades] =
-            $this->resolveBaseCounters($user, $scope);
-
-        $percentages = collect($counts)->map(
-            fn ($c) => $total ? round($c / $total * 100, 1) : 0
-        );
-
-        return compact(
-            'counts',
-            'percentages',
-            'academic',
-            'alerts',
-            'lastSubmissions',
-            'lastApprovals',
-            'usersCount',
-            'scholarshipHoldersCount',
-            'totalUnidades',
-            'unidades',
-            'unitName',
-            'currentMonth',
-            'month',
-            'year'
-        );
     }
 
-    /* =========================================================
-     |  DASHBOARD FINANCEIRO
-     ========================================================= */
-    public function getFinancialData(array $filters): array
+    public function getFinancialData(array $filters, ?int $projectId = null): array
     {
-        [$year, $month, $startDate, $endDate] = $this->resolvePeriod($filters);
+        [$year, $month] = $this->resolvePeriod($filters);
 
-        $user  = Auth::user();
-        $scope = $this->resolveScope($user);
+        $query = app(VisibilityService::class)
+            ->apply(Payment::query(), Auth::user(), 'admin');
 
-        $query = Payment::query();
+        if ($projectId) {
+            $query->where('project_id', $projectId);
+        }
 
         if ($month) {
             $query->where('year', $year)->where('month', $month);
-        } else {
-            $query->whereBetween(
-                DB::raw("DATE(CONCAT(year,'-',LPAD(month,2,'0'),'-01'))"),
-                [$startDate->startOfMonth(), $endDate->endOfMonth()]
-            );
         }
 
-        $this->applyPaymentScope($query, $user, $scope);
-
-        $counts = [
-            'generated' => (clone $query)->count(),
-            'sent'      => (clone $query)->where('status', Payment::STATUS_SENT)->count(),
-            'paid'      => (clone $query)->where('status', Payment::STATUS_PAID)->count(),
-            'confirmed' => (clone $query)->where('status', Payment::STATUS_CONFIRMED)->count(),
+        return [
+            'counts' => [
+                'generated' => $query->count(),
+            ],
+            'totals' => [
+                'paid' => $query->sum('amount'),
+            ],
         ];
-
-        $totals = [
-            'sent'      => (clone $query)->where('status', Payment::STATUS_SENT)->sum('amount'),
-            'paid'      => (clone $query)->where('status', Payment::STATUS_PAID)->sum('amount'),
-            'confirmed' => (clone $query)->where('status', Payment::STATUS_CONFIRMED)->sum('amount'),
-        ];
-
-        return compact('counts', 'totals');
     }
 
-    /* =========================================================
-     |  HELPERS
-     ========================================================= */
+    private function resolveUserProjects(User $user): Collection
+    {
+        $projectIds = $user->visibleProjectIds();
+
+        if ($projectIds->isEmpty()) {
+            return collect();
+        }
+
+        return Project::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $projectIds)
+            ->orderBy('name')
+            ->get();
+    }
+
     private function resolveScope(User $user): string
     {
-        if ($user->hasRole('superadmin') || $user->hasRole('admin')) {
+        if ($user->isInstitutionScoped()) {
             return 'all';
         }
 
-        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            return 'institution';
-        }
-
-        if ($user->hasRole(['coordenador_adjunto', 'supervisor', 'apoio_administrativo', 'orientador'])) {
+        if ($user->isUnitScoped()) {
             return 'unit';
         }
 
         return $user->scholarshipHolder ? 'self' : 'none';
     }
 
-    private function applyPaymentScope($query, User $user, string $scope): void
-    {
-        match ($scope) {
-            'institution' =>
-                $query->whereHas('unit', fn ($q) =>
-                    $q->where('institution_id', $user->institution_id)
-                ),
-
-            'unit' =>
-                $query->where('unit_id', $user->unit_id),
-
-            'self' =>
-                $query->where('scholarship_holder_id', $user->scholarshipHolder->id),
-
-            'none' =>
-                $query->whereRaw('1 = 0'),
-
-            default => null,
-        };
-    }
-
     private function resolveBaseCounters(User $user, string $scope): array
     {
-        $users = User::query();
+        $users = User::query()->with('unit');
         $holders = ScholarshipHolder::query();
-        $units = Unit::query();
+        $units = Unit::query()->withoutGlobalScopes();
 
-        if ($scope === 'unit') {
-            $users->where('unit_id', $user->unit_id);
-            $holders->where('unit_id', $user->unit_id);
-            $units->where('id', $user->unit_id);
+        $institutionIds = $user->activeInstitutionIds();
+        $unitIds = $user->visibleUnitIds();
+
+        if ($scope === 'all' && $institutionIds->isNotEmpty()) {
+            $users->where(function ($query) use ($institutionIds) {
+                $query->whereIn('institution_id', $institutionIds)
+                    ->orWhereHas('unit', fn ($unitQuery) => $unitQuery->whereIn('institution_id', $institutionIds));
+            });
+            $holders->whereHas('unit', fn ($query) => $query->whereIn('institution_id', $institutionIds));
+            $units->whereIn('institution_id', $institutionIds);
         }
 
-        if ($scope === 'self') {
+        if ($scope === 'unit' && $unitIds->isNotEmpty()) {
+            $users->whereIn('unit_id', $unitIds);
+            $holders->whereIn('unit_id', $unitIds);
+            $units->whereIn('id', $unitIds);
+        }
+
+        if ($scope === 'self' && $user->scholarshipHolder) {
             $users->where('id', $user->id);
             $holders->where('id', $user->scholarshipHolder->id);
             $units->where('id', $user->scholarshipHolder->unit_id);
         }
 
         return [
-            $users->count(),
-            $holders->count(),
+            $users->count('id'),
+            $holders->count('id'),
             $units->count(),
             $units->get(),
         ];
@@ -243,23 +226,27 @@ class DashboardService
 
     private function resolvePeriod(array $filters): array
     {
-        if (!empty($filters['month']) && preg_match('/^\d{4}-\d{2}$/', $filters['month'])) {
+        if (! empty($filters['month'])) {
             [$year, $month] = explode('-', $filters['month']);
-            return [
-                (int)$year,
-                (int)$month,
-                Carbon::create($year, $month, 1)->startOfMonth(),
-                Carbon::create($year, $month, 1)->endOfMonth(),
-            ];
+
+            return [(int) $year, (int) $month, null, null];
         }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $start = Carbon::parse($filters['start_date'])->startOfDay();
-            $end   = Carbon::parse($filters['end_date'])->endOfDay();
-            return [(int)$start->year, null, $start, $end];
-        }
+        $start = Carbon::parse($filters['start_date'] ?? now()->startOfMonth());
+        $end = Carbon::parse($filters['end_date'] ?? now()->endOfMonth());
 
-        $now = now();
-        return [(int)$now->year, (int)$now->month, $now->startOfMonth(), $now->endOfMonth()];
+        return [(int) $start->year, null, $start, $end];
+    }
+
+    public function resolveProjects($user)
+    {
+        return $this->resolveUserProjects($user);
+    }
+
+    public function resolveActiveProject($projects, $request)
+    {
+        $projectId = $request->input('project_id');
+
+        return $projects->firstWhere('id', $projectId) ?? $projects->first();
     }
 }

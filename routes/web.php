@@ -1,64 +1,67 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\DataTables\UsersDataTable;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\ProjectController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\AttendanceRecordController;
-use App\Http\Controllers\AttendanceSubmissionController;
-use App\Http\Controllers\FinalActivityReportController;
-use App\Http\Controllers\AttendanceReportController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\UnitController;
-use App\Http\Controllers\Admin\PositionController;
-use App\Http\Controllers\ScholarshipHolderController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\HomologationController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\InstitutionController;
-use App\Http\Controllers\Admin\CourseController;
-use App\Http\Controllers\Admin\FundingSourceController;
-use App\Http\Controllers\Admin\ProjectWizardController;
-use App\Http\Controllers\Admin\DisciplineController;
-use App\Http\Controllers\MyPaymentController;
-use App\Http\Controllers\Admin\PaymentController;
-use App\Http\Controllers\Admin\PaymentExecutionController;
-use App\Http\Controllers\PaymentReceiptController;
-use App\Http\Controllers\Admin\PaymentDashboardController;
-use App\Http\Controllers\Admin\DocumentTemplateController;
-use App\Http\Controllers\Admin\FinancialReportController;
+use App\Http\Controllers\Admin\AssignmentController;
+use App\Http\Controllers\Admin\ClassOfferingController;
+use App\Http\Controllers\Admin\ClassOfferingDashboardController;
 use App\Http\Controllers\Admin\ClassOfferingDisciplineController;
 use App\Http\Controllers\Admin\ClassOfferingScholarshipHolderController;
+use App\Http\Controllers\Admin\ClassOfferingStudentController;
+use App\Http\Controllers\Admin\ClassOfferingSyllabusController;
 use App\Http\Controllers\Admin\ClassSessionController;
 use App\Http\Controllers\Admin\ClassSessionReportController;
-use App\Http\Controllers\Admin\ClassOfferingSyllabusController;
-use App\Http\Controllers\Admin\ClassOfferingDashboardController;
-use App\Http\Controllers\Admin\ClassOfferingController;
-use App\Http\Controllers\Admin\DisciplineDashboardController;
-use App\Http\Controllers\Admin\GlobalDashboardController;
-use App\Http\Controllers\Admin\TeacherDashboardController;
-use App\Http\Controllers\Admin\UnitDashboardController;
-use App\Http\Controllers\Admin\IntelligentAlertSettingController;
-use App\Http\Controllers\Admin\SupervisorAssignmentController;
-use App\Http\Controllers\Admin\TeacherController;
-use App\Http\Controllers\Admin\TeacherClassController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Admin\ProjectEditController;
-use App\Http\Controllers\Admin\CourseDisciplineController;
+use App\Http\Controllers\Admin\ContextController;
 use App\Http\Controllers\Admin\CourseClassOfferingController;
+use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CourseDisciplineController;
+use App\Http\Controllers\Admin\CourseScholarshipHolderController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DisciplineController;
+use App\Http\Controllers\Admin\DisciplineDashboardController;
+use App\Http\Controllers\Admin\DocumentTemplateController;
 use App\Http\Controllers\Admin\FinancialClosureController;
-use App\Http\Controllers\ReceiptVerificationController;
+use App\Http\Controllers\Admin\FinancialReportController;
+use App\Http\Controllers\Admin\FundingSourceController;
+use App\Http\Controllers\Admin\GlobalDashboardController;
+use App\Http\Controllers\Admin\HomologationController;
+use App\Http\Controllers\Admin\InstitutionController;
+use App\Http\Controllers\Admin\IntelligentAlertSettingController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\PaymentDashboardController;
+use App\Http\Controllers\Admin\PaymentExecutionController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\PositionController;
+use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\ProjectEditController;
+use App\Http\Controllers\Admin\ProjectWizardController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\StudentPaymentController;
+use App\Http\Controllers\Admin\SuperAdminDashboardController;
+use App\Http\Controllers\Admin\SupervisorAssignmentController;
+use App\Http\Controllers\Admin\TeacherClassController;
+use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\Admin\TeacherDashboardController;
+use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\Admin\UnitDashboardController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminScholarshipHolderController;
+use App\Http\Controllers\AttendanceRecordController;
+use App\Http\Controllers\AttendanceReportController;
+use App\Http\Controllers\AttendanceSubmissionController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardResolverController;
+use App\Http\Controllers\FinalActivityReportController;
 use App\Http\Controllers\MyAttendanceRecordController;
 use App\Http\Controllers\MyAttendanceSubmissionController;
+use App\Http\Controllers\MyPaymentController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentReceiptController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReceiptVerificationController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ScholarshipHolderController;
 use App\Http\Controllers\StudentController;
-use App\Http\Controllers\Admin\ClassOfferingStudentController;
-use App\Http\Controllers\Admin\StudentPaymentController;
-use App\Http\Controllers\Admin\CourseScholarshipHolderController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -88,13 +91,12 @@ Route::get('/manual/{doc?}', function (?string $doc = null) {
 })->middleware(['auth', 'verified'])->name('manual.index');
 
 // Receipt Verification
-Route::get('/verificar-recibo',[ReceiptVerificationController::class, 'form'])->name('receipt.verify.form');
-Route::post('/verificar-recibo',[ReceiptVerificationController::class, 'verify'])->name('receipt.verify');
-
+Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])->name('receipt.verify.form');
+Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('receipt.verify');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::resource('/dashboard', DashboardController::class)->only(['index'])->names(['index' => 'dashboard']);
+    Route::get('/meu-dashboard', [DashboardController::class, 'index'])->name('holder.dashboard');
 
     // Módulo de Frequência para o Bolsista
     Route::prefix('attendance')->middleware('auth')->group(function () {
@@ -117,26 +119,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/', [AttendanceSubmissionController::class, 'index'])->name('attendance.submissions.index');
             Route::post('/', [AttendanceSubmissionController::class, 'store'])->name('attendance.submissions.store');
 
-            Route::get('my',[MyAttendanceSubmissionController::class, 'index'])->name('my-attendance.submissions.my');
+            Route::get('my', [MyAttendanceSubmissionController::class, 'index'])->name('my-attendance.submissions.my');
             Route::post('my', [MyAttendanceSubmissionController::class, 'store'])->name('my-attendance.submissions.store');
 
             Route::get('/{submission}', [AttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
             Route::post('/{submission}/submit', [AttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
             Route::post('/{submission}/approve', [AttendanceSubmissionController::class, 'approve'])->name('attendance.submissions.approve');
             Route::post('/{submission}/reject', [AttendanceSubmissionController::class, 'reject'])->name('attendance.submissions.reject');
-            Route::delete('/{submission}/records/{record}',[AttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
+            Route::delete('/{submission}/records/{record}', [AttendanceSubmissionController::class, 'removeRecord'])->name('attendance.submissions.records.remove');
 
             Route::get('/my/{submission}', [MyAttendanceSubmissionController::class, 'show'])->name('my-attendance.submissions.show');
             Route::post('/my/{submission}/submit', [MyAttendanceSubmissionController::class, 'submit'])->name('my-attendance.submissions.submit');
             Route::post('/my/{submission}/approve', [MyAttendanceSubmissionController::class, 'approve'])->name('my-attendance.submissions.approve');
             Route::post('/my/{submission}/reject', [MyAttendanceSubmissionController::class, 'reject'])->name('my-attendance.submissions.reject');
-            Route::delete('/my/{submission}/records/{record}',[MyAttendanceSubmissionController::class, 'removeRecord'])->name('my-attendance.submissions.records.remove');
-            
+            Route::delete('/my/{submission}/records/{record}', [MyAttendanceSubmissionController::class, 'removeRecord'])->name('my-attendance.submissions.records.remove');
+
             Route::get('/cards/approved/{month}', fn ($month) => null)->name('attendance.submissions.cards.approved.month');
             Route::get('/cards/submitted/{month}', fn ($month) => null)->name('attendance.submissions.cards.submitted.month');
             Route::get('/cards/rejected/{month}', fn ($month) => null)->name('attendance.submissions.cards.rejected.month');
             Route::get('/cards/late/{month}', fn ($month) => null)->name('attendance.submissions.cards.late.month');
-            
+
         });
 
         /*
@@ -147,23 +149,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('reports')->group(function () {
 
             Route::get('/', [AttendanceReportController::class, 'index'])->name('attendance.reports.index');
-            Route::get('/monthly/{submission}',[AttendanceReportController::class, 'monthly'])->name('attendance.reports.monthly');
-            Route::get('/monthly/{submission}/blank',[AttendanceReportController::class, 'monthlyBlank'])->name('attendance.reports.monthly.blank');
-            Route::get('/monthly/{submission}/pdf',[AttendanceReportController::class, 'monthlyPdf'])->name('attendance.reports.monthly.pdf');
-            
+            Route::get('/monthly/{submission}', [AttendanceReportController::class, 'monthly'])->name('attendance.reports.monthly');
+            Route::get('/monthly/{submission}/blank', [AttendanceReportController::class, 'monthlyBlank'])->name('attendance.reports.monthly.blank');
+            Route::get('/monthly/{submission}/pdf', [AttendanceReportController::class, 'monthlyPdf'])->name('attendance.reports.monthly.pdf');
+
             Route::prefix('final')->group(function () {
                 Route::get('/', [FinalActivityReportController::class, 'index'])->name('attendance.reports.final.index');
-                Route::post('/blank',[FinalActivityReportController::class, 'blank'])->name('attendance.reports.final.blank');
-                Route::get('/create',[FinalActivityReportController::class, 'create'])->name('attendance.reports.final.create');
-                Route::post('/',[FinalActivityReportController::class, 'store'])->name('attendance.reports.final.store');
-          
+                Route::post('/blank', [FinalActivityReportController::class, 'blank'])->name('attendance.reports.final.blank');
+                Route::get('/create', [FinalActivityReportController::class, 'create'])->name('attendance.reports.final.create');
+                Route::post('/', [FinalActivityReportController::class, 'store'])->name('attendance.reports.final.store');
 
-                Route::get('/{report}/edit',[FinalActivityReportController::class, 'edit'])->name('attendance.reports.final.edit');
-                Route::put('/{report}',[FinalActivityReportController::class, 'update'])->name('attendance.reports.final.update');
-                Route::get('/{report}',[FinalActivityReportController::class, 'show'])->name('attendance.reports.final.show');
-                Route::get('/{report}/pdf',[FinalActivityReportController::class, 'pdf'])->name('attendance.reports.final.pdf');
-                Route::post('/{report}/submit',[FinalActivityReportController::class, 'submit'])->name('attendance.reports.final.submit');
-                Route::post('/{report}/approve',[FinalActivityReportController::class, 'approve'])->name('attendance.reports.final.approve');
+                Route::get('/{report}/edit', [FinalActivityReportController::class, 'edit'])->name('attendance.reports.final.edit');
+                Route::put('/{report}', [FinalActivityReportController::class, 'update'])->name('attendance.reports.final.update');
+                Route::get('/{report}', [FinalActivityReportController::class, 'show'])->name('attendance.reports.final.show');
+                Route::get('/{report}/pdf', [FinalActivityReportController::class, 'pdf'])->name('attendance.reports.final.pdf');
+                Route::post('/{report}/submit', [FinalActivityReportController::class, 'submit'])->name('attendance.reports.final.submit');
+                Route::post('/{report}/approve', [FinalActivityReportController::class, 'approve'])->name('attendance.reports.final.approve');
             });
         });
 
@@ -205,23 +206,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
 
         Route::get('/classes/{offering}', [TeacherClassController::class, 'show'])->name('classes.show');
-        Route::post('/classes/{offering}/monthly-save',[TeacherClassController::class, 'storeMonthly'])->name('classes.monthly.save');
-        Route::post('/classes/{offering}/{month}/close',[TeacherClassController::class, 'closeMonth'])->name('classes.monthly.close');
+        Route::post('/classes/{offering}/monthly-save', [TeacherClassController::class, 'storeMonthly'])->name('classes.monthly.save');
+        Route::post('/classes/{offering}/{month}/close', [TeacherClassController::class, 'closeMonth'])->name('classes.monthly.close');
     });
+
+    Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])->name('payments.verify.form');
+    Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('payments.verify');
 
 });
 
-//require __DIR__.'/auth.php';
+// require __DIR__.'/auth.php';
 
 Auth::routes();
 
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::middleware(['auth'])->group(function () {
+
+    Route::get('/dashboard', [DashboardResolverController::class, 'index'])->name('dashboard');
+
+    Route::prefix('superadmin')->middleware('role:superadmin')->group(function () {
+        Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])->name('superadmin.dashboard');
+    });
+});
 
 Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, 'search'])->name('scholarshipholders.search');
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 
+Route::post('/admin/context/switch', [ContextController::class, 'switch'])->name('admin.context.switch')->middleware(['auth', 'role:admin|superadmin']);
+
 // Rotas Administrativas
-Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('/scholarshipholders', [AdminScholarshipHolderController::class, 'index'])->name('scholarship_holders.impersonate');
+    Route::get('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'show'])->name('scholarship_holders.show');
+    Route::get('scholarship-holders/{holder}/edit', [AdminScholarshipHolderController::class, 'edit'])->name('scholarship_holders.edit');
+    Route::put('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'update'])->name('scholarship_holders.update');
+
+    // Impersonate
+    Route::post('impersonate/{user}', [AdminScholarshipHolderController::class, 'start'])->name('impersonate');
+    Route::post('impersonate-stop', [AdminScholarshipHolderController::class, 'stop'])->name('impersonate.stop');
+
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/dashboard/stats', [AdminDashboardController::class, 'stats'])->name('dashboard.stats');
@@ -253,6 +276,13 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::post('{submission}/reject', [HomologationController::class, 'reject'])->name('reject');
     });
 
+    // 🔹 Relatório de Fechamento Financeiro (apenas coordenador geral e adjunto)
+    Route::prefix('academic-reports/class-sessions')->name('academic-reports.class-sessions.')->group(function () {
+        Route::get('/global', [ClassSessionReportController::class, 'global'])->name('global');
+        Route::get('/global/pdf', [ClassSessionReportController::class, 'exportPdf'])->name('pdf');
+        Route::get('/global/excel', [ClassSessionReportController::class, 'exportExcel'])->name('excel');
+        Route::get('/{offering}', [ClassSessionReportController::class, 'index'])->name('index');
+    });
 
     // 🔹 Relatório Consolidado (apenas coordenador geral)
     Route::get('/reports/monthly', [ReportController::class, 'monthlyReport'])->name('reports.report');
@@ -262,6 +292,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     // 🔹 Relatório Detalhado por Unidade (coordenador geral)
     Route::get('/reports/unit/{unit?}/{project?}', [ReportController::class, 'unitDetail'])->name('reports.unit_detail');
 
+    Route::resource('assignments', AssignmentController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('users', UserController::class);
     Route::resource('units', UnitController::class);
@@ -271,13 +302,13 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     Route::resource('notifications', NotificationController::class);
     Route::resource('attendance_records', AttendanceRecordController::class);
     Route::resource('institutions', InstitutionController::class);
-    Route::resource('reports', ReportController::class);
-    //Route::resource('homologations', HomologationController::class);
+    Route::resource('reports', ReportController::class)->except(['show']);
+    // Route::resource('homologations', HomologationController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('courses', CourseController::class);
     Route::resource('funding-sources', FundingSourceController::class);
     Route::resource('projects', ProjectController::class);
-    //Route::resource('assignments', AssignmentController::class);
+    // Route::resource('assignments', AssignmentController::class);
 
     Route::resource('disciplines', DisciplineController::class);
 
@@ -331,14 +362,14 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('{class}/students/list', [ClassOfferingStudentController::class, 'list'])->name('class.students.list');
         Route::get('{class}/students', [ClassOfferingStudentController::class, 'index'])->name('class.students.index');
         Route::post('{class}/students', [ClassOfferingStudentController::class, 'save'])->name('class.students.save');
-        Route::post('{class}/students/submit',[ClassOfferingStudentController::class, 'submit'])->name('class.students.submit');
+        Route::post('{class}/students/submit', [ClassOfferingStudentController::class, 'submit'])->name('class.students.submit');
     });
 
     Route::prefix('student-payments')->name('student-payments.')->group(function () {
 
         Route::get('/', [StudentPaymentController::class, 'index'])->name('index');
         Route::post('batch/pay', [StudentPaymentController::class, 'payBatch'])->name('payBatch');
-        Route::get('dashboard',[StudentPaymentController::class, 'dashboard'])->name('dashboard');
+        Route::get('dashboard', [StudentPaymentController::class, 'dashboard'])->name('dashboard');
 
         Route::get('report/pdf', [StudentPaymentController::class, 'reportPdf'])->name('report.pdf');
         Route::get('report/excel', [StudentPaymentController::class, 'reportExcel'])->name('report.excel');
@@ -348,15 +379,13 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
     });
 
     // 4. Dashboards Globais e Relatórios Gerais
-    Route::get('reports/class-sessions', [ClassSessionReportController::class, 'global'])->name('reports.class-sessions');
-
     Route::prefix('dashboard')->as('dashboard.')->group(function () {
         Route::get('academic', [GlobalDashboardController::class, 'index'])->name('academic');
-        Route::get('unit/{unit}',[UnitDashboardController::class, 'index'])->name('unit');
+        Route::get('unit/{unit}', [UnitDashboardController::class, 'index'])->name('unit');
     });
 
-    Route::get('/settings/alerts',[IntelligentAlertSettingController::class, 'edit'])->name('settings.alerts');
-    Route::post('/settings/alerts',[IntelligentAlertSettingController::class, 'update'])->name('settings.alerts.update');
+    Route::get('/settings/alerts', [IntelligentAlertSettingController::class, 'edit'])->name('settings.alerts');
+    Route::post('/settings/alerts', [IntelligentAlertSettingController::class, 'update'])->name('settings.alerts.update');
 
     Route::prefix('payments')->name('payments.')->group(function () {
         Route::get('/dashboard', [PaymentDashboardController::class, 'index'])->name('dashboard');
@@ -433,7 +462,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
         Route::get('/', [DocumentTemplateController::class, 'index'])->name('index');
         Route::get('{template}/edit', [DocumentTemplateController::class, 'edit'])->name('edit');
         Route::put('{template}', [DocumentTemplateController::class, 'update'])->name('update');
-        Route::post('preview',[DocumentTemplateController::class, 'preview'])->name('preview');
+        Route::post('preview', [DocumentTemplateController::class, 'preview'])->name('preview');
     });
 
     Route::prefix('financial-reports')->name('financial-reports.')->group(function () {
@@ -458,12 +487,14 @@ Route::middleware(['auth', 'verified', 'role_or_permission:Admin|coordenador_ger
 
     Route::prefix('courses/{course}')->name('courses.')->group(function () {
         Route::get('disciplines', [CourseDisciplineController::class, 'index'])->name('disciplines.index');
-        Route::post('disciplines',[CourseDisciplineController::class, 'store'])->name('disciplines.store');
+        Route::post('disciplines', [CourseDisciplineController::class, 'store'])->name('disciplines.store');
 
-        Route::get('class-offerings',[CourseClassOfferingController::class, 'index'])->name('class-offerings.index');
-        Route::get('class-offerings/create',[CourseClassOfferingController::class, 'create'])->name('class-offerings.create');
+        Route::get('class-offerings', [CourseClassOfferingController::class, 'index'])->name('class-offerings.index');
+        Route::get('class-offerings/create', [CourseClassOfferingController::class, 'create'])->name('class-offerings.create');
     });
 
-    Route::resource('financial-closures', FinancialClosureController::class);
+    Route::get('/financial-closures/', [FinancialClosureController::class, 'index'])->name('financial-closures.index');
+    Route::post('/financial-closures', [FinancialClosureController::class, 'store'])->name('financial-closures.store');
+    Route::get('/financial-closures/preview', [FinancialClosureController::class, 'preview'])->name('financial-closures.preview');
 
 });

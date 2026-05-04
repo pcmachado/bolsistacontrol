@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\InstitutionScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Scopes\InstitutionScope;
 
 class Unit extends Model
 {
@@ -24,13 +23,13 @@ class Unit extends Model
         'phone',
         'domain',
         'email',
-        'cnpj'
+        'cnpj',
     ];
 
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
-    }  
+    }
 
     /**
      * Os utilizadores que pertencem a esta unidade.
@@ -51,11 +50,6 @@ class Unit extends Model
     public function classOfferings()
     {
         return $this->hasMany(ClassOffering::class);
-    }
-
-    public function supervisorAssignments()
-    {
-        return $this->hasMany(SupervisorAssignment::class);
     }
 
     public function payments()

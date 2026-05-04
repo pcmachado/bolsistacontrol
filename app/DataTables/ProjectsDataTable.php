@@ -1,4 +1,5 @@
 <?php
+
 namespace App\DataTables;
 
 use App\Models\Project;
@@ -39,22 +40,19 @@ class ProjectsDataTable extends DataTable
             ->with(['institution', 'units'])
             ->select('projects.*');
 
-        if ($user->hasRole('admin')) {
-            return $query;
+        if ($user->isInstitutionScoped()) {
+            return $query->whereIn('projects.institution_id', $user->activeInstitutionIds());
         }
 
-        if ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            return $query->where('projects.institution_id', $user->institution_id);
-        }
-
-        if ($user->hasRole('coordenador_adjunto')) {
-            $unitIds = method_exists($user, 'units')
-                ? $user->units()->pluck('units.id')
-                : collect([$user->unit_id])->filter();
-
-            return $query->whereHas('units', fn ($q) =>
-                $q->whereIn('units.id', $unitIds)
+        if ($user->isUnitScoped()) {
+            return $query->whereHas('units', fn ($q) => $q->whereIn('units.id', $user->visibleUnitIds())
             );
+        }
+
+        $projectIds = $user->visibleProjectIds();
+
+        if ($projectIds->isNotEmpty()) {
+            return $query->whereIn('projects.id', $projectIds);
         }
 
         return $query->whereRaw('1 = 0');
@@ -109,6 +107,6 @@ class ProjectsDataTable extends DataTable
 
     protected function filename(): string
     {
-        return 'Projects_' . date('YmdHis');
+        return 'Projects_'.date('YmdHis');
     }
 }

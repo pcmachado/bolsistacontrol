@@ -87,7 +87,7 @@
                 <div>
                     <h1 class="h3 fw-bold mb-2">Dashboard Acadêmico</h1>
                     <p class="text-muted mb-0">
-                        Consolide aulas, carga horária, docentes, cursos e turmas com filtros por unidade, curso, professor e intervalo.
+                        Consolide aulas, carga horária, professores, cursos e turmas com filtros por unidade, curso, professor e intervalo.
                     </p>
                 </div>
 
@@ -194,7 +194,7 @@
                         <div>
                             <div class="text-muted small mb-2">Professores</div>
                             <div class="value">{{ $totalTeachers }}</div>
-                            <small class="text-muted">Docentes envolvidos</small>
+                            <small class="text-muted">Professores envolvidos</small>
                         </div>
                         <span class="icon tone-success"><i class="bi bi-person-badge"></i></span>
                     </div>
@@ -270,7 +270,7 @@
                 <div class="card section-card h-100">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <strong>Carga horária por professor</strong>
-                        <div class="text-muted small">Participação docente no recorte atual.</div>
+                        <div class="text-muted small">Participação do professor no recorte atual.</div>
                     </div>
                     <div class="card-body px-4 pb-4">
                         <canvas id="hoursByTeacherChart"></canvas>

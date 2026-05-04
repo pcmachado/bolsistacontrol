@@ -3,10 +3,10 @@
 namespace App\DataTables;
 
 use App\Models\User;
-use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Html\Button;
+use Yajra\DataTables\Html\Column;
+use Yajra\DataTables\Services\DataTable;
 
 class TeachersDataTable extends DataTable
 {
@@ -22,7 +22,7 @@ class TeachersDataTable extends DataTable
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
-            ->addColumn('unit', fn($t) => $t->unit->name ?? '-')
+            ->addColumn('unit', fn ($t) => $t->unit->name ?? '-')
 
             ->addColumn('disciplines_count', function ($t) {
                 return $t->teachingAssignments->count();
@@ -103,6 +103,6 @@ class TeachersDataTable extends DataTable
 
     protected function filename(): string
     {
-        return 'Docentes_' . date('YmdHis');
+        return 'Professores_'.date('YmdHis');
     }
 }

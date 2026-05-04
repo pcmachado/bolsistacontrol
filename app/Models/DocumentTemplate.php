@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DocumentTemplate extends Model
@@ -24,7 +24,8 @@ class DocumentTemplate extends Model
 
     public static function for(string $key, $unitId = null, $institutionId = null)
     {
-        return self::where('key', $key)
+        return self::query()
+            ->where('key', $key)
             ->where('active', true)
             ->where(function ($q) use ($unitId, $institutionId) {
                 $q->whereNull('unit_id')->orWhere('unit_id', $unitId);

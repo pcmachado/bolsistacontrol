@@ -2,197 +2,149 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Institution;
 use App\Models\ScholarshipHolder;
+use App\Models\Unit;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Crypt;
 
 class UserSeeder extends Seeder
 {
-    protected static ?string $password;
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
+    protected static ?string $password = null;
+
     public function run(): void
     {
         $password = static::$password ??= Hash::make('password');
-        // Admin (vê tudo)
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@bolsista.com'],
+
+        $superadmin = User::updateOrCreate(
+            ['email' => 'superadmin@bolsista.com'],
             [
                 'name' => 'Super Admin',
                 'email_verified_at' => now(),
-                'password' => static::$password ??= Hash::make('password'),
+                'password' => $password,
                 'remember_token' => Str::random(10),
+                'institution_id' => null,
+                'unit_id' => null,
             ]
         );
 
-        $admin->syncRoles(['superadmin']);
+        $superadmin->syncRoles(['superadmin']);
 
-        $institutions = Institution::with('units')->get();
+        $institutions = Institution::with('units')->orderBy('name')->get();
 
-        foreach ($institutions as $inst) {
-
-            // Cria um usuário para a coordenação geral
-            $coordenadorGeral = User::firstOrCreate(
-                ['email' => "cg@{$inst->acronym}.example.com"],
-                [
-                    'name' => 'Coordenador Geral',
-                    'unit_id' =>  null,
-                    'institution_id' => $inst->id,
-                    'email_verified_at' => now(),
-                    'password' => $password,
-                    'remember_token' => Str::random(10),
-                ]
+        foreach ($institutions as $institution) {
+            $this->upsertUser(
+                email: "admin@{$institution->acronym}.example.com",
+                name: "Administrador {$institution->acronym}",
+                role: 'admin',
+                institutionId: $institution->id
             );
-            $coordenadorGeral->syncRoles(['coordenador_geral']);
-            $this->ensureScholarshipHolder($coordenadorGeral);
 
-            // Cria um usuário para a coordenação adjunta geral
-            $coordenadorAdjuntoGeral = User::firstOrCreate(
-                ['email' => "cag@{$inst->acronym}.example.com"],
-                [
-                    'name' => 'Coordenador Adjunto Geral',
-                    'unit_id' =>  null,
-                    'institution_id' => $inst->id,
-                    'email_verified_at' => now(),
-                    'password' => $password,
-                    'remember_token' => Str::random(10),
-                ]
+            $this->upsertUser(
+                email: "cg@{$institution->acronym}.example.com",
+                name: "Coordenador Geral {$institution->acronym}",
+                role: 'coordenador_geral',
+                institutionId: $institution->id
             );
-            $coordenadorAdjuntoGeral->syncRoles(['coordenador_adjunto_geral']);
-            $this->ensureScholarshipHolder($coordenadorAdjuntoGeral);
 
-            foreach ($inst->units as $unit) {
-                
-                // Cria um usuário para o coordenador adjunto
-                $coordenadorAdjunto = User::firstOrCreate(
-                    ['email' => "ca@{$unit->shortname}.example.com"],
-                    [
-                        'name' => "Coordenador Adjunto - {$unit->shortname}",
-                        'unit_id' => $unit->id,
-                        'institution_id' => $inst->id,
-                        'email_verified_at' => now(),
-                        'password' => $password,
-                        'remember_token' => Str::random(10),
-                    ]
+            $this->upsertUser(
+                email: "cag@{$institution->acronym}.example.com",
+                name: "Coordenador Adjunto Geral {$institution->acronym}",
+                role: 'coordenador_adjunto_geral',
+                institutionId: $institution->id
+            );
+
+            for ($index = 1; $index <= 2; $index++) {
+                $this->upsertUser(
+                    email: "prof{$index}@{$institution->acronym}.example.com",
+                    name: "Professor {$index} {$institution->acronym}",
+                    role: 'professor',
+                    institutionId: $institution->id
                 );
-                $coordenadorAdjunto->syncRoles(['coordenador_adjunto']);
-                $this->ensureScholarshipHolder($coordenadorAdjunto);
+            }
 
-                for ($i = 1; $i <= 2; $i++) {
-                    
-                    // Cria usuários para os supervisores
-                    $supervisor = User::firstOrCreate(
-                        ['email' => "sup_{$i}@{$unit->shortname}.example.com"],
-                        [
-                            'name' => "Supervisor {$i} - {$unit->shortname}",
-                            'unit_id' => $unit->id,
-                            'institution_id' => $inst->id,
-                        'email_verified_at' => now(),
-                        'password' => $password,
-                        'remember_token' => Str::random(10),
-                    ]);
-                    $supervisor->syncRoles(['supervisor']);
-                    $this->ensureScholarshipHolder($supervisor);
+            foreach ($institution->units as $unit) {
+                $this->upsertUser(
+                    email: "ca@{$unit->shortname}.example.com",
+                    name: "Coordenador Adjunto {$unit->shortname}",
+                    role: 'coordenador_adjunto',
+                    institutionId: $institution->id,
+                    unitId: $unit->id
+                );
+
+                for ($index = 1; $index <= 2; $index++) {
+                    $this->upsertUser(
+                        email: "sup{$index}@{$unit->shortname}.example.com",
+                        name: "Supervisor {$index} {$unit->shortname}",
+                        role: 'supervisor',
+                        institutionId: $institution->id,
+                        unitId: $unit->id
+                    );
                 }
             }
         }
 
-        $docentes =User::firstOrCreate(
-            ['email' => "professor@{$inst->acronym}.example.com"],
+        $this->command?->info('Usuarios base criados com sucesso.');
+    }
+
+    protected function upsertUser(string $email, string $name, string $role, ?int $institutionId = null, ?int $unitId = null): User
+    {
+        $password = static::$password ??= Hash::make('password');
+
+        $user = User::updateOrCreate(
+            ['email' => $email],
             [
-                'name' => 'Professor Exemplo',
-                'unit_id' => null,
-                'institution_id' => $inst->id,
+                'name' => $name,
+                'institution_id' => $institutionId,
+                'unit_id' => $unitId,
                 'email_verified_at' => now(),
                 'password' => $password,
                 'remember_token' => Str::random(10),
             ]
         );
-        
-        $docentes->syncRoles(['professor']);
 
-        $this->command->info('Usuários padrão criados com sucesso.');
+        $user->syncRoles([$role]);
+
+        if ($institutionId) {
+            $user->institutions()->syncWithoutDetaching([
+                $institutionId => ['active' => true],
+            ]);
+        }
+
+        if (! in_array($role, ['superadmin', 'admin'])) {
+            $this->ensureScholarshipHolder($user, $unitId);
+        }
+
+        return $user;
     }
 
-    protected function ensureScholarshipHolder(User $user): void
+    protected function ensureScholarshipHolder(User $user, ?int $unitId): void
     {
-        ScholarshipHolder::firstOrCreate(
+        $unit = $unitId ? Unit::find($unitId) : null;
+
+        ScholarshipHolder::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'name'           => $user->name,
-                'cpf'            => $this->randomCpf(),
-                'unit_id'        => $user->unit_id ?? null,
-                'status'         => 'active',
-                'bank'     => Crypt::encryptString($this->randomBank()),
-                'agency'   => Crypt::encryptString($this->randomAgency()),
-                'account'  => Crypt::encryptString($this->randomAccount()),
-                'pix_key'  => Crypt::encryptString($this->randomPixKey($user)),
+                'name' => $user->name,
+                'cpf' => $this->documentFromUser($user, 11),
+                'email' => $user->email,
+                'phone' => '(54) 99999-0000',
+                'bank' => 'Banco do Brasil',
+                'agency' => '1234',
+                'account' => '567890-1',
+                'pix_key' => $user->email,
+                'unit_id' => $unit?->id,
+                'status' => 'active',
+                'start_date' => now()->subMonths(6)->toDateString(),
+                'end_date' => null,
             ]
         );
     }
 
-    private function randomCpf(): string
+    protected function documentFromUser(User $user, int $length): string
     {
-        $n = [];
-
-        // Gera os 9 primeiros dígitos
-        for ($i = 0; $i < 9; $i++) {
-            $n[$i] = rand(0, 9);
-        }
-
-        // Calcula o primeiro dígito verificador
-        $sum = 0;
-        for ($i = 0, $weight = 10; $i < 9; $i++, $weight--) {
-            $sum += $n[$i] * $weight;
-        }
-        $n[9] = ($sum % 11 < 2) ? 0 : 11 - ($sum % 11);
-
-        // Calcula o segundo dígito verificador
-        $sum = 0;
-        for ($i = 0, $weight = 11; $i < 10; $i++, $weight--) {
-            $sum += $n[$i] * $weight;
-        }
-        $n[10] = ($sum % 11 < 2) ? 0 : 11 - ($sum % 11);
-
-        return sprintf(
-            '%d%d%d.%d%d%d.%d%d%d-%d%d',
-            ...$n
-        );
+        return str_pad((string) $user->id, $length, '0', STR_PAD_LEFT);
     }
-
-    private function randomBank(): string
-    {
-        return collect([
-            'Banco do Brasil',
-            'Caixa Econômica Federal',
-            'Bradesco',
-            'Itaú',
-            'Santander',
-            'Nubank',
-        ])->random();
-    }
-
-    private function randomAgency(): string
-    {
-        return str_pad((string) rand(1000, 9999), 4, '0', STR_PAD_LEFT);
-    }
-
-    private function randomAccount(): string
-    {
-        return rand(100000, 999999) . '-' . rand(0, 9);
-    }
-
-    private function randomPixKey(User $user): string
-    {
-        // usa email como chave PIX (bem realista)
-        return $user->email;
-    }
-
 }

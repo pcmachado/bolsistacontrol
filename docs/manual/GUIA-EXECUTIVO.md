@@ -77,7 +77,7 @@ Baseado nas funcionalidades atualmente disponiveis no sistema.
 
 1. Administracao organiza projetos e vinculos
 2. Configura cursos, disciplinas e turmas
-3. Mantem docentes, supervisores e bolsistas vinculados
+3. Mantem professores, supervisores e bolsistas vinculados
 4. Revisa consistencia por unidade e instituicao
 
 ## 5. Matriz de Acesso (Resumo)

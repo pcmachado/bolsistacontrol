@@ -31,6 +31,19 @@
                 <strong>Nome:</strong>
                 <input type="text" name="name" placeholder="Nome" class="form-control">
             </div>
+            <div class="form-group mt-2">
+                <strong>Descrição:</strong>
+                <textarea name="description" placeholder="Descrição" class="form-control"></textarea>
+                <small class="form-text text-muted">Opcional: Forneça uma descrição detalhada do cargo para melhor compreensão.</small>
+            </div>
+            <div class="form-group mt-2">
+                <strong>É cargo de professor?</strong>
+                <select name="is_teacher" class="form-control">
+                    <option value="0">Não</option>
+                    <option value="1">Sim</option>
+                </select>
+                <small class="form-text text-muted">Indique se este cargo é destinado a professores ou não.</small>
+            </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12 text-center">
             <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Enviar</button>

@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\DataTables\InstitutionsDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Institution;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class InstitutionController extends Controller
 {
-    public function index()
+    public function index(InstitutionsDataTable $dataTable)
     {
-        $institutions = Institution::paginate(10);
-        return view('admin.institutions.index', compact('institutions'));
+        return $dataTable->render('admin.institutions.index');
     }
 
     public function create()
@@ -25,18 +25,18 @@ class InstitutionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'    => 'required|string|max:255',
-            'phone'   => 'nullable|string|max:50',
-            'cnpj'    => 'nullable|string|max:18|unique:institutions,cnpj',
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'cnpj' => 'nullable|string|max:18|unique:institutions,cnpj',
             'address' => 'nullable|string|max:255',
-            'city'    => 'nullable|string|max:100',
-            'state'   => 'nullable|string|max:2',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:2',
         ]);
 
         Institution::create($validated);
 
         return redirect()->route('admin.institutions.index')
-                         ->with('success', 'Instituição criada com sucesso!');
+            ->with('success', 'Instituição criada com sucesso!');
     }
 
     public function show(Institution $institution)
@@ -52,18 +52,18 @@ class InstitutionController extends Controller
     public function update(Request $request, Institution $institution)
     {
         $validated = $request->validate([
-            'name'    => 'required|string|max:255',
-            'phone'   => 'nullable|string|max:50',
-            'cnpj'    => 'nullable|string|max:18|unique:institutions,cnpj,' . $institution->id,
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'cnpj' => 'nullable|string|max:18|unique:institutions,cnpj,'.$institution->id,
             'address' => 'nullable|string|max:255',
-            'city'    => 'nullable|string|max:100',
-            'state'   => 'nullable|string|max:2',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:2',
         ]);
 
         $institution->update($validated);
 
         return redirect()->route('admin.institutions.index')
-                         ->with('success', 'Instituição atualizada com sucesso!');
+            ->with('success', 'Instituição atualizada com sucesso!');
     }
 
     public function destroy(Institution $institution)
@@ -71,21 +71,22 @@ class InstitutionController extends Controller
         $institution->delete();
 
         return redirect()->route('admin.institutions.index')
-                         ->with('success', 'Instituição removida com sucesso!');
+            ->with('success', 'Instituição removida com sucesso!');
     }
 
     public function select(): View
     {
         $user = Auth::user();
 
-        $institutions = $user->isAdmin()
-            ? Institution::orderBy('name')->get(['institutions.id', 'institutions.name'])
-            : $user->institutions()->orderBy('institutions.name')->get(['institutions.id', 'institutions.name']);
+        $institutions = Institution::query()
+            ->whereIn('id', $user->accessibleInstitutionIds())
+            ->orderBy('name')
+            ->get(['institutions.id', 'institutions.name']);
 
         return view('institutions.select', [
             'institutions' => $institutions,
-            'active'       => session('institution_id'),
-            'user'         => $user,
+            'active' => session('admin_institution_context') ?? session('institution_id'),
+            'user' => $user,
         ]);
     }
 
@@ -100,7 +101,7 @@ class InstitutionController extends Controller
         session()->save();
 
         $user = Auth::user();
-        $route = $user->hasRole(['admin', 'coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto'])
+        $route = $user->hasAnyRole(['admin', 'superadmin', 'coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto'])
             ? 'admin.dashboard'
             : 'dashboard';
 

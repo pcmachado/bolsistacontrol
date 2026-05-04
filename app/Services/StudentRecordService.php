@@ -17,11 +17,12 @@ class StudentRecordService
         $students = $offering->students;
 
         foreach ($students as $student) {
+            $query = StudentMonthRecord::query();
 
-            $months = StudentMonthRecord::where([
-                'student_id' => $student->id,
-                'class_offering_id' => $offering->id,
-            ])->get();
+            $months = $query
+                ->where('student_id', $student->id)
+                ->where('class_offering_id', $offering->id)
+                ->get();
 
             $absences = $months->sum('absences');
 

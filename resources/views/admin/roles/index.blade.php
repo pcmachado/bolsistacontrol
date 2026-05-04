@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-dark">Gerenciamento de Funções e Permissões</h1>
+        <h1 class="h3 mb-0 text-dark">Gerenciamento de Perfis de Acesso</h1>
         
         @can('create', Spatie\Permission\Models\Role::class)
             <a href="{{ route('admin.roles.create') }}" class="btn btn-primary shadow-sm rounded-3">

@@ -42,7 +42,7 @@
             <div class="card shadow-sm">
                 <div class="card-body text-center">
                     <h3 class="fw-bold">{{ $teachersCount }}</h3>
-                    <p class="text-muted mb-0">Docentes</p>
+                    <p class="text-muted mb-0">Professores</p>
                 </div>
             </div>
         </div>

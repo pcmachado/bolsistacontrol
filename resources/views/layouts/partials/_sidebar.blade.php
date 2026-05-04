@@ -65,7 +65,7 @@
             <li><x-sidebar-item route="attendance.reports.final.index" icon="bi bi-file-earmark-person" title="Relatório Final"/></li>
         </ul>
 
-        @role('professor')
+        @if(auth()->user()->canAccessTeacher())
         <h6 class="sidebar-section-title mt-4">
             Professor
         </h6>
@@ -73,10 +73,10 @@
                 <li><x-sidebar-item route="teacher.dashboard" icon="bi bi-easel2" title="Meu Dashboard"/></li>
                 <li><x-sidebar-item route="teacher.classes" icon="bi bi-journal-check" title="Minhas Turmas"/></li>
             </ul>
-        @endrole
+        @endif
 
         {{-- COORDENAÇÃO --}}
-        @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral')
+        @if(auth()->user()->canAccessCoordination())
             <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
                 Coordenação
             </h6>
@@ -84,13 +84,24 @@
             <ul class="nav nav-pills flex-column mb-3">
                 <li><x-sidebar-item route="attendance.submissions.index" icon="bi bi-calendar-week" title="Frequências"/></li>
                 <li><x-sidebar-item route="admin.homologations.index" icon="bi bi-check2-square" title="Homologações"/></li>
-                <li><x-sidebar-item route="admin.homologations.pending" icon="bi bi-hourglass-split" title="Pendentes"/></li>
-                <li><x-sidebar-item route="admin.homologations.late" icon="bi bi-exclamation-circle" title="Atrasados"/></li>
+                {{-- <li><x-sidebar-item route="admin.homologations.pending" icon="bi bi-hourglass-split" title="Pendentes"/></li>
+                <li><x-sidebar-item route="admin.homologations.late" icon="bi bi-exclamation-circle" title="Atrasados"/></li> --}}
             </ul>
-        @endhasanyrole
+        @endif
+
+        @if(auth()->user()->hasAnyRole(['admin','coordenador_geral','coordenador_adjunto_geral','coordenador_adjunto']))
+            <h6 class="sidebar-section-title mt-4">
+                Gestão
+            </h6>
+            <ul class="nav nav-pills flex-column mb-3">
+                <li><x-sidebar-item route="admin.scholarship_holders.impersonate" icon="bi bi-people" title="Bolsistas" /></li>
+                <li><x-sidebar-item route="attendance.submissions.index" icon="bi bi-calendar-check" title="Frequências" /></li>
+                <li><x-sidebar-item route="admin.payments.index" icon="bi bi-cash-stack" title="Pagamentos" /></li>
+            </ul>
+        @endif
 
         {{-- Financeiro --}}
-        @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral')
+        @if(auth()->user()->canAccessFinancial())
             <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
                 Financeiro
             </h6>
@@ -102,26 +113,26 @@
                 <li><x-sidebar-item route="admin.payments.reports.monthly" icon="bi bi-calendar3" title="Fechamento Mensal"/></li>
                 <li><x-sidebar-item route="admin.financial-closures.index" icon="bi bi-lock" title="Fechamentos"/></li>
             </ul>
-        @endhasanyrole
+        @endif
 
         {{-- ACADÊMICO --}}
-        @hasanyrole('admin|coordenador_geral|coordenador_adjunto_geral')
+        @if(auth()->user()->canAccessCoordination())
             <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
                 Acadêmico
             </h6>
 
             <ul class="nav nav-pills flex-column mb-3">
                 <li><x-sidebar-item route="admin.dashboard.academic" icon="bi bi-bar-chart" title="Dashboard Acadêmico"/></li>
-                <li><x-sidebar-item route="admin.reports.class-sessions" icon="bi bi-file-earmark-bar-graph" title="Rel. de Aulas"/></li>
+                <li><x-sidebar-item route="admin.academic-reports.class-sessions.global" icon="bi bi-file-earmark-bar-graph" title="Rel. de Aulas"/></li>
                 <li><x-sidebar-item route="admin.projects.index" icon="bi bi-kanban" title="Projetos"/></li>
                 <li><x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/></li>
                 <li><x-sidebar-item route="admin.disciplines.index" icon="bi bi-journal-text" title="Disciplinas"/></li>
                 <li><x-sidebar-item route="admin.class-offerings.index" icon="bi bi-collection" title="Turmas"/></li>
             </ul>
-        @endhasanyrole
+        @endif
 
         {{-- ADMINISTRAÇÃO --}}
-        @hasanyrole('admin|coordenador_geral|coordenador_adjunto_geral')
+        @if(auth()->user()->canAccessAdministrative())
             <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
                 Administração
             </h6>
@@ -139,7 +150,7 @@
                 <li><x-sidebar-item route="admin.document-templates.index" icon="bi bi-file-earmark-richtext" title="Modelos"/></li>
                 {{-- <li><x-sidebar-item route="admin.settings" icon="bi bi-gear" title="Configurações"/></li> --}}
             </ul>
-        @endhasanyrole
+        @endif
 
         <h6 class="sidebar-section-title mt-4">Ajuda</h6>
 

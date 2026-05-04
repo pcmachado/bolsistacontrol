@@ -11,14 +11,23 @@ class ProjectCourseSeeder extends Seeder
     public function run(): void
     {
         $projects = Project::all();
-        $courses = Course::all();
 
-        if ($projects->isEmpty() || $courses->isEmpty()) {
-            $this->command?->warn('ProjectCourseSeeder: projetos ou cursos ausentes.');
+        if ($projects->isEmpty()) {
+            $this->command?->warn('ProjectCourseSeeder: projetos ausentes.');
+
             return;
         }
 
         foreach ($projects as $project) {
+            // ✅ Validar isolamento: apenas cursos da mesma instituição
+            $courses = Course::where('institution_id', $project->institution_id)->get();
+
+            if ($courses->isEmpty()) {
+                $this->command?->warn("ProjectCourseSeeder: nenhum curso encontrado para instituição {$project->institution_id}.");
+
+                continue;
+            }
+
             $sample = $courses->shuffle()->take(min(3, $courses->count()));
 
             foreach ($sample as $course) {
@@ -35,4 +44,3 @@ class ProjectCourseSeeder extends Seeder
         }
     }
 }
-

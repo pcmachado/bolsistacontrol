@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\DataTables\HomologationsDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceSubmission;
-use App\Models\Unit;
-use App\Models\ScholarshipHolder;
 use App\Models\Project;
+use App\Models\ScholarshipHolder;
+use App\Models\Unit;
 use App\Services\HomologationService;
-use App\DataTables\HomologationsDataTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -23,12 +23,6 @@ class HomologationController extends Controller
         $this->homologationService = $homologationService;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LISTAGEM
-    |--------------------------------------------------------------------------
-    */
-
     public function index(Request $request, HomologationsDataTable $dataTable)
     {
         $user = Auth::user();
@@ -42,94 +36,55 @@ class HomologationController extends Controller
             'scholarship_holder_id',
         ]);
 
-        if ($user->hasRole('admin')) {
-            $projects = Project::query()->orderBy('name')->get();
-        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            $projects = Project::query()
-                ->where('institution_id', $user->institution_id)
-                ->orderBy('name')
-                ->get();
-        } elseif ($user->hasRole('coordenador_adjunto')) {
-            $unitIds = $user->unit_id;
-            $projects = Project::query()
-                ->whereHas('units', fn ($q) => $q->where('units.id', $unitIds))
-                ->orderBy('name')
-                ->get();
-        } else {
-            $projects = collect();
-        }
+        $projects = Project::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleProjectIds())
+            ->orderBy('name')
+            ->get();
 
-        if ($user->hasRole('admin')) {
-            $units = Unit::query()->orderBy('name')->get();
-        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            $units = Unit::query()
-                ->where('institution_id', $user->institution_id)
-                ->orderBy('name')
-                ->get();
-        } elseif ($user->hasRole('coordenador_adjunto')) {
-            $units = $user->unit()->get();
-        } else {
-            $units = collect();
-        }
+        $units = Unit::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleUnitIds())
+            ->orderBy('name')
+            ->get();
 
         $scholarship_holders = ScholarshipHolder::query()
             ->with('user')
-            ->orderBy('name');
-
-        if ($user->hasRole('admin')) {
-            $scholarship_holders = $scholarship_holders->get();
-        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            $scholarship_holders = $scholarship_holders
-                ->whereHas('unit', fn ($q) => $q->where('institution_id', $user->institution_id))
-                ->get();
-        } elseif ($user->hasRole('coordenador_adjunto')) {
-            $unitIds = $user->unit_id;
-            $scholarship_holders = $scholarship_holders
-                ->where('unit_id', $unitIds)
-                ->get();
-        } else {
-            $scholarship_holders = collect();
-        }
+            ->when($user->visibleUnitIds()->isNotEmpty(), fn ($query) => $query->whereIn('unit_id', $user->visibleUnitIds())
+            )
+            ->orderBy('name')
+            ->get();
 
         return $dataTable
             ->setFilters($filters)
-            ->render(
-                'admin.homologations.index',
-                compact('projects', 'units', 'scholarship_holders')
-            );
+            ->render('admin.homologations.index', compact('projects', 'units', 'scholarship_holders'));
     }
 
-    public function show (AttendanceSubmission $submission)
+    public function show(AttendanceSubmission $submission)
     {
         $this->authorize('view', $submission);
 
         return view('admin.homologations.show', compact('submission'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | APROVAÇÃO EM LOTE (POR SUBMISSÃO)
-    |--------------------------------------------------------------------------
-    */
-
     public function bulk(Request $request)
     {
         $request->validate([
-            'action'       => 'required|in:approve,reject',
-            'submissions'  => 'required|array',
-            'submissions.*'=> 'integer|exists:attendance_submissions,id',
-            'reason'       => 'required_if:action,reject|string|max:1000',
+            'action' => 'required|in:approve,reject',
+            'submissions' => 'required|array',
+            'submissions.*' => 'integer|exists:attendance_submissions,id',
+            'reason' => 'required_if:action,reject|string|max:1000',
         ]);
 
         $submissions = AttendanceSubmission::whereIn('id', $request->submissions)->get();
 
         $processed = 0;
-        $skipped   = 0;
+        $skipped = 0;
 
         foreach ($submissions as $submission) {
-
-            if (!Gate::allows('approve', $submission)) {
+            if (! Gate::allows('approve', $submission)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -138,31 +93,21 @@ class HomologationController extends Controller
             }
 
             if ($request->action === 'reject') {
-                $this->homologationService->reject(
-                    $submission,
-                    Auth::id(),
-                    $request->reason
-                );
+                $this->homologationService->reject($submission, Auth::id(), $request->reason);
             }
 
             $processed++;
         }
 
         return response()->json([
-            'success'   => true,
-            'action'    => $request->action,
+            'success' => true,
+            'action' => $request->action,
             'requested' => count($request->submissions),
             'processed' => $processed,
-            'skipped'   => $skipped,
-            'message'   => "Processadas {$processed} submissões. {$skipped} ignoradas."
+            'skipped' => $skipped,
+            'message' => "Processadas {$processed} submissoes. {$skipped} ignoradas.",
         ]);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | APROVAR INDIVIDUAL
-    |--------------------------------------------------------------------------
-    */
 
     public function approve(AttendanceSubmission $submission)
     {
@@ -170,14 +115,8 @@ class HomologationController extends Controller
 
         $this->homologationService->approve($submission, Auth::id());
 
-        return back()->with('success', 'Submissão homologada com sucesso!');
+        return back()->with('success', 'Submissao homologada com sucesso.');
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | REJEITAR INDIVIDUAL
-    |--------------------------------------------------------------------------
-    */
 
     public function reject(Request $request, AttendanceSubmission $submission)
     {
@@ -187,12 +126,15 @@ class HomologationController extends Controller
             'reason' => 'required|string|max:1000',
         ]);
 
-        $this->homologationService->reject(
-            $submission,
-            Auth::id(),
-            $request->reason
-        );
+        $this->homologationService->reject($submission, Auth::id(), $request->reason);
 
-        return back()->with('success', 'Submissão rejeitada com sucesso!');
+        return back()->with('success', 'Submissao rejeitada com sucesso.');
+    }
+
+    public function late(AttendanceSubmission $submission)
+    {
+        $this->homologationService->markAsLate($submission, Auth::id());
+
+        return back()->with('success', 'Submissao marcada como atrasada com sucesso.');
     }
 }

@@ -2,34 +2,33 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\AttendanceSubmission;
 use App\Models\Payment;
 use App\Models\ScholarshipHolder;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
-use Carbon\Carbon;
 
 class PaymentSeeder extends Seeder
 {
     public function run(): void
     {
         $holders = ScholarshipHolder::with(['projects', 'unit'])->get();
-        $admin   = User::role('admin')->first();
-        $submission = AttendanceSubmission::where('status', AttendanceSubmission::STATUS_APPROVED)->first();
+        $admin = User::role('admin')->first();
 
         if ($holders->isEmpty()) {
             $this->command->warn('Nenhum bolsista encontrado.');
+
             return;
         }
 
         foreach ($holders as $holder) {
             // últimos 6 meses
             for ($i = 0; $i < 6; $i++) {
-                $date  = now()->subMonths($i);
+                $date = now()->subMonths($i);
                 $month = (int) $date->format('m');
-                $year  = (int) $date->format('Y');
+                $year = (int) $date->format('Y');
 
                 // evita duplicidade
                 if (
@@ -42,6 +41,19 @@ class PaymentSeeder extends Seeder
                     continue;
                 }
 
+                // ✅ CRÍTICO: Buscar a submission CORRETA para este bolsista/mês/ano
+                $submission = AttendanceSubmission::where([
+                    ['scholarship_holder_id', '=', $holder->id],
+                    ['month', '=', $month],
+                    ['year', '=', $year],
+                    ['status', '=', AttendanceSubmission::STATUS_APPROVED],
+                ])->first();
+
+                // Se não houver submission aprovada, pula
+                if (! $submission) {
+                    continue;
+                }
+
                 $status = Arr::random([
                     Payment::STATUS_SENT,
                     Payment::STATUS_PAID,
@@ -50,19 +62,20 @@ class PaymentSeeder extends Seeder
 
                 $payment = Payment::create([
                     // 🔹 polymorphic
-                    'payable_type'          => ScholarshipHolder::class,
-                    'payable_id'            => $holder->id,
+                    'payable_type' => ScholarshipHolder::class,
+                    'payable_id' => $holder->id,
 
                     'scholarship_holder_id' => $holder->id,
-                    'project_id'            => optional($holder->projects->first())->id,
-                    'unit_id'               => $holder->unit_id,
+                    'project_id' => optional($holder->projects->first())->id,
+                    'unit_id' => $holder->unit_id,
 
-                    'month'                 => $month,
-                    'year'                  => $year,
-                    'total_hours'           => $submission->total_hours,
-                    'amount'                => $submission->calculated_value,
-                    'status'                => $status,
-                    'sent_at'               => now()->subDays(rand(5, 20)),
+                    'month' => $month,
+                    'year' => $year,
+                    // ✅ Usar valores REAIS da submission
+                    'total_hours' => $submission->total_hours,
+                    'amount' => $submission->calculated_value,
+                    'status' => $status,
+                    'sent_at' => now()->subDays(rand(5, 20)),
                 ]);
 
                 // ajustes conforme status
@@ -75,8 +88,8 @@ class PaymentSeeder extends Seeder
 
                 if ($status === Payment::STATUS_CONFIRMED) {
                     $payment->update([
-                        'paid_at'       => now()->subDays(rand(3, 7)),
-                        'confirmed_at'  => now()->subDays(rand(1, 3)),
+                        'paid_at' => now()->subDays(rand(3, 7)),
+                        'confirmed_at' => now()->subDays(rand(1, 3)),
                         'paid_by_user_id' => $admin?->id,
                         'receipt_number' => Payment::generateReceiptNumber(),
                         'receipt_generated_at' => Carbon::now()->subDays(rand(1, 3)),
@@ -89,4 +102,3 @@ class PaymentSeeder extends Seeder
         $this->command->info('Pagamentos de teste gerados com sucesso.');
     }
 }
-

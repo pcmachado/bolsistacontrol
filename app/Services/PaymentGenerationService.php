@@ -15,7 +15,7 @@ class PaymentGenerationService
         }
 
         // 🔒 evita duplicidade
-        $existing = Payment::where('attendance_submission_id', $submission->id)->first();
+        $existing = Payment::query()->where('attendance_submission_id', $submission->id)->first();
 
         if ($existing) {
             return $existing;
@@ -40,7 +40,7 @@ class PaymentGenerationService
                 'unit_id' => $holder->unit_id,
 
                 'month' => $submission->month,
-                'year'  => $submission->year,
+                'year' => $submission->year,
 
                 'amount' => $submission->total_hours * $rate,
 

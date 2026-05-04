@@ -2,22 +2,22 @@
 
 namespace App\Services;
 
-use App\Models\Payment;
+use App\Models\AttendanceSubmission;
 use App\Models\FinancialClosure;
+use App\Models\Payment;
 use App\Models\Project;
 use App\Models\ProjectFundingSource;
 use App\Models\Unit;
-use App\Models\AttendanceSubmission;
-use App\Services\VisibilityService;
+use App\Models\User;
 
 class PaymentDashboardService
 {
-    public function data($user, $filters)
+    public function data(User $user, array $filters)
     {
-        $month     = $filters['month'];
-        $year      = $filters['year'];
+        $month = $filters['month'];
+        $year = $filters['year'];
         $projectId = $filters['project_id'] ?? null;
-        $unitId    = $filters['unit_id'] ?? null;
+        $unitId = $filters['unit_id'] ?? null;
 
         /*
         |--------------------------------------------------------------------------
@@ -27,8 +27,8 @@ class PaymentDashboardService
         $baseQuery = Payment::query()
             ->where('year', $year)
             ->where('month', $month)
-            ->when($projectId, fn($q) => $q->where('project_id', $projectId))
-            ->when($unitId, fn($q) => $q->where('unit_id', $unitId));
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->when($unitId, fn ($q) => $q->where('unit_id', $unitId));
 
         $baseQuery = app(VisibilityService::class)
             ->apply($baseQuery, $user, 'admin');
@@ -70,13 +70,13 @@ class PaymentDashboardService
         |--------------------------------------------------------------------------
         */
         $prevMonth = $month == 1 ? 12 : $month - 1;
-        $prevYear  = $month == 1 ? $year - 1 : $year;
+        $prevYear = $month == 1 ? $year - 1 : $year;
 
         $previousQuery = Payment::query()
             ->where('year', $prevYear)
             ->where('month', $prevMonth)
-            ->when($projectId, fn($q) => $q->where('project_id', $projectId))
-            ->when($unitId, fn($q) => $q->where('unit_id', $unitId));
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->when($unitId, fn ($q) => $q->where('unit_id', $unitId));
 
         $previousQuery = app(VisibilityService::class)
             ->apply($previousQuery, $user, 'admin');
@@ -84,7 +84,7 @@ class PaymentDashboardService
         $previousTotal = $previousQuery
             ->whereIn('status', [
                 Payment::STATUS_PAID,
-                Payment::STATUS_CONFIRMED
+                Payment::STATUS_CONFIRMED,
             ])
             ->sum('amount');
 
@@ -99,10 +99,8 @@ class PaymentDashboardService
             ->where('month', $month)
             ->where('year', $year)
             ->where('status', AttendanceSubmission::STATUS_APPROVED)
-            ->when($unitId, fn($q) => 
-                $q->whereHas('scholarshipHolder', fn($h) => 
-                    $h->where('unit_id', $unitId)
-                )
+            ->when($unitId, fn ($q) => $q->whereHas('scholarshipHolder', fn ($h) => $h->where('unit_id', $unitId)
+            )
             );
 
         $forecastTotal = (clone $forecastQuery)->sum('calculated_value');
@@ -112,24 +110,21 @@ class PaymentDashboardService
 
         $gap = $forecastTotal - $realTotal;
 
-/*
-        |--------------------------------------------------------------------------
-        | ORÇAMENTO DOS PROJETOS (PROJECT_FUNDING_SOURCE)
-        |--------------------------------------------------------------------------
-        */
+        /*
+                |--------------------------------------------------------------------------
+                | ORÇAMENTO DOS PROJETOS (PROJECT_FUNDING_SOURCE)
+                |--------------------------------------------------------------------------
+                */
         $budgetQuery = ProjectFundingSource::query()
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
-            ->when($unitId, fn ($q) => $q->whereHas('project.classOfferings', fn ($sub) =>
-                $sub->where('unit_id', $unitId)
+            ->when($unitId, fn ($q) => $q->whereHas('project.classOfferings', fn ($sub) => $sub->where('unit_id', $unitId)
             ));
 
-        if ($user->isCoordenadorGeral() || $user->isCoordenadorAdjuntoGeral()) {
-            $budgetQuery->whereHas('project.classOfferings.unit', fn ($q) =>
-                $q->where('institution_id', $user->resolvedInstitutionId())
+        if ($user->isInstitutionScoped()) {
+            $budgetQuery->whereHas('project.classOfferings.unit', fn ($q) => $q->whereIn('institution_id', $user->activeInstitutionIds())
             );
-        } elseif ($user->isCoordenadorAdjunto()) {
-            $budgetQuery->whereHas('project.classOfferings', fn ($q) =>
-                $q->where('unit_id', $user->unit_id)
+        } elseif ($user->isUnitScoped()) {
+            $budgetQuery->whereHas('project.classOfferings', fn ($q) => $q->whereIn('unit_id', $user->visibleUnitIds())
             );
         }
 
@@ -190,8 +185,8 @@ class PaymentDashboardService
         */
         $yearQuery = Payment::query()
             ->where('year', $year)
-            ->when($projectId, fn($q) => $q->where('project_id', $projectId))
-            ->when($unitId, fn($q) => $q->where('unit_id', $unitId));
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->when($unitId, fn ($q) => $q->where('unit_id', $unitId));
 
         $yearQuery = app(VisibilityService::class)
             ->apply($yearQuery, $user, 'admin');
@@ -201,7 +196,7 @@ class PaymentDashboardService
             ->groupBy('month', 'status')
             ->get();
 
-        $months = collect(range(1,12));
+        $months = collect(range(1, 12));
 
         $monthlyPaid = [];
         $monthlyConfirmed = [];
@@ -220,10 +215,18 @@ class PaymentDashboardService
 
         return [
             'month' => $month,
-            'year'  => $year,
+            'year' => $year,
 
-            'projects' => Project::orderBy('name')->get(),
-            'units'    => Unit::orderBy('name')->get(),
+            'projects' => Project::query()
+                ->withoutGlobalScopes()
+                ->whereIn('id', $user->visibleProjectIds())
+                ->orderBy('name', 'asc')
+                ->get(),
+            'units' => Unit::query()
+                ->withoutGlobalScopes()
+                ->whereIn('id', $user->visibleUnitIds())
+                ->orderBy('name', 'asc')
+                ->get(),
 
             'totalPaid' => $totalPaid,
             'totalConfirmed' => $totalConfirmed,
@@ -234,17 +237,17 @@ class PaymentDashboardService
             'totalCount' => $totalCount,
 
             'previousTotal' => $previousTotal,
-            'currentTotal'  => $currentTotal,
+            'currentTotal' => $currentTotal,
             'currentTotalCount' => $currentTotalCount,
-            'variation'     => $variation,
-            'prevMonth'     => $prevMonth,
-            'prevYear'      => $prevYear,
+            'variation' => $variation,
+            'prevMonth' => $prevMonth,
+            'prevYear' => $prevYear,
 
             'chartByProject' => $chartByProject,
-            'chartByUnit'    => $chartByUnit,
+            'chartByUnit' => $chartByUnit,
 
             'chartStacked' => [
-                'months' => $months->map(fn($m) => str_pad($m,2,'0',STR_PAD_LEFT)),
+                'months' => $months->map(fn ($m) => str_pad($m, 2, '0', STR_PAD_LEFT)),
                 'paid' => $monthlyPaid,
                 'confirmed' => $monthlyConfirmed,
                 'pending' => $monthlyPending,

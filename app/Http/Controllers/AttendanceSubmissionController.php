@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\DataTables\AttendanceSubmissionDataTable;
-use App\Models\AttendanceSubmission;
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use App\Models\Unit;
-use App\Services\AttendanceSubmissionService;
 use App\Services\AttendanceDashboardService;
+use App\Services\AttendanceSubmissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,48 +19,26 @@ class AttendanceSubmissionController extends Controller
         $this->middleware('auth');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LISTAGEM ADMINISTRATIVA
-    |--------------------------------------------------------------------------
-    */
-
-    public function index(Request $request, AttendanceSubmissionDataTable $dataTable, AttendanceDashboardService $dashboardService)
-    {
-
+    public function index(
+        Request $request,
+        AttendanceSubmissionDataTable $dataTable,
+        AttendanceDashboardService $dashboardService
+    ) {
         $user = Auth::user();
-
         $filters = $request->only(['status', 'month', 'unit_id']);
-
         $submissionCounts = $dashboardService->submissionCounts($user, 'admin');
 
-        // Unidades visíveis ao usuário
-        if ($user->hasRole('admin')) {
-            $units = Unit::orderBy('name')->get();
-        } elseif ($user->hasRole(['coordenador_geral','coordenador_adjunto_geral'])) {
-            $units = Unit::where('institution_id', $user->institution_id)
-                        ->orderBy('name')
-                        ->get();
-        } elseif ($user->hasRole('coordenador_adjunto')) {
-            $units = $user->unit()->get();
-        } else {
-            $units = collect();
-        }
+        $units = Unit::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleUnitIds())
+            ->orderBy('name')
+            ->get();
 
         return $dataTable
             ->setMode('admin')
             ->setFilters($filters)
-            ->render(
-                'attendance.submissions.index',
-                compact('submissionCounts','units')
-            );
+            ->render('attendance.submissions.index', compact('submissionCounts', 'units'));
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | VISUALIZAR
-    |--------------------------------------------------------------------------
-    */
 
     public function show(AttendanceSubmission $submission)
     {
@@ -75,12 +53,6 @@ class AttendanceSubmissionController extends Controller
         return view('attendance.submissions.show', compact('submission'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CRIAR SUBMISSÃO (BOLSISTA)
-    |--------------------------------------------------------------------------
-    */
-
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -89,21 +61,12 @@ class AttendanceSubmissionController extends Controller
             'month' => ['required', 'date_format:Y-m'],
         ]);
 
-        $submission = $this->service->createFromMonth(
-            $user,
-            $request->month
-        );
+        $submission = $this->service->createFromMonth($user, $request->month);
 
         return redirect()
             ->route('my-attendance.submissions.show', $submission)
-            ->with('success', 'Submissão criada com sucesso.');
+            ->with('success', 'Submissao criada com sucesso.');
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | ENVIAR
-    |--------------------------------------------------------------------------
-    */
 
     public function submit(AttendanceSubmission $submission)
     {
@@ -111,17 +74,8 @@ class AttendanceSubmissionController extends Controller
 
         $this->service->submit($submission);
 
-        return back()->with(
-            'success',
-            'Frequência enviada para homologação.'
-        );
+        return back()->with('success', 'Frequencia enviada para homologacao.');
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | APROVAR
-    |--------------------------------------------------------------------------
-    */
 
     public function approve(AttendanceSubmission $submission)
     {
@@ -131,19 +85,11 @@ class AttendanceSubmissionController extends Controller
 
         return redirect()
             ->route('attendance.submissions.index')
-            ->with('success', 'Submissão homologada com sucesso.');
+            ->with('success', 'Submissao homologada com sucesso.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | REJEITAR
-    |--------------------------------------------------------------------------
-    */
-
-    public function reject(
-        Request $request,
-        AttendanceSubmission $submission
-    ) {
+    public function reject(Request $request, AttendanceSubmission $submission)
+    {
         $user = Auth::user();
 
         $this->authorize('reject', $submission);
@@ -152,43 +98,23 @@ class AttendanceSubmissionController extends Controller
             'reason' => ['required', 'string', 'max:1000'],
         ]);
 
-        $this->service->reject(
-            $submission,
-            $request->reason,
-            $user->id
-        );
+        $this->service->reject($submission, $request->reason, $user->id);
 
         return redirect()
             ->route('attendance.submissions.index')
-            ->with(
-                'success',
-                'Submissão rejeitada e devolvida ao bolsista.'
-            );
+            ->with('success', 'Submissao rejeitada e devolvida ao bolsista.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVER REGISTRO DA SUBMISSÃO
-    |--------------------------------------------------------------------------
-    */
-
-    public function removeRecord(
-        AttendanceSubmission $submission,
-        AttendanceRecord $record
-    ) {
-
+    public function removeRecord(AttendanceSubmission $submission, AttendanceRecord $record)
+    {
         $this->authorize('submit', $submission);
 
-        // 🔒 Garante que o registro pertence à submissão
         if ($record->attendance_submission_id !== $submission->id) {
             abort(403);
         }
 
         $this->service->removeRecord($submission, $record);
 
-        return back()->with(
-            'success',
-            'Registro removido da submissão.'
-        );
+        return back()->with('success', 'Registro removido da submissao.');
     }
 }

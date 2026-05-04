@@ -2,12 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payment extends Model
 {
@@ -19,9 +18,12 @@ class Payment extends Model
     |--------------------------------------------------------------------------
     */
 
-    public const STATUS_DRAFT     = 'draft';
-    public const STATUS_SENT      = 'sent_to_payment';
-    public const STATUS_PAID      = 'paid';
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_SENT = 'sent_to_payment';
+
+    public const STATUS_PAID = 'paid';
+
     public const STATUS_CONFIRMED = 'confirmed';
 
     /*
@@ -54,11 +56,11 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'sent_at'      => 'datetime',
-        'paid_at'      => 'datetime',
+        'sent_at' => 'datetime',
+        'paid_at' => 'datetime',
         'confirmed_at' => 'datetime',
-        'total_hours'  => 'float',
-        'amount'       => 'float',
+        'total_hours' => 'float',
+        'amount' => 'float',
     ];
 
     /*
@@ -105,7 +107,7 @@ class Payment extends Model
         }
 
         $this->update([
-            'status'  => self::STATUS_SENT,
+            'status' => self::STATUS_SENT,
             'sent_at' => now(),
         ]);
     }
@@ -117,8 +119,8 @@ class Payment extends Model
         }
 
         $this->update([
-            'status'          => self::STATUS_PAID,
-            'paid_at'         => now(),
+            'status' => self::STATUS_PAID,
+            'paid_at' => now(),
             'paid_by_user_id' => $userId,
         ]);
     }
@@ -130,7 +132,7 @@ class Payment extends Model
         }
 
         $this->update([
-            'status'       => self::STATUS_CONFIRMED,
+            'status' => self::STATUS_CONFIRMED,
             'confirmed_at' => now(),
         ]);
     }
@@ -164,8 +166,13 @@ class Payment extends Model
     public function periodLabel(): string
     {
         return str_pad($this->month, 2, '0', STR_PAD_LEFT)
-            . '/'
-            . $this->year;
+            .'/'
+            .$this->year;
+    }
+
+    public function safePeriodLabel(): string
+    {
+        return str_replace('/', '-', $this->periodLabel());
     }
 
     /*
@@ -177,8 +184,8 @@ class Payment extends Model
     public static function generateReceiptNumber(): string
     {
         return now()->format('Ym')
-            . '-'
-            . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+            .'-'
+            .strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
     }
 
     public static function generateReceiptHash(self $payment): string

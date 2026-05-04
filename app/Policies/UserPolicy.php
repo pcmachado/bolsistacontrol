@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
@@ -22,7 +21,7 @@ class UserPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, user $model): bool
+    public function view(User $user, User $model): bool
     {
         return false;
     }
@@ -41,7 +40,7 @@ class UserPolicy
     public function update(User $logged, User $target)
     {
         if ($target->hasRole('superadmin')) {
-            return $logged->id === $target->id; 
+            return $logged->id === $target->id;
         }
 
         if ($logged->hasRole('superadmin')) {
@@ -50,7 +49,7 @@ class UserPolicy
 
         // 🔒 ninguém altera ADMIN exceto ele mesmo
         if ($target->hasRole('admin')) {
-            return $logged->id === $target->id; 
+            return $logged->id === $target->id;
         }
 
         // admin pode tudo
@@ -81,7 +80,7 @@ class UserPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $logged, User $target)
+    public function deleteUser(User $logged, User $target)
     {
         return $this->update($logged, $target);
     }
@@ -89,7 +88,7 @@ class UserPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, user $model): bool
+    public function restore(User $user, User $model): bool
     {
         return false;
     }
@@ -97,7 +96,7 @@ class UserPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, user $model): bool
+    public function forceDelete(User $user, User $model): bool
     {
         return false;
     }

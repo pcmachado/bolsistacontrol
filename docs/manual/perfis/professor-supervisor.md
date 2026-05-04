@@ -10,7 +10,7 @@ No estado atual do sistema, parte das funcionalidades e dashboards para professo
 
 ## Acessos Relacionados
 
-1. `admin.teachers.index` (gestao de docentes, perfil administrativo)
+1. `admin.teachers.index` (gestao de professores, perfil administrativo)
 2. `admin.supervisors.index` (vinculos de supervisao, perfil administrativo)
 3. `admin.dashboard.teacher` (dashboard por professor)
 4. `admin.dashboard.unit` (visao por unidade)

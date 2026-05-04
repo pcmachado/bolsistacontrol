@@ -79,7 +79,7 @@
     <div class="row text-center mb-4">
         <x-kpi-card title="Horas Ministradas" value="{{ number_format($totalHours, 1) }}" class="col-md-2" />
         <x-kpi-card title="Aulas" value="{{ $totalClasses }}" class="col-md-2" />
-        <x-kpi-card title="Docentes" value="{{ $totalTeachers }}" class="col-md-2" />
+        <x-kpi-card title="Professores" value="{{ $totalTeachers }}" class="col-md-2" />
         <x-kpi-card title="Cursos Ativos" value="{{ $totalCourses }}" class="col-md-2" />
         <x-kpi-card title="Turmas" value="{{ $totalOfferings }}" class="col-md-2" />
         <x-kpi-card title="Bolsistas" value="{{ $totalStudents }}" class="col-md-2" />

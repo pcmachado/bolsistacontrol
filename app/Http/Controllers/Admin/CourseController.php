@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Http\Request;
-use App\Models\Course;
-use Illuminate\View\View;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
-use App\Services\CourseService;
 use App\DataTables\CoursesDataTable;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Project;
 use App\Models\Unit;
+use App\Services\CourseService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class CourseController extends Controller
 {
@@ -26,35 +26,17 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('admin')) {
-            $projects = Project::query()->orderBy('name')->get();
-        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            $projects = Project::query()
-                ->where('institution_id', $user->institution_id)
-                ->orderBy('name')
-                ->get();
-        } elseif ($user->hasRole('coordenador_adjunto')) {
-            $unitIds = $user->units()->pluck('units.id');
-            $projects = Project::query()
-                ->whereHas('units', fn ($q) => $q->whereIn('units.id', $unitIds))
-                ->orderBy('name')
-                ->get();
-        } else {
-            $projects = collect();
-        }
+        $projects = Project::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleProjectIds())
+            ->orderBy('name')
+            ->get();
 
-        if ($user->hasRole('admin')) {
-            $units = Unit::query()->orderBy('name')->get();
-        } elseif ($user->hasRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
-            $units = Unit::query()
-                ->where('institution_id', $user->institution_id)
-                ->orderBy('name')
-                ->get();
-        } elseif ($user->hasRole('coordenador_adjunto')) {
-            $units = $user->units()->orderBy('name')->get();
-        } else {
-            $units = collect();
-        }
+        $units = Unit::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleUnitIds())
+            ->orderBy('name')
+            ->get();
 
         return $dataTable->render('admin.courses.index', compact('projects', 'units'));
     }
@@ -106,6 +88,7 @@ class CourseController extends Controller
     public function destroy(Course $course): RedirectResponse
     {
         $course->delete();
+
         return redirect()->route('admin.courses.index')->with('success', 'Curso excluído com sucesso!');
     }
 
@@ -117,7 +100,7 @@ class CourseController extends Controller
             ->where('name', 'like', "%{$term}%")
             ->orderBy('name')
             ->limit(10)
-            ->get(['id','name']);
+            ->get(['id', 'name']);
 
         return response()->json($results);
     }

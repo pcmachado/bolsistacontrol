@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -22,18 +22,28 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    //public const HOME = '/dashboard';
+    // public const HOME = '/dashboard';
 
     public static function home()
     {
         $user = Auth::user();
 
-        if ($user->hasRole('admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto')) {
+        if ($user->hasAnyRole([
+            'admin',
+            'superadmin',
+            'coordenador_geral',
+            'coordenador_adjunto_geral',
+            'coordenador_adjunto',
+        ])) {
             return route('admin.dashboard');
         }
 
+        if ($user->hasRole('professor')) {
+            return route('teacher.dashboard');
+        }
+
         if ($user->scholarshipHolder !== null) {
-            return route('dashboard');
+            return route('holder.dashboard');
         }
 
         return '/'; // fallback
@@ -61,7 +71,7 @@ class RouteServiceProvider extends ServiceProvider
         $this->mapApiRoutes();
 
         $this->mapWebRoutes();
-        
+
         $this->mapWebhookRoutes();
 
         //
@@ -77,8 +87,8 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapWebRoutes()
     {
         Route::middleware('web')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/web.php'));
+            ->namespace($this->namespace)
+            ->group(base_path('routes/web.php'));
     }
 
     /**
@@ -91,13 +101,10 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapApiRoutes()
     {
         Route::prefix('api')
-             ->middleware('api')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/api.php'));
+            ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/api.php'));
     }
-    
-    protected function mapWebhookRoutes()
-	{
 
-	}
+    protected function mapWebhookRoutes() {}
 }

@@ -13,5 +13,9 @@
         <a href="{{ route('login') }}" class="btn btn-primary btn-lg">
             Entrar no Sistema
         </a>
+        <hr class="my-4">
+        <a href="{{ route('payments.verify.form') }}" class="btn btn-secondary">
+            Verificar Recibo de Pagamento
+        </a>
     </div>
 @endsection

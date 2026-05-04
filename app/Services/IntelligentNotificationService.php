@@ -18,7 +18,7 @@ class IntelligentNotificationService
         $settings = IntelligentAlertSetting::getSettings();
 
         // Regra desativada?
-        if (!$settings->check_delays_enabled) {
+        if (! $settings->check_delays_enabled) {
             return;
         }
 
@@ -28,7 +28,8 @@ class IntelligentNotificationService
             $planned = $d->pivot->workload ?? $d->workload ?? 0;
 
             // Carga ministrada
-            $taught = ClassSession::where('class_offering_id', $offering->id)
+            $taught = ClassSession::query()
+                ->where('class_offering_id', $offering->id)
                 ->where('discipline_id', $d->id)
                 ->sum('duration_hours');
 
@@ -36,8 +37,8 @@ class IntelligentNotificationService
 
             // Progresso temporal (dias)
             $start = Carbon::parse($offering->start_date);
-            $end   = Carbon::parse($offering->end_date);
-            $now   = Carbon::now();
+            $end = Carbon::parse($offering->end_date);
+            $now = Carbon::now();
 
             if ($now->between($start, $end)) {
                 $timeProgress = $start->diffInDays($now) / max(1, $start->diffInDays($end));
@@ -57,7 +58,7 @@ class IntelligentNotificationService
 
                 foreach ($recipients as $user) {
                     $user->notify(new IntelligentSystemAlert(
-                        title: "Disciplina atrasada",
+                        title: 'Disciplina atrasada',
                         message: "A disciplina {$d->name} da turma {$offering->name} está atrasada no plano de ensino.",
                         level: 'warning',
                         url: route('admin.class-offerings.disciplines.dashboard', [$offering->id, $d->id])
@@ -74,16 +75,17 @@ class IntelligentNotificationService
     {
         $settings = IntelligentAlertSetting::getSettings();
 
-        if (!$settings->check_no_class_enabled) {
+        if (! $settings->check_no_class_enabled) {
             return;
         }
 
-        $lastClass = ClassSession::where('class_offering_id', $offering->id)
+        $lastClass = ClassSession::query()
+            ->where('class_offering_id', $offering->id)
             ->orderByDesc('date')
             ->first();
 
         // Turma nunca teve aula registrada → não notifica
-        if (!$lastClass) {
+        if (! $lastClass) {
             return;
         }
 
@@ -98,7 +100,7 @@ class IntelligentNotificationService
 
             foreach ($recipients as $user) {
                 $user->notify(new IntelligentSystemAlert(
-                    title: "Turma sem aulas recentes",
+                    title: 'Turma sem aulas recentes',
                     message: "A turma {$offering->name} não registra aulas há mais de {$limit} dias.",
                     level: 'danger',
                     url: route('admin.class-offerings.dashboard', $offering->id)
@@ -106,7 +108,6 @@ class IntelligentNotificationService
             }
         }
     }
-
 
     /**
      * Método chamado pelo cron (scheduler) para rodar todas as análises.

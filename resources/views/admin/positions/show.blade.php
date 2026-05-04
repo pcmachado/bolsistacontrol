@@ -17,6 +17,14 @@
             <strong>Nome:</strong>
             {{ $position->name }}
         </div>
+        <div class="form-group mt-2">
+            <strong>Descrição:</strong>
+            {{ $position->description ?? 'N/A' }}
+        </div>
+        <div class="form-group mt-2">
+            <strong>É cargo de professor?</strong>
+            {{ $position->is_teacher ? 'Sim' : 'Não' }}
+        </div>
     </div>
 </div>
 @endsection

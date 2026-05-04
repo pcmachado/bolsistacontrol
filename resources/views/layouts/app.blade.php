@@ -26,6 +26,20 @@
 
     {{-- ÁREA PRINCIPAL --}}
     <div id="main-content" class="flex-grow-1 d-flex flex-column">
+        @if(session('impersonated_by'))
+        <div class="bg-warning text-dark text-center py-2">
+            <strong>⚠ Você está logado como outro usuário</strong>
+
+            <form method="POST"
+                action="{{ route('admin.impersonate.stop') }}"
+                class="d-inline ms-3">
+                @csrf
+                <button class="btn btn-dark btn-sm">
+                    🔙 Voltar para sua conta
+                </button>
+            </form>
+        </div>
+        @endif
 
         {{-- NAVBAR --}}
         @include('layouts.partials._navbar')

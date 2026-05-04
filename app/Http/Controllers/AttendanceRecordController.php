@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\DataTables\AttendanceRecordDataTable;
 use App\Models\AttendanceRecord;
-use App\Models\AttendanceSubmission;
 use App\Services\AttendanceRecordService;
 use App\Services\AttendanceService;
 use App\Services\AttendanceSubmissionService;
@@ -59,7 +58,7 @@ class AttendanceRecordController extends Controller
 
         // filtros para DataTable
         $filters = [
-            'month'  => $monthString,
+            'month' => $monthString,
             'status' => $request->get('status'),
         ];
 
@@ -67,15 +66,15 @@ class AttendanceRecordController extends Controller
             ->setMode('self')
             ->setFilters($filters)
             ->render('attendance.index', [
-                'month'         => $monthString,
-                'year'          => $year,
-                'monthNumber'   => $monthNumber,
-                'total'         => $total,
-                'limit'         => $limit,
-                'currentMonth'  => $currentMonth,
-                'oldestMonth'   => $oldestMonth,
-                'oldestRecord'  => $oldestRecord,
-                'submission'    => null,
+                'month' => $monthString,
+                'year' => $year,
+                'monthNumber' => $monthNumber,
+                'total' => $total,
+                'limit' => $limit,
+                'currentMonth' => $currentMonth,
+                'oldestMonth' => $oldestMonth,
+                'oldestRecord' => $oldestRecord,
+                'submission' => null,
             ]);
     }
 
@@ -93,13 +92,13 @@ class AttendanceRecordController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'date'        => ['required', 'date'],
-            'start_time'  => ['required', 'date_format:H:i'],
-            'end_time'    => ['required', 'date_format:H:i', 'after:start_time'],
+            'date' => ['required', 'date'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $user   = Auth::user();
+        $user = Auth::user();
         $holder = $this->scholarshipHolderService->holderOrFail($user);
 
         $date = \Carbon\Carbon::parse($validated['date']);
@@ -111,10 +110,10 @@ class AttendanceRecordController extends Controller
             $date->month
         )) {
             return back()
-            ->withInput()
-            ->withErrors([
-                'Este mês já foi enviado para homologação.'
-            ]);
+                ->withInput()
+                ->withErrors([
+                    'Este mês já foi enviado para homologação.',
+                ]);
         }
 
         $this->records->create($holder, $validated);
@@ -142,7 +141,7 @@ class AttendanceRecordController extends Controller
      */
     public function edit(AttendanceRecord $attendanceRecord)
     {
-        if (!Auth::user()->can('update', $attendanceRecord)) {
+        if (! Auth::user()->can('update', $attendanceRecord)) {
             return redirect()
                 ->route('attendance.index', ['month' => optional($attendanceRecord->date)->format('Y-m') ?? now()->format('Y-m')])
                 ->with('error', $attendanceRecord->editBlockReason() ?? 'Você não pode editar este registro, prazo de 7 dias expirado.');
@@ -154,18 +153,18 @@ class AttendanceRecordController extends Controller
     /**
      * Atualização
      */
-    public function update(Request $request, AttendanceRecord $attendanceRecord )
+    public function update(Request $request, AttendanceRecord $attendanceRecord)
     {
-        if (!Auth::user()->can('update', $attendanceRecord)) {
+        if (! Auth::user()->can('update', $attendanceRecord)) {
             return redirect()
                 ->back()
                 ->with('error', $attendanceRecord->editBlockReason() ?? 'Edição não permitida.');
         }
 
         $validated = $request->validate([
-            'date'        => ['required', 'date'],
-            'start_time'  => ['required', 'date_format:H:i'],
-            'end_time'    => ['required', 'date_format:H:i', 'after:start_time'],
+            'date' => ['required', 'date'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -183,11 +182,10 @@ class AttendanceRecordController extends Controller
     {
         $this->authorize('delete', $attendanceRecord);
 
-        $this->records->delete($attendanceRecord);
+        $this->records->deleteAttendance($attendanceRecord);
 
         return redirect()
             ->route('attendance.index')
             ->with('success', 'Registro removido.');
     }
-
 }

@@ -4,15 +4,11 @@ namespace App\Services;
 
 use App\Models\ScholarshipHolder;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 
 class ScholarshipHolderService
 {
     /**
      * Retorna uma instância de ScholarshipHolder com os dados necessários.
-     *
-     * @param int $id
-     * @return ScholarshipHolder|null
      */
     public function find(int $id): ?ScholarshipHolder
     {
@@ -21,9 +17,6 @@ class ScholarshipHolderService
 
     /**
      * Cria um novo bolsista (simplificado).
-     *
-     * @param array $data
-     * @return ScholarshipHolder
      */
     public function create(array $data): ScholarshipHolder
     {
@@ -33,10 +26,6 @@ class ScholarshipHolderService
 
     /**
      * Atualiza os dados do bolsista.
-     *
-     * @param ScholarshipHolder $scholarshipHolder
-     * @param array $data
-     * @return bool
      */
     public function update(ScholarshipHolder $scholarshipHolder, array $data): bool
     {
@@ -44,20 +33,9 @@ class ScholarshipHolderService
         return $scholarshipHolder->update($data);
     }
 
-    /**
-     * Exclui um bolsista (Soft Delete).
-     *
-     * @param ScholarshipHolder $scholarshipHolder
-     * @return bool|null
-     */
-    public function delete(ScholarshipHolder $scholarshipHolder): bool|null
-    {
-        return $scholarshipHolder->delete();
-    }
-
     public function holderOrFail(User $user): ScholarshipHolder
     {
-        if (!$user->scholarshipHolder) {
+        if (! $user->scholarshipHolder) {
             abort(403, 'Usuário não é bolsista.');
         }
 
@@ -66,13 +44,11 @@ class ScholarshipHolderService
 
     /**
      * Restaura um bolsista excluído (Soft Delete).
-     *
-     * @param int $id
-     * @return bool
      */
     public function restore(int $id): bool
     {
         $scholarshipHolder = ScholarshipHolder::withTrashed()->findOrFail($id);
+
         return $scholarshipHolder->restore();
     }
 }

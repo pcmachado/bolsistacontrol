@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ReportService;
 use App\Models\Unit;
+use App\Services\ReportService;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -18,7 +18,7 @@ class ReportController extends Controller
     public function unitDetail(Request $request, Unit $unit)
     {
         $month = $request->get('month', now()->month);
-        $year  = $request->get('year', now()->year);
+        $year = $request->get('year', now()->year);
 
         $report = $this->reportService->unitAttendance(
             $unit,

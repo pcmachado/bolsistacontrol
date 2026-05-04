@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClassSession extends Model
@@ -33,5 +33,12 @@ class ClassSession extends Model
     public function discipline()
     {
         return $this->belongsTo(Discipline::class);
+    }
+
+    public function scopeForTeacher($query, $teacherId)
+    {
+        return $query->whereHas('classOffering.disciplines', function ($q) use ($teacherId) {
+            $q->where('teacher_id', $teacherId);
+        });
     }
 }

@@ -4,80 +4,59 @@ namespace App\Policies;
 
 use App\Models\AttendanceSubmission;
 use App\Models\User;
+use App\Services\VisibilityService;
 
 class AttendanceSubmissionPolicy
 {
-    /**
-     * Visualizar a submissão
-     */
     public function view(User $user, AttendanceSubmission $submission): bool
     {
-        // Bolsista dono
         if ($user->scholarshipHolder?->id === $submission->scholarship_holder_id) {
             return true;
         }
 
-        // Coordenação
-        return $this->isReviewer($user);
+        return $this->canReview($user, $submission);
     }
 
-    /**
-     * Enviar para homologação
-     */
     public function submit(User $user, AttendanceSubmission $submission): bool
     {
         return $user->scholarshipHolder?->id === $submission->scholarship_holder_id
             && $submission->status === AttendanceSubmission::STATUS_DRAFT;
     }
 
-    /**
-     * Aprovar submissão
-     */
     public function approve(User $user, AttendanceSubmission $submission): bool
     {
         return $submission->status === AttendanceSubmission::STATUS_SUBMITTED
-        && $user->hasAnyRole([
-            'admin',
-            'coordenador_geral',
-            'coordenador_adjunto_geral',
-            'coordenador_adjunto',
-        ]);
+            && $this->canReview($user, $submission);
     }
 
-    /**
-     * Rejeitar submissão
-     */
     public function reject(User $user, AttendanceSubmission $submission): bool
     {
         return $this->approve($user, $submission);
     }
 
-    /**
-     * Define quem pode homologar
-     */
-    protected function isReviewer(User $user): bool
-    {
-        return $user->hasAnyRole([
-            'admin',
-            'coordenador_geral',
-            'coordenador_adjunto_geral',
-            'coordenador_adjunto',
-        ]);
-    }
-
     public function report(User $user, AttendanceSubmission $submission): bool
     {
-        // 🔒 Bolsista só pode gerar relatório da própria submissão
-        if ($user->scholarshipHolder) {
-            return $submission->scholarship_holder_id === $user->scholarshipHolder->id;
+        if ($user->scholarshipHolder?->id === $submission->scholarship_holder_id) {
+            return true;
         }
 
-        // 🔓 Coordenação / Admin pode acessar
-        return $user->hasAnyRole([
+        return $this->canReview($user, $submission);
+    }
+
+    protected function canReview(User $user, AttendanceSubmission $submission): bool
+    {
+        if (! $user->hasAnyRole([
+            'superadmin',
             'admin',
             'coordenador_geral',
             'coordenador_adjunto_geral',
             'coordenador_adjunto',
-        ]);
+        ])) {
+            return false;
+        }
+
+        return app(VisibilityService::class)
+            ->apply(AttendanceSubmission::query()->whereKey($submission->id), $user, 'admin')
+            ->exists();
     }
 }
