@@ -33,9 +33,7 @@ class Student extends Model
     {
         return $this->belongsToMany(
             ClassOffering::class,
-            'class_offering_student',
-            'student_id',
-            'class_offering_id'
+            'class_offering_student'
         );
     }
 }

@@ -75,7 +75,7 @@ class ClassOffering extends Model
 
     public function students(): BelongsToMany
     {
-        return $this->belongsToMany(Student::class,'class_offering_student','class_offering_id','student_id');
+        return $this->belongsToMany(Student::class,'class_offering_student');
     }
 
     public function classOfferingSubmissions(): HasMany

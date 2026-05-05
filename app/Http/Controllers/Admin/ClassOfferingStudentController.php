@@ -57,7 +57,7 @@ class ClassOfferingStudentController extends Controller
             ->orderBy('month')
             ->get();
 
-        $students = Student::where('class_offering_id', $class->id)
+        $students = $class->students()
             ->with('classOfferings')
             ->get();
 

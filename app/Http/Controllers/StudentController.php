@@ -36,10 +36,10 @@ class StudentController extends Controller
             'cpf' => 'nullable|string|max:14',
             'passport' => 'nullable|string|max:20',
             'payment_type' => 'required|in:pix,transfer',
-            'pix_key' => 'nullable|string',
-            'bank' => 'nullable|string',
-            'agency' => 'nullable|string',
-            'account' => 'nullable|string',
+            'pix_key' => 'required_if:payment_type,pix|nullable|string',
+            'bank' => 'required_if:payment_type,transfer|nullable|string',
+            'agency' => 'required_if:payment_type,transfer|nullable|string',
+            'account' => 'required_if:payment_type,transfer|nullable|string',
         ]);
 
         Student::create($data);
@@ -64,10 +64,10 @@ class StudentController extends Controller
             'cpf' => 'nullable|string|max:14',
             'passport' => 'nullable|string|max:20',
             'payment_type' => 'required|in:pix,transfer',
-            'pix_key' => 'nullable|string',
-            'bank' => 'nullable|string',
-            'agency' => 'nullable|string',
-            'account' => 'nullable|string',
+            'pix_key' => 'required_if:payment_type,pix|nullable|string',
+            'bank' => 'required_if:payment_type,transfer|nullable|string',
+            'agency' => 'required_if:payment_type,transfer|nullable|string',
+            'account' => 'required_if:payment_type,transfer|nullable|string',
         ]);
 
         $student->update($data);

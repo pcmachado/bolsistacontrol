@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminScholarshipHolderController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\ClassOfferingController;
 use App\Http\Controllers\Admin\ClassOfferingDashboardController;
@@ -43,17 +44,18 @@ use App\Http\Controllers\Admin\TeacherDashboardController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\UnitDashboardController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\AdminScholarshipHolderController;
 use App\Http\Controllers\AttendanceRecordController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\AttendanceSubmissionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardResolverController;
+use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FinalActivityReportController;
 use App\Http\Controllers\MyAttendanceRecordController;
 use App\Http\Controllers\MyAttendanceSubmissionController;
 use App\Http\Controllers\MyPaymentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NotificationSettingController;
 use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReceiptVerificationController;
@@ -300,6 +302,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
     Route::resource('scholarship_holders', ScholarshipHolderController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('notifications', NotificationController::class);
+    Route::resource('email-templates', EmailTemplateController::class);
+    Route::resource('notification-settings', NotificationSettingController::class);
     Route::resource('attendance_records', AttendanceRecordController::class);
     Route::resource('institutions', InstitutionController::class);
     Route::resource('reports', ReportController::class)->except(['show']);

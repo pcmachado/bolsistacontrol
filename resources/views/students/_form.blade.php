@@ -32,10 +32,66 @@
 
     <div class="col-md-4">
         <label>Tipo pagamento</label>
-        <select name="payment_type" class="form-select">
-            <option value="pix">PIX</option>
-            <option value="transfer">Transferência</option>
+        <select name="payment_type" id="payment_type" class="form-select">
+            <option value="">Selecione</option>
+            <option value="pix" @selected(old('payment_type', $student->payment_type ?? '') == 'pix')>PIX</option>
+            <option value="transfer" @selected(old('payment_type', $student->payment_type ?? '') == 'transfer')>Transferência</option>
         </select>
     </div>
 
+    {{-- PIX --}}
+    <div id="pix_fields" class="col-md-4 d-none">
+        <label>Chave PIX</label>
+        <input type="text" name="pix_key" class="form-control"
+            value="{{ old('pix_key', $student->pix_key ?? '') }}">
+    </div>
+
+    {{-- TRANSFERÊNCIA --}}
+    <div id="bank_fields" class="row g-3 d-none">
+
+        <div class="col-md-4">
+            <label>Banco</label>
+            <input type="text" name="bank" class="form-control"
+                value="{{ old('bank', $student->bank ?? '') }}">
+        </div>
+
+        <div class="col-md-4">
+            <label>Agência</label>
+            <input type="text" name="agency" class="form-control"
+                value="{{ old('agency', $student->agency ?? '') }}">
+        </div>
+
+        <div class="col-md-4">
+            <label>Conta</label>
+            <input type="text" name="account" class="form-control"
+                value="{{ old('account', $student->account ?? '') }}">
+        </div>
+
+    </div>
+
 </div>
+
+<script>
+    function togglePaymentFields() {
+        const type = document.getElementById('payment_type').value;
+
+        const pix = document.getElementById('pix_fields');
+        const bank = document.getElementById('bank_fields');
+
+        pix.classList.add('d-none');
+        bank.classList.add('d-none');
+
+        if (type === 'pix') {
+            pix.classList.remove('d-none');
+        }
+
+        if (type === 'transfer') {
+            bank.classList.remove('d-none');
+        }
+    }
+
+    document.getElementById('payment_type').addEventListener('change', togglePaymentFields);
+
+    // 🔥 carregar corretamente ao abrir edição
+    window.addEventListener('load', togglePaymentFields);
+</script>

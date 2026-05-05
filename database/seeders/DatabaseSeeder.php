@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
             UnitSeeder::class,
             UserSeeder::class,
             PositionSeeder::class,
-            //InstitutionUserSeeder::class,
+            // InstitutionUserSeeder::class,
             ScholarshipHolderSeeder::class,
             StudentSeeder::class,
             ProjectSeeder::class,
@@ -95,6 +95,8 @@ class DatabaseSeeder extends Seeder
             StudentMonthRecordSeeder::class,
             ClassOfferingSubmissionSeeder::class,
             ScholarshipHolderClassOfferingSeeder::class,
+            EmailTemplateSeeder::class,
+            NotificationSettingSeeder::class,
         ]);
     }
 }

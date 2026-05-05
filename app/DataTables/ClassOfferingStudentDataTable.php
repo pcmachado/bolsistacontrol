@@ -3,6 +3,7 @@
 namespace App\DataTables;
 
 use App\Models\Student;
+use App\Models\ClassOffering;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Services\DataTable;
 
@@ -28,9 +29,9 @@ class ClassOfferingStudentDataTable extends DataTable
 
     public function query(Student $model)
     {
-        return $model->newQuery()
-            ->where('class_offering_id', $this->classId)
-            ->latest();
+        return ClassOffering::findOrFail($this->classId)
+        ->students()
+        ->select('students.*');
     }
 
     public function html()

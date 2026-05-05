@@ -147,6 +147,8 @@
                 <li><x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissões"/></li>
                 <li><x-sidebar-item route="admin.institutions.index" icon="bi bi-bank" title="Instituições"/></li>
                 <li><x-sidebar-item route="admin.settings.alerts" icon="bi bi-bell" title="Alertas"/></li>
+                <li><x-sidebar-item route="admin.email-templates.index" icon="bi bi-envelope-paper" title="Templates de Email"/></li>
+                <li><x-sidebar-item route="admin.notification-settings.index" icon="bi bi-gear" title="Config. Notificações"/></li>
                 <li><x-sidebar-item route="admin.document-templates.index" icon="bi bi-file-earmark-richtext" title="Modelos"/></li>
                 {{-- <li><x-sidebar-item route="admin.settings" icon="bi bi-gear" title="Configurações"/></li> --}}
             </ul>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\DataTables\PaymentDataTable;
 use App\Models\Payment;
-use App\Notifications\IntelligentSystemAlert;
+use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +22,8 @@ class MyPaymentController extends Controller
     {
         $this->authorize('confirm', $payment);
 
+        $oldStatus = $payment->status;
+
         if (! $payment->receipt_number) {
             $payment->receipt_number = Payment::generateReceiptNumber();
         }
@@ -35,12 +37,24 @@ class MyPaymentController extends Controller
             'confirmed_at' => now(),
         ]);
 
-        $payment->paidBy?->notify(
-            new IntelligentSystemAlert(
-                title: 'Pagamento confirmado',
-                message: "O bolsista confirmou o pagamento {$payment->periodLabel()}",
-                level: 'info'
-            )
+        // Notificação usando o sistema avançado
+        $notificationService = app(NotificationService::class);
+        $notificationService->sendEventNotification(
+            'payment_status_changed',
+            [
+                'title' => 'Pagamento Confirmado',
+                'message' => "O bolsista {$payment->scholarshipHolder->user->name} confirmou o pagamento de {$payment->periodLabel()}",
+                'level' => 'success',
+                'payment_id' => $payment->id,
+                'old_status' => $oldStatus,
+                'new_status' => Payment::STATUS_CONFIRMED,
+                'url' => route('payments.show', $payment),
+                'scholarship_holder_name' => $payment->scholarshipHolder->user->name,
+                'period' => $payment->periodLabel(),
+                'amount' => number_format($payment->amount, 2, ',', '.'),
+            ],
+            $payment->project_id,
+            $payment->unit->institution_id ?? null
         );
 
         return back()->with('success', 'Pagamento confirmado com sucesso.');

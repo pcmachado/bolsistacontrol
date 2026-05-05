@@ -2,21 +2,25 @@
 
 namespace App\Providers;
 
+use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
+use App\Models\EmailTemplate;
+use App\Models\FinalActivityReport;
+use App\Models\NotificationSetting;
+use App\Models\Payment;
+use App\Models\Project;
+use App\Models\User;
+use App\Policies\AttendanceRecordPolicy;
+use App\Policies\AttendanceSubmissionPolicy;
+use App\Policies\EmailTemplatePolicy;
+use App\Policies\FinalActivityReportPolicy;
+use App\Policies\NotificationSettingPolicy;
+use App\Policies\PaymentPolicy;
+use App\Policies\ProjectPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
-use App\Models\AttendanceRecord;
-use App\Models\Project;
-use App\Models\User;
-use App\Models\Payment;
-use App\Policies\ProjectPolicy;
-use App\Policies\UserPolicy;
-use App\Policies\AttendanceRecordPolicy;
-use App\Policies\PaymentPolicy;
-use App\Models\AttendanceSubmission;
-use App\Policies\AttendanceSubmissionPolicy;
-use App\Models\FinalActivityReport;
-use App\Policies\FinalActivityReportPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -30,6 +34,8 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Payment::class => PaymentPolicy::class,
         FinalActivityReport::class => FinalActivityReportPolicy::class,
+        EmailTemplate::class => EmailTemplatePolicy::class,
+        NotificationSetting::class => NotificationSettingPolicy::class,
     ];
 
     /**
@@ -42,7 +48,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         // initialize passport routes
-       // Passport::routes();
+        // Passport::routes();
 
         // admin get all the access
         // Implicitly grant "Admin" role all permissions

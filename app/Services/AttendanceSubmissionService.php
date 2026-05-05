@@ -6,9 +6,6 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSubmission;
 use App\Models\ScholarshipHolder;
 use App\Models\User;
-use App\Notifications\AttendanceApproved;
-use App\Notifications\AttendanceRejected;
-use App\Notifications\AttendanceSubmitted;
 use Illuminate\Support\Facades\DB;
 
 class AttendanceSubmissionService
@@ -92,11 +89,24 @@ class AttendanceSubmissionService
             ]);
         });
 
-        $coordinator = User::role('coordinator')->get();
-
-        foreach ($coordinator as $coord) {
-            $coord->notify(new AttendanceSubmitted($submission));
-        }
+        // Notificação usando o sistema avançado
+        $notificationService = app(NotificationService::class);
+        $notificationService->sendEventNotification(
+            'submission_submitted',
+            [
+                'title' => 'Nova Submissão de Frequência',
+                'message' => "O bolsista {$submission->scholarshipHolder->user->name} enviou uma submissão de frequência para {$submission->month}/{$submission->year}",
+                'level' => 'info',
+                'submission_id' => $submission->id,
+                'url' => route('attendance.submissions.show', $submission),
+                'scholarship_holder_name' => $submission->scholarshipHolder->user->name,
+                'month' => $submission->month,
+                'year' => $submission->year,
+                'total_hours' => $submission->total_hours,
+            ],
+            $submission->project_id,
+            $submission->scholarshipHolder->unit->institution_id ?? null
+        );
     }
 
     /**
@@ -114,7 +124,23 @@ class AttendanceSubmissionService
             'approved_by' => $userId,
         ]);
 
-        $submission->scholarshipHolder->user->notify(new AttendanceApproved($submission));
+        // Notificação usando o sistema avançado
+        $notificationService = app(NotificationService::class);
+        $notificationService->sendEventNotification(
+            'submission_approved',
+            [
+                'title' => 'Submissão de Frequência Aprovada',
+                'message' => "Sua submissão de frequência para {$submission->month}/{$submission->year} foi aprovada",
+                'level' => 'success',
+                'submission_id' => $submission->id,
+                'url' => route('my-attendance.submissions.show', $submission),
+                'month' => $submission->month,
+                'year' => $submission->year,
+                'total_hours' => $submission->total_hours,
+            ],
+            $submission->project_id,
+            $submission->scholarshipHolder->unit->institution_id ?? null
+        );
     }
 
     /**
@@ -140,7 +166,23 @@ class AttendanceSubmissionService
             ]);
         });
 
-        $submission->scholarshipHolder->user->notify(new AttendanceRejected($submission));
+        // Notificação usando o sistema avançado
+        $notificationService = app(NotificationService::class);
+        $notificationService->sendEventNotification(
+            'submission_rejected',
+            [
+                'title' => 'Submissão de Frequência Rejeitada',
+                'message' => "Sua submissão de frequência para {$submission->month}/{$submission->year} foi rejeitada. Motivo: {$reason}",
+                'level' => 'danger',
+                'submission_id' => $submission->id,
+                'url' => route('my-attendance.submissions.show', $submission),
+                'month' => $submission->month,
+                'year' => $submission->year,
+                'reason' => $reason,
+            ],
+            $submission->project_id,
+            $submission->scholarshipHolder->unit->institution_id ?? null
+        );
     }
 
     public function canCreateRecord(ScholarshipHolder $holder, int $year, int $month): bool
@@ -156,7 +198,7 @@ class AttendanceSubmissionService
             ->exists();
     }
 
-    protected function getOrCreateDraft(Request $request, ScholarshipHolder $holder, int $year, int $month): AttendanceSubmission
+    protected function getOrCreateDraft(ScholarshipHolder $holder, int $year, int $month): AttendanceSubmission
     {
         return AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
