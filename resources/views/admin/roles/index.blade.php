@@ -43,22 +43,42 @@
                                 
                                 <td>
                                     @if ($role->permissions->isEmpty())
-                                        <span class="text-muted fst-italic small">Nenhuma permissão</span>
+                                        <span class="text-muted fst-italic small">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Nenhuma permissão
+                                        </span>
                                     @else
-                                        @if($role->permissions->count() > 5)
-                                            <span class="badge bg-secondary rounded-pill">
-                                                {{ $role->permissions->count() }} permissões
-                                            </span>
-                                            <small class="text-muted ms-2">(Ver detalhes)</small>
-                                        @else
-                                            <div class="d-flex flex-wrap gap-1">
-                                                @foreach ($role->permissions as $permission)
-                                                    <span class="badge bg-light text-dark border rounded-pill">
-                                                        {{ $permission->name }}
-                                                    </span>
-                                                @endforeach
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress" style="height: 20px; width: 100px;">
+                                                @php
+                                                    $percentage = min(100, round(($role->permissions->count() / 80) * 100));
+                                                @endphp
+                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                     style="width: {{ $percentage }}%;" 
+                                                     aria-valuenow="{{ $percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                    <small class="text-white">{{ $role->permissions->count() }}</small>
+                                                </div>
                                             </div>
-                                        @endif
+                                            <span class="badge bg-info rounded-pill" title="Total de permissões">
+                                                {{ $role->permissions->count() }} permissão{{ $role->permissions->count() !== 1 ? 's' : '' }}
+                                            </span>
+                                        </div>
+                                        <div class="mt-2">
+                                            @php
+                                                $categories = $role->permissions->groupBy(function($p) {
+                                                    return explode('.', $p->name)[0];
+                                                });
+                                            @endphp
+                                            @foreach ($categories->take(3) as $category => $perms)
+                                                <span class="badge bg-light text-dark border rounded-pill small me-1 mb-1">
+                                                    {{ ucfirst($category) }}: {{ $perms->count() }}
+                                                </span>
+                                            @endforeach
+                                            @if($categories->count() > 3)
+                                                <span class="badge bg-secondary rounded-pill small">
+                                                    +{{ $categories->count() - 3 }} mais
+                                                </span>
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
                                 

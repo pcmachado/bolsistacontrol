@@ -18,6 +18,7 @@ use App\Policies\NotificationSettingPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\UserPolicy;
+use App\Policies\RolePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
@@ -36,6 +37,7 @@ class AuthServiceProvider extends ServiceProvider
         FinalActivityReport::class => FinalActivityReportPolicy::class,
         EmailTemplate::class => EmailTemplatePolicy::class,
         NotificationSetting::class => NotificationSettingPolicy::class,
+        \Spatie\Permission\Models\Role::class => RolePolicy::class,
     ];
 
     /**

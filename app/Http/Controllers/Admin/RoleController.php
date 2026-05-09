@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
@@ -10,6 +11,8 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    public function __construct(private PermissionService $permissionService) {}
+
     /**
      * Helper para definir hierarquia no controller também,
      * para filtrar a query. O ideal seria um Service, mas aqui funciona bem.
@@ -41,10 +44,11 @@ class RoleController extends Controller
         // Mostramos apenas roles que o usuário tem poder para gerenciar (peso menor)
         // OU roles de mesmo nível (apenas para visualização, sem edição)
         if ($currentUserWeight < 90) {
-            // Pega nomes das roles que tem peso maior ou igual ao usuário atual
-            // para EXCLUIR da lista (ou seja, ele não vê seus chefes)
+            // Pega nomes das roles que têm peso maior que o usuário atual
+            // para EXCLUIR da lista (ou seja, ele não vê seus chefes).
+            // Roles do mesmo nível permanecem visíveis para visualização.
             $rolesAbove = collect($hierarchy)
-                ->filter(fn ($weight) => $weight >= $currentUserWeight)
+                ->filter(fn ($weight) => $weight > $currentUserWeight)
                 ->keys()
                 ->toArray();
 
@@ -64,17 +68,20 @@ class RoleController extends Controller
 
     public function create()
     {
-        $permissions = Permission::all();
+        $permissionsByCategory = $this->permissionService->getPermissionsByCategory();
 
-        return view('admin.roles.create', compact('permissions'));
+        return view('admin.roles.create', compact('permissionsByCategory'));
     }
 
     public function show(Role $role)
     {
-        $this->authorize('view', $role);
-        $rolePermissions = $role->permissions;
+        abort_unless(auth()->user()->can('roles.view'), 403);
 
-        return view('admin.roles.show', compact('role', 'rolePermissions'));
+        $rolePermissions = $role->permissions;
+        $rolePermissionsByCategory = $this->permissionService->getRolePermissionsByCategory($role);
+        $permissionCount = $this->permissionService->getRolePermissionCount($role);
+
+        return view('admin.roles.show', compact('role', 'rolePermissions', 'rolePermissionsByCategory', 'permissionCount'));
     }
 
     public function store(Request $request)
@@ -106,10 +113,11 @@ class RoleController extends Controller
     {
         $this->authorize('update', $role);
 
-        $permissions = Permission::all();
-        $rolePermissions = $role->permissions->pluck('id')->toArray();
+        $permissionsByCategory = $this->permissionService->getRolePermissionsByCategory($role);
+        $permissionCount = $this->permissionService->getRolePermissionCount($role);
+        $permissionPercentage = $this->permissionService->getRolePermissionPercentage($role);
 
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        return view('admin.roles.edit', compact('role', 'permissionsByCategory', 'permissionCount', 'permissionPercentage'));
     }
 
     public function update(Request $request, Role $role)
@@ -121,10 +129,7 @@ class RoleController extends Controller
             'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
-        $permissions = Permission::whereIn('id', $request->permissions ?? [])->get();
-
-        // sincroniza permissões da role
-        $role->syncPermissions($permissions);
+        $this->permissionService->syncRolePermissions($role, $request->permissions ?? []);
 
         return redirect()->route('admin.roles.index')->with('success', 'Permissões atualizadas com sucesso!');
     }

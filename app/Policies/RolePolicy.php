@@ -62,14 +62,17 @@ class RolePolicy
 
     public function view(User $user, Role $role): bool
     {
-        // Todos com permissão podem ver, mas admins veem tudo
+        if (! $user->hasPermissionTo('roles.view')) {
+            return false;
+        }
+
+        // Admin vê tudo
         if ($this->getUserWeight($user) >= 90) {
             return true;
         }
 
-        // Usuários normais só veem roles de nível inferior ou igual
-        // (Opcional: se quiser que eles vejam que existe Admin, remova o if abaixo)
-        return $user->hasPermissionTo('roles.view');
+        // demais só veem inferiores
+        return $this->getUserWeight($user) >= $this->getRoleWeight($role->name);
     }
 
     public function create(User $user): bool
@@ -93,7 +96,7 @@ class RolePolicy
         return $this->canManageRole($user, $role);
     }
 
-    public function deleteRole(User $user, Role $role): bool
+    public function delete(User $user, Role $role): bool
     {
         if (! $user->hasPermissionTo('roles.delete')) {
             return false;

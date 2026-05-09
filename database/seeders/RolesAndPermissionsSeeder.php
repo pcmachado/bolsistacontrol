@@ -85,6 +85,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'supervisor_assignment.manage', // Gerenciar atribuição de supervisor
             'intelligent_alert_setting.manage', // Gerenciar configurações de alertas
 
+            'roles.manage',
+            'roles.create',
+            'roles.delete',
             'roles.view',
             'roles.edit',
             'roles.update',
@@ -152,8 +155,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'supervisor_assignment.manage',
             'intelligent_alert_setting.manage',
 
+            'roles.manage',
+            'roles.create',
+            'roles.delete',
             'roles.view',
             'roles.edit',
+            'roles.update',
+            'roles.permissions.update', 
             'roles.permissions.manage',
         ]);
         
@@ -188,8 +196,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'supervisor_assignment.manage',
             'intelligent_alert_setting.manage',
 
+            'roles.manage',
+            'roles.create',
+            'roles.delete',
             'roles.view',
             'roles.edit',
+            'roles.update',
+            'roles.permissions.update',
             'roles.permissions.manage',
         ]);
 
