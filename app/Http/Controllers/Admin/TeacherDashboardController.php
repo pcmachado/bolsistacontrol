@@ -5,31 +5,30 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClassOffering;
 use App\Models\ClassSession;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TeacherDashboardController extends Controller
 {
-    public function index(Request $request, User $teacher)
+    public function index(Request $request)
     {
-        // Garantir role de professor
+        $teacher = Auth::user();
+
         abort_unless(
             $teacher->canAccessTeacher(),
             403,
             'Este usuário não possui acesso como professor.'
         );
 
-        // Base query das aulas
+        // IDs das turmas onde o usuário é professor
+        $classIds = $teacher->assignments()
+            ->where('assignment_type', \App\Models\Assignment::TYPE_PROFESSOR)
+            ->pluck('class_offering_id');
+
+        // Query base
         $sessions = ClassSession::query()
-            ->forTeacher($teacher->id)
-            ->whereHas('classOffering', function ($q) use ($teacher) {
-                $q->whereIn('id',
-                    $teacher->assignments()
-                        ->where('assignment_type', \App\Models\Assignment::TYPE_PROFESSOR)
-                        ->pluck('class_offering_id')
-                );
-            })
+            ->whereHas('classOffering', fn ($q) => $q->whereIn('id', $classIds)
+            )
             ->with(['discipline.course', 'classOffering.unit'])
             ->orderBy('date');
 
@@ -37,13 +36,16 @@ class TeacherDashboardController extends Controller
         if ($request->filled('filter_from')) {
             $sessions->whereDate('date', '>=', $request->filter_from);
         }
+
         if ($request->filled('filter_to')) {
             $sessions->whereDate('date', '<=', $request->filter_to);
         }
+
         if ($request->filled('filter_unit')) {
             $sessions->whereHas('classOffering', fn ($q) => $q->where('unit_id', $request->filter_unit)
             );
         }
+
         if ($request->filled('filter_course')) {
             $sessions->whereHas('discipline', fn ($q) => $q->where('course_id', $request->filter_course)
             );
@@ -72,18 +74,17 @@ class TeacherDashboardController extends Controller
 
         $hoursByOffering = $sessions->groupBy('class_offering_id')
             ->map(fn ($g) => [
-                'label' => optional($g->first()->classOffering)->name ?? 'Turma #'.$g->first()->classOffering->id,
+                'label' => optional($g->first()->classOffering)->name
+                    ?? 'Turma #'.$g->first()->classOffering->id,
                 'hours' => $g->sum('duration_hours'),
             ]);
 
         // Aulas recentes
         $recent = $sessions->sortByDesc('date')->take(10);
 
-        $classes = ClassOffering::whereHas('disciplines', function ($q) use ($teacher) {
-            $q->where('teacher_id', $teacher->id);
-        })
-            ->with(['course', 'unit', 'disciplines' => fn ($q) => $q->where('teacher_id', $teacher->id),
-            ])
+        // Turmas do professor
+        $classes = ClassOffering::whereIn('id', $classIds)
+            ->with(['course', 'unit'])
             ->get();
 
         return view('teacher.dashboard', [
@@ -97,7 +98,7 @@ class TeacherDashboardController extends Controller
             'hoursByMonth' => $hoursByMonth,
             'hoursByDiscipline' => $hoursByDiscipline,
             'hoursByOffering' => $hoursByOffering,
-            'units' => Auth::user()->assignments()
+            'units' => $teacher->assignments()
                 ->pluck('unit_id')
                 ->filter()
                 ->unique()

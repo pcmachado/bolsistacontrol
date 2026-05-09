@@ -24,6 +24,7 @@ class Unit extends Model
         'domain',
         'email',
         'cnpj',
+        'is_administrative',
     ];
 
     public function institution(): BelongsTo
@@ -60,5 +61,10 @@ class Unit extends Model
     protected static function booted()
     {
         static::addGlobalScope(new InstitutionScope);
+    }
+
+    public function isAdministrative(): bool
+    {
+        return (bool) $this->is_administrative;
     }
 }

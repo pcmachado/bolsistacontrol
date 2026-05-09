@@ -96,6 +96,7 @@ class AttendanceRecordController extends Controller
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'description' => ['nullable', 'string', 'max:500'],
+            'project_id' => $activeProjectId = ['nullable', 'exists:projects,id'],
         ]);
 
         $user = Auth::user();
@@ -166,6 +167,7 @@ class AttendanceRecordController extends Controller
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'description' => ['nullable', 'string', 'max:500'],
+            'project_id' => $activeProjectId = ['nullable', 'exists:projects,id'],
         ]);
 
         $this->records->update($attendanceRecord, $validated);

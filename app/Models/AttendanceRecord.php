@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
 
 class AttendanceRecord extends Model
 {
@@ -16,6 +16,7 @@ class AttendanceRecord extends Model
     protected $fillable = [
         'scholarship_holder_id',
         'attendance_submission_id',
+        'project_id',
         'date',
         'start_time',
         'end_time',
@@ -45,6 +46,11 @@ class AttendanceRecord extends Model
         return $this->belongsTo(AttendanceSubmission::class, 'attendance_submission_id');
     }
 
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
     /*
     |------------------------------------------------------------------
     | SCOPES
@@ -54,7 +60,7 @@ class AttendanceRecord extends Model
     public function scopeByMonth(Builder $query, int $month, int $year): Builder
     {
         return $query->whereMonth('date', $month)
-                     ->whereYear('date', $year);
+            ->whereYear('date', $year);
     }
 
     /*
@@ -75,11 +81,11 @@ class AttendanceRecord extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->computed_status) {
-            AttendanceSubmission::STATUS_DRAFT     => 'Em edição',
+            AttendanceSubmission::STATUS_DRAFT => 'Em edição',
             AttendanceSubmission::STATUS_SUBMITTED => 'Enviado',
-            AttendanceSubmission::STATUS_APPROVED  => 'Homologado',
-            AttendanceSubmission::STATUS_REJECTED  => 'Rejeitado',
-            default     => '-',
+            AttendanceSubmission::STATUS_APPROVED => 'Homologado',
+            AttendanceSubmission::STATUS_REJECTED => 'Rejeitado',
+            default => '-',
         };
     }
 
@@ -116,12 +122,12 @@ class AttendanceRecord extends Model
 
     public function formattedDuration(): string
     {
-        if (!$this->start_time || !$this->end_time) {
+        if (! $this->start_time || ! $this->end_time) {
             return '-';
         }
 
         $start = Carbon::parse($this->start_time);
-        $end   = Carbon::parse($this->end_time);
+        $end = Carbon::parse($this->end_time);
 
         $minutes = $start->diffInMinutes($end);
 

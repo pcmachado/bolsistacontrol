@@ -116,14 +116,16 @@
 
         @if($projects->count() > 1)
         <ul class="nav nav-tabs mb-3">
+
             @foreach($projects as $project)
                 <li class="nav-item">
                     <a class="nav-link @if($project->id == $activeProjectId) active @endif"
-                    href="{{ route('admin.dashboard', ['project_id' => $project->id]) }}">
+                    href="{{ route('admin.dashboard', array_merge(request()->all(), ['project_id' => $project->id])) }}">
                         {{ $project->name }}
                     </a>
                 </li>
             @endforeach
+
         </ul>
         @endif
 

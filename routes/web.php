@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AcademicDashboardController;
 use App\Http\Controllers\Admin\AdminScholarshipHolderController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\ClassOfferingController;
@@ -22,7 +23,6 @@ use App\Http\Controllers\Admin\DocumentTemplateController;
 use App\Http\Controllers\Admin\FinancialClosureController;
 use App\Http\Controllers\Admin\FinancialReportController;
 use App\Http\Controllers\Admin\FundingSourceController;
-use App\Http\Controllers\Admin\GlobalDashboardController;
 use App\Http\Controllers\Admin\HomologationController;
 use App\Http\Controllers\Admin\InstitutionController;
 use App\Http\Controllers\Admin\IntelligentAlertSettingController;
@@ -93,12 +93,16 @@ Route::get('/manual/{doc?}', function (?string $doc = null) {
 })->middleware(['auth', 'verified'])->name('manual.index');
 
 // Receipt Verification
-Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])->name('receipt.verify.form');
-Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('receipt.verify');
+Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])->name('payments.verify.form');
+Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('payments.verify');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/meu-dashboard', [DashboardController::class, 'index'])->name('holder.dashboard');
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
+
+    Route::post('/impersonate-stop', [AdminScholarshipHolderController::class, 'stop'])
+        ->name('admin.impersonate.stop');
 
     // Módulo de Frequência para o Bolsista
     Route::prefix('attendance')->middleware('auth')->group(function () {
@@ -212,14 +216,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/classes/{offering}/{month}/close', [TeacherClassController::class, 'closeMonth'])->name('classes.monthly.close');
     });
 
-    Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])->name('payments.verify.form');
-    Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('payments.verify');
-
 });
 
-// require __DIR__.'/auth.php';
+require __DIR__.'/auth.php';
 
-Auth::routes();
+// Auth::routes();
 
 Route::middleware(['auth'])->group(function () {
 
@@ -245,7 +246,6 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
 
     // Impersonate
     Route::post('impersonate/{user}', [AdminScholarshipHolderController::class, 'start'])->name('impersonate');
-    Route::post('impersonate-stop', [AdminScholarshipHolderController::class, 'stop'])->name('impersonate.stop');
 
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
@@ -384,7 +384,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
 
     // 4. Dashboards Globais e Relatórios Gerais
     Route::prefix('dashboard')->as('dashboard.')->group(function () {
-        Route::get('academic', [GlobalDashboardController::class, 'index'])->name('academic');
+        Route::get('academic', [AcademicDashboardController::class, 'index'])->name('academic');
+        Route::get('risk', [AcademicDashboardController::class, 'risk'])->name('risk');
         Route::get('unit/{unit}', [UnitDashboardController::class, 'index'])->name('unit');
     });
 

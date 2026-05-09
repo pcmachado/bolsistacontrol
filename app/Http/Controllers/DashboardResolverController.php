@@ -28,13 +28,13 @@ class DashboardResolverController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        if ($user->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto'])) {
-            return redirect()->route('admin.dashboard'); // operacional
-        }
+        // if ($user->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto'])) {
+        //     return redirect()->route('admin.dashboard'); // operacional
+        // }
 
-        if ($user->hasRole('professor')) {
-            return redirect()->route('teacher.dashboard');
-        }
+        // if ($user->hasRole('professor')) {
+        //     return redirect()->route('teacher.dashboard');
+        // }
 
         return redirect()->route('holder.dashboard');
     }

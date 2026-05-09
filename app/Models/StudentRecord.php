@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentRecord extends Model
 {
@@ -17,12 +17,14 @@ class StudentRecord extends Model
         'class_offering_id',
         'total_classes',
         'absences',
+        'justified_absences',
+        'daily_rate',
         'status',
         'attended_classes',
         'total_amount',
         'submitted_at',
         'approved_at',
-        'status_financial'
+        'status_financial',
     ];
 
     public function student(): BelongsTo

@@ -67,6 +67,8 @@ class AdminScholarshipHolderController extends Controller
     {
         $adminId = session('impersonated_by');
 
+        abort_unless($adminId, 403, 'Nenhuma sessão de impersonação ativa.');
+
         Auth::loginUsingId($adminId);
 
         session()->forget('impersonated_by');
@@ -75,56 +77,56 @@ class AdminScholarshipHolderController extends Controller
     }
 
     public function show(ScholarshipHolder $scholarshipHolder)
-{
-    $this->authorize('view', $scholarshipHolder);
+    {
+        $this->authorize('view', $scholarshipHolder);
 
-    $scholarshipHolder->load([
-        'user',
-        'unit',
-        'projects.positions',
-    ]);
+        $scholarshipHolder->load([
+            'user',
+            'unit',
+            'projects.positions',
+        ]);
 
-    return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
-}
-
-public function edit(ScholarshipHolder $scholarshipHolder)
-{
-    $this->authorize('update', $scholarshipHolder);
-
-    $scholarshipHolder->load([
-        'projects.positions'
-    ]);
-
-    return view('admin.scholarship_holders.edit', [
-        'holder' => $scholarshipHolder,
-        'projects' => Project::pluck('name','id'),
-        'units' => Unit::pluck('name','id'),
-        'positions' => Position::pluck('name','id'),
-    ]);
-}
-
-public function update(Request $request, ScholarshipHolder $scholarshipHolder)
-{
-    $this->authorize('update', $scholarshipHolder);
-
-    $data = $request->validate([
-        'unit_id' => 'nullable|exists:units,id',
-        'status'  => 'required|in:active,inactive',
-        // outros campos se quiser editar
-    ]);
-
-    $scholarshipHolder->update($data);
-
-    // Se quiser atualizar posição no pivot:
-    // $request->input('positions_by_project') = [project_id => position_id]
-    if ($request->filled('positions_by_project')) {
-        foreach ($request->positions_by_project as $projectId => $positionId) {
-            $scholarshipHolder->projects()->updateExistingPivot($projectId, [
-                'position_id' => $positionId
-            ]);
-        }
+        return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
     }
 
-    return back()->with('success', 'Bolsista atualizado.');
-}
+    public function edit(ScholarshipHolder $scholarshipHolder)
+    {
+        $this->authorize('update', $scholarshipHolder);
+
+        $scholarshipHolder->load([
+            'projects.positions',
+        ]);
+
+        return view('admin.scholarship_holders.edit', [
+            'holder' => $scholarshipHolder,
+            'projects' => Project::pluck('name', 'id'),
+            'units' => Unit::pluck('name', 'id'),
+            'positions' => Position::pluck('name', 'id'),
+        ]);
+    }
+
+    public function update(Request $request, ScholarshipHolder $scholarshipHolder)
+    {
+        $this->authorize('update', $scholarshipHolder);
+
+        $data = $request->validate([
+            'unit_id' => 'nullable|exists:units,id',
+            'status' => 'required|in:active,inactive',
+            // outros campos se quiser editar
+        ]);
+
+        $scholarshipHolder->update($data);
+
+        // Se quiser atualizar posição no pivot:
+        // $request->input('positions_by_project') = [project_id => position_id]
+        if ($request->filled('positions_by_project')) {
+            foreach ($request->positions_by_project as $projectId => $positionId) {
+                $scholarshipHolder->projects()->updateExistingPivot($projectId, [
+                    'position_id' => $positionId,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Bolsista atualizado.');
+    }
 }

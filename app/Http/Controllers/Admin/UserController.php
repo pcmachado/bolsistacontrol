@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Unit;
-use Spatie\Permission\Models\Role;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 use App\DataTables\UsersDataTable;
+use App\Http\Controllers\Controller;
+use App\Models\Unit;
+use App\Models\User;
 use App\Services\UserService;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -46,6 +46,7 @@ class UserController extends Controller
     {
         $units = Unit::all();
         $roles = Role::all();
+
         return view('admin.users.create', compact('units', 'roles'));
     }
 
@@ -58,19 +59,34 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|string|exists:roles,name'
+            'role' => 'required|string|exists:roles,name',
         ];
 
         // Se não for admin ou coordenador geral, exige unit_id
-        if (!Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
+        if (! Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
             $rules['unit_id'] = 'required|exists:units,id';
         } else {
             $rules['unit_id'] = 'nullable|exists:units,id';
         }
 
         $validated = $request->validate($rules);
+
+        // Se o checkbox de notificar estiver marcado, gera senha temporária
+        if ($request->has('notify_user')) {
+            $temporaryPassword = $this->generateTemporaryPassword();
+            $validated['password'] = $temporaryPassword;
+            $notify = true;
+        } else {
+            $notify = false;
+        }
+
         // Cria usuário via service
         $user = $this->userService->createUser($validated);
+
+        // Envia notificação se solicitado
+        if ($notify) {
+            $user->notify(new \App\Notifications\UserCreatedNotification($validated['password']));
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
     }
@@ -78,6 +94,7 @@ class UserController extends Controller
     public function show(User $user): View
     {
         $user->load('unit', 'roles');
+
         return view('admin.users.show', compact('user'));
     }
 
@@ -88,7 +105,9 @@ class UserController extends Controller
     {
         $units = Unit::all();
         $roles = Role::all();
-        return view('admin.users.edit', compact('user', 'units', 'roles'));
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        return view('admin.users.edit', compact('user', 'units', 'roles', 'userRoles'));
     }
 
     /**
@@ -96,13 +115,13 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
-        $rules=[
+        $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|string|exists:roles,name'
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'role' => 'required|string|exists:roles,name',
         ];
 
-        if (!Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
+        if (! Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
             $rules['unit_id'] = 'required|exists:units,id';
         } else {
             $rules['unit_id'] = 'nullable|exists:units,id';
@@ -113,7 +132,6 @@ class UserController extends Controller
         }
 
         $validated = $request->validate($rules);
-
 
         $this->userService->updateUser($user, $validated);
 
@@ -128,5 +146,13 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário removido com sucesso!');
+    }
+
+    /**
+     * Gera uma senha temporária segura.
+     */
+    private function generateTemporaryPassword(): string
+    {
+        return Str::random(12); // Gera uma string aleatória de 12 caracteres
     }
 }

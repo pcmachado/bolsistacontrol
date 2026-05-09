@@ -77,7 +77,10 @@ class MyPaymentController extends Controller
 
         return Pdf::loadView(
             'payments.receipt',
-            compact('payment')
+            [
+                'payment' => $payment,
+                'isPdf' => true,
+            ]
         )->stream(
             'recibo_'.\Str::slug(
                 $payment->scholarshipHolder->user->name.'_'

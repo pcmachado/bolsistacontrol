@@ -41,22 +41,13 @@
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="mb-3">
-                <label for="role" class="form-label"><strong>Papel</strong></label>
-                <select name="role" class="form-select" required>
-                    <option value="">Selecione um Papel</option>
-                    @foreach($roles as $role)
-                        <option value="{{ $role->name }}"
-                            {{ old('role', $user->getRoleNames()->first() ?? '') == $role->name ? 'selected' : '' }}>
-                            {{ ucfirst($role->name) }}
-                        </option>
-                    @endforeach
-                </select>
-
-                @error('role')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
+            <x-role-selector
+                :selectedRoles="$userRoles"
+                :user="auth()->user()"
+                :multiple="false"
+                :required="true"
+                name="role"
+            />
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="mb-3">

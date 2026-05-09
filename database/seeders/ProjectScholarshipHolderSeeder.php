@@ -17,6 +17,7 @@ class ProjectScholarshipHolderSeeder extends Seeder
 
         if ($holders->isEmpty() || $positions->isEmpty()) {
             $this->command?->warn('ProjectScholarshipHolderSeeder: bolsistas/cargos ausentes.');
+
             return;
         }
 
@@ -50,12 +51,6 @@ class ProjectScholarshipHolderSeeder extends Seeder
                 ],
             ]);
 
-            if ($position->is_teacher && $holder->user) {
-                if (! $holder->user->hasRole('professor')) {
-                    $holder->user->assignRole('professor');
-                }
-            }
         }
     }
 }
-

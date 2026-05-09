@@ -18,11 +18,12 @@ class UnitSeeder extends Seeder
                 ['name' => 'UCS - Tecnologia', 'shortname' => 'ucs-tec', 'domain' => 'tecnologia.ucs.br'],
                 ['name' => 'UCS - Bento Goncalves', 'shortname' => 'ucs-bento', 'domain' => 'bento.ucs.br'],
                 ['name' => 'UCS - Caxias do Sul', 'shortname' => 'ucs-caxias', 'domain' => 'ucs.br'],
+                ['name' => 'UCS - Reitoria', 'shortname' => 'ucs-reitoria', 'domain' => 'reitoria.ucs.br', 'is_administrative' => true],
             ],
             'ifrs' => [
                 ['name' => 'IFRS - Campus Bento Goncalves', 'shortname' => 'ifrs-bento', 'domain' => 'bento.ifrs.edu.br'],
                 ['name' => 'IFRS - Campus Farroupilha', 'shortname' => 'ifrs-farroupilha', 'domain' => 'farroupilha.ifrs.edu.br'],
-                ['name' => 'IFRS - Reitoria', 'shortname' => 'ifrs-reitoria', 'domain' => 'ifrs.edu.br'],
+                ['name' => 'IFRS - Reitoria', 'shortname' => 'ifrs-reitoria', 'domain' => 'ifrs.edu.br', 'is_administrative' => true],
             ],
         ];
 
@@ -49,6 +50,7 @@ class UnitSeeder extends Seeder
                         'phone' => $faker->phoneNumber(),
                         'email' => $faker->unique()->companyEmail(),
                         'cnpj' => $faker->cnpj(),
+                        'is_administrative' => $data['is_administrative'] ?? false,
                     ]
                 );
             }

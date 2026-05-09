@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
@@ -349,7 +350,10 @@ class User extends Authenticatable
 
     public function canAccessTeacher(): bool
     {
-        return $this->hasAssignment(Assignment::TYPE_PROFESSOR) || $this->hasRole('professor');
+        return $this->assignments()
+            ->where('assignment_type', Assignment::TYPE_PROFESSOR)
+            ->where('active', true)
+            ->exists();
     }
 
     public function canAccessCoordination(): bool

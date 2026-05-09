@@ -105,13 +105,15 @@
             <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
                 Financeiro
             </h6>
-                <li><x-sidebar-item route="admin.financial-reports.index" icon="bi bi-graph-up" title="Financeiro"/></li>
-                <li><x-sidebar-item route="admin.payments.dashboard" icon="bi bi-graph-up" title="Financeiro (Bolsistas)"/></li>
-                <li><x-sidebar-item route="admin.payments.index" icon="bi bi-wallet2" title="Pagamentos"/></li>
+
+            <ul class="nav nav-pills flex-column mb-3">
+                <li><x-sidebar-item route="admin.financial-reports.index" icon="bi bi-graph-up" title="Relatórios Financeiros"/></li>
+                <li><x-sidebar-item route="admin.payments.dashboard" icon="bi bi-wallet2" title="Pagamentos (Bolsistas)"/></li>
+                <li><x-sidebar-item route="admin.payments.index" icon="bi bi-cash-stack" title="Gestão de Pagamentos"/></li>
                 <li><x-sidebar-item route="admin.student-payments.dashboard" icon="bi bi-graph-up-arrow" title="Financeiro (Alunos)"/></li>
-                <li><x-sidebar-item route="admin.student-payments.index" icon="bi bi-cash-stack" title="Pagamentos Alunos"/></li>
+                <li><x-sidebar-item route="admin.student-payments.index" icon="bi bi-money" title="Pagamentos Alunos"/></li>
                 <li><x-sidebar-item route="admin.payments.reports.monthly" icon="bi bi-calendar3" title="Fechamento Mensal"/></li>
-                <li><x-sidebar-item route="admin.financial-closures.index" icon="bi bi-lock" title="Fechamentos"/></li>
+                <li><x-sidebar-item route="admin.financial-closures.index" icon="bi bi-lock" title="Fechamentos Financeiros"/></li>
             </ul>
         @endif
 
@@ -123,6 +125,7 @@
 
             <ul class="nav nav-pills flex-column mb-3">
                 <li><x-sidebar-item route="admin.dashboard.academic" icon="bi bi-bar-chart" title="Dashboard Acadêmico"/></li>
+                <li><x-sidebar-item route="admin.dashboard.risk" icon="bi bi-exclamation-triangle"
                 <li><x-sidebar-item route="admin.academic-reports.class-sessions.global" icon="bi bi-file-earmark-bar-graph" title="Rel. de Aulas"/></li>
                 <li><x-sidebar-item route="admin.projects.index" icon="bi bi-kanban" title="Projetos"/></li>
                 <li><x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/></li>
@@ -137,8 +140,8 @@
                 Administração
             </h6>
 
-            <ul class="nav nav-pills flex-column">
-                <li><x-sidebar-item route="admin.dashboard" icon="bi bi-speedometer" title="Dashboard Admin"/></li>
+            <ul class="nav nav-pills flex-column mb-3">
+                <li><x-sidebar-item route="admin.dashboard" icon="bi bi-speedometer2" title="Dashboard"/></li>
                 <li><x-sidebar-item route="admin.units.index" icon="bi bi-building" title="Unidades"/></li>
                 <li><x-sidebar-item route="admin.positions.index" icon="bi bi-briefcase" title="Cargos"/></li>
                 <li><x-sidebar-item route="admin.scholarship_holders.index" icon="bi bi-people" title="Bolsistas"/></li>

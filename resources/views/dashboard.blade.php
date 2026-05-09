@@ -197,14 +197,14 @@
                         </div>
 
                         <div class="period-nav">
-                            <a href="{{ $canNavigatePrevPeriod ? route('dashboard', ['month' => $previousPeriod->format('Y-m'), 'year' => $selectedYear]) : '#' }}"
+                            <a href="{{ $canNavigatePrevPeriod ? route('dashboard', ['project_id' => $activeProjectId,'month' => $previousPeriod->format('Y-m'), 'year' => $selectedYear]) : '#' }}"
                                class="btn btn-sm btn-outline-secondary {{ $canNavigatePrevPeriod ? '' : 'disabled' }}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
 
                             <span class="fw-semibold">{{ $periodLabel }}</span>
 
-                            <a href="{{ $canNavigateNextPeriod ? route('dashboard', ['month' => $nextPeriod->format('Y-m'), 'year' => $selectedYear]) : '#' }}"
+                            <a href="{{ $canNavigateNextPeriod ? route('dashboard', ['project_id' => $activeProjectId,'month' => $nextPeriod->format('Y-m'), 'year' => $selectedYear]) : '#' }}"
                                class="btn btn-sm btn-outline-secondary {{ $canNavigateNextPeriod ? '' : 'disabled' }}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
@@ -213,7 +213,7 @@
 
                     <form method="GET" class="row g-2 align-items-end">
                         <input type="hidden" name="year" value="{{ $selectedYear }}">
-
+                        <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
                         <div class="col-md-8">
                             <label class="form-label">Competência</label>
                             <input type="month" name="month" value="{{ $monthInput }}" class="form-control">
@@ -235,14 +235,14 @@
                         </div>
 
                         <div class="period-nav">
-                            <a href="{{ $canNavigatePrevYear ? route('dashboard', ['month' => $monthInput, 'year' => $selectedYear - 1]) : '#' }}"
+                            <a href="{{ $canNavigatePrevYear ? route('dashboard', ['project_id' => $activeProjectId,'month' => $monthInput, 'year' => $selectedYear - 1]) : '#' }}"
                                class="btn btn-sm btn-outline-secondary {{ $canNavigatePrevYear ? '' : 'disabled' }}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
 
                             <span class="fw-semibold">{{ $selectedYear }}</span>
 
-                            <a href="{{ $canNavigateNextYear ? route('dashboard', ['month' => $monthInput, 'year' => $selectedYear + 1]) : '#' }}"
+                            <a href="{{ $canNavigateNextYear ? route('dashboard', ['project_id' => $activeProjectId,'month' => $monthInput, 'year' => $selectedYear + 1]) : '#' }}"
                                class="btn btn-sm btn-outline-secondary {{ $canNavigateNextYear ? '' : 'disabled' }}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
@@ -251,6 +251,7 @@
 
                     <form method="GET" class="row g-2 align-items-end">
                         <input type="hidden" name="month" value="{{ $monthInput }}">
+                        <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
 
                         <div class="col-md-8">
                             <label class="form-label">Ano</label>
@@ -265,17 +266,33 @@
             </div>
         </section>
 
-        @if($project)
-            <div class="alert alert-info mb-0">
-                <strong>Projeto vinculado:</strong> {{ $project->name }}
-                @if($project->description)
-                    <br>
-                    <small>{{ $project->description }}</small>
-                @endif
-            </div>
+        @if($projects->count() > 1)
+            <ul class="nav nav-tabs mb-3" id="projectTabs">
+
+                @foreach($projects as $proj)
+                    <li class="nav-item">
+                        <a class="nav-link project-tab {{ $proj->id == $activeProjectId ? 'active' : '' }}"
+                        href="#"
+                        data-project="{{ $proj->id }}">
+                            {{ $proj->name }}
+                        </a>
+                    </li>
+                @endforeach
+
+            </ul>
         @else
             <div class="alert alert-warning mb-0">
                 Você ainda não está vinculado a nenhum projeto.
+            </div>
+        @endif
+
+        @if($activeProject)
+            <div class="alert alert-info">
+                Projeto: <strong>{{ $activeProject->name }}</strong>
+            </div>
+        @else
+            <div class="alert alert-warning">
+                Nenhum projeto selecionado ou vínculo inexistente.
             </div>
         @endif
 
@@ -322,7 +339,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Registros no mês</div>
-                                <div class="value">{{ $recordsCount }}</div>
+                                <div class="value" id="recordsCount">{{ $recordsCount }}</div>
                                 <small class="text-muted">{{ $workedDaysCount }} dias com frequência</small>
                             </div>
                             <span class="icon tone-primary">
@@ -337,7 +354,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Horas acumuladas</div>
-                                <div class="value">{{ number_format($recordsHours, 1, ',', '.') }}h</div>
+                                <div class="value" id="recordsHours">{{ number_format($recordsHours, 1, ',', '.') }}h</div>
                                 <small class="text-muted">de {{ number_format($monthlyLimit, 1, ',', '.') }}h previstas</small>
                             </div>
                             <span class="icon tone-success">
@@ -356,7 +373,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Estimativa do período</div>
-                                <div class="value">R$ {{ number_format($periodEstimatedValue, 2, ',', '.') }}</div>
+                                <div class="value" id="estimatedValue">R$ {{ number_format($periodEstimatedValue, 2, ',', '.') }}</div>
                                 <small class="text-muted">
                                     @if($periodPayment)
                                         {{ $paymentLabels[$periodPayment->status] ?? ucfirst($periodPayment->status) }}
@@ -377,7 +394,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Pagamento do período</div>
-                                <div class="value">
+                                <div class="value" id="periodPayment">
                                     @if($periodPayment)
                                         <span class="fs-4">R$ {{ number_format($periodPayment->amount, 2, ',', '.') }}</span>
                                     @else
@@ -415,7 +432,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Enviadas</div>
-                                <div class="value">{{ $submissionCounts['submitted'] ?? 0 }}</div>
+                                <div class="value" id="submittedCount">{{ $submissionCounts['submitted'] ?? 0 }}</div>
                                 <small class="text-muted">Aguardando homologação</small>
                             </div>
                             <span class="icon tone-info">
@@ -430,7 +447,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Homologadas</div>
-                                <div class="value">{{ $submissionCounts['approved'] ?? 0 }}</div>
+                                <div class="value" id="approvedCount">{{ $submissionCounts['approved'] ?? 0 }}</div>
                                 <small class="text-muted">Concluídas no ano</small>
                             </div>
                             <span class="icon tone-success">
@@ -445,7 +462,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Rejeitadas</div>
-                                <div class="value">{{ $submissionCounts['rejected'] ?? 0 }}</div>
+                                <div class="value" id="rejectedCount">{{ $submissionCounts['rejected'] ?? 0 }}</div>
                                 <small class="text-muted">Precisaram de ajuste</small>
                             </div>
                             <span class="icon tone-danger">
@@ -460,7 +477,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="text-muted small mb-2">Atrasadas</div>
-                                <div class="value">{{ $submissionCounts['late'] ?? 0 }}</div>
+                                <div class="value" id="lateCount">{{ $submissionCounts['late'] ?? 0 }}</div>
                                 <small class="text-muted">Sem ocorrências registradas</small>
                             </div>
                             <span class="icon tone-warning">
@@ -496,7 +513,7 @@
                             <div class="card summary-card h-100">
                                 <div class="card-body">
                                     <div class="text-muted small mb-2">Enviado ao financeiro</div>
-                                    <div class="value">R$ {{ number_format($paymentTotals['sent'] ?? 0, 2, ',', '.') }}</div>
+                                    <div class="value" id="sentAmount">R$ {{ number_format($paymentTotals['sent'] ?? 0, 2, ',', '.') }}</div>
                                     <small class="text-muted">{{ $paymentCounts['sent'] ?? 0 }} pagamento(s)</small>
                                 </div>
                             </div>
@@ -504,7 +521,7 @@
                             <div class="card summary-card h-100">
                                 <div class="card-body">
                                     <div class="text-muted small mb-2">Pago</div>
-                                    <div class="value">R$ {{ number_format($paymentTotals['paid'] ?? 0, 2, ',', '.') }}</div>
+                                    <div class="value" id="paidAmount">R$ {{ number_format($paymentTotals['paid'] ?? 0, 2, ',', '.') }}</div>
                                     <small class="text-muted">{{ $paymentCounts['paid'] ?? 0 }} pagamento(s)</small>
                                 </div>
                             </div>
@@ -512,7 +529,7 @@
                             <div class="card summary-card h-100">
                                 <div class="card-body">
                                     <div class="text-muted small mb-2">Confirmado</div>
-                                    <div class="value">R$ {{ number_format($paymentTotals['confirmed'] ?? 0, 2, ',', '.') }}</div>
+                                    <div class="value" id="confirmedAmount">R$ {{ number_format($paymentTotals['confirmed'] ?? 0, 2, ',', '.') }}</div>
                                     <small class="text-muted">{{ $paymentCounts['confirmed'] ?? 0 }} pagamento(s)</small>
                                 </div>
                             </div>
@@ -520,7 +537,7 @@
                             <div class="card summary-card h-100">
                                 <div class="card-body">
                                     <div class="text-muted small mb-2">Aguardando confirmação</div>
-                                    <div class="value">R$ {{ number_format($paymentTotals['waiting_confirmation'] ?? 0, 2, ',', '.') }}</div>
+                                    <div class="value" id="waitingConfirmationAmount">R$ {{ number_format($paymentTotals['waiting_confirmation'] ?? 0, 2, ',', '.') }}</div>
                                     <small class="text-muted">{{ $paymentCounts['waiting_confirmation'] ?? 0 }} pagamento(s)</small>
                                 </div>
                             </div>
@@ -588,7 +605,7 @@
                 <div class="card section-card h-100">
                     <div class="card-header bg-white border-0 pt-4 px-4">
                         <strong>Notificações recentes</strong>
-                        <div class="text-muted small">{{ $notificacoesPendentes }} nao lida(s)</div>
+                        <div class="text-muted small" id="pendingNotifications">{{ $notificacoesPendentes }} nao lida(s)</div>
                     </div>
 
                     <div class="card-body px-4 pb-4">
@@ -615,45 +632,95 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const canvas = document.getElementById('attendanceChart');
 
-    if (!canvas) {
-        return;
+    let chart;
+
+    function renderChart(data) {
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Homologadas', 'Enviadas', 'Rejeitadas', 'Atrasadas'],
+                datasets: [{
+                    data: [
+                        data.approved ?? 0,
+                        data.submitted ?? 0,
+                        data.rejected ?? 0,
+                        data.late ?? 0
+                    ],
+                    backgroundColor: ['#198754','#0dcaf0','#dc3545','#ffc107']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
     }
 
-    const ctx = canvas.getContext('2d');
+    function loadDashboard(projectId) {
 
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Homologadas', 'Enviadas', 'Rejeitadas', 'Atrasadas'],
-            datasets: [{
-                data: [
-                    {{ $submissionCounts['approved'] ?? 0 }},
-                    {{ $submissionCounts['submitted'] ?? 0 }},
-                    {{ $submissionCounts['rejected'] ?? 0 }},
-                    {{ $submissionCounts['late'] ?? 0 }}
-                ],
-                backgroundColor: [
-                    '#198754',
-                    '#0dcaf0',
-                    '#dc3545',
-                    '#ffc107'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+        document.body.classList.add('loading');
+
+        fetch(`{{ route('dashboard.stats') }}?project_id=${projectId}&month={{ $monthInput }}&year={{ $selectedYear }}`)
+            .then(res => res.json())
+            .then(res => {
+
+                const data = res.data;
+                const financial = res.financial;
+                const attendance = res.attendance;
+
+                // 🔥 Atualizar cards
+                document.getElementById('recordsCount').innerText = data.recordsCount;
+
+                document.getElementById('recordsHours').innerText =
+                    Number(data.recordsHours).toLocaleString('pt-BR') + 'h';
+
+                document.getElementById('estimatedValue').innerText =
+                    'R$ ' + Number(data.periodEstimatedValue).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+
+                // pagamento
+                if (financial?.periodPayment) {
+                    document.getElementById('periodPayment').innerText =
+                        'R$ ' + Number(financial.periodPayment.amount).toLocaleString('pt-BR', {minimumFractionDigits: 2});
                 }
-            }
-        }
+
+                // gráfico
+                renderChart(attendance);
+
+                // atualizar URL (sem reload)
+                history.replaceState(null, '', '?project_id=' + projectId);
+
+            })
+            .catch(() => alert('Erro ao carregar dados'))
+            .finally(() => document.body.classList.remove('loading'));
+    }
+
+    // 🔥 tabs
+    document.querySelectorAll('.project-tab').forEach(tab => {
+
+        tab.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const projectId = this.dataset.project;
+
+            // UI ativa
+            document.querySelectorAll('.project-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            loadDashboard(projectId);
+        });
+
     });
+
 });
 </script>
 @endpush

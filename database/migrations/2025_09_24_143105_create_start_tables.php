@@ -47,6 +47,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('domain')->nullable();
             $table->string('cnpj')->nullable();
+            $table->boolean('is_administrative')->default(false);
 
             $table->timestamps();
             $table->softDeletes();
@@ -76,6 +77,21 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->string('status')->default('active');
+
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('projects', function (Blueprint $table) {
+            $table->id();
+            $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
+            $table->text('description')->nullable();
+            $table->decimal('student_daily_rate', 10, 2)->nullable();
+            $table->string('wizard_step')->default('step1');
+            $table->string('status')->default('draft');
+            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
@@ -116,6 +132,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('scholarship_holder_id')->constrained()->onDelete('cascade');
             $table->foreignId('attendance_submission_id')->nullable()->constrained('attendance_submissions')->onDelete('set null');
+            $table->foreignId('project_id')->nullable()->constrained()->cascadeOnDelete();
 
             $table->date('date');
             $table->time('start_time')->nullable();
@@ -141,21 +158,6 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->boolean('active')->default(true);
-
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        Schema::create('projects', function (Blueprint $table) {
-            $table->id();
-            $table->string('name'); // Ex.: PIBIC, Extensão, Monitoria
-            $table->text('description')->nullable();
-            $table->decimal('student_daily_rate', 10, 2)->nullable();
-            $table->string('wizard_step')->default('step1');
-            $table->string('status')->default('draft');
-            $table->foreignId('institution_id')->constrained()->onDelete('cascade');
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
@@ -241,6 +243,7 @@ return new class extends Migration
 
             $table->integer('total_classes');
             $table->integer('absences')->default(0);
+            $table->integer('justified_absences')->default(0);
             $table->integer('attended_classes')->default(0);
 
             $table->enum('status', ['approved', 'failed', 'canceled'])
@@ -627,6 +630,32 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
+        });
+
+        Schema::create('student_discipline_month_records', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('class_offering_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('discipline_id')->constrained()->cascadeOnDelete();
+
+            $table->unsignedTinyInteger('month');
+            $table->unsignedSmallInteger('year');
+
+            $table->integer('total_classes')->default(0);
+            $table->integer('absences')->default(0);
+            $table->integer('justified_absences')->default(0); // 🔥 NOVO
+            $table->integer('attended_classes')->default(0);
+
+            $table->timestamps();
+
+            $table->unique([
+                'student_id',
+                'class_offering_id',
+                'discipline_id',
+                'month',
+                'year',
+            ], 'student_disc_month_unique');
         });
 
     }

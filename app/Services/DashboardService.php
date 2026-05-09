@@ -29,7 +29,7 @@ class DashboardService
         $unitName = $user->unit?->name;
 
         $projects = $this->resolveUserProjects($user);
-        $activeProjectId = $projectId ?? request('project_id') ?? $projects->first()?->id;
+        $activeProjectId = $projectId;
         $activeProject = $projects->firstWhere('id', $activeProjectId);
 
         $query = $visibility->apply(
@@ -102,20 +102,25 @@ class DashboardService
             'academic' => [
                 'projects_active' => $visibility
                     ->apply(Project::query(), $user, 'admin')
+                    ->when($activeProjectId, fn ($q) => $q->where('id', $activeProjectId))
                     ->where('status', Project::STATUS_ACTIVE)
                     ->count(),
                 'projects_draft' => $visibility
                     ->apply(Project::query(), $user, 'admin')
+                    ->when($activeProjectId, fn ($q) => $q->where('id', $activeProjectId))
                     ->where('status', Project::STATUS_DRAFT)
                     ->count(),
                 'courses_total' => $visibility
                     ->apply(Course::query(), $user, 'admin')
+                    ->when($activeProjectId, fn ($q) => $q->where('id', $activeProjectId))
                     ->count(),
                 'disciplines_total' => $visibility
                     ->apply(Discipline::query(), $user, 'admin')
+                    ->when($activeProjectId, fn ($q) => $q->where('id', $activeProjectId))
                     ->count('id'),
                 'class_offerings_active' => $visibility
                     ->apply(ClassOffering::query(), $user, 'admin')
+                    ->when($activeProjectId, fn ($q) => $q->where('id', $activeProjectId))
                     ->where('active', true)
                     ->count(),
             ],

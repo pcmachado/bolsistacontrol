@@ -239,6 +239,38 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card summary-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="text-muted small mb-2">
+                                Risco Acadêmico
+                            </div>
+                            <div class="value">
+                                {{ $riskSummary['critical'] ?? 0 }}
+                            </div>
+                            <small class="text-muted">
+                                alunos em nível crítico
+                            </small>
+                        </div>
+                        <span class="icon tone-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </span>
+                    </div>
+                    {{-- mini breakdown --}}
+                    <div class="mt-3 small">
+                        <div>🔴 Crítico: {{ $riskSummary['critical'] ?? 0 }}</div>
+                        <div>🟠 Risco: {{ $riskSummary['risk'] ?? 0 }}</div>
+                        <div>🟡 Atenção: {{ $riskSummary['warning'] ?? 0 }}</div>
+                    </div>
+                    <a href="{{ route('admin.dashboard.risk') }}"
+                    class="btn btn-sm btn-outline-danger mt-3 w-100">
+                        Ver monitoramento →
+                    </a>
+                </div>
+
+            </div>
         </section>
 
         <section class="row g-4">

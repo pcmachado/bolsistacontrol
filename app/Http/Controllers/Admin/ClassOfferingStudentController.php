@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\ClassOffering;
-use App\Models\Student;
-use App\Models\StudentRecord;
-use App\Models\ClassOfferingSubmission;
-use App\Models\AttendanceSubmission;
 use App\DataTables\ClassOfferingStudentDataTable;
+use App\Http\Controllers\Controller;
+use App\Models\AttendanceSubmission;
+use App\Models\ClassOffering;
+use App\Models\StudentRecord;
 use App\Services\ClassOfferingSubmissionService;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class ClassOfferingStudentController extends Controller
 {
@@ -20,14 +18,14 @@ class ClassOfferingStudentController extends Controller
         return $dataTable
             ->forClass($class->id)
             ->render('admin.class-offerings.students.list', [
-                'class' => $class
+                'class' => $class,
             ]);
     }
 
     public function index(ClassOffering $class, Request $request)
     {
         $month = $request->get('month', now()->month);
-        $year  = $request->get('year', now()->year);
+        $year = $request->get('year', now()->year);
 
         $current = Carbon::create($year, $month, 1);
 
@@ -35,7 +33,7 @@ class ClassOfferingStudentController extends Controller
         $next = $current->copy()->addMonth();
 
         $start = Carbon::parse($class->start_date)->startOfMonth();
-        $end   = Carbon::parse($class->end_date)->endOfMonth();
+        $end = Carbon::parse($class->end_date)->endOfMonth();
 
         $canGoPrev = $prev->gte($start);
         $canGoNext = $next->lte($end);
@@ -45,7 +43,7 @@ class ClassOfferingStudentController extends Controller
                 ->route('admin.class.students.index', [
                     'class' => $class->id,
                     'month' => $start->month,
-                    'year'  => $start->year
+                    'year' => $start->year,
                 ])
                 ->with('warning', 'Período fora do intervalo da turma.');
         }
@@ -92,7 +90,7 @@ class ClassOfferingStudentController extends Controller
 
             $monthsData->push([
                 'month' => $cursor->month,
-                'year'  => $cursor->year,
+                'year' => $cursor->year,
                 'status' => $status,
                 'canSubmit' => $canSubmitCurrentMonth,
             ]);
@@ -126,6 +124,7 @@ class ClassOfferingStudentController extends Controller
 
             $total = (int) ($row['total_classes'] ?? 0);
             $absences = (int) ($row['absences'] ?? 0);
+            $justified = (int) ($row['justified_absences'] ?? 0);
 
             $rate = $class->project->student_daily_rate ?? 0;
 
@@ -137,12 +136,12 @@ class ClassOfferingStudentController extends Controller
                 [
                     'total_classes' => $total,
                     'absences' => $absences,
+                    'justified_absences' => $justified,
                     'daily_rate' => $rate,
                     'status' => $row['status'] ?? 'approved',
                 ]
             );
 
-            // 🔥 AQUI entra sua regra centralizada
             $record->calculate();
             $record->save();
         }
@@ -153,11 +152,15 @@ class ClassOfferingStudentController extends Controller
     public function submit(Request $request, ClassOffering $class)
     {
         $month = $request->get('month');
-        $year  = $request->get('year');
+        $year = $request->get('year');
 
         $service = app(ClassOfferingSubmissionService::class);
 
-        if (!$service->canSubmitMonth($class, $month, $year)) {
+        if (! $service->hasTeacherSubmission($class, $month, $year)) {
+            return back()->with('error', 'O professor ainda não enviou a frequência mensal deste mês.');
+        }
+
+        if (! $service->canSubmitMonth($class, $month, $year)) {
             return back()->with('error', 'Envie o mês anterior primeiro.');
         }
 

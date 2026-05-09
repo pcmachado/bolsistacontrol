@@ -13,18 +13,28 @@ class ScholarshipHolderDashboardService
     public function __construct(
         protected AttendanceService $attendanceService,
         protected AttendanceSubmissionService $submissionService
-    ) {
-    }
+    ) {}
 
-    public function data(User $user, array $filters = []): array
+    public function data(User $user, array $filters = [], ?int $projectId = null): array
     {
         $holder = $user->scholarshipHolder;
         abort_if(! $holder, 403);
 
-        $project = $holder->projects()->with('positions')->first();
+        $projects = $holder->projects()->with('positions')->get();
+
+        $activeProject = $projectId
+            ? $projects->firstWhere('id', $projectId)
+            : $projects->first();
+
+        $activeProjectId = $activeProject?->id;
+
+        if ($projectId && ! $projects->contains('id', $projectId)) {
+            abort(403);
+        }
+
         $now = now()->startOfMonth();
 
-        [$oldestPeriod, $oldestYear] = $this->resolveBounds($holder->id, $now);
+        [$oldestPeriod, $oldestYear] = $this->resolveBounds($holder->id, $now, $activeProjectId);
 
         $selectedPeriod = $this->resolveSelectedPeriod(
             $filters['month'] ?? null,
@@ -46,6 +56,7 @@ class ScholarshipHolderDashboardService
 
         $periodRecordsQuery = AttendanceRecord::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($activeProjectId, fn ($q) => $q->where('project_id', $activeProjectId))
             ->whereYear('date', $selectedPeriod->year)
             ->whereMonth('date', $selectedPeriod->month);
 
@@ -54,13 +65,14 @@ class ScholarshipHolderDashboardService
             ->selectRaw('COUNT(DISTINCT date) as aggregate')
             ->value('aggregate') ?? 0);
         $recordsHours = (float) (clone $periodRecordsQuery)->sum('hours');
-        $monthlyLimit = (float) $this->attendanceService->getMonthlyLimit($holder);
+        $monthlyLimit = (float) $this->attendanceService->getMonthlyLimit($holder, $activeProjectId);
         $completionPercent = $monthlyLimit > 0
             ? min(100, round(($recordsHours / $monthlyLimit) * 100, 1))
             : 0;
 
         $submission = AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($activeProjectId, fn ($q) => $q->where('project_id', $activeProjectId))
             ->where('year', $selectedPeriod->year)
             ->where('month', $selectedPeriod->month)
             ->latest()
@@ -68,7 +80,8 @@ class ScholarshipHolderDashboardService
 
         $yearlySubmissionsQuery = AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
-            ->where('year', $selectedYear);
+            ->where('year', $selectedYear)
+            ->when($activeProjectId, fn ($q) => $q->where('project_id', $activeProjectId));
 
         $yearlySubmissions = (clone $yearlySubmissionsQuery)
             ->orderByDesc('month')
@@ -92,6 +105,7 @@ class ScholarshipHolderDashboardService
 
         $yearPaymentsQuery = Payment::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($activeProjectId, fn ($q) => $q->where('project_id', $activeProjectId))
             ->where('year', $selectedYear);
 
         $paymentTotals = [
@@ -124,6 +138,7 @@ class ScholarshipHolderDashboardService
             ->where('scholarship_holder_id', $holder->id)
             ->where('year', $selectedPeriod->year)
             ->where('month', $selectedPeriod->month)
+            ->when($activeProjectId, fn ($q) => $q->where('project_id', $activeProjectId))
             ->latest('id')
             ->first();
 
@@ -133,8 +148,8 @@ class ScholarshipHolderDashboardService
             ->take(6)
             ->get();
 
-        $positionId = $project?->pivot->position_id;
-        $hourlyRate = (float) ($project?->positions
+        $positionId = $activeProject?->pivot->position_id;
+        $hourlyRate = (float) ($activeProject?->positions
             ->firstWhere('id', $positionId)
             ?->pivot->hourly_rate ?? 0);
 
@@ -147,7 +162,8 @@ class ScholarshipHolderDashboardService
         $canCreateRecord = $this->submissionService->canCreateRecord(
             $holder,
             $selectedPeriod->year,
-            $selectedPeriod->month
+            $selectedPeriod->month,
+            $activeProjectId
         );
 
         $previousPeriod = $selectedPeriod->copy()->subMonth();
@@ -177,7 +193,9 @@ class ScholarshipHolderDashboardService
             'canNavigatePrevYear' => ($selectedYear - 1) >= $oldestYear,
             'canNavigateNextYear' => ($selectedYear + 1) <= (int) $now->year,
             'scholarshipHolder' => $holder,
-            'project' => $project,
+            'projects' => $projects,
+            'activeProject' => $activeProject,
+            'activeProjectId' => $activeProjectId,
             'canCreateRecord' => $canCreateRecord,
             'submissionCounts' => $submissionCounts,
             'lastSubmissions' => $yearlySubmissions,
@@ -190,12 +208,13 @@ class ScholarshipHolderDashboardService
         ];
     }
 
-    protected function resolveBounds(int $holderId, Carbon $fallback): array
+    protected function resolveBounds(int $holderId, Carbon $fallback, ?int $projectId = null): array
     {
         $candidates = collect();
 
         $oldestRecordDate = AttendanceRecord::query()
             ->where('scholarship_holder_id', $holderId)
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->orderBy('date')
             ->value('date');
 
@@ -205,6 +224,7 @@ class ScholarshipHolderDashboardService
 
         $oldestSubmission = AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holderId)
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->orderBy('year')
             ->orderBy('month')
             ->first(['year', 'month']);
@@ -217,6 +237,7 @@ class ScholarshipHolderDashboardService
 
         $oldestPayment = Payment::query()
             ->where('scholarship_holder_id', $holderId)
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->orderBy('year')
             ->orderBy('month')
             ->first(['year', 'month']);

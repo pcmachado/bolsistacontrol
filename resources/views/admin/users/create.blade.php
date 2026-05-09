@@ -4,17 +4,17 @@
 <div class="row">
     <div class="col-lg-12 margin-tb">
         <div class="pull-left">
-            <h2>Create New User</h2>
+            <h2>Criar Novo Usuário</h2>
         </div>
         <div class="pull-right">
-            <a class="btn btn-primary btn-sm mb-2" href="{{ route('users.index') }}"><i class="fa fa-arrow-left"></i> Back</a>
+            <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.users.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
         </div>
     </div>
 </div>
 
 @if (count($errors) > 0)
     <div class="alert alert-danger">
-      <strong>Whoops!</strong> There were some problems with your input.<br><br>
+      <strong>Erro!</strong> Há problemas com os dados inseridos.<br><br>
       <ul>
          @foreach ($errors->all() as $error)
            <li>{{ $error }}</li>
@@ -23,50 +23,65 @@
     </div>
 @endif
 
-<form method="POST" action="{{ route('users.store') }}">
+<form method="POST" action="{{ route('admin.users.store') }}">
     @csrf
     <div class="row">
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Name:</strong>
-                <input type="text" name="name" placeholder="Name" class="form-control">
+                <strong>Nome:</strong>
+                <input type="text" name="name" value="{{ old('name') }}" placeholder="Nome completo" class="form-control" required>
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Email:</strong>
-                <input type="email" name="email" placeholder="Email" class="form-control">
+                <strong>E-mail:</strong>
+                <input type="email" name="email" value="{{ old('email') }}" placeholder="E-mail" class="form-control" required>
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Password:</strong>
-                <input type="password" name="password" placeholder="Password" class="form-control">
+                <strong>Senha:</strong>
+                <input type="password" name="password" placeholder="Senha" class="form-control" required>
+                <small class="form-text text-muted">Se marcar "Notificar usuário", esta senha será substituída por uma temporária.</small>
             </div>
         </div>
+        @if(Auth::user()->hasRole(['admin', 'coordenador-geral']))
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
-                <strong>Confirm Password:</strong>
-                <input type="password" name="confirm-password" placeholder="Confirm Password" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Role:</strong>
-                <select name="roles[]" class="form-control" multiple="multiple">
-                    @foreach ($roles as $value => $label)
-                        <option value="{{ $value }}">
-                            {{ $label }}
+                <strong>Unidade:</strong>
+                <select name="unit_id" class="form-control">
+                    <option value="">Selecione uma unidade (opcional)</option>
+                    @foreach ($units as $unit)
+                        <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
+                            {{ $unit->name }}
                         </option>
-                     @endforeach
+                    @endforeach
                 </select>
             </div>
         </div>
+        @endif
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <x-role-selector
+                :selectedRoles="old('role') ? [old('role')] : []"
+                :user="auth()->user()"
+                :multiple="false"
+                :required="true"
+                name="role"
+            />
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group form-check">
+                <input type="checkbox" name="notify_user" value="1" class="form-check-input" id="notify_user">
+                <label class="form-check-label" for="notify_user">
+                    <strong>Notificar usuário por e-mail</strong>
+                </label>
+                <br>
+                <small class="form-text text-muted">Se marcado, uma senha temporária será gerada e enviada por e-mail para o usuário.</small>
+            </div>
+        </div>
         <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Submit</button>
+            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Criar Usuário</button>
         </div>
     </div>
 </form>
-
-<p class="text-center text-primary"><small>Tutorial by ItSolutionStuff.com</small></p>
 @endsection

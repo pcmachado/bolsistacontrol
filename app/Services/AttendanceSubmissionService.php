@@ -198,16 +198,21 @@ class AttendanceSubmissionService
             ->exists();
     }
 
-    protected function getOrCreateDraft(ScholarshipHolder $holder, int $year, int $month): AttendanceSubmission
+    protected function getOrCreateDraft(ScholarshipHolder $holder, int $year, int $month, ?int $projectId = null): AttendanceSubmission
     {
         return AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->where('year', $year)
             ->where('month', $month)
-            ->firstOr(function () use ($holder, $year, $month) {
+            ->firstOr(function () use ($holder, $year, $month, $projectId) {
+
+                $projectId = $projectId
+                    ?? $holder->projects()->first()?->id;
+
                 return AttendanceSubmission::create([
                     'scholarship_holder_id' => $holder->id,
-                    'project_id' => $holder->projects()->first()?->id,
+                    'project_id' => $projectId,
                     'year' => $year,
                     'month' => $month,
                     'status' => AttendanceSubmission::STATUS_DRAFT,

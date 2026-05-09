@@ -92,6 +92,7 @@ class DatabaseSeeder extends Seeder
             PaymentSeeder::class,
             StudentPaymentSeeder::class,
             TeachingAssignmentsSeeder::class,
+            AssignmentSeeder::class,
             StudentMonthRecordSeeder::class,
             ClassOfferingSubmissionSeeder::class,
             ScholarshipHolderClassOfferingSeeder::class,

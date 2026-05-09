@@ -21,9 +21,9 @@
                 🎓 ProBolsas
             </a>
 
-            <div>
+            {{-- <div>
                 <a href="{{ route('contact') }}" class="btn btn-outline-secondary">Contato</a>
-            </div>
+            </div> --}}
         </div>
     </nav>
 

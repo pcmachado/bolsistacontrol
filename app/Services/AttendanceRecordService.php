@@ -38,6 +38,7 @@ class AttendanceRecordService
             'description' => $data['description'] ?? null,
             'hours' => $hours,
             'attendance_submission_id' => null,
+            'project_id' => $data['project_id'],
         ]);
     }
 
@@ -73,6 +74,7 @@ class AttendanceRecordService
             'end_time' => $data['end_time'],
             'description' => $data['description'] ?? null,
             'hours' => $hours,
+            'project_id' => $data['project_id'],
         ]);
 
         return $record;

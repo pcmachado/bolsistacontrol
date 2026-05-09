@@ -91,6 +91,14 @@ class UserSeeder extends Seeder
 
     protected function upsertUser(string $email, string $name, string $role, ?int $institutionId = null, ?int $unitId = null): User
     {
+        if ($unitId === null && $institutionId !== null) {
+            if (in_array($role, ['coordenador_adjunto_geral', 'coordenador_geral'])) {
+                $unitId = Unit::where('institution_id', $institutionId)->where('shortname', 'like', '%reitoria%')->first()?->id;
+            } else {
+                $unitId = Unit::where('institution_id', $institutionId)->inRandomOrder()->first()?->id;
+            }
+        }
+
         $password = static::$password ??= Hash::make('password');
 
         $user = User::updateOrCreate(

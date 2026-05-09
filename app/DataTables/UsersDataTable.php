@@ -3,23 +3,12 @@
 namespace App\DataTables;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
 
-class UsersDataTable extends DataTable
+class UsersDataTable extends BaseDataTable
 {
-    protected array $filters = [];
-
-    public function setFilters(array $filters): self
-    {
-        $this->filters = $filters;
-
-        return $this;
-    }
-
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
@@ -34,44 +23,36 @@ class UsersDataTable extends DataTable
 
     public function query(User $model)
     {
-        $logged = Auth::user();
-
         $query = $model->newQuery()->with(['roles', 'unit']);
 
-        if ($logged->isInstitutionScoped()) {
-            $institutionIds = $logged->activeInstitutionIds();
+        // Aplicar filtro de instituição automaticamente
+        $query = $this->applyInstitutionFilter($query);
 
-            $query->where(function ($scoped) use ($institutionIds) {
-                $scoped->whereIn('institution_id', $institutionIds)
-                    ->orWhereHas('unit', fn ($unitQuery) => $unitQuery->whereIn('institution_id', $institutionIds));
-            });
-        } elseif ($logged->isUnitScoped()) {
-            $query->whereIn('unit_id', $logged->visibleUnitIds())
-                ->whereDoesntHave('roles', fn ($roles) => $roles->whereIn('name', [
-                    'admin',
-                    'superadmin',
-                    'coordenador_geral',
-                    'coordenador_adjunto_geral',
-                ])
-                );
-        } else {
-            $query->where('id', $logged->id);
-        }
-
-        if (! empty($this->filters['filter_name'])) {
-            $query->where('name', 'like', '%'.$this->filters['filter_name'].'%');
-        }
-
-        if (! empty($this->filters['filter_unit'])) {
-            $query->where('unit_id', $this->filters['filter_unit']);
-        }
-
-        if (! empty($this->filters['filter_role'])) {
-            $query->whereHas('roles', fn ($roles) => $roles->where('name', $this->filters['filter_role'])
-            );
-        }
+        // Aplicar filtros customizados
+        $query = $this->applyCustomFilters($query, [
+            'filter_name',
+            'filter_unit',
+            'filter_role',
+        ]);
 
         return $query;
+    }
+
+    protected function applyFilterNameFilter($query, $value)
+    {
+        return $query->where('name', 'like', "%{$value}%");
+    }
+
+    protected function applyFilterUnitFilter($query, $value)
+    {
+        return $query->where('unit_id', $value);
+    }
+
+    protected function applyFilterRoleFilter($query, $value)
+    {
+        return $query->whereHas('roles', function ($roleQuery) use ($value) {
+            $roleQuery->where('name', $value);
+        });
     }
 
     public function html()

@@ -41,7 +41,12 @@ class PaymentController extends Controller
 
         $monthString = $request->get('month', now()->format('Y-m'));
 
-        [$year, $monthNumber] = explode('-', $monthString);
+        if (str_contains($monthString, '-')) {
+            [$year, $monthNumber] = explode('-', $monthString);
+        } else {
+            $year = $request->get('year', now()->year);
+            $monthNumber = $monthString;
+        }
 
         return $dataTable->render('admin.payments.index', [
             'units' => Unit::all(),
@@ -55,9 +60,6 @@ class PaymentController extends Controller
         ]);
     }
 
-    /**
-     * Formulário de geração de pagamento
-     */
     public function create()
     {
         return view('admin.payments.create', [
@@ -70,34 +72,25 @@ class PaymentController extends Controller
         return view('admin.payments.show', compact('payment'));
     }
 
-    /**
-     * Gera pagamento individual
-     */
     public function store(Request $request)
     {
-        $fundingSource = $request->input('funding_source_id');
-        $amount = $request->input('amount');
-
-        if (! $fundingSource->hasBalance($amount)) {
-            throw ValidationException::withMessages([
-                'funding_source_id' => 'Saldo insuficiente na fonte de fomento.',
-            ]);
-        }
-
         $data = $request->validate([
             'scholarship_holder_id' => 'required|exists:scholarship_holders,id',
             'month' => 'required|integer|min:1|max:12',
             'year' => 'required|integer|min:2000|max:2100',
+            'funding_source_id' => 'required|exists:funding_sources,id',
         ]);
+
+        $fundingSource = \App\Models\FundingSource::findOrFail($data['funding_source_id']);
 
         $holder = ScholarshipHolder::with(['unit', 'projects'])->findOrFail($data['scholarship_holder_id']);
 
-        // 🔒 Bloqueio por fechamento financeiro
+        // 🔒 fechamento financeiro
         if (FinancialClosure::isClosed($holder->unit_id, $data['month'], $data['year'])) {
             return back()->withErrors('O período financeiro está fechado.');
         }
 
-        // Evita duplicidade
+        // duplicidade
         $exists = Payment::where([
             'scholarship_holder_id' => $holder->id,
             'month' => $data['month'],
@@ -108,7 +101,7 @@ class PaymentController extends Controller
             return back()->withErrors('Já existe pagamento para este período.');
         }
 
-        // Frequências homologadas
+        // frequências homologadas
         $records = AttendanceRecord::approved()
             ->where('scholarship_holder_id', $holder->id)
             ->whereMonth('date', $data['month'])
@@ -119,7 +112,15 @@ class PaymentController extends Controller
             return back()->withErrors('Nenhuma frequência homologada encontrada.');
         }
 
-        DB::transaction(function () use ($data, $holder, $records) {
+        $amount = $records->sum('calculated_value');
+
+        if (! $fundingSource->hasBalance($amount)) {
+            throw ValidationException::withMessages([
+                'funding_source_id' => 'Saldo insuficiente na fonte de fomento.',
+            ]);
+        }
+
+        DB::transaction(function () use ($data, $holder, $records, $amount) {
 
             $payment = Payment::create([
                 'scholarship_holder_id' => $holder->id,
@@ -128,7 +129,7 @@ class PaymentController extends Controller
                 'month' => $data['month'],
                 'year' => $data['year'],
                 'total_hours' => $records->sum('hours'),
-                'amount' => $records->sum('calculated_value'),
+                'amount' => $amount,
                 'status' => Payment::STATUS_SENT,
                 'sent_at' => now(),
             ]);
@@ -146,9 +147,6 @@ class PaymentController extends Controller
             ->with('success', 'Pagamento enviado para execução financeira.');
     }
 
-    /**
-     * Marca pagamento como pago
-     */
     public function pay(Payment $payment)
     {
         if (! $payment->canBePaid()) {
@@ -169,61 +167,41 @@ class PaymentController extends Controller
             );
         });
 
-        return redirect()
-            ->back()
-            ->with('success', 'Pagamento marcado como pago.');
+        return back()->with('success', 'Pagamento marcado como pago.');
     }
 
     public function pdf(Unit $unit, Request $request)
     {
-
         $month = $request->get('month');
         $year = $request->get('year');
 
         $payments = $this->paymentService->monthly($unit, $month, $year);
 
-        $pdf = Pdf::loadView(
-            'payments.pdf',
-            compact('payments', 'unit', 'month', 'year')
-        );
-
-        return $pdf->download("pagamentos_{$month}_{$year}.pdf");
+        return Pdf::loadView('payments.pdf', [
+            'payments' => $payments,
+            'unit' => $unit,
+            'month' => $month,
+            'year' => $year,
+            'isPdf' => true,
+        ])->download("pagamentos_{$month}_{$year}.pdf");
     }
 
     public function reportMonthly(Request $request)
     {
         $user = Auth::user();
 
-        $query = Payment::with(['unit', 'project', 'scholarshipHolder.projects']);
+        $query = Payment::with([
+            'unit',
+            'project',
+            'scholarshipHolder.user',
+            'scholarshipHolder.projects',
+        ]);
 
         $query = app(\App\Services\VisibilityService::class)
             ->apply($query, $user, 'admin');
 
-        if ($request->filled('month')) {
-            [$year, $month] = explode('-', $request->month);
-            $query->where('year', $year)
-                ->where('month', $month);
-        } elseif ($request->filled('year')) {
-            $query->where('year', $request->year);
-        }
-
-        if ($request->filled('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
-        }
-
-        if ($request->filled('project_id')) {
-            $query->where('project_id', $request->project_id);
-        }
-
-        if ($request->filled('position_id')) {
-            $query->whereHas('scholarshipHolder.projects', function ($q) use ($request) {
-                $q->where('position_id', $request->position_id);
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        // 🔥 usar trait centralizado
+        $query = $this->applyPaymentFilters($query, $request);
 
         $payments = $query->get();
 
@@ -248,7 +226,7 @@ class PaymentController extends Controller
         $isPdf = $request->boolean('pdf');
 
         if ($isPdf) {
-            return \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            return Pdf::loadView(
                 'admin.payments.reports.monthly',
                 compact('grouped', 'totalGeral', 'isPdf')
             )->stream('relatorio_consolidado.pdf');

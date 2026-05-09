@@ -96,6 +96,13 @@
     @endforeach
 
     </div>
+        <div class="alert alert-light border mb-3 small">
+        <strong>Legenda:</strong><br>
+        <span class="badge bg-danger">F</span>
+        Faltas (impactam pagamento)
+        <span class="badge bg-warning text-dark ms-2">J</span>
+        Justificadas (não impactam)
+    </div>
 
     <form method="POST">
         @csrf
@@ -109,6 +116,7 @@
                             <th>Aluno</th>
                             <th width="120">Aulas</th>
                             <th width="120">Faltas</th>
+                            <th width="120">Justificadas</th>
                             <th width="120">Presenças</th>
                             <th width="150">Situação</th>
                             <th width="150">Valor</th>
@@ -120,7 +128,12 @@
 
                             @php
                                 $r = $records[$student->id] ?? null;
-                                $locked = !$submission || $submission?->status !== 'submitted' || $submission->status !== 'approved';
+                                $locked = !in_array($submission?->status, ['draft', 'rejected']);
+
+                                $total = $r->total_classes ?? 0;
+                                $absences = $r->absences ?? 0;
+                                
+                                $percent = $total > 0 ? ($absences / $total) * 100 : 0;
                             @endphp
 
                             <tr class="student-row">
@@ -128,6 +141,11 @@
                                 {{-- Nome --}}
                                 <td>
                                     <strong>{{ $student->name }}</strong>
+                                     @if($percent > 15)
+                                        <div class="text-danger small fw-bold">
+                                            ⚠ {{ number_format($percent,1) }}%
+                                        </div>
+                                    @endif
                                 </td>
 
                                 {{-- Total aulas --}}
@@ -140,10 +158,29 @@
 
                                 {{-- Faltas --}}
                                 <td>
-                                    <input type="number"
-                                        name="students[{{ $student->id }}][absences]"
-                                        value="{{ $r->absences ?? 0 }}"
-                                        class="form-control form-control-sm absences" {{ $locked ? 'disabled' : '' }}>
+                                    <div class="d-flex gap-1">
+                                        {{-- faltas reais --}}
+                                        <input type="number"
+                                            name="students[{{ $student->id }}][absences]"
+                                            value="{{ $r->absences ?? 0 }}"
+                                            class="form-control form-control-sm absences border-danger text-center"
+                                            placeholder="F"
+                                            title="Faltas não justificadas"
+                                            {{ $locked ? 'disabled' : '' }}>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex gap-1"></div>
+                                        {{-- justificadas --}}
+                                        <input type="number"
+                                            name="students[{{ $student->id }}][justified_absences]"
+                                            value="{{ $r->justified_absences ?? 0 }}"
+                                            class="form-control form-control-sm justified border-warning text-center"
+                                            placeholder="J"
+                                            title="Faltas justificadas"
+                                            {{ $locked ? 'disabled' : '' }}>
+                                    </div>
                                 </td>
 
                                 {{-- Presenças --}}
@@ -230,6 +267,7 @@ const rate = {{ $rate ?? 0 }};
 function calculateRow(row) {
     let total = parseInt(row.querySelector('.total').value) || 0;
     let absences = parseInt(row.querySelector('.absences').value) || 0;
+    let justified_absences = parseInt(row.querySelector('.justified').value) || 0;
 
     let attended = Math.max(0, total - absences);
 
@@ -259,7 +297,7 @@ function calculateAll() {
 }
 
 // eventos
-document.querySelectorAll('.total, .absences').forEach(input => {
+document.querySelectorAll('.total, .absences, .justified').forEach(input => {
     input.addEventListener('input', calculateAll);
 });
 
