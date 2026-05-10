@@ -4,7 +4,7 @@ namespace App\DataTables;
 use App\Models\Position;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
+use Yajra\DataTables\EloquentDataTable;
 use App\DataTables\BaseDataTable;
 
 class PositionsDataTable extends BaseDataTable

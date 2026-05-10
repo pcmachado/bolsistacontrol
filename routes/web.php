@@ -107,8 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/meu-dashboard', [DashboardController::class, 'index'])->name('holder.dashboard');
     Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
 
-    Route::post('/impersonate-stop', [AdminScholarshipHolderController::class, 'stop'])
-        ->name('admin.impersonate.stop');
+    Route::post('/impersonate-stop', [AdminScholarshipHolderController::class, 'stop'])->name('admin.impersonate.stop');
 
     // Módulo de Frequência para o Bolsista
     Route::prefix('attendance')->middleware('auth')->group(function () {

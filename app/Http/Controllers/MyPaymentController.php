@@ -21,6 +21,7 @@ class MyPaymentController extends Controller
             Auth::user(),
             $request->integer('project_id') ?: null
         );
+        $dataTable->mode = 'my';
 
         $filters = $request->only(['month']);
         $filters['project_id'] = $context['activeProjectId'];
