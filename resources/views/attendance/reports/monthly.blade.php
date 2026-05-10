@@ -1,95 +1,91 @@
 @extends('layouts.pdf')
 
-@section('title', 'Relatório Mensal de Frequência')
+@section('title', 'RelatÃ³rio Mensal de FrequÃªncia')
 
 @section('header-extra')
-
 <div style="margin-top: 5px;">
-    <h3>BOLSA FORMAÇÃO – PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
+    <h3>BOLSA FORMAÃ‡ÃƒO â€“ PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
     <h4>REGISTRO DAS HORAS TRABALHADAS</h4>
     <h5>
-        Campus {{ $submission->scholarshipHolder->unit->name ?? '—' }} –
+        Campus {{ $submission->scholarshipHolder->unit->name ?? 'â€”' }} â€“
         {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
     </h5>
 </div>
-
 @endsection
 
 @section('content')
-
 <h5>1. Dados do bolsista</h5>
 
 <table>
-<tr>
-    <td width="30%"><strong>Nome</strong></td>
-    <td>{{ $submission->scholarshipHolder->user->name }}</td>
-</tr>
-<tr>
-    <td><strong>CPF</strong></td>
-    <td>{{ $submission->scholarshipHolder->cpf }}</td>
-</tr>
-<tr>
-    <td><strong>Carga horária prevista</strong></td>
-    <td>
-        {{ $submission->scholarshipHolder?->projects->first()?->pivot->weekly_workload
-            ? ($submission->scholarshipHolder?->projects->first()?->pivot->weekly_workload) * 4
-            : '—'
-        }} horas mensais
-    </td>
-</tr>
+    <tr>
+        <td width="30%"><strong>Nome</strong></td>
+        <td>{{ $submission->scholarshipHolder->user->name }}</td>
+    </tr>
+    <tr>
+        <td><strong>Projeto</strong></td>
+        <td>{{ $submission->project?->name ?? 'â€”' }}</td>
+    </tr>
+    <tr>
+        <td><strong>CPF</strong></td>
+        <td>{{ $submission->scholarshipHolder->cpf }}</td>
+    </tr>
+    <tr>
+        <td><strong>Carga horÃ¡ria prevista</strong></td>
+        <td>
+            {{ $submission->project?->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder)
+                ? $submission->project->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder) * 4
+                : 'â€”'
+            }} horas mensais
+        </td>
+    </tr>
 </table>
 
 <h5>2. Quadro das horas e atividades</h5>
 
 <table>
-<thead>
-<tr>
-    <th width="15%">Data</th>
-    <th width="15%">Horas</th>
-    <th>Atividades</th>
-</tr>
-</thead>
-<tbody>
+    <thead>
+        <tr>
+            <th width="15%">Data</th>
+            <th width="15%">Horas</th>
+            <th>Atividades</th>
+        </tr>
+    </thead>
+    <tbody>
+        @php $totalHoras = 0; @endphp
 
-@php $totalHoras = 0; @endphp
+        @forelse($records as $record)
+            @php $totalHoras += $record->hours; @endphp
+            <tr>
+                <td>{{ $record->date->format('d/m/Y') }}</td>
+                <td>{{ hoursToTime($record->hours) }}</td>
+                <td>{{ $record->description ?: 'â€”' }}</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="3">Nenhuma atividade registrada.</td>
+            </tr>
+        @endforelse
 
-@forelse($records as $record)
-    @php $totalHoras += $record->hours; @endphp
-
-<tr>
-    <td>{{ $record->date->format('d/m/Y') }}</td>
-    <td>{{ hoursToTime($record->hours) }}</td>
-    <td>{{ $record->description ?: '—' }}</td>
-</tr>
-
-@empty
-<tr>
-    <td colspan="3">Nenhuma atividade registrada.</td>
-</tr>
-@endforelse
-
-<tr>
-    <td><strong>Total</strong></td>
-    <td><strong>{{ hoursToTime($totalHoras) }}</strong></td>
-    <td></td>
-</tr>
-
-</tbody>
+        <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>{{ hoursToTime($totalHoras) }}</strong></td>
+            <td></td>
+        </tr>
+    </tbody>
 </table>
 
 <h5>3. Assinaturas</h5>
 
 <table class="assinaturas no-break">
-<tr>
-    <td>
-        <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
-        Coordenação Adjunta
-    </td>
-    <td>
-        <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
-        Coordenação Geral
-    </td>
-</tr>
+    <tr>
+        <td>
+            <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
+            CoordenaÃ§Ã£o Adjunta
+        </td>
+        <td>
+            <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
+            CoordenaÃ§Ã£o Geral
+        </td>
+    </tr>
 </table>
-
 @endsection

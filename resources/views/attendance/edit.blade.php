@@ -1,10 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Registro de Frequência')
+@section('title', 'Editar Registro de FrequÃªncia')
 
 @section('content')
 <div class="container">
-    <h3 class="mb-4"><i class="bi bi-pencil-square me-2"></i> Editar Registro de Frequência</h3>
+    <h3 class="mb-4"><i class="bi bi-pencil-square me-2"></i> Editar Registro de FrequÃªncia</h3>
+
+    @include('attendance.partials.project-tabs')
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -13,30 +15,42 @@
                 @method('PUT')
 
                 <div class="mb-3">
+                    <label for="project_id" class="form-label">Projeto</label>
+                    <select name="project_id" id="project_id" class="form-select" required>
+                        <option value="">Selecione</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" @selected((string) old('project_id', $attendanceRecord->project_id) === (string) $project->id)>
+                                {{ $project->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3">
                     <label for="date" class="form-label">Data</label>
-                    <input type="date" name="date" id="date" class="form-control" 
+                    <input type="date" name="date" id="date" class="form-control"
                            value="{{ old('date', $attendanceRecord->date->format('Y-m-d')) }}" required>
                 </div>
 
                 <div class="mb-3">
-                    <label for="start_time" class="form-label">Hora de Início</label>
+                    <label for="start_time" class="form-label">Hora de InÃ­cio</label>
                     <input type="time" name="start_time" id="start_time" class="form-control"
                         value="{{ old('start_time', \Carbon\Carbon::parse($attendanceRecord->start_time)->format('H:i')) }}" required>
                 </div>
 
                 <div class="mb-3">
-                    <label for="end_time" class="form-label">Hora de Término</label>
+                    <label for="end_time" class="form-label">Hora de TÃ©rmino</label>
                     <input type="time" name="end_time" id="end_time" class="form-control"
                         value="{{ old('end_time', \Carbon\Carbon::parse($attendanceRecord->end_time)->format('H:i')) }}" required>
                 </div>
 
                 <div class="mb-3">
-                    <label for="description" class="form-label">Atividades / Observações</label>
+                    <label for="description" class="form-label">Atividades / ObservaÃ§Ãµes</label>
                     <textarea name="description" id="description" rows="3" class="form-control sgb-textarea">{{ old('description', $attendanceRecord->description) }}</textarea>
                 </div>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('attendance.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('attendance.index', ['project_id' => old('project_id', $attendanceRecord->project_id), 'month' => $selectedMonth]) }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar
                     </a>
                     <button type="submit" class="btn btn-primary">

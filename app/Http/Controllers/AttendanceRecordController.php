@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\DataTables\AttendanceRecordDataTable;
 use App\Models\AttendanceRecord;
+use App\Models\AttendanceSubmission;
 use App\Services\AttendanceRecordService;
 use App\Services\AttendanceService;
 use App\Services\AttendanceSubmissionService;
@@ -23,49 +24,59 @@ class AttendanceRecordController extends Controller
     }
 
     /**
-     * Diário de frequência (por mês)
+     * DiÃ¡rio de frequÃªncia (por mÃªs)
      */
     public function index(Request $request, AttendanceRecordDataTable $dataTable)
     {
         $user = Auth::user();
-        $holder = $this->scholarshipHolderService->holderOrFail($user);
+        $context = $this->scholarshipHolderService->attendanceContext(
+            $user,
+            $request->integer('project_id') ?: null
+        );
 
-        // 📅 mês atual padrão
+        $holder = $context['holder'];
+        $activeProjectId = $context['activeProjectId'];
+
         $monthString = $request->get('month', now()->format('Y-m'));
-
         [$year, $monthNumber] = explode('-', $monthString);
 
         $year = (int) $year;
         $monthNumber = (int) $monthNumber;
 
-        // 📊 serviço
         $attendanceService = app(AttendanceService::class);
+        $total = $attendanceService->getMonthlyTotal($holder, $year, $monthNumber, $activeProjectId);
+        $limit = $attendanceService->getMonthlyLimit($holder, $activeProjectId);
 
-        $total = $attendanceService->getMonthlyTotal($holder, $year, $monthNumber);
-        $limit = $attendanceService->getMonthlyLimit($holder);
-
-        // 📅 primeiro registro
         $oldestRecord = AttendanceRecord::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($activeProjectId, fn ($query) => $query->where('project_id', $activeProjectId))
             ->orderBy('date')
             ->first();
 
-        // 📅 controle navegação
         $currentMonth = now()->format('Y-m');
         $oldestMonth = $oldestRecord
             ? $oldestRecord->date->format('Y-m')
             : $currentMonth;
 
-        // filtros para DataTable
+        $submission = AttendanceSubmission::query()
+            ->where('scholarship_holder_id', $holder->id)
+            ->when($activeProjectId, fn ($query) => $query->where('project_id', $activeProjectId))
+            ->where('year', $year)
+            ->where('month', $monthNumber)
+            ->latest('id')
+            ->first();
+
         $filters = [
             'month' => $monthString,
             'status' => $request->get('status'),
+            'project_id' => $activeProjectId,
         ];
 
         return $dataTable
             ->setMode('self')
             ->setFilters($filters)
             ->render('attendance.index', [
+                ...$context,
                 'month' => $monthString,
                 'year' => $year,
                 'monthNumber' => $monthNumber,
@@ -74,16 +85,25 @@ class AttendanceRecordController extends Controller
                 'currentMonth' => $currentMonth,
                 'oldestMonth' => $oldestMonth,
                 'oldestRecord' => $oldestRecord,
-                'submission' => null,
+                'submission' => $submission,
+                'isClosed' => ! $this->submissions->canCreateRecord($holder, $year, $monthNumber, $activeProjectId),
             ]);
     }
 
     /**
-     * Formulário de criação
+     * FormulÃ¡rio de criaÃ§Ã£o
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('attendance.create');
+        $context = $this->scholarshipHolderService->attendanceContext(
+            Auth::user(),
+            $request->integer('project_id') ?: null
+        );
+
+        return view('attendance.create', [
+            ...$context,
+            'selectedMonth' => $request->get('month', now()->format('Y-m')),
+        ]);
     }
 
     /**
@@ -96,70 +116,81 @@ class AttendanceRecordController extends Controller
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'description' => ['nullable', 'string', 'max:500'],
-            'project_id' => $activeProjectId = ['nullable', 'exists:projects,id'],
+            'project_id' => ['required', 'integer', 'exists:projects,id'],
         ]);
 
         $user = Auth::user();
         $holder = $this->scholarshipHolderService->holderOrFail($user);
-
         $date = \Carbon\Carbon::parse($validated['date']);
 
-        // 🔒 mês fechado?
         if (! $this->submissions->canCreateRecord(
             $holder,
             $date->year,
-            $date->month
+            $date->month,
+            (int) $validated['project_id']
         )) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'Este mês já foi enviado para homologação.',
+                    'Este mÃªs jÃ¡ foi enviado para homologaÃ§Ã£o neste projeto.',
                 ]);
         }
 
         $this->records->create($holder, $validated);
 
         return redirect()
-            ->route('attendance.index')
+            ->route('attendance.index', [
+                'project_id' => $validated['project_id'],
+                'month' => $date->format('Y-m'),
+            ])
             ->with('success', 'Registro criado com sucesso.');
     }
 
     /**
-     * Visualização individual
+     * VisualizaÃ§Ã£o individual
      */
     public function show(AttendanceRecord $attendanceRecord): View
     {
         $this->authorize('view', $attendanceRecord);
 
-        return view(
-            'attendance.show',
-            compact('attendanceRecord')
-        );
+        return view('attendance.show', compact('attendanceRecord'));
     }
 
     /**
-     * Edição
+     * EdiÃ§Ã£o
      */
     public function edit(AttendanceRecord $attendanceRecord)
     {
         if (! Auth::user()->can('update', $attendanceRecord)) {
             return redirect()
-                ->route('attendance.index', ['month' => optional($attendanceRecord->date)->format('Y-m') ?? now()->format('Y-m')])
-                ->with('error', $attendanceRecord->editBlockReason() ?? 'Você não pode editar este registro, prazo de 7 dias expirado.');
+                ->route('attendance.index', [
+                    'project_id' => $attendanceRecord->project_id,
+                    'month' => optional($attendanceRecord->date)->format('Y-m') ?? now()->format('Y-m'),
+                ])
+                ->with('error', $attendanceRecord->editBlockReason() ?? 'VocÃª nÃ£o pode editar este registro, prazo de 7 dias expirado.');
         }
 
-        return view('attendance.edit', compact('attendanceRecord'));
+        $context = $this->scholarshipHolderService->attendanceContext(
+            Auth::user(),
+            $attendanceRecord->project_id
+        );
+
+        return view('attendance.edit', [
+            ...$context,
+            'attendanceRecord' => $attendanceRecord,
+            'selectedMonth' => optional($attendanceRecord->date)->format('Y-m') ?? now()->format('Y-m'),
+        ]);
     }
 
     /**
-     * Atualização
+     * AtualizaÃ§Ã£o
      */
     public function update(Request $request, AttendanceRecord $attendanceRecord)
     {
         if (! Auth::user()->can('update', $attendanceRecord)) {
             return redirect()
                 ->back()
-                ->with('error', $attendanceRecord->editBlockReason() ?? 'Edição não permitida.');
+                ->with('error', $attendanceRecord->editBlockReason() ?? 'EdiÃ§Ã£o nÃ£o permitida.');
         }
 
         $validated = $request->validate([
@@ -167,18 +198,23 @@ class AttendanceRecordController extends Controller
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
             'description' => ['nullable', 'string', 'max:500'],
-            'project_id' => $activeProjectId = ['nullable', 'exists:projects,id'],
+            'project_id' => ['required', 'integer', 'exists:projects,id'],
         ]);
+
+        $date = \Carbon\Carbon::parse($validated['date']);
 
         $this->records->update($attendanceRecord, $validated);
 
         return redirect()
-            ->route('attendance.index')
+            ->route('attendance.index', [
+                'project_id' => $validated['project_id'],
+                'month' => $date->format('Y-m'),
+            ])
             ->with('success', 'Registro atualizado.');
     }
 
     /**
-     * Exclusão
+     * ExclusÃ£o
      */
     public function destroy(AttendanceRecord $attendanceRecord)
     {
@@ -187,7 +223,10 @@ class AttendanceRecordController extends Controller
         $this->records->deleteAttendance($attendanceRecord);
 
         return redirect()
-            ->route('attendance.index')
+            ->route('attendance.index', [
+                'project_id' => $attendanceRecord->project_id,
+                'month' => optional($attendanceRecord->date)->format('Y-m') ?? now()->format('Y-m'),
+            ])
             ->with('success', 'Registro removido.');
     }
 }

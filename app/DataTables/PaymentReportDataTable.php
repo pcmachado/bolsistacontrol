@@ -4,10 +4,10 @@ namespace App\DataTables;
 
 use App\Models\Payment;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 use App\Services\FinancialReportService;
 
-class PaymentReportDataTable extends DataTable
+class PaymentReportDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -74,6 +74,7 @@ class PaymentReportDataTable extends DataTable
                 ['data' => 'actions', 'title' => 'Ações', 'orderable' => false, 'searchable' => false, 'width' => '150px'],
             ])
             ->minifiedAjax()
-            ->orderBy(3);
+            ->orderBy(3)
+            ->parameters($this->defaultParameters());
     }
 }

@@ -1,18 +1,37 @@
-<form method="GET" action="{{ route('attendance.submissions.index') }}" class="card filter-card">
+@php
+    $isSelf = request()->routeIs('my-attendance.submissions.*');
+    $action = $isSelf ? route('my-attendance.submissions.my') : route('attendance.submissions.index');
+@endphp
+
+<form method="GET" action="{{ $action }}" class="card filter-card">
     <div class="card-body">
         <div class="row g-3 align-items-end">
-            @unlessrole('bolsista')
+            @if(isset($projects) && $projects->isNotEmpty())
                 <div class="col-md-3">
-                    <label for="filter-month" class="form-label">Mês</label>
-                    <input
-                        id="filter-month"
-                        type="month"
-                        name="month"
-                        value="{{ request('month') }}"
-                        class="form-control"
-                    >
+                    <label for="filter-project" class="form-label">Projeto</label>
+                    <select id="filter-project" name="project_id" class="form-select">
+                        @if(! $isSelf)
+                            <option value="">Todos</option>
+                        @endif
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" @selected(request('project_id', $activeProjectId ?? null) == $project->id)>
+                                {{ $project->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
-            @endunlessrole
+            @endif
+
+            <div class="col-md-3">
+                <label for="filter-month" class="form-label">MÃªs</label>
+                <input
+                    id="filter-month"
+                    type="month"
+                    name="month"
+                    value="{{ request('month') }}"
+                    class="form-control"
+                >
+            </div>
 
             <div class="col-md-3">
                 <label for="filter-status" class="form-label">Status</label>
@@ -26,7 +45,7 @@
                 </select>
             </div>
 
-            @if(isset($units) && $units->isNotEmpty())
+            @if(! $isSelf && isset($units) && $units->isNotEmpty())
                 <div class="col-md-3">
                     <label class="form-label">Unidade</label>
                     <select name="unit_id" class="form-select">
@@ -45,7 +64,7 @@
                     <i class="bi bi-funnel me-1"></i> Filtrar
                 </button>
 
-                <a href="{{ route('attendance.submissions.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ $action }}" class="btn btn-outline-secondary">
                     Limpar
                 </a>
             </div>

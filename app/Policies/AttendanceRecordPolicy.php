@@ -49,7 +49,7 @@ class AttendanceRecordPolicy
         return $submission->status === AttendanceSubmission::STATUS_REJECTED;
     }
 
-    public function deleteAttendanceRecord(User $user, AttendanceRecord $record): bool
+    public function delete(User $user, AttendanceRecord $record): bool
     {
         return $this->update($user, $record);
     }

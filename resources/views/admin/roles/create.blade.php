@@ -42,6 +42,21 @@
                     @enderror
                     <small class="form-text text-muted">Use snake_case para nomear a função (ex: coordenador_geral)</small>
                 </div>
+
+                <div class="mb-3">
+                    <label for="level" class="form-label"><strong>Nível Hierárquico</strong> <span class="text-danger">*</span></label>
+                    <input type="number"
+                           name="level"
+                           min="0"
+                           max="100"
+                           class="form-control @error('level') is-invalid @enderror"
+                           value="{{ old('level', 10) }}"
+                           required>
+                    @error('level')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <small class="form-text text-muted">Quanto maior o número, maior o poder hierárquico desta função.</small>
+                </div>
             </div>
         </div>
 

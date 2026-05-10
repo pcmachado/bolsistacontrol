@@ -8,20 +8,33 @@ use DomainException;
 
 class AttendanceService
 {
-    public function getMonthlyTotal(ScholarshipHolder $holder, int $year, int $month): float
-    {
+    public function getMonthlyTotal(
+        ScholarshipHolder $holder,
+        int $year,
+        int $month,
+        ?int $projectId = null
+    ): float {
         return AttendanceRecord::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($projectId, fn ($query) => $query->where('project_id', $projectId))
             ->whereYear('date', $year)
             ->whereMonth('date', $month)
             ->sum('hours');
     }
 
-    public function getMonthlyLimit(ScholarshipHolder $holder): float
-    {
-        $project = $holder->projects->first();
+    public function getMonthlyLimit(
+        ScholarshipHolder $holder,
+        ?int $projectId = null
+    ): float {
+        $project = $projectId
+            ? $holder->projects()->where('projects.id', $projectId)->first()
+            : $holder->projects()->first();
 
-        return ($project->pivot->weekly_workload ?? 0) * 4;
+        if (! $project) {
+            return 0;
+        }
+
+        return $project->weeklyWorkloadForScholarshipHolder($holder) * 4;
     }
 
     public function validateMonthlyLimit(
@@ -29,11 +42,12 @@ class AttendanceService
         int $year,
         int $month,
         float $newHours,
-        ?int $ignoreRecordId = null
+        ?int $ignoreRecordId = null,
+        ?int $projectId = null
     ): void {
-
         $query = AttendanceRecord::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($projectId, fn ($builder) => $builder->where('project_id', $projectId))
             ->whereYear('date', $year)
             ->whereMonth('date', $month);
 
@@ -42,8 +56,7 @@ class AttendanceService
         }
 
         $total = $query->sum('hours');
-
-        $limit = $this->getMonthlyLimit($holder);
+        $limit = $this->getMonthlyLimit($holder, $projectId);
 
         if (($total + $newHours) > $limit) {
             throw new DomainException(

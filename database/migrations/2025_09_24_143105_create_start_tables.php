@@ -121,7 +121,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->unique(
-                ['scholarship_holder_id', 'year', 'month'],
+                ['scholarship_holder_id', 'project_id', 'year', 'month'],
                 'unique_submission_per_month'
             );
 

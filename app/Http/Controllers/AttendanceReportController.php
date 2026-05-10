@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\AttendanceSubmission;
-use App\Models\AttendanceRecord;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class AttendanceReportController extends Controller
 {
@@ -19,6 +18,7 @@ class AttendanceReportController extends Controller
         abort_if(! $holder, 403);
 
         $submissions = AttendanceSubmission::query()
+            ->with('project')
             ->where('scholarship_holder_id', $holder->id)
             ->whereIn('status', [
                 AttendanceSubmission::STATUS_APPROVED,
@@ -35,50 +35,39 @@ class AttendanceReportController extends Controller
     {
         $this->authorize('report', $submission);
 
-        // 🔹 Carrega relações
         $submission->load([
+            'project',
             'scholarshipHolder.user',
             'scholarshipHolder.unit',
-            'scholarshipHolder.projects',
         ]);
 
-        // 🔹 Busca registros
         $records = $this->getRecords($submission);
 
-        // 🔹 Se for PDF
         if ($request->boolean('pdf')) {
             return $this->renderPdf($submission, $records, $request);
         }
 
-        // 🔹 HTML normal
         return view('attendance.reports.monthly', [
             'submission' => $submission,
             'records' => $records,
-            'isPdf' => false
+            'isPdf' => false,
         ]);
     }
 
-    /**
-     * 🔎 Centraliza busca de registros
-     */
     private function getRecords(AttendanceSubmission $submission)
     {
-        return AttendanceRecord::where('scholarship_holder_id', $submission->scholarship_holder_id)
-            ->whereMonth('date', $submission->month)
-            ->whereYear('date', $submission->year)
+        return $submission->attendanceRecords()
+            ->with('project')
             ->orderBy('date')
             ->get();
     }
 
-    /**
-     * 📄 Renderização PDF padronizada
-     */
     private function renderPdf($submission, $records, Request $request)
     {
         $pdf = Pdf::loadView('attendance.reports.monthly', [
             'submission' => $submission,
             'records' => $records,
-            'isPdf' => true
+            'isPdf' => true,
         ]);
 
         $filename = "relatorio_{$submission->month}_{$submission->year}.pdf";
@@ -95,9 +84,9 @@ class AttendanceReportController extends Controller
         $this->authorize('report', $submission);
 
         $submission->load([
+            'project',
             'scholarshipHolder.user',
             'scholarshipHolder.unit',
-            'scholarshipHolder.projects',
         ]);
 
         if ($request->boolean('pdf')) {

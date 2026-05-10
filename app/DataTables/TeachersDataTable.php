@@ -6,9 +6,9 @@ use App\Models\User;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class TeachersDataTable extends DataTable
+class TeachersDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -69,6 +69,7 @@ class TeachersDataTable extends DataTable
             ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
             ->orderBy(0)
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel'),
                 Button::make('csv'),

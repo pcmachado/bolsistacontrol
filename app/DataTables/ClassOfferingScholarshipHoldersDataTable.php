@@ -4,11 +4,11 @@ namespace App\DataTables;
 
 use App\Models\ScholarshipHolder;
 use App\Models\ClassOffering;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Column;
 
-class ClassOfferingScholarshipHoldersDataTable extends DataTable
+class ClassOfferingScholarshipHoldersDataTable extends BaseDataTable
 {
     protected $offering;
 
@@ -64,6 +64,7 @@ class ClassOfferingScholarshipHoldersDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
+            ->parameters($this->defaultParameters())
             ->dom('Bfrtip')
             ->buttons([
                 'excel', 'csv', 'pdf', 'print'

@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 use App\Services\VisibilityService;
 
-class CoursesDataTable extends DataTable
+class CoursesDataTable extends BaseDataTable
 {
     public function dataTable($query)
     {
@@ -69,6 +69,7 @@ class CoursesDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax()
             ->orderBy(0)
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0'),
                 Button::make('csv')->className('btn btn-info rounded-0'),

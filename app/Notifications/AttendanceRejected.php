@@ -27,7 +27,7 @@ class AttendanceRejected extends Notification
             'message' => 'Seu registro de frequência foi rejeitado. Motivo: ' . $this->attendance->rejected_reason,
             'attendance_id' => $this->attendance->id,
             'date' => $this->attendance->date->format('Y-m-d'),
-            'url' => route('attendance.index', ['month' => $this->attendance->date->format('Y-m')]),
+            'url' => route('attendance.index', ['project_id' => $this->attendance->project_id, 'month' => $this->attendance->date->format('Y-m')]),
             'level' => 'error',
         ];
     }

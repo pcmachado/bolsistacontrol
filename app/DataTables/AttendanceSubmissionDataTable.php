@@ -6,9 +6,8 @@ use App\Models\AttendanceSubmission;
 use App\Services\VisibilityService;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Services\DataTable;
 
-class AttendanceSubmissionDataTable extends DataTable
+class AttendanceSubmissionDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -29,26 +28,27 @@ class AttendanceSubmissionDataTable extends DataTable
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
+            ->addColumn('project', fn ($row) =>
+                $row->project?->name ?? '-'
+            )
             ->addColumn('bolsista', fn ($row) =>
                 $row->scholarshipHolder?->user?->name ?? '-'
             )
-
             ->addColumn('period', fn ($row) =>
                 sprintf('%02d/%d', $row->month, $row->year)
             )
-
             ->addColumn('records_count', fn ($row) =>
                 $row->attendance_records_count
             )
-
             ->addColumn('status_label', fn ($row) =>
                 view('attendance.submissions.partials.status', compact('row'))->render()
             )
-
             ->addColumn('actions', fn ($row) =>
-                view('attendance.submissions.partials.actions', compact('row'))->render()
+                view('attendance.submissions.partials.actions', [
+                    'row' => $row,
+                    'mode' => $this->mode,
+                ])->render()
             )
-
             ->rawColumns(['status_label', 'actions']);
     }
 
@@ -58,36 +58,38 @@ class AttendanceSubmissionDataTable extends DataTable
 
         $query = $model->newQuery()
             ->with([
+                'project',
                 'scholarshipHolder.user',
                 'scholarshipHolder.unit',
             ])
             ->withCount('attendanceRecords');
-        
-        $context = $this->mode === 'self' ? 'self' : 'admin';
 
+        $context = $this->mode === 'self' ? 'self' : 'admin';
         $query = app(VisibilityService::class)->apply($query, $user, $context);
 
-        if (!empty($this->filters['status']) && $this->filters['status'] !== 'all') {
+        if (! empty($this->filters['status']) && $this->filters['status'] !== 'all') {
             $query->where('status', $this->filters['status']);
         }
 
-        if (!empty($this->filters['month'])) {
-
+        if (! empty($this->filters['month'])) {
             if (! preg_match('/^\d{4}-\d{2}$/', $this->filters['month'])) {
                 return $query->whereRaw('1=0');
             }
 
             [$year, $month] = explode('-', $this->filters['month']);
             $query->where('year', $year)
-                  ->where('month', $month);
+                ->where('month', $month);
         }
 
-        if (!empty($this->filters['unit_id'])) {
+        if (! empty($this->filters['project_id'])) {
+            $query->where('project_id', $this->filters['project_id']);
+        }
 
+        if (! empty($this->filters['unit_id'])) {
             $unitId = $this->filters['unit_id'];
 
-            $query->whereHas('scholarshipHolder', function ($q) use ($unitId) {
-                $q->where('unit_id', $unitId);
+            $query->whereHas('scholarshipHolder', function ($builder) use ($unitId) {
+                $builder->where('unit_id', $unitId);
             });
         }
 
@@ -99,16 +101,17 @@ class AttendanceSubmissionDataTable extends DataTable
         return $this->builder()
             ->setTableId('attendance-submissions-table')
             ->minifiedAjax()
-            ->responsive(true)
+            ->parameters($this->defaultParameters())
             ->columns([
+                ['data' => 'project', 'title' => 'Projeto'],
                 ['data' => 'bolsista', 'title' => 'Bolsista'],
-                ['data' => 'period', 'title' => 'Período'],
+                ['data' => 'period', 'title' => 'PerÃ­odo'],
                 ['data' => 'records_count', 'title' => 'Registros'],
                 ['data' => 'status_label', 'title' => 'Status'],
                 [
-                    'data'       => 'actions',
-                    'title'      => 'Ações',
-                    'orderable'  => false,
+                    'data' => 'actions',
+                    'title' => 'AÃ§Ãµes',
+                    'orderable' => false,
                     'searchable' => false,
                 ],
             ]);

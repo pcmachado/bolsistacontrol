@@ -134,6 +134,16 @@ class Project extends Model
         return (float) ($positionPivot?->hourly_rate ?? 0);
     }
 
+    public function weeklyWorkloadForScholarshipHolder(ScholarshipHolder $holder): float
+    {
+        $pivot = $this->scholarshipHolders()
+            ->where('scholarship_holder_id', $holder->id)
+            ->first()
+            ?->pivot;
+
+        return (float) ($pivot?->weekly_workload ?? 0);
+    }
+
     public function payments()
     {
         return $this->hasMany(Payment::class);

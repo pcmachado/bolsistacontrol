@@ -34,6 +34,7 @@
                             <tr>
                                 <td>
                                     <span class="fw-bolder text-primary">{{ $role->name }}</span>
+                                    <span class="badge bg-secondary text-white ms-2">Nível {{ $role->level }}</span>
                                     @if (in_array($role->name, ['admin', 'superadmin']))
                                         <span class="badge bg-danger ms-2">Admin</span>
                                     @elseif (in_array($role->name, ['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto']))
@@ -50,7 +51,8 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="progress" style="height: 20px; width: 100px;">
                                                 @php
-                                                    $percentage = min(100, round(($role->permissions->count() / 80) * 100));
+                                                    $totalPermissions = \Spatie\Permission\Models\Permission::count() ?: 1;
+                                                    $percentage = min(100, round(($role->permissions->count() / $totalPermissions) * 100));
                                                 @endphp
                                                 <div class="progress-bar bg-success" role="progressbar" 
                                                      style="width: {{ $percentage }}%;" 

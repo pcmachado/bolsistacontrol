@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class AttendanceSubmissionService
 {
-    public function createFromMonth(User $user, string $month): AttendanceSubmission
+    public function createFromMonth(User $user, string $month, ?int $projectId = null): AttendanceSubmission
     {
         $holder = $user->scholarshipHolder;
 
@@ -19,12 +19,17 @@ class AttendanceSubmissionService
         }
 
         if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
-            throw new \InvalidArgumentException('Formato de mês inválido.');
+            throw new \InvalidArgumentException('Formato de mÃªs invÃ¡lido.');
         }
 
         [$year, $month] = explode('-', $month);
 
-        $submission = $this->getOrCreateDraft($holder, (int) $year, (int) $month);
+        $submission = $this->getOrCreateDraft(
+            $holder,
+            (int) $year,
+            (int) $month,
+            $projectId
+        );
 
         $this->attachMonthlyRecords($submission);
 
@@ -32,12 +37,13 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Vincula automaticamente os registros do mês à submissão
+     * Vincula automaticamente os registros do mÃªs Ã  submissÃ£o
      */
     public function attachMonthlyRecords(AttendanceSubmission $submission): void
     {
         AttendanceRecord::query()
             ->where('scholarship_holder_id', $submission->scholarship_holder_id)
+            ->where('project_id', $submission->project_id)
             ->whereYear('date', $submission->year)
             ->whereMonth('date', $submission->month)
             ->update([
@@ -46,16 +52,16 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Remove um registro da submissão (antes do envio)
+     * Remove um registro da submissÃ£o (antes do envio)
      */
     public function removeRecord(AttendanceSubmission $submission, AttendanceRecord $record): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_DRAFT) {
-            throw new \DomainException('Submissão já enviada.');
+            throw new \DomainException('SubmissÃ£o jÃ¡ enviada.');
         }
 
         if ($record->attendance_submission_id !== $submission->id) {
-            throw new \DomainException('Registro não pertence a esta submissão.');
+            throw new \DomainException('Registro nÃ£o pertence a esta submissÃ£o.');
         }
 
         $record->update([
@@ -64,18 +70,18 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Envia a submissão para homologação
+     * Envia a submissÃ£o para homologaÃ§Ã£o
      */
     public function submit(AttendanceSubmission $submission): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_DRAFT) {
-            throw new \DomainException('A submissão não está em rascunho.');
+            throw new \DomainException('A submissÃ£o nÃ£o estÃ¡ em rascunho.');
         }
 
         $this->attachMonthlyRecords($submission);
 
         if ($submission->attendanceRecords()->count() === 0) {
-            throw new \DomainException('Não é possível enviar uma submissão vazia.');
+            throw new \DomainException('NÃ£o Ã© possÃ­vel enviar uma submissÃ£o vazia.');
         }
 
         $submission->recalculate();
@@ -89,13 +95,12 @@ class AttendanceSubmissionService
             ]);
         });
 
-        // Notificação usando o sistema avançado
         $notificationService = app(NotificationService::class);
         $notificationService->sendEventNotification(
             'submission_submitted',
             [
-                'title' => 'Nova Submissão de Frequência',
-                'message' => "O bolsista {$submission->scholarshipHolder->user->name} enviou uma submissão de frequência para {$submission->month}/{$submission->year}",
+                'title' => 'Nova SubmissÃ£o de FrequÃªncia',
+                'message' => "O bolsista {$submission->scholarshipHolder->user->name} enviou uma submissÃ£o de frequÃªncia para {$submission->month}/{$submission->year}",
                 'level' => 'info',
                 'submission_id' => $submission->id,
                 'url' => route('attendance.submissions.show', $submission),
@@ -110,12 +115,12 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Aprovação da submissão (coordenador)
+     * AprovaÃ§Ã£o da submissÃ£o (coordenador)
      */
     public function approve(AttendanceSubmission $submission, int $userId): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_SUBMITTED) {
-            throw new \DomainException('Submissão não está pendente.');
+            throw new \DomainException('SubmissÃ£o nÃ£o estÃ¡ pendente.');
         }
 
         $submission->update([
@@ -124,13 +129,16 @@ class AttendanceSubmissionService
             'approved_by' => $userId,
         ]);
 
-        // Notificação usando o sistema avançado
+        app(PaymentGenerationService::class)->generateFromSubmission(
+            $submission->fresh(['project', 'scholarshipHolder'])
+        );
+
         $notificationService = app(NotificationService::class);
         $notificationService->sendEventNotification(
             'submission_approved',
             [
-                'title' => 'Submissão de Frequência Aprovada',
-                'message' => "Sua submissão de frequência para {$submission->month}/{$submission->year} foi aprovada",
+                'title' => 'SubmissÃ£o de FrequÃªncia Aprovada',
+                'message' => "Sua submissÃ£o de frequÃªncia para {$submission->month}/{$submission->year} foi aprovada",
                 'level' => 'success',
                 'submission_id' => $submission->id,
                 'url' => route('my-attendance.submissions.show', $submission),
@@ -144,12 +152,12 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Rejeição da submissão (coordenador)
+     * RejeiÃ§Ã£o da submissÃ£o (coordenador)
      */
     public function reject(AttendanceSubmission $submission, string $reason, int $userId): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_SUBMITTED) {
-            throw new \DomainException('Submissão não está pendente.');
+            throw new \DomainException('SubmissÃ£o nÃ£o estÃ¡ pendente.');
         }
 
         DB::transaction(function () use ($submission, $reason, $userId) {
@@ -160,19 +168,17 @@ class AttendanceSubmissionService
                 'approved_by' => $userId,
             ]);
 
-            // devolve os registros para edição
             $submission->attendanceRecords()->update([
                 'attendance_submission_id' => null,
             ]);
         });
 
-        // Notificação usando o sistema avançado
         $notificationService = app(NotificationService::class);
         $notificationService->sendEventNotification(
             'submission_rejected',
             [
-                'title' => 'Submissão de Frequência Rejeitada',
-                'message' => "Sua submissão de frequência para {$submission->month}/{$submission->year} foi rejeitada. Motivo: {$reason}",
+                'title' => 'SubmissÃ£o de FrequÃªncia Rejeitada',
+                'message' => "Sua submissÃ£o de frequÃªncia para {$submission->month}/{$submission->year} foi rejeitada. Motivo: {$reason}",
                 'level' => 'danger',
                 'submission_id' => $submission->id,
                 'url' => route('my-attendance.submissions.show', $submission),
@@ -185,10 +191,15 @@ class AttendanceSubmissionService
         );
     }
 
-    public function canCreateRecord(ScholarshipHolder $holder, int $year, int $month): bool
-    {
+    public function canCreateRecord(
+        ScholarshipHolder $holder,
+        int $year,
+        int $month,
+        ?int $projectId = null
+    ): bool {
         return ! AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($projectId, fn ($query) => $query->where('project_id', $projectId))
             ->where('year', $year)
             ->where('month', $month)
             ->whereIn('status', [
@@ -198,18 +209,20 @@ class AttendanceSubmissionService
             ->exists();
     }
 
-    protected function getOrCreateDraft(ScholarshipHolder $holder, int $year, int $month, ?int $projectId = null): AttendanceSubmission
-    {
+    protected function getOrCreateDraft(
+        ScholarshipHolder $holder,
+        int $year,
+        int $month,
+        ?int $projectId = null
+    ): AttendanceSubmission {
+        $projectId = $this->resolveProjectId($holder, $projectId);
+
         return AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
-            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->where('project_id', $projectId)
             ->where('year', $year)
             ->where('month', $month)
             ->firstOr(function () use ($holder, $year, $month, $projectId) {
-
-                $projectId = $projectId
-                    ?? $holder->projects()->first()?->id;
-
                 return AttendanceSubmission::create([
                     'scholarship_holder_id' => $holder->id,
                     'project_id' => $projectId,
@@ -223,14 +236,19 @@ class AttendanceSubmissionService
     public function findById($id): AttendanceSubmission
     {
         return AttendanceSubmission::query()
-            ->with(['scholarshipHolder.user', 'scholarshipHolder.unit'])
+            ->with(['project', 'scholarshipHolder.user', 'scholarshipHolder.unit'])
             ->findOrFail($id);
     }
 
-    public function isClosed(ScholarshipHolder $holder, int $year, int $month): bool
-    {
+    public function isClosed(
+        ScholarshipHolder $holder,
+        int $year,
+        int $month,
+        ?int $projectId = null
+    ): bool {
         return AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($projectId, fn ($query) => $query->where('project_id', $projectId))
             ->where('year', $year)
             ->where('month', $month)
             ->whereIn('status', [
@@ -238,5 +256,22 @@ class AttendanceSubmissionService
                 AttendanceSubmission::STATUS_APPROVED,
             ])
             ->exists();
+    }
+
+    protected function resolveProjectId(ScholarshipHolder $holder, ?int $projectId = null): int
+    {
+        $project = $projectId
+            ? $holder->projects()->where('projects.id', $projectId)->first()
+            : $holder->projects()->first();
+
+        if (! $project) {
+            if ($projectId !== null) {
+                abort(403, 'Projeto invÃ¡lido para este bolsista.');
+            }
+
+            throw new \DomainException('Nenhum projeto vÃ¡lido vinculado ao bolsista.');
+        }
+
+        return (int) $project->id;
     }
 }

@@ -3,9 +3,9 @@ namespace App\DataTables;
 
 use App\Models\Student;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class StudentDataTable extends DataTable
+class StudentDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -44,7 +44,6 @@ class StudentDataTable extends DataTable
         return $this->builder()
             ->setTableId('students-table')
             ->minifiedAjax()
-            ->responsive(true)
             ->columns([
                 ['data' => 'name', 'title' => 'Nome'],
                 ['data' => 'class', 'title' => 'Turma'],
@@ -55,6 +54,7 @@ class StudentDataTable extends DataTable
                     'orderable' => false,
                     'searchable' => false,
                 ],
-            ]);
+            ])
+            ->parameters($this->defaultParameters());
     }
 }

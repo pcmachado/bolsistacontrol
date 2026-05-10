@@ -1,43 +1,40 @@
 @extends('layouts.app')
 
-@section('title', 'Relatórios Mensais')
+@section('title', 'RelatÃ³rios Mensais')
 
 @section('content')
 <div class="container-fluid py-3">
-
-    <h2 class="mb-4">📄 Relatórios Mensais</h2>
+    <h2 class="mb-4">ðŸ“„ RelatÃ³rios Mensais</h2>
 
     @if($submissions->isEmpty())
         <div class="alert alert-info">
-            Nenhuma submissão disponível para relatório.
+            Nenhuma submissÃ£o disponÃ­vel para relatÃ³rio.
         </div>
     @else
         <div class="card shadow-sm">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Mês/Ano</th>
+                        <th>Projeto</th>
+                        <th>MÃªs/Ano</th>
                         <th>Status</th>
-                        <th class="text-end">Ações</th>
+                        <th class="text-end">AÃ§Ãµes</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($submissions as $submission)
                         <tr>
-                            <td>
-                                {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
-                            </td>
-
+                            <td>{{ $submission->project?->name ?? '-' }}</td>
+                            <td>{{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}</td>
                             <td>
                                 <span class="badge bg-{{ match($submission->status) {
-                                    'approved'  => 'success',
+                                    'approved' => 'success',
                                     'submitted' => 'warning',
-                                    default     => 'secondary'
+                                    default => 'secondary'
                                 } }}">
                                     {{ ucfirst($submission->status) }}
                                 </span>
                             </td>
-
                             <td class="text-end">
                                 <a href="{{ route('attendance.reports.monthly', $submission) }}"
                                    class="btn btn-sm btn-outline-primary">
@@ -62,6 +59,5 @@
             </table>
         </div>
     @endif
-
 </div>
 @endsection

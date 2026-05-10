@@ -6,11 +6,11 @@ use App\Models\Discipline;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 use Illuminate\Support\Facades\Auth;
 use App\Services\VisibilityService;
 
-class DisciplinesDataTable extends DataTable
+class DisciplinesDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -55,10 +55,7 @@ class DisciplinesDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax(request()->fullUrl())
             ->orderBy(0, 'asc')
-            ->parameters([
-                'responsive' => true,
-                'autoWidth' => false,
-            ])
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0')->text('Excel'),
                 Button::make('csv')->className('btn btn-info rounded-0')->text('CSV'),

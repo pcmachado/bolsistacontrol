@@ -29,7 +29,14 @@ class DashboardController extends Controller
             : optional($user->scholarshipHolder)->projects()->get() ?? collect();
 
         if ($user->unit?->isAdministrative()) {
-            $projects = \App\Models\Project::all();
+
+            $projects = \App\Models\Project::query()
+
+                ->whereHas('institution', function ($q) use ($user) {
+                    $q->where('institutions.id', $user->institution_id);
+                })
+
+                ->get();
         }
 
         $activeProject = $projectId

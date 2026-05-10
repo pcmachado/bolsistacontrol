@@ -232,6 +232,8 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, 'search'])->name('scholarshipholders.search');
+Route::get('/admin/scholarship-holders/search', [ScholarshipHolderController::class, 'search'])->name('admin.scholarship-holders.search');
+
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 
 Route::post('/admin/context/switch', [ContextController::class, 'switch'])->name('admin.context.switch')->middleware(['auth', 'role:admin|superadmin']);

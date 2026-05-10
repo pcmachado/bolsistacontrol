@@ -113,10 +113,13 @@ class ScholarshipHolderDashboardService
                 ->where('status', Payment::STATUS_SENT)
                 ->sum('amount'),
             'paid' => (float) (clone $yearPaymentsQuery)
-                ->where('status', Payment::STATUS_PAID)
+                ->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_CONFIRMED])
                 ->sum('amount'),
             'confirmed' => (float) (clone $yearPaymentsQuery)
                 ->where('status', Payment::STATUS_CONFIRMED)
+                ->sum('amount'),
+            'waiting_confirmation' => (float) (clone $yearPaymentsQuery)
+                ->where('status', Payment::STATUS_PAID)
                 ->sum('amount'),
             'year_total' => (float) (clone $yearPaymentsQuery)->sum('amount'),
         ];
@@ -126,9 +129,12 @@ class ScholarshipHolderDashboardService
                 ->where('status', Payment::STATUS_SENT)
                 ->count(),
             'paid' => (clone $yearPaymentsQuery)
-                ->where('status', Payment::STATUS_PAID)
+                ->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_CONFIRMED])
                 ->count(),
             'confirmed' => (clone $yearPaymentsQuery)
+                ->where('status', Payment::STATUS_CONFIRMED)
+                ->count(),
+            'waiting_confirmation' => (clone $yearPaymentsQuery)
                 ->where('status', Payment::STATUS_CONFIRMED)
                 ->count(),
             'total' => (clone $yearPaymentsQuery)->count(),

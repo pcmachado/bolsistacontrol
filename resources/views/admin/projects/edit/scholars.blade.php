@@ -31,8 +31,19 @@
             <div class="row g-3">
 
                 <div class="col-md-4">
-                    <label>Bolsista</label>
-                    <select id="holder-select" class="form-control"></select>
+
+                    <label for="holder-select" class="form-label">
+                        Bolsista
+                    </label>
+
+                    <select id="holder-select"
+                            class="form-select">
+                    </select>
+
+                    <small class="text-muted">
+                        Digite pelo menos 2 caracteres para buscar.
+                    </small>
+
                 </div>
 
                 <div class="col-md-3">
@@ -45,7 +56,7 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label>Carga</label>
+                    <label>Carga Horária Semanal</label>
                     <input type="number" id="weekly_workload" class="form-control">
                 </div>
 
@@ -60,7 +71,7 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label>Edital</label>
+                    <label>Edital/Portaria</label>
                     <input type="text" id="edital_portaria" class="form-control">
                 </div>
 
@@ -180,57 +191,159 @@
 
 @push('scripts')
 <script>
-let index = {{ count($project->scholarshipHolders) }};
 
-$('#addScholar').click(function () {
+document.addEventListener('DOMContentLoaded', () => {
 
-    let holder = $('#holder-select').select2('data')[0];
+    let index = {{ count($project->scholarshipHolders) }};
 
-    if (!holder) return alert('Selecione um bolsista');
+    // 🔥 TOM SELECT
+    const holderSelect = new TomSelect('#holder-select', {
 
-    let row = `
-        <tr>
-            <td>
-                ${holder.text}
-                <input type="hidden" name="scholarships[${index}][scholarship_holder_id]" value="${holder.id}">
-            </td>
+        valueField: 'id',
+        labelField: 'text',
+        searchField: 'text',
 
-            <td>
-                <input type="hidden" name="scholarships[${index}][position_id]" value="${$('#position_id').val()}">
-                ${$('#position_id option:selected').text()}
-            </td>
+        placeholder: 'Digite nome, CPF ou e-mail...',
 
-            <td>
-                <input type="number" name="scholarships[${index}][weekly_workload]" value="${$('#weekly_workload').val()}" class="form-control">
-            </td>
+        maxOptions: 20,
 
-            <td>
-                <input type="date" name="scholarships[${index}][start_date]" value="${$('#start_date').val()}" class="form-control">
-            </td>
+        loadThrottle: 300,
 
-            <td>
-                <input type="date" name="scholarships[${index}][end_date]" value="${$('#end_date').val()}" class="form-control">
-            </td>
+        load(query, callback) {
 
-            <td>
-                <select name="scholarships[${index}][status]" class="form-select">
-                    <option value="active">Ativo</option>
-                    <option value="inactive">Inativo</option>
-                </select>
-            </td>
+            if (query.length < 2) {
+                callback();
+                return;
+            }
 
-            <td>
-                <button type="button" class="btn btn-danger btn-sm remove-row">🗑</button>
-            </td>
-        </tr>
-    `;
+            fetch(`{{ route('admin.scholarship-holders.search') }}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(json => {
+                    callback(json.results);
+                })
+                .catch(() => {
+                    callback();
+                });
+        },
 
-    $('#scholarTable tbody').append(row);
-    index++;
+        render: {
+            option(item, escape) {
+                return `
+                    <div>
+                        ${escape(item.text)}
+                    </div>
+                `;
+            }
+        }
+    });
+
+    // 🔥 ADICIONAR
+    document.getElementById('addScholar')
+        .addEventListener('click', () => {
+
+        const holderId = holderSelect.getValue();
+
+        if (!holderId) {
+            alert('Selecione um bolsista');
+            return;
+        }
+
+        const holder = holderSelect.options[holderId];
+
+        // 🚫 evitar duplicado
+        const exists = [...document.querySelectorAll(
+            'input[name*="[scholarship_holder_id]"]'
+        )].some(input => input.value == holderId);
+
+        if (exists) {
+            alert('Este bolsista já foi adicionado.');
+            return;
+        }
+
+        const row = `
+            <tr>
+
+                <td>
+                    ${holder.text}
+
+                    <input type="hidden"
+                        name="scholarships[${index}][scholarship_holder_id]"
+                        value="${holderId}">
+                </td>
+
+                <td>
+                    <input type="hidden"
+                        name="scholarships[${index}][position_id]"
+                        value="${document.getElementById('position_id').value}">
+
+                    ${document.querySelector('#position_id option:checked').text}
+                </td>
+
+                <td>
+                    <input type="number"
+                        name="scholarships[${index}][weekly_workload]"
+                        value="${document.getElementById('weekly_workload').value}"
+                        class="form-control">
+                </td>
+
+                <td>
+                    <input type="text"
+                        name="scholarships[${index}][edital_portaria]"
+                        value="${document.getElementById('edital_portaria').value}"
+                        class="form-control">
+                </td>
+
+                <td>
+                    <input type="date"
+                        name="scholarships[${index}][start_date]"
+                        value="${document.getElementById('start_date').value}"
+                        class="form-control">
+                </td>
+
+                <td>
+                    <input type="date"
+                        name="scholarships[${index}][end_date]"
+                        value="${document.getElementById('end_date').value}"
+                        class="form-control">
+                </td>
+
+                <td>
+                    <select name="scholarships[${index}][status]"
+                            class="form-select">
+
+                        <option value="active">Ativo</option>
+                        <option value="inactive">Inativo</option>
+                    </select>
+                </td>
+
+                <td>
+                    <button type="button"
+                            class="btn btn-danger btn-sm remove-row">
+                        🗑
+                    </button>
+                </td>
+
+            </tr>
+        `;
+
+        document.querySelector('#scholarTable tbody')
+            .insertAdjacentHTML('beforeend', row);
+
+        holderSelect.clear();
+
+        index++;
+    });
+
+    // remover
+    document.addEventListener('click', function (e) {
+
+        if (e.target.classList.contains('remove-row')) {
+            e.target.closest('tr').remove();
+        }
+
+    });
+
 });
 
-$(document).on('click', '.remove-row', function () {
-    $(this).closest('tr').remove();
-});
 </script>
 @endpush

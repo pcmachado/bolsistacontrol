@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class ClassOfferingsDataTable extends DataTable
+class ClassOfferingsDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -92,6 +92,7 @@ class ClassOfferingsDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax(request()->fullUrl())
             ->orderBy(0, 'asc')
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel'),
                 Button::make('csv'),

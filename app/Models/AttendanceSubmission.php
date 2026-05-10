@@ -183,13 +183,10 @@ class AttendanceSubmission extends Model
         $hours = $this->attendanceRecords()->sum('hours');
 
         $holder = $this->scholarshipHolder;
-        $project = $holder?->projects->first();
-
-        $positionId = $project?->pivot->position_id;
-
-        $rate = $project?->positions
-            ->firstWhere('id', $positionId)
-            ?->pivot->hourly_rate ?? 0;
+        $project = $this->relationLoaded('project')
+            ? $this->project
+            : $this->project()->with('positions')->first();
+        $rate = $project?->hourlyRateForScholarshipHolder($holder) ?? 0;
 
         $this->update([
             'total_hours' => $hours,

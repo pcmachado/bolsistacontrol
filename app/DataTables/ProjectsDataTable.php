@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class ProjectsDataTable extends DataTable
+class ProjectsDataTable extends BaseDataTable
 {
     public function dataTable($query)
     {
@@ -66,10 +66,7 @@ class ProjectsDataTable extends DataTable
             ->minifiedAjax()
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
-            ->parameters([
-                'responsive' => true,
-                'autoWidth' => false,
-            ])
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0')->text('Excel'),
                 Button::make('csv')->className('btn btn-info rounded-0')->text('CSV'),

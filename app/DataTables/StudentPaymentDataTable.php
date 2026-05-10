@@ -4,9 +4,9 @@ namespace App\DataTables;
 
 use App\Models\StudentPayment;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class StudentPaymentDataTable extends DataTable
+class StudentPaymentDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -86,7 +86,6 @@ class StudentPaymentDataTable extends DataTable
         return $this->builder()
             ->setTableId('student-payments-table')
             ->minifiedAjax()
-            ->responsive(true)
             ->columns([
                 ['data' => 'checkbox', 'title' => '<input type="checkbox" id="select-all">', 'orderable' => false, 'searchable' => false],
                 ['data' => 'student', 'title' => 'Aluno'],
@@ -100,6 +99,7 @@ class StudentPaymentDataTable extends DataTable
                     'orderable' => false,
                     'searchable' => false,
                 ],
-            ]);
+            ])
+            ->parameters($this->defaultParameters());
     }
 }

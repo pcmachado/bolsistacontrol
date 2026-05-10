@@ -24,19 +24,16 @@ class PaymentGenerationService
         return DB::transaction(function () use ($submission) {
 
             $holder = $submission->scholarshipHolder;
-
-            $project = $holder->projects()->first();
-            $positionId = $project?->pivot->position_id;
-
-            $rate = $project?->positions
-                ->firstWhere('id', $positionId)
-                ?->pivot->hourly_rate ?? 0;
+            $project = $submission->relationLoaded('project')
+                ? $submission->project
+                : $submission->project()->with('positions')->first();
+            $rate = $project?->hourlyRateForScholarshipHolder($holder) ?? 0;
 
             return Payment::create([
                 'attendance_submission_id' => $submission->id,
 
                 'scholarship_holder_id' => $holder->id,
-                'project_id' => $project?->id,
+                'project_id' => $project?->id ?? $submission->project_id,
                 'unit_id' => $holder->unit_id,
 
                 'month' => $submission->month,

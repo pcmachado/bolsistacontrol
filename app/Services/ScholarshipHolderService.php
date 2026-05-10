@@ -8,7 +8,7 @@ use App\Models\User;
 class ScholarshipHolderService
 {
     /**
-     * Retorna uma instância de ScholarshipHolder com os dados necessários.
+     * Retorna uma instÃ¢ncia de ScholarshipHolder com os dados necessÃ¡rios.
      */
     public function find(int $id): ?ScholarshipHolder
     {
@@ -20,7 +20,7 @@ class ScholarshipHolderService
      */
     public function create(array $data): ScholarshipHolder
     {
-        // Implemente a lógica de criação e criptografia de senhas (se aplicável)
+        // Implemente a lÃ³gica de criaÃ§Ã£o e criptografia de senhas (se aplicÃ¡vel)
         return ScholarshipHolder::create($data);
     }
 
@@ -36,14 +36,39 @@ class ScholarshipHolderService
     public function holderOrFail(User $user): ScholarshipHolder
     {
         if (! $user->scholarshipHolder) {
-            abort(403, 'Usuário não é bolsista.');
+            abort(403, 'UsuÃ¡rio nÃ£o Ã© bolsista.');
         }
 
         return $user->scholarshipHolder;
     }
 
+    public function attendanceContext(User $user, ?int $projectId = null): array
+    {
+        $holder = $this->holderOrFail($user);
+
+        $projects = $holder->projects()
+            ->with(['institution', 'positions'])
+            ->orderBy('name')
+            ->get();
+
+        $activeProject = $projectId
+            ? $projects->firstWhere('id', $projectId)
+            : $projects->first();
+
+        if ($projectId !== null && ! $activeProject) {
+            abort(403, 'Projeto nÃ£o vinculado ao bolsista.');
+        }
+
+        return [
+            'holder' => $holder,
+            'projects' => $projects,
+            'activeProject' => $activeProject,
+            'activeProjectId' => $activeProject?->id,
+        ];
+    }
+
     /**
-     * Restaura um bolsista excluído (Soft Delete).
+     * Restaura um bolsista excluÃ­do (Soft Delete).
      */
     public function restore(int $id): bool
     {

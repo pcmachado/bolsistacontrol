@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\DataTables\MyAttendanceRecordDataTable;
 use App\Models\AttendanceRecord;
-use App\Services\AttendanceRecordService;
+use App\Models\AttendanceSubmission;
 use App\Services\AttendanceService;
 use App\Services\AttendanceSubmissionService;
 use App\Services\ScholarshipHolderService;
@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 class MyAttendanceRecordController extends Controller
 {
     public function __construct(
-        protected AttendanceRecordService $records,
         protected AttendanceSubmissionService $submissions,
         protected ScholarshipHolderService $scholarshipHolderService
     ) {
@@ -24,22 +23,27 @@ class MyAttendanceRecordController extends Controller
     public function index(Request $request, MyAttendanceRecordDataTable $dataTable)
     {
         $user = Auth::user();
-        $holder = $this->scholarshipHolderService->holderOrFail($user);
+        $context = $this->scholarshipHolderService->attendanceContext(
+            $user,
+            $request->integer('project_id') ?: null
+        );
+
+        $holder = $context['holder'];
+        $activeProjectId = $context['activeProjectId'];
 
         $monthString = $request->get('month', now()->format('Y-m'));
-
         [$year, $monthNumber] = explode('-', $monthString);
 
         $year = (int) $year;
         $monthNumber = (int) $monthNumber;
 
         $attendanceService = app(AttendanceService::class);
-
-        $total = $attendanceService->getMonthlyTotal($holder, $year, $monthNumber);
-        $limit = $attendanceService->getMonthlyLimit($holder);
+        $total = $attendanceService->getMonthlyTotal($holder, $year, $monthNumber, $activeProjectId);
+        $limit = $attendanceService->getMonthlyLimit($holder, $activeProjectId);
 
         $oldestRecord = AttendanceRecord::query()
             ->where('scholarship_holder_id', $holder->id)
+            ->when($activeProjectId, fn ($query) => $query->where('project_id', $activeProjectId))
             ->orderBy('date')
             ->first();
 
@@ -49,25 +53,33 @@ class MyAttendanceRecordController extends Controller
             : $currentMonth;
 
         $filters = [
-            'month'  => $monthString,
+            'month' => $monthString,
             'status' => $request->get('status'),
+            'project_id' => $activeProjectId,
         ];
 
-        $isClosed = ! $this->submissions->canCreateRecord($holder, $year, $monthNumber);
+        $submission = AttendanceSubmission::query()
+            ->where('scholarship_holder_id', $holder->id)
+            ->when($activeProjectId, fn ($query) => $query->where('project_id', $activeProjectId))
+            ->where('year', $year)
+            ->where('month', $monthNumber)
+            ->latest('id')
+            ->first();
 
         return $dataTable
             ->setFilters($filters)
             ->render('attendance.my', [
-                'month'         => $monthString,
-                'year'          => $year,
-                'monthNumber'   => $monthNumber,
-                'total'         => $total,
-                'limit'         => $limit,
-                'currentMonth'  => $currentMonth,
-                'oldestMonth'   => $oldestMonth,
-                'oldestRecord'  => $oldestRecord,
-                'submission'    => null,
-                'isClosed'      => $isClosed,
+                ...$context,
+                'month' => $monthString,
+                'year' => $year,
+                'monthNumber' => $monthNumber,
+                'total' => $total,
+                'limit' => $limit,
+                'currentMonth' => $currentMonth,
+                'oldestMonth' => $oldestMonth,
+                'oldestRecord' => $oldestRecord,
+                'submission' => $submission,
+                'isClosed' => ! $this->submissions->canCreateRecord($holder, $year, $monthNumber, $activeProjectId),
             ]);
     }
 }

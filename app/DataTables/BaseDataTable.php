@@ -9,6 +9,40 @@ abstract class BaseDataTable extends DataTable
 {
     protected array $filters = [];
 
+    protected function defaultParameters(): array
+    {
+        return [
+
+            'responsive' => true,
+            'autoWidth' => false,
+
+            'language' => [
+
+                'processing' => __('datatables.processing'),
+                'search' => __('datatables.search'),
+                'lengthMenu' => __('datatables.lengthMenu'),
+                'info' => __('datatables.info'),
+                'infoEmpty' => __('datatables.infoEmpty'),
+                'infoFiltered' => __('datatables.infoFiltered'),
+                'loadingRecords' => __('datatables.loadingRecords'),
+                'zeroRecords' => __('datatables.zeroRecords'),
+                'emptyTable' => __('datatables.emptyTable'),
+
+                'paginate' => [
+                    'first' => __('datatables.paginate.first'),
+                    'previous' => __('datatables.paginate.previous'),
+                    'next' => __('datatables.paginate.next'),
+                    'last' => __('datatables.paginate.last'),
+                ],
+
+                'aria' => [
+                    'sortAscending' => __('datatables.aria.sortAscending'),
+                    'sortDescending' => __('datatables.aria.sortDescending'),
+                ],
+            ],
+        ];
+    }
+
     public function setFilters(array $filters): self
     {
         $this->filters = $filters;
@@ -37,7 +71,7 @@ abstract class BaseDataTable extends DataTable
             $institutionIds = $user->activeInstitutionIds();
 
             if ($institutionIds->isNotEmpty()) {
-                $query->where(function ($scoped) use ($institutionIds) {
+                $query->where(function ($scoped) use ($institutionIds, $query) {
                     // Tentar diferentes campos dependendo do modelo
                     $model = $query->getModel();
 
@@ -68,7 +102,7 @@ abstract class BaseDataTable extends DataTable
             $unitIds = $user->visibleUnitIds();
 
             if ($unitIds->isNotEmpty()) {
-                $query->where(function ($scoped) use ($unitIds) {
+                $query->where(function ($scoped) use ($unitIds, $query) {
                     $model = $query->getModel();
 
                     // Se o modelo tem unit_id diretamente

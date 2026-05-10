@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-0 text-dark">Detalhes da Função: <strong>{{ ucfirst(str_replace('_', ' ', $role->name)) }}</strong></h1>
-            <small class="text-muted">Total de Permissões: {{ $permissionCount }}</small>
+            <small class="text-muted">Total de Permissões: {{ $permissionCount }} · Nível: {{ $role->level }}</small>
         </div>
         <div>
             @can('update', $role)

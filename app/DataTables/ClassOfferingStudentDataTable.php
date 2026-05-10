@@ -5,9 +5,9 @@ namespace App\DataTables;
 use App\Models\Student;
 use App\Models\ClassOffering;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class ClassOfferingStudentDataTable extends DataTable
+class ClassOfferingStudentDataTable extends BaseDataTable
 {
     protected $classId;
 
@@ -39,7 +39,7 @@ class ClassOfferingStudentDataTable extends DataTable
         return $this->builder()
             ->setTableId('class-students-table')
             ->minifiedAjax()
-            ->responsive(true)
+            ->parameters($this->defaultParameters())
             ->columns([
                 ['data' => 'name', 'title' => 'Nome'],
                 ['data' => 'payment', 'title' => 'Pagamento'],

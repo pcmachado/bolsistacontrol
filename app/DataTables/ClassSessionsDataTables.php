@@ -4,12 +4,12 @@ namespace App\DataTables;
 
 use App\Models\ClassSession;
 use App\Models\ClassOffering;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Html\Button;
 
-class ClassSessionsDataTable extends DataTable
+class ClassSessionsDataTable extends BaseDataTable
 {
     protected ClassOffering $offering;
     protected array $filters = [];
@@ -99,6 +99,7 @@ class ClassSessionsDataTable extends DataTable
             ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
             ->orderBy(0)
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel'),
                 Button::make('csv'),

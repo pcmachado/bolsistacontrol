@@ -63,10 +63,7 @@ class UsersDataTable extends BaseDataTable
             ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
-            ->parameters([
-                'responsive' => true,
-                'autoWidth' => false,
-            ])
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0')->text('Excel'),
                 Button::make('csv')->className('btn btn-info rounded-0')->text('CSV'),

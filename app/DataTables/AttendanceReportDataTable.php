@@ -3,9 +3,9 @@
 namespace App\DataTables;
 
 use App\Models\AttendanceRecord;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class AttendanceReportDataTable extends DataTable
+class AttendanceReportDataTable extends BaseDataTable
 {
     public function query()
     {

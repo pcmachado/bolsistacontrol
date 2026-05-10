@@ -17,7 +17,7 @@ class MyAttendanceRecordDataTable extends BaseAttendanceDataTable
         $user = Auth::user();
 
         $query = $model->newQuery()
-            ->with(['submission'])
+            ->with(['project', 'submission'])
             ->where('scholarship_holder_id', $user->scholarshipHolder->id);
 
         return $this->applyFilters($query)
@@ -29,7 +29,7 @@ class MyAttendanceRecordDataTable extends BaseAttendanceDataTable
         return $this->builder()
             ->setTableId('my-attendance-table')
             ->minifiedAjax()
-            ->responsive(true)
+            ->parameters($this->defaultParameters())
             ->columns($this->getColumns());
     }
 }

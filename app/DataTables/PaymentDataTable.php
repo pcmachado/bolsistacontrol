@@ -6,11 +6,11 @@ use App\Models\Payment;
 use App\Services\VisibilityService;
 use App\Support\Traits\PaymentFilters;
 use Yajra\DataTables\EloquentDataTable;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
-class PaymentDataTable extends DataTable
+class PaymentDataTable extends BaseDataTable
 {
     public string $mode = 'default';
     
@@ -76,7 +76,7 @@ class PaymentDataTable extends DataTable
             ->setTableId('payments-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->responsive(true);
+            ->parameters($this->defaultParameters());
     }
 
     protected function getColumns(): array

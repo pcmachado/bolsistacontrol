@@ -39,7 +39,7 @@ class NotificationTestSeeder extends Seeder
                     'title' => 'Frequência pendente',
                     'message' => "Você possui registros não submetidos neste mês.",
                     'level' => 'warning',
-                    'url' => route('attendance.index'),
+                    'url' => route('attendance.index', ['project_id' => null, 'month' => now()->format('Y-m')]),
                 ],
                 [
                     'title' => 'Ação necessária',

@@ -14,21 +14,20 @@ class AttendanceRecordService
     {
         $date = Carbon::parse($data['date']);
         $hours = $this->calculateHours($data['start_time'], $data['end_time']);
+        $projectId = $this->resolveProjectId($holder, $data['project_id'] ?? null);
 
-        // 🔒 valida se pode registrar nesse mês
         if (! app(AttendanceSubmissionService::class)
-            ->canCreateRecord($holder, $date->year, $date->month)
+            ->canCreateRecord($holder, $date->year, $date->month, $projectId)
         ) {
-            throw new DomainException('Mês já fechado para edição.');
+            throw new DomainException('MÃªs jÃ¡ fechado para ediÃ§Ã£o.');
         }
 
         if (FinancialClosure::isClosed($holder->unit_id, $date->month, $date->year)) {
-            throw new DomainException('Período financeiro fechado.');
+            throw new DomainException('PerÃ­odo financeiro fechado.');
         }
 
-        // 🔥 valida limite mensal
         app(AttendanceService::class)
-            ->validateMonthlyLimit($holder, $date->year, $date->month, $hours);
+            ->validateMonthlyLimit($holder, $date->year, $date->month, $hours, null, $projectId);
 
         return AttendanceRecord::create([
             'scholarship_holder_id' => $holder->id,
@@ -38,14 +37,14 @@ class AttendanceRecordService
             'description' => $data['description'] ?? null,
             'hours' => $hours,
             'attendance_submission_id' => null,
-            'project_id' => $data['project_id'],
+            'project_id' => $projectId,
         ]);
     }
 
     public function update(AttendanceRecord $record, array $data): AttendanceRecord
     {
         if (! $record->isEditable()) {
-            throw new DomainException('Este registro não pode ser alterado.');
+            throw new DomainException('Este registro nÃ£o pode ser alterado.');
         }
 
         if (FinancialClosure::isClosed(
@@ -53,11 +52,12 @@ class AttendanceRecordService
             $record->date->month,
             $record->date->year
         )) {
-            throw new DomainException('Período financeiro fechado.');
+            throw new DomainException('PerÃ­odo financeiro fechado.');
         }
 
         $date = Carbon::parse($data['date']);
         $hours = $this->calculateHours($data['start_time'], $data['end_time']);
+        $projectId = $this->resolveProjectId($record->scholarshipHolder, $data['project_id'] ?? null);
 
         app(AttendanceService::class)
             ->validateMonthlyLimit(
@@ -65,7 +65,8 @@ class AttendanceRecordService
                 $date->year,
                 $date->month,
                 $hours,
-                $record->id // ignora o próprio registro
+                $record->id,
+                $projectId
             );
 
         $record->update([
@@ -74,7 +75,7 @@ class AttendanceRecordService
             'end_time' => $data['end_time'],
             'description' => $data['description'] ?? null,
             'hours' => $hours,
-            'project_id' => $data['project_id'],
+            'project_id' => $projectId,
         ]);
 
         return $record;
@@ -83,7 +84,7 @@ class AttendanceRecordService
     public function deleteAttendance(AttendanceRecord $record): void
     {
         if (! $record->isEditable()) {
-            throw new DomainException('Este registro não pode ser removido.');
+            throw new DomainException('Este registro nÃ£o pode ser removido.');
         }
 
         if (FinancialClosure::isClosed(
@@ -91,7 +92,7 @@ class AttendanceRecordService
             $record->date->month,
             $record->date->year
         )) {
-            throw new DomainException('Período financeiro fechado.');
+            throw new DomainException('PerÃ­odo financeiro fechado.');
         }
 
         $record->delete();
@@ -103,5 +104,22 @@ class AttendanceRecordService
         $endTime = Carbon::parse($end);
 
         return round($startTime->diffInMinutes($endTime) / 60, 2);
+    }
+
+    protected function resolveProjectId(ScholarshipHolder $holder, mixed $projectId): int
+    {
+        if (! $projectId) {
+            throw new DomainException('Selecione um projeto.');
+        }
+
+        $project = $holder->projects()
+            ->where('projects.id', $projectId)
+            ->first();
+
+        if (! $project) {
+            abort(403, 'Projeto invÃ¡lido para este bolsista.');
+        }
+
+        return (int) $project->id;
     }
 }

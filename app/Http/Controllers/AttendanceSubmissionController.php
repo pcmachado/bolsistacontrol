@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\DataTables\AttendanceSubmissionDataTable;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSubmission;
+use App\Models\Project;
 use App\Models\Unit;
 use App\Services\AttendanceDashboardService;
 use App\Services\AttendanceSubmissionService;
@@ -25,8 +26,20 @@ class AttendanceSubmissionController extends Controller
         AttendanceDashboardService $dashboardService
     ) {
         $user = Auth::user();
-        $filters = $request->only(['status', 'month', 'unit_id']);
-        $submissionCounts = $dashboardService->submissionCounts($user, 'admin');
+        $projectIds = $user->visibleProjectIds();
+        $projects = Project::query()
+            ->withoutGlobalScopes()
+            ->when($projectIds->isEmpty(), fn ($query) => $query->whereRaw('1=0'))
+            ->when($projectIds->isNotEmpty(), fn ($query) => $query->whereIn('id', $projectIds))
+            ->orderBy('name')
+            ->get();
+
+        $filters = $request->only(['status', 'month', 'unit_id', 'project_id']);
+        $submissionCounts = $dashboardService->submissionCounts(
+            $user,
+            $request->integer('project_id') ?: null,
+            'admin'
+        );
 
         $units = Unit::query()
             ->withoutGlobalScopes()
@@ -37,7 +50,12 @@ class AttendanceSubmissionController extends Controller
         return $dataTable
             ->setMode('admin')
             ->setFilters($filters)
-            ->render('attendance.submissions.index', compact('submissionCounts', 'units'));
+            ->render('attendance.submissions.index', [
+                'submissionCounts' => $submissionCounts,
+                'units' => $units,
+                'projects' => $projects,
+                'activeProject' => $projects->firstWhere('id', $request->integer('project_id')),
+            ]);
     }
 
     public function show(AttendanceSubmission $submission)
@@ -45,7 +63,8 @@ class AttendanceSubmissionController extends Controller
         $this->authorize('view', $submission);
 
         $submission->load([
-            'attendanceRecords',
+            'project',
+            'attendanceRecords.project',
             'scholarshipHolder.user',
             'scholarshipHolder.unit',
         ]);
@@ -59,9 +78,10 @@ class AttendanceSubmissionController extends Controller
 
         $request->validate([
             'month' => ['required', 'date_format:Y-m'],
+            'project_id' => ['required', 'integer', 'exists:projects,id'],
         ]);
 
-        $submission = $this->service->createFromMonth($user, $request->month);
+        $submission = $this->service->createFromMonth($user, $request->month, (int) $request->project_id);
 
         return redirect()
             ->route('my-attendance.submissions.show', $submission)
@@ -84,7 +104,7 @@ class AttendanceSubmissionController extends Controller
         $this->service->approve($submission, Auth::user()->id);
 
         return redirect()
-            ->route('attendance.submissions.index')
+            ->route('attendance.submissions.index', ['project_id' => $submission->project_id])
             ->with('success', 'Submissao homologada com sucesso.');
     }
 
@@ -101,7 +121,7 @@ class AttendanceSubmissionController extends Controller
         $this->service->reject($submission, $request->reason, $user->id);
 
         return redirect()
-            ->route('attendance.submissions.index')
+            ->route('attendance.submissions.index', ['project_id' => $submission->project_id])
             ->with('success', 'Submissao rejeitada e devolvida ao bolsista.');
     }
 

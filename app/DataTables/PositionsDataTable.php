@@ -5,9 +5,9 @@ use App\Models\Position;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Yajra\DataTables\Services\DataTable;
-use Yajra\DataTables\EloquentDataTable;
+use App\DataTables\BaseDataTable;
 
-class PositionsDataTable extends DataTable
+class PositionsDataTable extends BaseDataTable
 {
     public function dataTable($query)
     {
@@ -36,10 +36,7 @@ class PositionsDataTable extends DataTable
             ->minifiedAjax()
             ->dom('Bfrtip')
             ->orderBy(0, 'asc')
-            ->parameters([
-                'responsive' => true,
-                'autoWidth' => false,
-            ])
+            ->parameters($this->defaultParameters())
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0')->text('📊 Excel'),
                 Button::make('csv')->className('btn btn-info rounded-0')->text('📝 CSV'),

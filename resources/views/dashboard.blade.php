@@ -102,6 +102,11 @@
         color: #6c757d;
     }
 
+    body.loading {
+        opacity: .7;
+        pointer-events: none;
+    }
+
     @media (max-width: 767.98px) {
         .dashboard-hero {
             padding: 1.25rem;
@@ -288,7 +293,7 @@
 
         @if($activeProject)
             <div class="alert alert-info">
-                Projeto: <strong>{{ $activeProject->name }}</strong>
+                Projeto: <strong id="activeProjectName">{{ $activeProject->name }}</strong>
             </div>
         @else
             <div class="alert alert-warning">
@@ -666,39 +671,110 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function loadDashboard(projectId) {
+    function loadDashboard(projectId, projectName) {
 
         document.body.classList.add('loading');
 
-        fetch(`{{ route('dashboard.stats') }}?project_id=${projectId}&month={{ $monthInput }}&year={{ $selectedYear }}`)
-            .then(res => res.json())
+        const month =
+            document.querySelector('input[name="month"]')?.value;
+
+        const year =
+            document.querySelector('input[name="year"]')?.value;
+
+        fetch(
+            `{{ route('dashboard.stats') }}?project_id=${projectId}&month=${month}&year=${year}`
+        )
+            .then(async res => {
+
+                if (!res.ok) {
+                    throw new Error(await res.text());
+                }
+
+                return res.json();
+            })
             .then(res => {
 
-                const data = res.data;
+                const data = res.general;
                 const financial = res.financial;
                 const attendance = res.attendance;
 
-                // 🔥 Atualizar cards
-                document.getElementById('recordsCount').innerText = data.recordsCount;
+                document.getElementById('activeProjectName').innerText = 
+                    projectName;
+
+                // resumo mensal
+                document.getElementById('recordsCount').innerText =
+                    data.recordsCount ?? 0;
 
                 document.getElementById('recordsHours').innerText =
-                    Number(data.recordsHours).toLocaleString('pt-BR') + 'h';
+                    Number(data.recordsHours ?? 0)
+                        .toLocaleString('pt-BR') + 'h';
 
                 document.getElementById('estimatedValue').innerText =
-                    'R$ ' + Number(data.periodEstimatedValue).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    'R$ ' + Number(data.periodEstimatedValue ?? 0)
+                        .toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                        });
 
-                // pagamento
-                if (financial?.periodPayment) {
-                    document.getElementById('periodPayment').innerText =
-                        'R$ ' + Number(financial.periodPayment.amount).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-                }
+                // pagamento do período
+                document.getElementById('periodPayment').innerText =
+                    financial?.periodPayment
+                        ? 'R$ ' + Number(financial.periodPayment.amount)
+                            .toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2
+                            })
+                        : '--';
+
+                // submissões
+                document.getElementById('submittedCount').innerText =
+                    attendance.submitted ?? 0;
+
+                document.getElementById('approvedCount').innerText =
+                    attendance.approved ?? 0;
+
+                document.getElementById('rejectedCount').innerText =
+                    attendance.rejected ?? 0;
+
+                document.getElementById('lateCount').innerText =
+                    attendance.late ?? 0;
+
+                // financeiro
+                document.getElementById('sentAmount').innerText =
+                    'R$ ' + Number(financial.sent ?? 0)
+                        .toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                        });
+
+                document.getElementById('paidAmount').innerText =
+                    'R$ ' + Number(financial.paid ?? 0)
+                        .toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                        });
+
+                document.getElementById('confirmedAmount').innerText =
+                    'R$ ' + Number(financial.confirmed ?? 0)
+                        .toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                        });
+
+                document.getElementById('waitingConfirmationAmount').innerText =
+                    'R$ ' + Number(financial.waiting_confirmation ?? 0)
+                        .toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2
+                        });
 
                 // gráfico
                 renderChart(attendance);
 
-                // atualizar URL (sem reload)
-                history.replaceState(null, '', '?project_id=' + projectId);
+                // URL
+                const params = new URLSearchParams(window.location.search);
 
+                params.set('project_id', projectId);
+
+                history.replaceState(
+                    {},
+                    '',
+                    `${window.location.pathname}?${params}`
+                );
             })
             .catch(() => alert('Erro ao carregar dados'))
             .finally(() => document.body.classList.remove('loading'));
@@ -711,12 +787,13 @@ document.addEventListener("DOMContentLoaded", function () {
             e.preventDefault();
 
             const projectId = this.dataset.project;
+            const projectName = this.innerText.trim();
 
             // UI ativa
             document.querySelectorAll('.project-tab').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
 
-            loadDashboard(projectId);
+            loadDashboard(projectId, projectName);
         });
 
     });

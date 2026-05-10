@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Services\DataTable;
+use App\DataTables\BaseDataTable;
 
-class HomologationsDataTable extends DataTable
+class HomologationsDataTable extends BaseDataTable
 {
     protected array $filters = [];
 
@@ -127,10 +127,7 @@ class HomologationsDataTable extends DataTable
             ->columns($this->getColumns())
             ->minifiedAjax(request()->fullUrl())
             ->orderBy(6, 'desc')
-            ->parameters([
-                'responsive' => true,
-                'autoWidth' => false,
-            ]);
+            ->parameters($this->defaultParameters());
     }
 
     protected function getColumns(): array

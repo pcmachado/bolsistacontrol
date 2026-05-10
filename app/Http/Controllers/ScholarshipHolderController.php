@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\DataTables\ScholarshipHoldersDataTable;
+use App\Models\Institution;
 use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\Institution;
-use App\DataTables\ScholarshipHoldersDataTable;
 use App\Services\ScholarshipHolderService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class ScholarshipHolderController extends Controller
 {
@@ -36,6 +34,7 @@ class ScholarshipHolderController extends Controller
         $unidades = Unit::all();
         $users = User::all();
         $institutions = Institution::all();
+
         return view('admin.scholarship_holders.create', compact('unidades', 'users', 'institutions'));
     }
 
@@ -59,7 +58,7 @@ class ScholarshipHolderController extends Controller
         ]);
 
         // Cria um usuário para o bolsista (com senha padrão)
-      // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
+        // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
         DB::beginTransaction();
 
         try {
@@ -67,12 +66,12 @@ class ScholarshipHolderController extends Controller
             // Tenta encontrar um usuário pelo email (caso já exista uma conta)
             $user = User::firstWhere('email', $validatedData['email']);
 
-            if (!$user) {
+            if (! $user) {
                 // Cria um novo usuário, necessário para login.
                 $user = User::create([
                     'name' => $validatedData['name'],
                     'email' => $validatedData['email'],
-                    'password' => Hash::make(/*$validatedData['cpf']*/ 'password'), // Senha inicial é o CPF
+                    'password' => Hash::make(/* $validatedData['cpf'] */ 'password'), // Senha inicial é o CPF
                 ])->assignRole('bolsista');
             }
 
@@ -92,8 +91,9 @@ class ScholarshipHolderController extends Controller
         } catch (\Exception $e) {
             // Reverte a transação em caso de erro
             DB::rollBack();
+
             // Log do erro ($e->getMessage())
-            return back()->withInput()->with('error', 'Erro ao cadastrar bolsista e usuário: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Erro ao cadastrar bolsista e usuário: '.$e->getMessage());
         }
     }
 
@@ -104,12 +104,14 @@ class ScholarshipHolderController extends Controller
     {
         $unidades = Unit::all();
         $unidadeAtual = $scholarshipHolder->units()->first();
+
         return view('admin.scholarship_holders.edit', compact('bolsista', 'unidades', 'unidadeAtual'));
     }
 
     public function show(ScholarshipHolder $scholarshipHolder): View
     {
         $scholarshipHolder->load('unit', 'user');
+
         return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
     }
 
@@ -149,13 +151,31 @@ class ScholarshipHolderController extends Controller
     {
         $term = $request->get('q');
 
-        $results = ScholarshipHolder::query()
-            ->where('name', 'like', "%{$term}%")
-            ->orWhere('cpf', 'like', "%{$term}%")
-            ->limit(10)
-            ->get(['id','name','cpf']);
+        $query = ScholarshipHolder::query()
+            ->with('user');
 
-        return response()->json($results);
+        // 🔒 visibilidade institucional
+        $query = app(\App\Services\VisibilityService::class)
+            ->apply($query, auth()->user(), 'admin');
+
+        // 🔎 busca
+        if ($term) {
+            $query->whereHas('user', function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%");
+            })->orWhere('cpf', 'like', "%{$term}%");
+        }
+
+        $holders = $query
+            ->where('status', 'active')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'results' => $holders->map(fn ($holder) => [
+                'id' => $holder->id,
+                'text' => $holder->user->name,
+            ]),
+        ]);
     }
-
 }

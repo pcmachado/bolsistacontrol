@@ -16,6 +16,27 @@
         @csrf
         @method('PUT')
 
+        <div class="card shadow-lg mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="level" class="form-label"><strong>Nível Hierárquico</strong></label>
+                        <input type="number"
+                               name="level"
+                               min="0"
+                               max="100"
+                               class="form-control @error('level') is-invalid @enderror"
+                               value="{{ old('level', $role->level) }}"
+                               required>
+                        @error('level')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted">Defina o peso hierárquico da função para controle dinâmico de visibilidade e edição.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card shadow-lg">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Selecionar Permissões por Categoria</h5>

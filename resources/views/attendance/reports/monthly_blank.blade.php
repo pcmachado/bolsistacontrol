@@ -1,22 +1,19 @@
 @extends('layouts.pdf')
 
-@section('title', 'Relatório Mensal de Frequência')
+@section('title', 'RelatÃ³rio Mensal de FrequÃªncia')
 
 @section('header-extra')
-
 <div style="margin-top: 5px;">
-    <h3>BOLSA FORMAÇÃO – PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
+    <h3>BOLSA FORMAÃ‡ÃƒO â€“ PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
     <h4>REGISTRO DAS HORAS TRABALHADAS</h4>
     <h5>
-        Campus {{ $submission->scholarshipHolder->unit->name ?? '—' }} –
+        Campus {{ $submission->scholarshipHolder->unit->name ?? 'â€”' }} â€“
         {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
     </h5>
 </div>
-
 @endsection
 
 @section('content')
-
 <h5>1. Dados do bolsista</h5>
 
 <table>
@@ -26,10 +23,10 @@
     </tr>
     <tr>
         <th>Projeto</th>
-        <td>{{ $submission->scholarshipHolder?->projects->first()?->name ?? '—' }}</td>
+        <td>{{ $submission->project?->name ?? 'â€”' }}</td>
     </tr>
     <tr>
-        <th>Mês/Ano</th>
+        <th>MÃªs/Ano</th>
         <td>{{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}</td>
     </tr>
 </table>
@@ -44,11 +41,11 @@
     </thead>
     <tbody>
         @for($i = 0; $i < 20; $i++)
-        <tr>
-            <td height="18"></td>
-            <td></td>
-            <td></td>
-        </tr>
+            <tr>
+                <td height="18"></td>
+                <td></td>
+                <td></td>
+            </tr>
         @endfor
     </tbody>
 </table>
@@ -68,9 +65,8 @@
         </td>
         <td>
             _________________________________<br>
-            Coordenação
+            CoordenaÃ§Ã£o
         </td>
     </tr>
 </table>
-
 @endsection

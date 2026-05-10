@@ -18,6 +18,11 @@ import 'datatables.net-buttons/js/buttons.print.min.js';
 // === Select2 ===
 import 'select2';
 
+import TomSelect from "tom-select";
+import "tom-select/dist/css/tom-select.bootstrap5.css";
+
+window.TomSelect = TomSelect;
+
 // === Outros utilitários ===
 import 'alpinejs';
 
