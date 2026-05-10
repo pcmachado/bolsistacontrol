@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'RelatÃ³rios Mensais')
+@section('title', 'Relatórios Mensais')
 
 @section('content')
 <div class="container-fluid py-3">
-    <h2 class="mb-4">ðŸ“„ RelatÃ³rios Mensais</h2>
+    <h2 class="mb-4">Relatórios Mensais</h2>
 
     @if($submissions->isEmpty())
         <div class="alert alert-info">
-            Nenhuma submissÃ£o disponÃ­vel para relatÃ³rio.
+            Nenhuma submissão disponível para relatório.
         </div>
     @else
         <div class="card shadow-sm">
@@ -16,9 +16,9 @@
                 <thead class="table-light">
                     <tr>
                         <th>Projeto</th>
-                        <th>MÃªs/Ano</th>
+                        <th>Mês/Ano</th>
                         <th>Status</th>
-                        <th class="text-end">AÃ§Ãµes</th>
+                        <th class="text-end">Ações</th>
                     </tr>
                 </thead>
                 <tbody>

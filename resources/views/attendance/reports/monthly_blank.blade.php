@@ -1,13 +1,13 @@
 @extends('layouts.pdf')
 
-@section('title', 'RelatÃ³rio Mensal de FrequÃªncia')
+@section('title', 'Relatório Mensal de Frequência')
 
 @section('header-extra')
 <div style="margin-top: 5px;">
-    <h3>BOLSA FORMAÃ‡ÃƒO â€“ PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
+    <h3>BOLSA FORMACAO - PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
     <h4>REGISTRO DAS HORAS TRABALHADAS</h4>
     <h5>
-        Campus {{ $submission->scholarshipHolder->unit->name ?? 'â€”' }} â€“
+        Campus {{ $submission->scholarshipHolder->unit->name ?? '-' }} -
         {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
     </h5>
 </div>
@@ -23,10 +23,10 @@
     </tr>
     <tr>
         <th>Projeto</th>
-        <td>{{ $submission->project?->name ?? 'â€”' }}</td>
+        <td>{{ $submission->project?->name ?? '-' }}</td>
     </tr>
     <tr>
-        <th>MÃªs/Ano</th>
+        <th>Mês/Ano</th>
         <td>{{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}</td>
     </tr>
 </table>
@@ -65,7 +65,7 @@
         </td>
         <td>
             _________________________________<br>
-            CoordenaÃ§Ã£o
+            Coordenação
         </td>
     </tr>
 </table>

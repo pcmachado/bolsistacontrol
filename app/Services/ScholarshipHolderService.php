@@ -8,7 +8,7 @@ use App\Models\User;
 class ScholarshipHolderService
 {
     /**
-     * Retorna uma instÃ¢ncia de ScholarshipHolder com os dados necessÃ¡rios.
+     * Retorna uma instância de ScholarshipHolder com os dados necessários.
      */
     public function find(int $id): ?ScholarshipHolder
     {
@@ -20,7 +20,7 @@ class ScholarshipHolderService
      */
     public function create(array $data): ScholarshipHolder
     {
-        // Implemente a lÃ³gica de criaÃ§Ã£o e criptografia de senhas (se aplicÃ¡vel)
+        // Implemente a lógica de criação e criptografia de senhas (se aplicável)
         return ScholarshipHolder::create($data);
     }
 
@@ -36,7 +36,7 @@ class ScholarshipHolderService
     public function holderOrFail(User $user): ScholarshipHolder
     {
         if (! $user->scholarshipHolder) {
-            abort(403, 'UsuÃ¡rio nÃ£o Ã© bolsista.');
+            abort(403, 'Usuário não é bolsista.');
         }
 
         return $user->scholarshipHolder;
@@ -56,7 +56,7 @@ class ScholarshipHolderService
             : $projects->first();
 
         if ($projectId !== null && ! $activeProject) {
-            abort(403, 'Projeto nÃ£o vinculado ao bolsista.');
+            abort(403, 'Projeto não vinculado ao bolsista.');
         }
 
         return [
@@ -68,7 +68,7 @@ class ScholarshipHolderService
     }
 
     /**
-     * Restaura um bolsista excluÃ­do (Soft Delete).
+     * Restaura um bolsista excluído (Soft Delete).
      */
     public function restore(int $id): bool
     {

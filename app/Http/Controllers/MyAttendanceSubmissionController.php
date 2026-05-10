@@ -61,7 +61,7 @@ class MyAttendanceSubmissionController extends Controller
 
         return redirect()
             ->route('my-attendance.submissions.show', $submission)
-            ->with('success', 'SubmissÃ£o criada com sucesso.');
+            ->with('success', 'Submissão criada com sucesso.');
     }
 
     public function show(AttendanceSubmission $submission)
@@ -86,7 +86,7 @@ class MyAttendanceSubmissionController extends Controller
 
         $this->service->submit($submission);
 
-        return back()->with('success', 'FrequÃªncia enviada para homologaÃ§Ã£o.');
+        return back()->with('success', 'Frequência enviada para homologação.');
     }
 
     public function approve(AttendanceSubmission $submission)
@@ -97,7 +97,7 @@ class MyAttendanceSubmissionController extends Controller
 
         return redirect()
             ->route('my-attendance.submissions.my', ['project_id' => $submission->project_id])
-            ->with('success', 'SubmissÃ£o homologada com sucesso.');
+            ->with('success', 'Submissão homologada com sucesso.');
     }
 
     public function reject(Request $request, AttendanceSubmission $submission)
@@ -112,7 +112,7 @@ class MyAttendanceSubmissionController extends Controller
 
         return redirect()
             ->route('my-attendance.submissions.my', ['project_id' => $submission->project_id])
-            ->with('success', 'SubmissÃ£o rejeitada.');
+            ->with('success', 'Submissão rejeitada.');
     }
 
     public function removeRecord(AttendanceSubmission $submission, AttendanceRecord $record)
@@ -125,6 +125,6 @@ class MyAttendanceSubmissionController extends Controller
 
         $this->service->removeRecord($submission, $record);
 
-        return back()->with('success', 'Registro removido da submissÃ£o.');
+        return back()->with('success', 'Registro removido da submissão.');
     }
 }

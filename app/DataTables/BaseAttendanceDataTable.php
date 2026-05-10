@@ -40,10 +40,10 @@ abstract class BaseAttendanceDataTable extends BaseDataTable
             ['data' => 'project', 'title' => 'Projeto'],
             ['data' => 'date', 'title' => 'Data'],
             ['data' => 'hours', 'title' => 'Horas'],
-            ['data' => 'status', 'title' => 'SituaÃ§Ã£o'],
+            ['data' => 'status', 'title' => 'Situação'],
             [
                 'data' => 'actions',
-                'title' => 'AÃ§Ãµes',
+                'title' => 'Ações',
                 'orderable' => false,
                 'searchable' => false,
             ],

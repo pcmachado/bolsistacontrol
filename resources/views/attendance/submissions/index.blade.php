@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'SubmissÃµes de FrequÃªncia')
+@section('title', 'Submissões de Frequência')
 
 @push('styles')
 <style>
@@ -53,13 +53,13 @@
         <section class="dashboard-hero">
             <div class="d-flex flex-column flex-lg-row justify-content-between gap-4">
                 <div>
-                    <h1 class="h3 fw-bold mb-2">SubmissÃµes Mensais de FrequÃªncia</h1>
+                    <h1 class="h3 fw-bold mb-2">Submissões Mensais de Frequência</h1>
                     <p class="text-muted mb-2">
-                        Acompanhe o fluxo mensal de envio, homologaÃ§Ã£o e ajustes das frequÃªncias com contexto explÃ­cito de projeto.
+                        Acompanhe o fluxo mensal de envio, homologação e ajustes das frequências com contexto explícito de projeto.
                     </p>
                     <div class="small text-muted">
                         Projeto em foco:
-                        <strong>{{ $activeProject?->name ?? 'Todos os projetos visÃ­veis' }}</strong>
+                        <strong>{{ $activeProject?->name ?? 'Todos os projetos visíveis' }}</strong>
                     </div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
                             <div>
                                 <div class="text-muted small mb-2">Pendentes</div>
                                 <div class="value">{{ $submissionCounts['submitted'] ?? 0 }}</div>
-                                <small class="text-muted">Aguardando homologaÃ§Ã£o</small>
+                                <small class="text-muted">Aguardando homologação</small>
                             </div>
                             <span class="icon tone-info"><i class="bi bi-hourglass-split"></i></span>
                         </div>
@@ -90,7 +90,7 @@
                             <div>
                                 <div class="text-muted small mb-2">Homologadas</div>
                                 <div class="value">{{ $submissionCounts['approved'] ?? 0 }}</div>
-                                <small class="text-muted">SubmissÃµes concluÃ­das</small>
+                                <small class="text-muted">Submissões concluídas</small>
                             </div>
                             <span class="icon tone-success"><i class="bi bi-patch-check"></i></span>
                         </div>
@@ -122,7 +122,7 @@
                             <div>
                                 <div class="text-muted small mb-2">Atrasadas</div>
                                 <div class="value">{{ $submissionCounts['late'] ?? 0 }}</div>
-                                <small class="text-muted">OcorrÃªncias fora do prazo</small>
+                                <small class="text-muted">Ocorrências fora do prazo</small>
                             </div>
                             <span class="icon tone-warning"><i class="bi bi-alarm"></i></span>
                         </div>
@@ -135,12 +135,12 @@
 
         <section class="card section-card">
             <div class="card-header bg-white border-0 pt-4 px-4">
-                <strong>Lista de submissÃµes</strong>
+                <strong>Lista de submissões</strong>
                 <div class="text-muted small">
                     @if($activeMonth)
-                        CompetÃªncia filtrada: {{ \Carbon\Carbon::createFromFormat('Y-m', $activeMonth)->translatedFormat('F/Y') }}
+                        Competência filtrada: {{ \Carbon\Carbon::createFromFormat('Y-m', $activeMonth)->translatedFormat('F/Y') }}
                     @else
-                        Exibindo todos os perÃ­odos visÃ­veis para o perfil atual.
+                        Exibindo todos os períodos visíveis para o perfil atual.
                     @endif
                 </div>
             </div>

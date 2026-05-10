@@ -28,12 +28,12 @@
                 </div>
 
                 <div class="col-md-3">
-                    <div class="small text-muted">InstituiÃ§Ã£o</div>
+                    <div class="small text-muted">Instituição</div>
                     <strong>{{ $activeProject?->institution?->name ?? '-' }}</strong>
                 </div>
 
                 <div class="col-md-3">
-                    <div class="small text-muted">SituaÃ§Ã£o</div>
+                    <div class="small text-muted">Situação</div>
                     <span class="badge {{ $activeProject ? 'bg-success' : 'bg-secondary' }}">
                         {{ $activeProject ? 'Ativo' : 'Sem contexto' }}
                     </span>

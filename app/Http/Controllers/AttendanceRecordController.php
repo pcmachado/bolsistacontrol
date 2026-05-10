@@ -24,7 +24,7 @@ class AttendanceRecordController extends Controller
     }
 
     /**
-     * DiÃ¡rio de frequÃªncia (por mÃªs)
+     * Diário de frequência (por mês)
      */
     public function index(Request $request, AttendanceRecordDataTable $dataTable)
     {
@@ -91,7 +91,7 @@ class AttendanceRecordController extends Controller
     }
 
     /**
-     * FormulÃ¡rio de criaÃ§Ã£o
+     * Formulário de criação
      */
     public function create(Request $request): View
     {
@@ -132,7 +132,7 @@ class AttendanceRecordController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'Este mÃªs jÃ¡ foi enviado para homologaÃ§Ã£o neste projeto.',
+                    'Este mês já foi enviado para homologação neste projeto.',
                 ]);
         }
 
@@ -147,7 +147,7 @@ class AttendanceRecordController extends Controller
     }
 
     /**
-     * VisualizaÃ§Ã£o individual
+     * Visualização individual
      */
     public function show(AttendanceRecord $attendanceRecord): View
     {
@@ -157,7 +157,7 @@ class AttendanceRecordController extends Controller
     }
 
     /**
-     * EdiÃ§Ã£o
+     * Edição
      */
     public function edit(AttendanceRecord $attendanceRecord)
     {
@@ -167,7 +167,7 @@ class AttendanceRecordController extends Controller
                     'project_id' => $attendanceRecord->project_id,
                     'month' => optional($attendanceRecord->date)->format('Y-m') ?? now()->format('Y-m'),
                 ])
-                ->with('error', $attendanceRecord->editBlockReason() ?? 'VocÃª nÃ£o pode editar este registro, prazo de 7 dias expirado.');
+                ->with('error', $attendanceRecord->editBlockReason() ?? 'Você não pode editar este registro, prazo de 7 dias expirado.');
         }
 
         $context = $this->scholarshipHolderService->attendanceContext(
@@ -183,14 +183,14 @@ class AttendanceRecordController extends Controller
     }
 
     /**
-     * AtualizaÃ§Ã£o
+     * Atualização
      */
     public function update(Request $request, AttendanceRecord $attendanceRecord)
     {
         if (! Auth::user()->can('update', $attendanceRecord)) {
             return redirect()
                 ->back()
-                ->with('error', $attendanceRecord->editBlockReason() ?? 'EdiÃ§Ã£o nÃ£o permitida.');
+                ->with('error', $attendanceRecord->editBlockReason() ?? 'Edição não permitida.');
         }
 
         $validated = $request->validate([
@@ -214,7 +214,7 @@ class AttendanceRecordController extends Controller
     }
 
     /**
-     * ExclusÃ£o
+     * Exclusão
      */
     public function destroy(AttendanceRecord $attendanceRecord)
     {
