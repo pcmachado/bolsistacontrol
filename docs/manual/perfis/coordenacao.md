@@ -1,63 +1,57 @@
-# Manual da Coordenacao
+# Manuais da Coordenacao
 
-Perfis atendidos: `coordenador_adjunto`, `coordenador_adjunto_geral`, `coordenador_geral`.
+> Esta pagina orienta qual manual utilizar para cada perfil de coordenacao.
+>
+> **Convencao de imagens:** nos manuais detalhados, a marcacao `[PRINT ...]` indica o local onde deve ser inserida uma captura de tela antes da publicacao em PDF.
 
-## Objetivo do Perfil
+## 1. Perfis atendidos
 
-Validar frequencias, acompanhar indicadores academicos e financeiros, e manter conformidade do processo.
+A coordenacao do sistema pode ser dividida em tres perfis principais:
 
-## Acessos Principais
+1. **Coordenador Adjunto**: atua no escopo vinculado, normalmente unidade, projeto, curso ou turma.
+2. **Coordenador Adjunto Geral**: acompanha a operacao em nivel institucional e apoia a coordenacao geral.
+3. **Coordenador Geral**: possui visao ampla da instituicao e acompanha cadastros, homologacoes, financeiro, relatorios e configuracoes permitidas.
 
-1. `admin.homologations.index` - Homologacoes
-2. `admin.dashboard` - Dashboard administrativo
-3. `admin.payments.dashboard` - Painel financeiro
-4. `admin.class-offerings.index` - Turmas
-5. `admin.projects.index` - Projetos
+[PRINT 01 - Exemplo do menu lateral de um usuario de coordenacao]
 
-## Rotina Recomendada
+## 2. Qual manual devo usar?
 
-1. Conferir submissao pendente por periodo
-2. Homologar/rejeitar com justificativa quando necessario
-3. Revisar pendencias por unidade/projeto
-4. Acompanhar indicadores de pagamento
+| Perfil | Manual recomendado | Quando usar |
+| --- | --- | --- |
+| Coordenador Adjunto | `coordenador-adjunto.md` | Para homologar/acompanhar frequencias no escopo da unidade/projeto. |
+| Coordenador Adjunto Geral | `coordenador-adjunto-geral.md` | Para acompanhamento institucional, pendencias, relatorios e apoio aos adjuntos. |
+| Coordenador Geral | `coordenador-geral.md` | Para gestao institucional, financeiro, relatorios, usuarios e configuracoes. |
 
-## Homologacao de Frequencia (Passo a Passo)
+## 3. Fluxo mensal da coordenacao
 
-1. Acesse `admin.homologations.index`
-2. Aplique filtros: mes, status, unidade, projeto, bolsista
-3. Abra submissao para analise
-4. Execute aprovacao ou rejeicao
-5. Em lote, use acao `bulk` quando aplicavel
+1. Bolsista registra frequencias.
+2. Bolsista envia submissao mensal.
+3. Coordenacao analisa a submissao.
+4. Coordenacao aprova ou rejeita com justificativa.
+5. Submissoes aprovadas seguem para relatorios e financeiro.
+6. Pendencias e rejeicoes devem ser acompanhadas ate a regularizacao.
 
-## Financeiro de Alunos
+[PRINT 02 - Fluxo visual: registro > submissao > homologacao > financeiro]
 
-1. Acessar dashboard de pagamentos de alunos
-2. Filtrar por unidade, curso e turma
-3. Acompanhar pagamentos pendentes e atrasados
-4. Exportar relatorios (PDF/Excel)
+## 4. Regras gerais para todos os coordenadores
 
-## Fluxo de Turmas
+- Sempre confira o mes antes de homologar.
+- Use filtros de unidade, projeto, bolsista e status com atencao.
+- Evite aprovar em lote sem conferir a selecao.
+- Rejeite sempre com justificativa clara.
+- Gere evidencias mensais quando solicitado.
+- Oriente bolsistas e professores com linguagem simples.
 
-1. Validar lancamentos antes do envio
-2. Garantir sequencia mensal
-3. Rejeitar com justificativa quando necessario
-4. Monitorar pagamentos derivados das turmas
+## 5. Marcacoes necessarias para versao final em PDF
 
-## Filtros e Escopo
+Antes de gerar o PDF final de qualquer manual de coordenacao, inserir:
 
-1. Coordenacao geral: visao institucional
-2. Coordenacao adjunta geral: visao institucional (conforme regra)
-3. Coordenacao adjunta: escopo de unidades vinculadas
-
-## Erros Comuns
-
-1. Homologar mes errado por filtro incorreto
-2. Rejeitar sem justificativa clara
-3. Nao revisar status de pendentes apos operacao em lote
-
-## Boas Praticas
-
-1. Homologar por ciclos fixos (ex.: semanal no fechamento)
-2. Padronizar justificativas de rejeicao
-3. Exportar evidencia mensal para auditoria
-
+1. Print do dashboard do perfil.
+2. Print do menu lateral do perfil.
+3. Print da tela de filtros de homologacao.
+4. Print do detalhe de uma submissao.
+5. Print de aprovacao.
+6. Print de rejeicao com justificativa.
+7. Print de relatorio/exportacao.
+8. Print de mensagem de sucesso.
+9. Print de mensagem de erro ou validacao.

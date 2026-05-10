@@ -1,43 +1,54 @@
-# Manual de Professor e Supervisor
+# Manual de Professor, Supervisor e Orientador
 
-## Objetivo do Perfil
+> Esta pagina foi mantida como guia de transicao. Para manuais didaticos separados, utilize os documentos especificos de **Professor** e **Orientador**.
 
-Atuar no acompanhamento academico conforme os vinculos e escopo permitidos.
+## 1. Quando usar este guia
 
-## Observacao de Escopo
+Use este guia quando a instituicao tratar professor, supervisor e orientador em um mesmo fluxo de acompanhamento academico.
 
-No estado atual do sistema, parte das funcionalidades e dashboards para professor/supervisor existe como consulta e apoio operacional.
+Para publicacao final em PDF, recomenda-se usar os manuais separados:
 
-## Acessos Relacionados
+- `professor.md`
+- `orientador.md`
 
-1. `admin.teachers.index` (gestao de professores, perfil administrativo)
-2. `admin.supervisors.index` (vinculos de supervisao, perfil administrativo)
-3. `admin.dashboard.teacher` (dashboard por professor)
-4. `admin.dashboard.unit` (visao por unidade)
-5. Modulos de turmas e disciplinas conforme permissao
+[PRINT 01 - Menu lateral com a area Professor ou opcoes de acompanhamento]
 
-## Acompanhamento de Turmas
+## 2. Atividades comuns
 
-1. Visualizar alunos vinculados
-2. Conferir lancamentos mensais
-3. Apoiar validacao antes do envio
-4. Identificar inconsistencias academicas
+Professor, supervisor ou orientador podem participar de atividades como:
 
-## Rotina Recomendada (quando perfil operacional)
+1. Acompanhar turmas ou bolsistas vinculados.
+2. Conferir lancamentos mensais.
+3. Apoiar validacao antes do envio ou fechamento.
+4. Identificar inconsistencias academicas.
+5. Comunicar pendencias para a coordenacao.
 
-1. Acompanhar turmas vinculadas
-2. Revisar disciplinas e cargas previstas
-3. Validar consistencia de registros em conjunto com coordenacao
+## 3. Professor
 
-## Rotina Recomendada (quando perfil de gestao)
+O professor deve consultar o manual especifico **Manual do Professor**, que explica:
 
-1. Manter vinculos de professor/supervisor atualizados
-2. Aplicar filtros por unidade/curso/turma para analise
-3. Corrigir divergencias antes de fechamento de periodo
+- Dashboard do professor.
+- Minhas turmas.
+- Detalhe da turma.
+- Lancamentos mensais, quando habilitados.
+- Fechamento mensal, quando habilitado.
 
-## Boas Praticas
+[PRINT 02 - Dashboard do professor]
 
-1. Validar sempre o contexto (unidade, curso, turma)
-2. Evitar operacoes em lote sem revisao previa de filtro
-3. Registrar excecoes para acompanhamento da coordenacao
+## 4. Orientador/Supervisor
 
+O orientador ou supervisor deve consultar o manual especifico **Manual do Orientador**, que explica:
+
+- Acompanhamento de bolsistas ou projetos.
+- Analise de frequencias.
+- Orientacao de correcao.
+- Homologacao ou rejeicao, quando habilitado.
+
+[PRINT 03 - Tela de acompanhamento/homologacao do orientador ou supervisor]
+
+## 5. Boas praticas
+
+- Conferir sempre o contexto: unidade, curso, turma, projeto e periodo.
+- Nao fechar ou aprovar informacoes com duvida.
+- Registrar justificativas claras quando houver rejeicao.
+- Encaminhar inconsistencias para a coordenacao.

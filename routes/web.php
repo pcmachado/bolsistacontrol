@@ -79,8 +79,14 @@ Route::get('/manual/{doc?}', function (?string $doc = null) {
         'readme' => 'README.md',
         'bolsista' => 'perfis/bolsista.md',
         'coordenacao' => 'perfis/coordenacao.md',
+        'coordenador-adjunto' => 'perfis/coordenador-adjunto.md',
+        'coordenador-adjunto-geral' => 'perfis/coordenador-adjunto-geral.md',
+        'coordenador-geral' => 'perfis/coordenador-geral.md',
+        'professor' => 'perfis/professor.md',
+        'orientador' => 'perfis/orientador.md',
         'admin' => 'perfis/admin.md',
         'professor-supervisor' => 'perfis/professor-supervisor.md',
+        'turmas-alunos' => 'perfis/turmas-alunos.md',
     ];
 
     $selectedDoc = $doc ?: 'guia-executivo';
