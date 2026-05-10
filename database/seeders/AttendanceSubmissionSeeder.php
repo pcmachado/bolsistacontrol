@@ -2,72 +2,48 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\AttendanceSubmission;
 use App\Models\ScholarshipHolder;
-use App\Models\ProjectScholarshipHolder;
-use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class AttendanceSubmissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $start = Carbon::create(2025, 11, 1);
-        $end   = now()->startOfMonth();
+        $start = now()->copy()->startOfYear();
+        $end = now()->copy()->startOfMonth();
 
-        $holders = ScholarshipHolder::all();
+        $holders = ScholarshipHolder::with('projects')->get();
 
         foreach ($holders as $holder) {
+            foreach ($holder->projects as $project) {
+                $cursor = $start->copy();
 
-            $cursor = $start->copy();
+                while ($cursor <= $end) {
+                    $isCurrentMonth = $cursor->isSameMonth(now());
+                    $status = $isCurrentMonth
+                        ? AttendanceSubmission::STATUS_DRAFT
+                        : AttendanceSubmission::STATUS_APPROVED;
 
-            while ($cursor <= $end) {
+                    AttendanceSubmission::updateOrCreate(
+                        [
+                            'scholarship_holder_id' => $holder->id,
+                            'project_id' => $project->id,
+                            'year' => $cursor->year,
+                            'month' => $cursor->month,
+                        ],
+                        [
+                            'status' => $status,
+                            'submitted_at' => $isCurrentMonth ? null : $cursor->copy()->endOfMonth(),
+                            'approved_at' => $isCurrentMonth ? null : $cursor->copy()->endOfMonth()->addDays(2),
+                            'rejected_at' => null,
+                            'rejected_reason' => null,
+                        ]
+                    );
 
-                $monthsDiff = $cursor->diffInMonths(now());
-
-                if ($cursor->isSameMonth(now())) {
-                    $status = AttendanceSubmission::STATUS_DRAFT;
-                } elseif ($monthsDiff === 1) {
-                    $status = AttendanceSubmission::STATUS_SUBMITTED;
-                } else {
-                    $status = fake()->randomElement([
-                        'approved',
-                        'approved',
-                        'approved',
-                        'rejected',
-                    ]);
+                    $cursor->addMonth();
                 }
-
-                AttendanceSubmission::updateOrCreate(
-                    [
-                        'scholarship_holder_id' => $holder->id,
-                        'year'  => $cursor->year,
-                        'month' => $cursor->month,
-                    ],
-                    [
-                        'status'        => $status,
-                        'submitted_at'  => in_array($status, ['submitted','approved','rejected'])
-                            ? $cursor->copy()->endOfMonth()
-                            : null,
-
-                        'approved_at'   => $status === 'approved'
-                            ? $cursor->copy()->endOfMonth()->addDays(2)
-                            : null,
-
-                        'rejected_at'   => $status === 'rejected'
-                            ? now()->subDays(rand(1, 5)) // 🔥 importante p/ edição
-                            : null,
-
-                        'rejected_reason' => $status === 'rejected'
-                            ? 'Ajustar horas inconsistentes.'
-                            : null,
-                    ]
-                );
-
-                $cursor->addMonth();
             }
         }
-
-        AttendanceSubmission::all()->each(fn($s) => $s->recalculate());
     }
 }

@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\ClassOffering;
 use App\Models\Project;
 use App\Models\Unit;
-use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class ClassOfferingSeeder extends Seeder
 {
@@ -17,6 +16,7 @@ class ClassOfferingSeeder extends Seeder
 
         if ($projects->isEmpty() || $units->isEmpty()) {
             $this->command?->warn('ClassOfferingSeeder: projetos/unidades ausentes.');
+
             return;
         }
 
@@ -31,30 +31,22 @@ class ClassOfferingSeeder extends Seeder
             $unit = $units->firstWhere('institution_id', $project->institution_id) ?? $units->first();
 
             foreach ($sampleCourses as $index => $course) {
+                $start = now()->copy()->startOfYear();
+                $end = now()->copy()->endOfMonth();
 
-                $year = now()->year;
-
-                // 👇 início em janeiro (ou aleatório no 1º semestre)
-                $start = Carbon::create($year, rand(1, 3), 1);
-
-                // 👇 duração de 5 a 6 meses
-                $durationMonths = rand(5, 6);
-
-                $end = $start->copy()->addMonths($durationMonths)->subDay();
-
-                ClassOffering::firstOrCreate(
+                ClassOffering::updateOrCreate(
                     [
                         'project_id' => $project->id,
                         'course_id' => $course->id,
                         'unit_id' => $unit->id,
-                        'year' => (int) now()->format('Y'),
-                        'semester' => '2026/' . ($index + 1),
+                        'year' => now()->year,
+                        'semester' => now()->format('Y').'/'.($index + 1),
                     ],
                     [
                         'name' => "Turma {$project->id}-{$course->id}",
                         'active' => true,
-                        'start_date' => $start,
-                        'end_date' => $end,
+                        'start_date' => $start->toDateString(),
+                        'end_date' => $end->toDateString(),
                         'capacity' => rand(20, 40),
                         'status' => 'ongoing',
                     ]
