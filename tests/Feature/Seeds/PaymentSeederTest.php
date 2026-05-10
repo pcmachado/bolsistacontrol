@@ -40,6 +40,7 @@ class PaymentSeederTest extends TestCase
         foreach ($payments as $payment) {
             $submission = AttendanceSubmission::where([
                 ['scholarship_holder_id', '=', $payment->scholarship_holder_id],
+                ['project_id', '=', $payment->project_id],
                 ['month', '=', $payment->month],
                 ['year', '=', $payment->year],
             ])->first();
@@ -66,9 +67,9 @@ class PaymentSeederTest extends TestCase
     }
 
     /**
-     * Testa se há pagamentos que não correspondem a submissions aprovadas
+     * Testa se há pagamentos que não correspondem a submissions do mesmo projeto
      */
-    public function test_payments_only_created_for_approved_submissions(): void
+    public function test_payments_are_linked_to_matching_project_submissions(): void
     {
         $this->artisan('db:seed');
 
@@ -78,6 +79,7 @@ class PaymentSeederTest extends TestCase
         foreach ($payments as $payment) {
             $submission = AttendanceSubmission::where([
                 ['scholarship_holder_id', '=', $payment->scholarship_holder_id],
+                ['project_id', '=', $payment->project_id],
                 ['month', '=', $payment->month],
                 ['year', '=', $payment->year],
             ])->first();
