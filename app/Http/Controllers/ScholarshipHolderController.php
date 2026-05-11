@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Role;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
