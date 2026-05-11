@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,8 +35,9 @@ class ScholarshipHolderController extends Controller
         $unidades = Unit::all();
         $users = User::all();
         $institutions = Institution::all();
+        $roles = Role::pluck('name', 'id');
 
-        return view('admin.scholarship_holders.create', compact('unidades', 'users', 'institutions'));
+        return view('admin.scholarship_holders.create', compact('unidades', 'users', 'institutions', 'roles'));
     }
 
     public function store(Request $request)
