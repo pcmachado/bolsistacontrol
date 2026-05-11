@@ -93,7 +93,7 @@
                             </td>
                             <td class="d-flex gap-1">
 
-                                <a href="{{ route('admin.scholarship_holders.show', $holder) }}"
+                                <a href="{{ route('admin.scholarship_holders.details', $holder) }}"
                                    class="btn btn-sm btn-outline-primary">
                                     👁
                                 </a>

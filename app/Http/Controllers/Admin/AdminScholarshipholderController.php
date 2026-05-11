@@ -86,7 +86,7 @@ class AdminScholarshipHolderController extends Controller
             'projects.positions',
         ]);
 
-        return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
+        return view('admin.scholarship_holders.details', compact('scholarshipHolder'));
     }
 
     public function edit(ScholarshipHolder $scholarshipHolder)

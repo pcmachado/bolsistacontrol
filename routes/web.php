@@ -247,7 +247,7 @@ Route::post('/admin/context/switch', [ContextController::class, 'switch'])->name
 Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/scholarshipholders', [AdminScholarshipHolderController::class, 'index'])->name('scholarship_holders.impersonate');
-    Route::get('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'show'])->name('scholarship_holders.show');
+    Route::get('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'show'])->name('scholarship_holders.details');
     Route::get('scholarship-holders/{holder}/edit', [AdminScholarshipHolderController::class, 'edit'])->name('scholarship_holders.edit');
     Route::put('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'update'])->name('scholarship_holders.update');
 
@@ -306,7 +306,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
     Route::resource('users', UserController::class);
     Route::resource('units', UnitController::class);
     Route::resource('positions', PositionController::class);
-    Route::resource('scholarship_holders', ScholarshipHolderController::class);
+    Route::resource('scholarship_holders', ScholarshipHolderController::class)->except(['show']);
     Route::resource('projects', ProjectController::class);
     Route::resource('notifications', NotificationController::class);
     Route::resource('email-templates', EmailTemplateController::class);
