@@ -62,12 +62,12 @@ class UserController extends Controller
             'role' => 'required|string|exists:roles,name',
         ];
 
-        // Se não for admin ou coordenador geral, exige unit_id
-        if (! Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
-            $rules['unit_id'] = 'required|exists:units,id';
-        } else {
+        // // Se não for admin ou coordenador geral, exige unit_id
+        // if (! Auth::user()->hasRole(['admin', 'coordenador_geral'])) {
+        //     $rules['unit_id'] = 'required|exists:units,id';
+        // } else {
             $rules['unit_id'] = 'nullable|exists:units,id';
-        }
+        // }
 
         $validated = $request->validate($rules);
 
@@ -121,7 +121,7 @@ class UserController extends Controller
             'role' => 'required|string|exists:roles,name',
         ];
 
-        if (! Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
+        if (! Auth::user()->hasRole(['admin', 'coordenador_geral'])) {
             $rules['unit_id'] = 'required|exists:units,id';
         } else {
             $rules['unit_id'] = 'nullable|exists:units,id';

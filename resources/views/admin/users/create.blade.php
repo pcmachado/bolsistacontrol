@@ -45,7 +45,7 @@
                 <small class="form-text text-muted">Se marcar "Notificar usuário", esta senha será substituída por uma temporária.</small>
             </div>
         </div>
-        @if(Auth::user()->hasRole(['admin', 'coordenador-geral']))
+        @if(Auth::user()->hasRole(['admin', 'coordenador_geral']))
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
                 <strong>Unidade:</strong>

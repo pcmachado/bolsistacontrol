@@ -44,7 +44,7 @@
             <div class="mb-3">
                 <label for="unit" class="form-label"> <strong>Unidade</strong></label>
                 <select name="unit_id" id="unit" class="form-select select2"
-                    @if(auth()->user()->hasRole(['admin','coordenador-geral'])) disabled @endif>
+                    @if(auth()->user()->hasRole(['admin','coordenador_geral'])) disabled @endif>
                     <option value="">Selecione</option>
                     @foreach($units as $unit)
                         <option value="{{ $unit->id }}"
