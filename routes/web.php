@@ -246,10 +246,12 @@ Route::post('/admin/context/switch', [ContextController::class, 'switch'])->name
 // Rotas Administrativas
 Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::get('/scholarshipholders', [AdminScholarshipHolderController::class, 'index'])->name('scholarship_holders.impersonate');
-    Route::get('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'show'])->name('scholarship_holders.details');
-    Route::get('scholarship-holders/{holder}/edit', [AdminScholarshipHolderController::class, 'edit'])->name('scholarship_holders.edit');
-    Route::put('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'update'])->name('scholarship_holders.update');
+    Route::prefix('impersonate/holders')->name('impersonate.holders.')->group(function () {
+        Route::get('/', [AdminScholarshipHolderController::class, 'index'])->name('index');
+        Route::get('{holder}', [AdminScholarshipHolderController::class, 'show'])->name('show');
+        Route::get('{holder}/edit', [AdminScholarshipHolderController::class, 'edit'])->name('edit');
+        Route::put('{holder}', [AdminScholarshipHolderController::class, 'update'])->name('update');
+    });
 
     // Impersonate
     Route::post('impersonate/{user}', [AdminScholarshipHolderController::class, 'start'])->name('impersonate');
@@ -306,7 +308,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
     Route::resource('users', UserController::class);
     Route::resource('units', UnitController::class);
     Route::resource('positions', PositionController::class);
-    Route::resource('scholarship_holders', ScholarshipHolderController::class)->except(['show']);
+    Route::resource('scholarship_holders', ScholarshipHolderController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('notifications', NotificationController::class);
     Route::resource('email-templates', EmailTemplateController::class);

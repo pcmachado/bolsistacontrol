@@ -112,7 +112,7 @@ class ScholarshipHolderController extends Controller
     {
         $scholarshipHolder->load('unit', 'user');
 
-        return view('admin.scholarship_holders.details', compact('scholarshipHolder'));
+        return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
     }
 
     /**

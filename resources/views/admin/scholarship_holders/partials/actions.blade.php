@@ -1,6 +1,6 @@
 <div class="d-flex justify-content-center gap-2">
     {{-- Botão Visualizar --}}
-    <a href="{{ route('admin.scholarship_holders.details', $id) }}"
+    <a href="{{ route('admin.scholarship_holders.show', $id) }}"
        class="btn btn-sm btn-info rounded-0"
        title="Visualizar">
         <i class="bi bi-eye"></i>

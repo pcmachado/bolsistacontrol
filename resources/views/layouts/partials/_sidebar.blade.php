@@ -95,9 +95,9 @@
                 Gestão
             </h6>
             <ul class="nav nav-pills flex-column mb-3">
-                
-                <li><x-sidebar-item route="admin.scholarship_holders.impersonate" icon="bi bi-people" title="Bolsistas" /></li>
-                
+
+                <li><x-sidebar-item route="admin.impersonate.holders.index" icon="bi bi-people" title="Bolsistas" /></li>
+
             </ul>
         @endif
 
