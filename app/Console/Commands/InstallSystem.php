@@ -29,30 +29,18 @@ class InstallSystem extends Command
         )->exists()) {
 
             $this->error('Já existe um superadmin cadastrado.');
-
             return self::FAILURE;
         }
 
-        // instituição
-        $institutionName = $this->ask(
-            'Nome da instituição',
-            'Instituto Federal'
-        );
-
-        $institutionShort = $this->ask( 
-            'Sigla da instituição', 
-            'IFRS' 
-        );
-
-        $institutionCity = $this->ask( 
-            'Cidade da instituição', 
-            'Bento Gonçalves' 
-        );
-
-        $institutionState = $this->ask( 
-            'UF da instituição', 
-            'RS' 
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | INSTITUIÇÃO
+        |--------------------------------------------------------------------------
+        */
+        $institutionName = $this->ask('Nome da instituição', 'Instituto Federal');
+        $institutionShort = $this->ask('Sigla da instituição', 'IFRS');
+        $institutionCity = $this->ask('Cidade da instituição', 'Bento Gonçalves');
+        $institutionState = $this->ask('UF da instituição', 'RS');
 
         $institution = Institution::create([
             'name' => $institutionName,
@@ -61,53 +49,50 @@ class InstallSystem extends Command
             'state' => $institutionState,
         ]);
 
-        // unidade principal
-        $unitName = $this->ask(
-            'Nome da unidade principal',
-            'Reitoria'
+        /*
+        |--------------------------------------------------------------------------
+        | UNIDADE PRINCIPAL
+        |--------------------------------------------------------------------------
+        */
+        $unitName = $this->ask('Nome da unidade principal', 'Reitoria');
+        $unitCity = $this->ask('Cidade da unidade principal', 'Bento Gonçalves');
+
+        $isAdministrativeAnswer = strtolower(
+            $this->ask('A unidade principal é administrativa? (Sim/Não)', 'Sim')
         );
 
-        $unitName = $this->ask(
-            'Cidade da unidade principal',
-            'Bento Gonçalves'
-        );
+        $isAdministrative = in_array($isAdministrativeAnswer, ['sim', 's', 'yes', 'y']);
 
-        $unitName = $this->ask(
-            'A unidade principal é administrativa ',
-            'Sim'
-        );
+        $unitShort = $this->ask('Sigla da unidade principal', 'REI');
 
         $unit = Unit::create([
             'institution_id' => $institution->id,
             'name' => $unitName,
-            'shortname' => $this->ask('Sigla da unidade principal', 'REI'),
-            'city' => $unitName,
-            'is_administrative' => true,
+            'shortname' => $unitShort,
+            'city' => $unitCity,
+            'is_administrative' => $isAdministrative,
         ]);
 
-        // superadmin
-        $name = $this->ask('Nome do superadmin');
+        /*
+        |--------------------------------------------------------------------------
+        | SUPERADMIN
+        |--------------------------------------------------------------------------
+        */
+        $name = $this->ask('Nome do superadmin', 'Super Admin');
 
-        $email = $this->ask('E-mail do superadmin');
+        $email = $this->ask('E-mail do superadmin', 'pcmachado@live.com');
 
         // validar email único
-        while (
-            User::where('email', $email)->exists()
-        ) {
-
+        while (User::where('email', $email)->exists()) {
             $this->error('Este e-mail já está cadastrado.');
-
             $email = $this->ask('Informe outro e-mail');
         }
 
         $password = $this->secret('Senha');
-
         $confirm = $this->secret('Confirmar senha');
 
         if ($password !== $confirm) {
-
             $this->error('As senhas não conferem.');
-
             return self::FAILURE;
         }
 
@@ -125,11 +110,17 @@ class InstallSystem extends Command
             $user->assignRole($role);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | FINALIZAÇÃO
+        |--------------------------------------------------------------------------
+        */
         $this->info('');
         $this->info('✅ Sistema instalado com sucesso!');
         $this->info('');
         $this->line("Instituição: {$institution->name}");
-        $this->line("Usuário: {$email}");
+        $this->line("Unidade principal: {$unit->name}");
+        $this->line("Usuário superadmin: {$email}");
         $this->info('');
 
         return self::SUCCESS;
