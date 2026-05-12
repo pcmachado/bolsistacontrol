@@ -139,7 +139,7 @@
                     <!-- Botões de Ação -->
                     <div class="col-12 text-end mt-5">
                         <hr class="mb-4">
-                        <a href="{{ route('bolsistas.index') }}" class="btn btn-light border shadow-sm me-2">Cancelar</a>
+                        <a href="{{ route('admin.scholarship_holders.index') }}" class="btn btn-light border shadow-sm me-2">Cancelar</a>
                         <button type="submit" class="btn btn-primary shadow-sm">
                             <i class="bi bi-save me-1"></i> Cadastrar Bolsista
                         </button>
