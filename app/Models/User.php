@@ -337,15 +337,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function canAccessFinancial(): bool
     {
         return $this->hasAnyRole(['superadmin', 'admin'])
-            || $this->hasAssignment('coordenador_geral')
-            || $this->hasAssignment('coordenador_adjunto_geral');
+            || $this->hasRole('coordenador_geral')
+            || $this->hasRole('coordenador_adjunto_geral');
     }
 
     public function canAccessAdministrative(): bool
     {
         return $this->hasAnyRole(['superadmin', 'admin'])
-            || $this->hasAssignment('coordenador_geral')
-            || $this->hasAssignment('coordenador_adjunto_geral');
+            || $this->hasRole('coordenador_geral')
+            || $this->hasRole('coordenador_adjunto_geral');
     }
 
     public function canAccessTeacher(): bool
@@ -358,8 +358,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canAccessCoordination(): bool
     {
-        return $this->hasAssignment('coordenador_adjunto')
-            || $this->hasAssignment('coordenador_adjunto_geral')
-            || $this->hasAssignment('coordenador_geral');
+        return $this->hasRole('coordenador_adjunto')
+            || $this->hasRole('coordenador_adjunto_geral')
+            || $this->hasRole('coordenador_geral');
     }
 }
