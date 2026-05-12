@@ -82,13 +82,17 @@
                         </h5>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="unit_id" class="form-label fw-bold">Unidade de Atuação <span class="text-danger">*</span></label>
                         <select name="unit_id" id="unit_id" class="form-select" required>
                             <option value="">Selecione uma unidade...</option>
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
-                                    {{ $unit->name }}
+                            @foreach($units as $id => $name)
+                                @php
+                                    $unitId = is_object($name) ? $name->id : $id;
+                                    $unitName = is_object($name) ? $name->name : $name;
+                                @endphp
+                                <option value="{{ $unitId }}" {{ old('unit_id') == $unitId ? 'selected' : '' }}>
+                                    {{ $unitName }}
                                 </option>
                             @endforeach
                         </select>
