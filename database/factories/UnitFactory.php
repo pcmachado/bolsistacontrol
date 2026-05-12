@@ -10,8 +10,8 @@ class UnitFactory extends Factory
     public function definition(): array
     {
         return [
-            //'institution_id' => institution::factory(),
-            //'name' => $this->faker->word(),
+            'institution_id' => Institution::factory(),
+            'name' => $this->faker->company(),
             'city' => $this->faker->city(),
             'address' => $this->faker->address(),
         ];

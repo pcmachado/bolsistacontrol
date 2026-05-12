@@ -463,6 +463,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
         Route::get('/', [ProjectEditController::class, 'index'])->name('index');
 
         Route::get('/general', [ProjectEditController::class, 'general'])->name('general');
+        Route::get('/positions', [ProjectEditController::class, 'positions'])->name('positions');
+        Route::put('/positions', [ProjectEditController::class, 'updatePositions'])->name('positions.update');
 
         Route::get('/scholars', [ProjectEditController::class, 'scholars'])->name('scholars');
         Route::post('/scholars', [ProjectEditController::class, 'storeScholar'])->name('scholars.store');

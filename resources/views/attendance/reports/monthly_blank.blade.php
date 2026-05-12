@@ -1,6 +1,6 @@
 @extends('layouts.pdf')
 
-@section('title', 'Relatório Mensal de Frequência')
+@section('title', 'Relatorio Mensal de Frequencia')
 
 @section('header-extra')
 <div style="margin-top: 5px;">
@@ -14,6 +14,12 @@
 @endsection
 
 @section('content')
+@if(!empty($reportLayout['body_html']))
+    <div class="mb-3">
+        {!! $reportLayout['body_html'] !!}
+    </div>
+@endif
+
 <h5>1. Dados do bolsista</h5>
 
 <table>
@@ -26,7 +32,7 @@
         <td>{{ $submission->project?->name ?? '-' }}</td>
     </tr>
     <tr>
-        <th>Mês/Ano</th>
+        <th>Mes/Ano</th>
         <td>{{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}</td>
     </tr>
 </table>
@@ -65,7 +71,7 @@
         </td>
         <td>
             _________________________________<br>
-            Coordenação
+            Coordenacao
         </td>
     </tr>
 </table>

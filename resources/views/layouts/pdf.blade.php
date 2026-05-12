@@ -2,16 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title', 'Relatório')</title>
+    <title>@yield('title', 'Relatorio')</title>
 
     <style>
-
         @if($isPdf ?? false)
-
-        /* =========================
-        PDF (DOMPDF)
-        ========================= */
-
         @page {
             margin: 220px 40px 90px 40px;
         }
@@ -22,7 +16,6 @@
             line-height: 1.4;
         }
 
-        /* HEADER FIXO */
         header {
             position: fixed;
             top: -220px;
@@ -31,7 +24,6 @@
             text-align: center;
         }
 
-        /* FOOTER FIXO */
         footer {
             position: fixed;
             bottom: -60px;
@@ -41,22 +33,14 @@
             font-size: 10px;
         }
 
-        /* EVITA QUEBRA INTERNA */
         .no-break {
             page-break-inside: avoid;
         }
 
-        /* QUEBRA MANUAL */
         .page-break {
             page-break-after: always;
         }
-
         @else
-
-        /* =========================
-        HTML (NAVEGADOR)
-        ========================= */
-
         body {
             font-family: DejaVu Sans, sans-serif;
             font-size: 12px;
@@ -75,12 +59,7 @@
             margin-top: 20px;
             font-size: 10px;
         }
-
         @endif
-
-        /* =========================
-        TIPOGRAFIA HEADER
-        ========================= */
 
         header h3 {
             margin: 2px 0;
@@ -104,10 +83,6 @@
             margin-top: 20px;
         }
 
-        /* =========================
-        LOGOS
-        ========================= */
-
         .logos {
             width: 100%;
             margin-bottom: 5px;
@@ -122,10 +97,6 @@
         .logos img {
             max-height: 55px;
         }
-
-        /* =========================
-        TABELAS
-        ========================= */
 
         table {
             width: 100%;
@@ -144,14 +115,9 @@
             font-weight: bold;
         }
 
-        /* EVITA QUEBRA DE LINHA EM TABELAS IMPORTANTES */
         table.no-break {
             page-break-inside: avoid;
         }
-
-        /* =========================
-        ASSINATURAS
-        ========================= */
 
         .assinaturas,
         .assinaturas td {
@@ -164,108 +130,82 @@
             font-size: 11px;
         }
 
-        /* LINHA BONITA DE ASSINATURA */
         .assinatura-linha {
             border-top: 1px solid #000;
             width: 80%;
             margin: 0 auto 5px auto;
         }
 
-        /* =========================
-        CONTEÚDO
-        ========================= */
-
         main {
-            margin-top: 0px;
+            margin-top: 0;
         }
-
-        /* =========================
-        BOTÕES (HTML)
-        ========================= */
 
         .no-print {
             margin-bottom: 15px;
         }
-
-        /* =========================
-        PAGINAÇÃO
-        ========================= */
-
     </style>
-
 </head>
 <body>
-
-{{-- BOTÕES --}}
 @if(!($isPdf ?? false))
 <div class="no-print" style="display:flex; gap:10px;">
-
     <a href="{{ url()->previous() }}" class="btn btn-secondary">
-        ← Voltar
+        Voltar
     </a>
 
-    <a href="{{ request()->fullUrlWithQuery(['pdf' => 1]) }}"
-       target="_blank"
-       class="btn btn-danger">
-        📄 PDF
+    <a href="{{ request()->fullUrlWithQuery(['pdf' => 1]) }}" target="_blank" class="btn btn-danger">
+        PDF
     </a>
-
 </div>
 @endif
 
-{{-- HEADER --}}
 <header>
+    @if(!empty($reportLayout['header_html']))
+        {!! $reportLayout['header_html'] !!}
+    @else
+        <table class="logos">
+            <tr>
+                <td width="33%">
+                    <img src="{{ $isPdf ? imageToBase64(public_path('images/ifrs.png')) : asset('images/ifrs.png') }}">
+                </td>
+                <td width="33%">
+                    <img src="{{ $isPdf ? imageToBase64(public_path('images/mulheresmil.jpg')) : asset('images/mulheresmil.jpg') }}">
+                </td>
+                <td width="33%">
+                    <img src="{{ $isPdf ? imageToBase64(public_path('images/proex.png')) : asset('images/proex.png') }}">
+                </td>
+            </tr>
+        </table>
 
-    <table class="logos">
-        <tr>
-            <td width="33%">
-                <img src="{{ $isPdf
-                    ? imageToBase64(public_path('images/ifrs.png'))
-                    : asset('images/ifrs.png') }}">
-            </td>
-
-            <td width="33%">
-                <img src="{{ $isPdf
-                    ? imageToBase64(public_path('images/mulheresmil.jpg'))
-                    : asset('images/mulheresmil.jpg') }}">
-            </td>
-
-            <td width="33%">
-                <img src="{{ $isPdf
-                    ? imageToBase64(public_path('images/proex.png'))
-                    : asset('images/proex.png') }}">
-            </td>
-        </tr>
-    </table>
-
-    <h3>INSTITUTO FEDERAL DE EDUCAÇÃO, CIÊNCIA E TECNOLOGIA DO RIO GRANDE DO SUL</h3>
-    <h4>PROEX – Pró-Reitoria de Extensão</h4>
-    <h4>Programa Mulheres Mil – Educação, Cidadania e Desenvolvimento Sustentável</h4>
+        <h3>INSTITUTO FEDERAL DE EDUCACAO, CIENCIA E TECNOLOGIA DO RIO GRANDE DO SUL</h3>
+        <h4>PROEX - Pro-Reitoria de Extensao</h4>
+        <h4>Programa Mulheres Mil - Educacao, Cidadania e Desenvolvimento Sustentavel</h4>
+    @endif
 
     @yield('header-extra')
-
 </header>
 
-{{-- CONTEÚDO --}}
 <main>
     @yield('content')
 </main>
 
 <footer>
-    @if($isPdf ?? false)
-        Gerado em {{ now()->format('d/m/Y H:i') }}
+    @if(!empty($reportLayout['footer_html']))
+        {!! $reportLayout['footer_html'] !!}
     @endif
-    <br>
-    2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - v1.0
+
+    @if($isPdf ?? false)
+        <div>Gerado em {{ now()->format('d/m/Y H:i') }}</div>
+    @endif
+
+    <div>2026 - ProBolsas - Sistema de Gestao de Bolsas, Frequencia e Pagamentos Academicos - v1.0</div>
 </footer>
 
 @if($isPdf ?? false)
 <script type="text/php">
     if (isset($pdf)) {
-        $pdf->page_text(270, 820, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 8, array(0,0,0));
+        $pdf->page_text(270, 820, "Pagina {PAGE_NUM} de {PAGE_COUNT}", null, 8, array(0,0,0));
     }
 </script>
 @endif
-
 </body>
 </html>

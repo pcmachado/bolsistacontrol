@@ -3,24 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{
-    Project,
-    Institution,
-    Unit,
-    Position,
-    ScholarshipHolder,
-    Course,
-    FundingSource
-};
+use App\Models\Course;
+use App\Models\DocumentTemplate;
+use App\Models\FundingSource;
+use App\Models\Institution;
+use App\Models\Position;
+use App\Models\Project;
+use App\Models\ScholarshipHolder;
+use App\Models\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectWizardController extends Controller
 {
-    /* =========================
-     * Helpers
-     * ========================= */
     private function ensureStep(Project $project, string $expected)
     {
         if (empty($project->wizard_step)) {
@@ -28,7 +25,7 @@ class ProjectWizardController extends Controller
         }
 
         if ($project->wizard_step !== $expected) {
-            abort(403, 'Etapa inválida do wizard.');
+            abort(403, 'Etapa invÃ¡lida do wizard.');
         }
     }
 
@@ -37,30 +34,53 @@ class ProjectWizardController extends Controller
         $project->update(['wizard_step' => $next]);
     }
 
-    /* =========================
-     * STEP 1 – Projeto
-     * ========================= */
     public function createStep1()
     {
+        $user = Auth::user();
+
         return view('admin.projects.wizard.step1', [
-            'institutions' => Institution::all(),
-            'units'        => Unit::all(),
+            'institutions' => Institution::query()
+                ->whereIn('id', $user->accessibleInstitutionIds())
+                ->orderBy('name')
+                ->get(),
+            'units' => Unit::query()
+                ->withoutGlobalScopes()
+                ->whereIn('id', $user->visibleUnitIds())
+                ->orderBy('name')
+                ->get(),
+            'templates' => DocumentTemplate::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
     public function storeStep1(Request $request)
     {
         $data = $request->validate([
-            'name'           => 'required|string|max:255',
-            'unit_id'        => 'required|exists:units,id',
-            'institution_id'=> 'required|exists:institutions,id',
-            'start_date'    => 'required|date',
-            'end_date'      => 'nullable|date|after_or_equal:start_date',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'unit_id' => 'required|exists:units,id',
+            'institution_id' => 'required|exists:institutions,id',
+            'document_template_id' => 'nullable|exists:document_templates,id',
+            'monthly_report_template_id' => 'nullable|exists:document_templates,id',
+            'final_report_template_id' => 'nullable|exists:document_templates,id',
+            'report_title' => 'nullable|string|max:255',
+            'report_subtitle' => 'nullable|string|max:255',
+            'report_header_html' => 'nullable|string',
+            'report_footer_html' => 'nullable|string',
+            'report_logo' => 'nullable|image|max:2048',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $project = Project::update($data + [
+        if (! Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            $data['institution_id'] = Auth::user()->resolvedInstitutionId();
+        }
+
+        $project = Project::create($this->preparePayload($request, $data) + [
             'wizard_step' => 'step2',
-            'status'      => Project::STATUS_DRAFT,
+            'status' => Project::STATUS_DRAFT,
         ]);
 
         return redirect()->route('admin.projects.create.step2', $project);
@@ -68,11 +88,23 @@ class ProjectWizardController extends Controller
 
     public function editStep1(Project $project)
     {
-        // projeto existente → carregar dados
+        $user = Auth::user();
+
         return view('admin.projects.wizard.step1', [
             'project' => $project,
-            'institutions' => Institution::all(),
-            'units' => Unit::all(),
+            'institutions' => Institution::query()
+                ->whereIn('id', $user->accessibleInstitutionIds())
+                ->orderBy('name')
+                ->get(),
+            'units' => Unit::query()
+                ->withoutGlobalScopes()
+                ->whereIn('id', $user->visibleUnitIds())
+                ->orderBy('name')
+                ->get(),
+            'templates' => DocumentTemplate::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get(),
             'editing' => true,
         ]);
     }
@@ -81,23 +113,31 @@ class ProjectWizardController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'unit_id' => 'required|exists:units,id',
             'institution_id' => 'required|exists:institutions,id',
+            'document_template_id' => 'nullable|exists:document_templates,id',
+            'monthly_report_template_id' => 'nullable|exists:document_templates,id',
+            'final_report_template_id' => 'nullable|exists:document_templates,id',
+            'report_title' => 'nullable|string|max:255',
+            'report_subtitle' => 'nullable|string|max:255',
+            'report_header_html' => 'nullable|string',
+            'report_footer_html' => 'nullable|string',
+            'report_logo' => 'nullable|image|max:2048',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $project->update($data);
+        if (! Auth::user()->hasAnyRole(['admin', 'superadmin'])) {
+            $data['institution_id'] = Auth::user()->resolvedInstitutionId();
+        }
 
-        // garante avanço correto
+        $project->update($this->preparePayload($request, $data, $project));
         $this->advance($project, 'step2');
 
         return redirect()->route('admin.projects.create.step2', $project);
     }
 
-    /* =========================
-     * STEP 2 – Cargos
-     * ========================= */
     public function createStep2(Project $project)
     {
         $this->ensureStep($project, 'step2');
@@ -105,7 +145,7 @@ class ProjectWizardController extends Controller
         $project->load('positions');
 
         return view('admin.projects.wizard.step2', [
-            'project'   => $project,
+            'project' => $project,
             'positions' => Position::all(),
         ]);
     }
@@ -122,8 +162,8 @@ class ProjectWizardController extends Controller
 
         DB::transaction(function () use ($project, $validated) {
             $sync = collect($validated['positions'])
-                ->mapWithKeys(fn ($p) => [
-                    $p['id'] => ['hourly_rate' => $p['hourly_rate']]
+                ->mapWithKeys(fn ($position) => [
+                    $position['id'] => ['hourly_rate' => $position['hourly_rate']],
                 ])
                 ->toArray();
 
@@ -134,9 +174,6 @@ class ProjectWizardController extends Controller
         return redirect()->route('admin.projects.create.step3', $project);
     }
 
-    /* =========================
-     * STEP 3 – Cursos
-     * ========================= */
     public function createStep3(Project $project)
     {
         $this->ensureStep($project, 'step3');
@@ -154,12 +191,11 @@ class ProjectWizardController extends Controller
         $this->ensureStep($project, 'step3');
 
         $filtered = collect($request->input('courses', []))
-            ->filter(fn ($c) =>
-                !empty($c['course_id']) &&
+            ->filter(fn ($course) => ! empty($course['course_id']) &&
                 (
-                    isset($c['active']) ||
-                    !empty($c['semester']) ||
-                    !empty($c['year'])
+                    isset($course['active']) ||
+                    ! empty($course['semester']) ||
+                    ! empty($course['year'])
                 )
             )
             ->values()
@@ -178,14 +214,14 @@ class ProjectWizardController extends Controller
 
         DB::transaction(function () use ($project, $validated) {
             $sync = collect($validated['courses'])
-                ->mapWithKeys(fn ($c) => [
-                    $c['course_id'] => [
-                        'active' => isset($c['active']) ? (bool)$c['active'] : true,
-                        'semester' => $c['semester'] ?? null,
-                        'year' => $c['year'] ?? null,
-                        'start_date' => $c['start_date'] ?? $project->start_date,
-                        'end_date' => $c['end_date'] ?? $project->end_date,
-                    ]
+                ->mapWithKeys(fn ($course) => [
+                    $course['course_id'] => [
+                        'active' => isset($course['active']) ? (bool) $course['active'] : true,
+                        'semester' => $course['semester'] ?? null,
+                        'year' => $course['year'] ?? null,
+                        'start_date' => $course['start_date'] ?? $project->start_date,
+                        'end_date' => $course['end_date'] ?? $project->end_date,
+                    ],
                 ])
                 ->toArray();
 
@@ -196,9 +232,6 @@ class ProjectWizardController extends Controller
         return redirect()->route('admin.projects.create.step4', $project);
     }
 
-    /* =========================
-     * STEP 4 – Bolsistas
-     * ========================= */
     public function createStep4(Project $project)
     {
         $this->ensureStep($project, 'step4');
@@ -220,9 +253,8 @@ class ProjectWizardController extends Controller
         $this->ensureStep($project, 'step4');
 
         $filtered = collect($request->input('scholarships', []))
-            ->filter(fn ($s) => 
-                !empty($s['position_id']) &&
-                !empty($s['weekly_workload'])
+            ->filter(fn ($scholarship) => ! empty($scholarship['position_id']) &&
+                ! empty($scholarship['weekly_workload'])
             )
             ->values()
             ->all();
@@ -239,34 +271,30 @@ class ProjectWizardController extends Controller
 
         DB::transaction(function () use ($project, $validated) {
             $sync = collect($validated['scholarships'])
-                ->mapWithKeys(fn ($s) => [
-                    $s['scholarship_holder_id'] => [
-                        'position_id' => $s['position_id'],
-                        'weekly_workload' => $s['weekly_workload'] ?? 20,
-                        'status' => $s['status'] ?? 'active',
-                        'start_date'        => $s['start_date'] ?? $project->start_date,
-                        'end_date'          => $s['end_date'] ?? $project->end_date,
-                    ]
+                ->mapWithKeys(fn ($scholarship) => [
+                    $scholarship['scholarship_holder_id'] => [
+                        'position_id' => $scholarship['position_id'],
+                        'weekly_workload' => $scholarship['weekly_workload'] ?? 20,
+                        'status' => $scholarship['status'] ?? 'active',
+                        'start_date' => $scholarship['start_date'] ?? $project->start_date,
+                        'end_date' => $scholarship['end_date'] ?? $project->end_date,
+                    ],
                 ])
                 ->toArray();
 
             if (empty($sync)) {
                 return back()->withErrors([
-                    'scholarships' => 'Selecione ao menos um bolsista.'
+                    'scholarships' => 'Selecione ao menos um bolsista.',
                 ]);
             }
 
             $project->scholarshipHolders()->syncWithoutDetaching($sync);
-
             $this->advance($project, 'step5');
         });
 
         return redirect()->route('admin.projects.create.step5', $project);
     }
 
-    /* =========================
-     * STEP 5 – Fomento
-     * ========================= */
     public function createStep5(Project $project)
     {
         $this->ensureStep($project, 'step5');
@@ -283,12 +311,10 @@ class ProjectWizardController extends Controller
     {
         $this->ensureStep($project, 'step5');
 
-        // 🔥 Filtra apenas fundings válidos
         $filtered = collect($request->input('fundings', []))
-            ->filter(fn ($f) =>
-                !empty($f['funding_source_id']) &&
-                isset($f['allocated_amount']) &&
-                $f['allocated_amount'] !== ''
+            ->filter(fn ($funding) => ! empty($funding['funding_source_id']) &&
+                isset($funding['allocated_amount']) &&
+                $funding['allocated_amount'] !== ''
             )
             ->values()
             ->all();
@@ -303,35 +329,29 @@ class ProjectWizardController extends Controller
         )->validate();
 
         DB::transaction(function () use ($project, $validated) {
-
             $sync = collect($validated['fundings'])
-                ->mapWithKeys(fn ($f) => [
-                    $f['funding_source_id'] => [
-                        'allocated_amount'     => $f['allocated_amount'],
-                        'start_date' => $f['start_date'] ?? $project->start_date,
-                        'end_date'   => $f['end_date'] ?? $project->end_date,
-                        'status'     => $f['status'] ?? 'active',
+                ->mapWithKeys(fn ($funding) => [
+                    $funding['funding_source_id'] => [
+                        'allocated_amount' => $funding['allocated_amount'],
+                        'start_date' => $funding['start_date'] ?? $project->start_date,
+                        'end_date' => $funding['end_date'] ?? $project->end_date,
+                        'status' => $funding['status'] ?? 'active',
                     ],
                 ])
                 ->toArray();
 
             $project->fundingSources()->syncWithoutDetaching($sync);
-
-            // 🔥 Avança o wizard
             $this->advance($project, 'review');
         });
 
         return redirect()->route('admin.projects.review', $project);
     }
 
-    /* =========================
-     * REVIEW & FINALIZE
-     * ========================= */
     public function review(Project $project)
     {
         $this->ensureStep($project, 'review');
 
-        $project->load(['positions','courses','scholarshipHolders','fundingSources']);
+        $project->load(['positions', 'courses', 'scholarshipHolders', 'fundingSources']);
 
         return view('admin.projects.wizard.review', compact('project'));
     }
@@ -348,5 +368,27 @@ class ProjectWizardController extends Controller
         return redirect()
             ->route('admin.projects.index')
             ->with('success', 'Projeto finalizado com sucesso!');
+    }
+
+    private function preparePayload(Request $request, array $validated, ?Project $project = null): array
+    {
+        unset($validated['report_logo']);
+
+        if (empty($validated['document_template_id'])) {
+            $validated['document_template_id'] = $validated['monthly_report_template_id']
+                ?? $validated['final_report_template_id']
+                ?? null;
+        }
+
+        if ($request->hasFile('report_logo')) {
+            if ($project?->report_logo_path) {
+                Storage::disk('public')->delete($project->report_logo_path);
+            }
+
+            $validated['report_logo_path'] = $request->file('report_logo')
+                ->store('project-report-logos', 'public');
+        }
+
+        return $validated;
     }
 }

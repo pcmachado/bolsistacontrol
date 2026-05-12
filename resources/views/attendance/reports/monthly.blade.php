@@ -1,6 +1,6 @@
 @extends('layouts.pdf')
 
-@section('title', 'Relatório Mensal de Frequência')
+@section('title', 'Relatorio Mensal de Frequencia')
 
 @section('header-extra')
 <div style="margin-top: 5px;">
@@ -14,6 +14,12 @@
 @endsection
 
 @section('content')
+@if(!empty($reportLayout['body_html']))
+    <div class="mb-3">
+        {!! $reportLayout['body_html'] !!}
+    </div>
+@endif
+
 <h5>1. Dados do bolsista</h5>
 
 <table>
@@ -30,12 +36,10 @@
         <td>{{ $submission->scholarshipHolder->cpf }}</td>
     </tr>
     <tr>
-        <td><strong>Carga horária prevista</strong></td>
+        <td><strong>Carga horaria prevista</strong></td>
         <td>
-            {{ $submission->project?->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder)
-                ? $submission->project->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder) * 4
-                : '-'
-            }} horas mensais
+            {{ $submission->project?->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder) ? $submission->project->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder) * 4 : '-' }}
+            horas mensais
         </td>
     </tr>
 </table>
@@ -80,11 +84,11 @@
     <tr>
         <td>
             <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
-            Coordenação Adjunta
+            Coordenacao Adjunta
         </td>
         <td>
             <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
-            Coordenação Geral
+            Coordenacao Geral
         </td>
     </tr>
 </table>
