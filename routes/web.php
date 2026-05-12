@@ -247,6 +247,8 @@ Route::get('/api/institutions/{id}/units', function ($id) {
     return \App\Models\Unit::where('institution_id', $id)->get(['id', 'name']);
 });
 
+Route::get('/api/users/search', [UserController::class, 'search']);
+
 // Rotas Administrativas
 Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
 

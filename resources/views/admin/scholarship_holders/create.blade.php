@@ -26,11 +26,11 @@
     @endif
 
     <!-- Alerta de Automação (Usuário vinculado) -->
-    @if(isset($userPreenchido))
+    @if(isset($user))
         <div class="alert alert-info shadow-sm d-flex align-items-center" role="alert">
             <i class="bi bi-person-check-fill fs-4 me-3"></i>
             <div>
-                <strong>Atenção:</strong> Criando cadastro de bolsista vinculado ao usuário recém-criado <strong>{{ $userPreenchido->name }}</strong>.
+                <strong>Atenção:</strong> Criando cadastro de bolsista vinculado ao usuário <strong>{{ $user->name }}</strong>.
             </div>
         </div>
     @endif
@@ -41,15 +41,47 @@
             <form action="{{ route('admin.scholarship_holders.store') }}" method="POST">
                 @csrf
 
-                <!-- Input Oculto do ID do Usuário (se existir) -->
-                @if(isset($userPreenchido))
-                    <input type="hidden" name="user_id" value="{{ $userPreenchido->id }}">
-                @endif
-
                 <div class="row g-4">
 
+                    <!-- SESSÃO: Vínculo de Usuário (Autocomplete) -->
+                    <div class="col-12 bg-light p-4 rounded border">
+                        <h5 class="mb-3 text-primary">
+                            <i class="bi bi-person-bounding-box me-2"></i>Vínculo com Usuário do Sistema
+                        </h5>
+
+                        <div class="position-relative">
+                            <label for="user_search" class="form-label fw-bold">Pesquisar Usuário Existente (Opcional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                                <!-- Campo de texto para a pesquisa visual -->
+                                <input type="text" id="user_search" class="form-control"
+                                       placeholder="Digite o nome do usuário para vincular..."
+                                       value="{{ isset($user) ? $user->name : old('user_search_name') }}"
+                                       autocomplete="off">
+
+                                <!-- Botão para limpar a seleção -->
+                                <button class="btn btn-outline-secondary" type="button" id="clear_user_btn" title="Limpar Seleção">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                            <!-- Input Oculto que realmente envia o ID para o banco -->
+                            <input type="hidden" name="user_id" id="user_id" value="{{ $user->id ?? old('user_id') }}">
+
+                            <!-- Dropdown de resultados do Autocomplete -->
+                            <ul id="user_search_results" class="list-group position-absolute w-100 shadow-sm" style="display:none; z-index: 1050; max-height: 200px; overflow-y: auto;">
+                                <!-- Resultados da busca via JS aparecerão aqui -->
+                            </ul>
+
+                            <div class="form-text text-muted mt-2">
+                                <i class="bi bi-info-circle-fill text-info me-1"></i>
+                                <strong>Fluxo Automático:</strong> Se você deixar este campo vazio, o sistema criará um usuário automaticamente utilizando o <strong>E-mail</strong> e <strong>CPF</strong> informados abaixo (a senha padrão será o CPF).
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- SESSÃO: Dados Pessoais -->
-                    <div class="col-12">
+                    <div class="col-12 mt-5">
                         <h5 class="border-bottom pb-2 mb-0 text-primary">
                             <i class="bi bi-person me-2"></i>Dados Pessoais
                         </h5>
@@ -57,12 +89,12 @@
 
                     <div class="col-md-6">
                         <label for="name" class="form-label fw-bold">Nome Completo <span class="text-danger">*</span></label>
-                        <input type="text" name="name" id="name" value="{{ old('name', $userPreenchido->name ?? '') }}" class="form-control" required>
+                        <input type="text" name="name" id="name" value="{{ old('name', $user->name ?? '') }}" class="form-control" required>
                     </div>
 
                     <div class="col-md-6">
                         <label for="email" class="form-label fw-bold">E-mail <span class="text-danger">*</span></label>
-                        <input type="email" name="email" id="email" value="{{ old('email', $userPreenchido->email ?? '') }}" class="form-control" required>
+                        <input type="email" name="email" id="email" value="{{ old('email', $user->email ?? '') }}" class="form-control" required>
                     </div>
 
                     <div class="col-md-6">
@@ -71,8 +103,8 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="phone" class="form-label fw-bold">Telefone / WhatsApp <span class="text-danger">*</span></label>
-                        <input type="text" name="phone" id="phone" value="{{ old('phone') }}" class="form-control" required placeholder="(00) 00000-0000">
+                        <label for="phone" class="form-label fw-bold">Telefone / WhatsApp</label>
+                        <input type="text" name="phone" id="phone" value="{{ old('phone') }}" class="form-control" placeholder="(00) 00000-0000">
                     </div>
 
                     <!-- SESSÃO: Atuação -->
@@ -82,27 +114,34 @@
                         </h5>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label for="unit_id" class="form-label fw-bold">Unidade de Atuação <span class="text-danger">*</span></label>
                         <select name="unit_id" id="unit_id" class="form-select" required>
                             <option value="">Selecione uma unidade...</option>
                             @foreach($units as $id => $name)
-                                @php
-                                    $unitId = is_object($name) ? $name->id : $id;
-                                    $unitName = is_object($name) ? $name->name : $name;
-                                @endphp
-                                <option value="{{ $unitId }}" {{ old('unit_id') == $unitId ? 'selected' : '' }}>
-                                    {{ $unitName }}
+                                <option value="{{ $id }}" {{ old('unit_id') == $id ? 'selected' : '' }}>
+                                    {{ $name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label for="pix_key" class="form-label fw-bold">Chave PIX <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="text" name="pix_key" id="pix_key" value="{{ old('pix_key') }}" class="form-control" required>
-                        </div>
+                        <label for="status" class="form-label fw-bold">Status <span class="text-danger">*</span></label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Ativo</option>
+                            <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inativo</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="start_date" class="form-label fw-bold">Data de Início <span class="text-danger">*</span></label>
+                        <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="end_date" class="form-label fw-bold">Data de Término</label>
+                        <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}" class="form-control">
                     </div>
 
                     <!-- SESSÃO: Dados Bancários -->
@@ -112,19 +151,24 @@
                         </h5>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="bank" class="form-label fw-bold">Banco</label>
                         <input type="text" name="bank" id="bank" value="{{ old('bank') }}" class="form-control" placeholder="Ex: Banco do Brasil">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="agency" class="form-label fw-bold">Agência</label>
                         <input type="text" name="agency" id="agency" value="{{ old('agency') }}" class="form-control" placeholder="Ex: 1234-5">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="account" class="form-label fw-bold">Conta</label>
                         <input type="text" name="account" id="account" value="{{ old('account') }}" class="form-control" placeholder="Corrente ou Poupança">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="pix_key" class="form-label fw-bold">Chave PIX</label>
+                        <input type="text" name="pix_key" id="pix_key" value="{{ old('pix_key') }}" class="form-control" placeholder="Chave PIX">
                     </div>
 
                     <!-- Botões de Ação -->
@@ -141,3 +185,84 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('user_search');
+    const userIdInput = document.getElementById('user_id');
+    const resultsList = document.getElementById('user_search_results');
+    const clearBtn = document.getElementById('clear_user_btn');
+
+    // Campos a serem preenchidos ao selecionar um usuário
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+
+    let debounceTimer;
+
+    // Função de limpeza
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        userIdInput.value = '';
+        resultsList.style.display = 'none';
+        nameInput.value = '';
+        emailInput.value = '';
+        searchInput.focus();
+    });
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value;
+
+        if (query.length < 2) {
+            resultsList.style.display = 'none';
+            // Se apagar a pesquisa, apaga o ID oculto também para forçar a criação de um novo
+            if(query.length === 0) userIdInput.value = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(() => {
+            // Nota: Você precisará criar uma rota de API real para essa busca funcionar.
+            // Exemplo: Route::get('/api/users/search', [UserController::class, 'search']);
+            fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.ok ? response.json() : [])
+                .then(data => {
+                    resultsList.innerHTML = '';
+                    if (data.length > 0) {
+                        data.forEach(user => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item list-group-item-action cursor-pointer';
+                            li.innerHTML = `<strong>${user.name}</strong> <br><small class="text-muted">${user.email}</small>`;
+                            li.style.cursor = 'pointer';
+
+                            li.addEventListener('click', () => {
+                                searchInput.value = user.name;
+                                userIdInput.value = user.id;
+                                nameInput.value = user.name;
+                                emailInput.value = user.email;
+                                resultsList.style.display = 'none';
+                            });
+
+                            resultsList.appendChild(li);
+                        });
+                        resultsList.style.display = 'block';
+                    } else {
+                        resultsList.innerHTML = '<li class="list-group-item text-muted">Nenhum usuário encontrado.</li>';
+                        resultsList.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar usuários:', error);
+                });
+        }, 300);
+    });
+
+    // Fecha a lista se clicar fora
+    document.addEventListener('click', function(e) {
+        if (e.target !== searchInput && e.target !== resultsList) {
+            resultsList.style.display = 'none';
+        }
+    });
+});
+</script>
+@endpush

@@ -32,11 +32,22 @@ class ScholarshipHolderController extends Controller
 
     public function create(Request $request): View
     {
-        $userId = $request->get('user_id');
+        $user = null;
+        $units = collect();
 
-        $user = User::findOrFail($userId);
+        // Se a tela foi aberta via redirecionamento com um ID de usuário:
+        if ($request->has('user_id')) {
+            $user = User::find($request->user_id);
 
-        $units = Unit::where('institution_id', $user->institution_id)->pluck('name', 'id');
+            if ($user && $user->institution_id) {
+                $units = Unit::where('institution_id', $user->institution_id)->pluck('name', 'id');
+            }
+        }
+
+        // Se for criar do zero, traz as unidades padrão
+        if ($units->isEmpty()) {
+            $units = Unit::pluck('name', 'id');
+        }
 
         $roles = Role::pluck('name', 'id');
 
