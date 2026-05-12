@@ -115,6 +115,11 @@
                     </div>
 
                     <div class="col-md-4">
+                        <label for="position" class="form-label fw-bold">Cargo / Posição <span class="text-danger">*</span></label>
+                        <input type="text" name="position" id="position" value="{{ old('position') }}" class="form-control" required placeholder="Ex: Apoio Administrativo">
+                    </div>
+
+                    <div class="col-md-4">
                         <label for="unit_id" class="form-label fw-bold">Unidade de Atuação <span class="text-danger">*</span></label>
                         <select name="unit_id" id="unit_id" class="form-select" required>
                             <option value="">Selecione uma unidade...</option>

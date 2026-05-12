@@ -73,22 +73,36 @@ class ScholarshipHolderController extends Controller
             'status' => 'required|in:active,inactive',
         ]);
 
+        if ($request->filled('user_id')) {
+            // Exige APENAS que o e-mail seja único na tabela de bolsistas (ignora a users)
+            $rules['email'] = 'required|email|unique:scholarship_holders,email';
+        } else {
+            // Se for criar um usuário novo do zero, o e-mail não pode existir na tabela users
+            $rules['email'] = 'required|email|unique:scholarship_holders,email|unique:users,email';
+        }
         // Cria um usuário para o bolsista (com senha padrão)
         // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
         DB::beginTransaction();
 
         try {
             // 2. Cria ou Encontra o Usuário
-            // Tenta encontrar um usuário pelo email (caso já exista uma conta)
-            $user = User::firstWhere('email', $validatedData['email']);
+            // Pega o ID do usuário do form (se veio pelo autocomplete)
+            $userId = $request->user_id;
 
-            if (! $user) {
-                // Cria um novo usuário, necessário para login.
-                $user = User::create([
-                    'name' => $validatedData['name'],
-                    'email' => $validatedData['email'],
-                    'password' => Hash::make(/* $validatedData['cpf'] */ 'password'), // Senha inicial é o CPF
-                ])->assignRole('bolsista');
+            // 2. Cria ou Encontra o Usuário
+            if (empty($userId)) {
+                $user = User::firstWhere('email', $validatedData['email']);
+
+                if (! $user) {
+                    // Cria um novo usuário
+                    $user = User::create([
+                        'name' => $validatedData['name'],
+                        'email' => $validatedData['email'],
+                        'password' => Hash::make(preg_replace('/[^0-9]/', '', $validatedData['cpf'])), // Senha inicial é o CPF sem pontos
+                    ])->assignRole('bolsista');
+                }
+
+                $userId = $user->id;
             }
 
             // 3. Cria o Bolsista e o associa ao novo Usuário
