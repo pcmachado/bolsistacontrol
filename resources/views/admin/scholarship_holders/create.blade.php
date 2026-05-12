@@ -7,7 +7,7 @@
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-dark">Cadastrar Novo Bolsista</h1>
-        <a href="{{ route('bolsistas.index') }}" class="btn btn-secondary shadow-sm">
+        <a href="{{ route('admin.scholarship_holders.index') }}" class="btn btn-secondary shadow-sm">
             <i class="bi bi-arrow-left me-1"></i> Voltar
         </a>
     </div>
@@ -38,7 +38,7 @@
     <!-- Formulário -->
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
-            <form action="{{ route('bolsistas.store') }}" method="POST">
+            <form action="{{ route('admin.scholarship_holders.store') }}" method="POST">
                 @csrf
 
                 <!-- Input Oculto do ID do Usuário (se existir) -->
@@ -56,8 +56,8 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="nome" class="form-label fw-bold">Nome Completo <span class="text-danger">*</span></label>
-                        <input type="text" name="nome" id="nome" value="{{ old('nome', $userPreenchido->name ?? '') }}" class="form-control" required>
+                        <label for="name" class="form-label fw-bold">Nome Completo <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="name" value="{{ old('name', $userPreenchido->name ?? '') }}" class="form-control" required>
                     </div>
 
                     <div class="col-md-6">
@@ -71,8 +71,8 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="telefone" class="form-label fw-bold">Telefone / WhatsApp <span class="text-danger">*</span></label>
-                        <input type="text" name="telefone" id="telefone" value="{{ old('telefone') }}" class="form-control" required placeholder="(00) 00000-0000">
+                        <label for="phone" class="form-label fw-bold">Telefone / WhatsApp <span class="text-danger">*</span></label>
+                        <input type="text" name="phone" id="phone" value="{{ old('phone') }}" class="form-control" required placeholder="(00) 00000-0000">
                     </div>
 
                     <!-- SESSÃO: Atuação -->
@@ -83,34 +83,21 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label for="cargo_id" class="form-label fw-bold">Cargo <span class="text-danger">*</span></label>
-                        <select name="cargo_id" id="cargo_id" class="form-select" required>
-                            <option value="">Selecione um cargo...</option>
-                            @foreach($cargos as $cargo)
-                                <option value="{{ $cargo->id }}" {{ old('cargo_id') == $cargo->id ? 'selected' : '' }}>
-                                    {{ $cargo->nome }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label for="unidade_id" class="form-label fw-bold">Unidade de Atuação <span class="text-danger">*</span></label>
-                        <select name="unidade_id" id="unidade_id" class="form-select" required>
+                        <label for="unit_id" class="form-label fw-bold">Unidade de Atuação <span class="text-danger">*</span></label>
+                        <select name="unit_id" id="unit_id" class="form-select" required>
                             <option value="">Selecione uma unidade...</option>
-                            @foreach($unidades as $unidade)
-                                <option value="{{ $unidade->id }}" {{ old('unidade_id') == $unidade->id ? 'selected' : '' }}>
-                                    {{ $unidade->nome }}
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
+                                    {{ $unit->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label for="carga_horaria" class="form-label fw-bold">Carga Horária Mensal <span class="text-danger">*</span></label>
+                        <label for="pix_key" class="form-label fw-bold">Chave PIX <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <input type="number" name="carga_horaria" id="carga_horaria" value="{{ old('carga_horaria') }}" class="form-control" min="1" required>
-                            <span class="input-group-text bg-light text-muted">horas</span>
+                            <input type="text" name="pix_key" id="pix_key" value="{{ old('pix_key') }}" class="form-control" required>
                         </div>
                     </div>
 
@@ -122,18 +109,18 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label for="banco" class="form-label fw-bold">Banco</label>
-                        <input type="text" name="banco" id="banco" value="{{ old('banco') }}" class="form-control" placeholder="Ex: Banco do Brasil">
+                        <label for="bank" class="form-label fw-bold">Banco</label>
+                        <input type="text" name="bank" id="bank" value="{{ old('bank') }}" class="form-control" placeholder="Ex: Banco do Brasil">
                     </div>
 
                     <div class="col-md-4">
-                        <label for="agencia" class="form-label fw-bold">Agência</label>
-                        <input type="text" name="agencia" id="agencia" value="{{ old('agencia') }}" class="form-control" placeholder="Ex: 1234-5">
+                        <label for="agency" class="form-label fw-bold">Agência</label>
+                        <input type="text" name="agency" id="agency" value="{{ old('agency') }}" class="form-control" placeholder="Ex: 1234-5">
                     </div>
 
                     <div class="col-md-4">
-                        <label for="conta" class="form-label fw-bold">Conta</label>
-                        <input type="text" name="conta" id="conta" value="{{ old('conta') }}" class="form-control" placeholder="Corrente ou Poupança">
+                        <label for="account" class="form-label fw-bold">Conta</label>
+                        <input type="text" name="account" id="account" value="{{ old('account') }}" class="form-control" placeholder="Corrente ou Poupança">
                     </div>
 
                     <!-- Botões de Ação -->
