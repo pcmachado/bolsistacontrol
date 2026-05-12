@@ -107,7 +107,7 @@
                 <li class="nav-item"><x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissões"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.institutions.index" icon="bi bi-bank" title="Instituições"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.email-templates.index" icon="bi bi-envelope-paper" title="Templates de Email"/></li>
-                <li class="nav-item"><x-sidebar-item route="notification-settings.index" icon="bi bi-gear" title="Config. Notificações"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.notification-settings.index" icon="bi bi-gear" title="Config. Notificações"/></li>
             </ul>
         @endhasanyrole
     </div>
