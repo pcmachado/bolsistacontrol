@@ -71,15 +71,10 @@ class ScholarshipHolderController extends Controller
             'account' => 'nullable|string',
             'pix_key' => 'nullable|string',
             'status' => 'required|in:active,inactive',
+            'email' => 'required|email|unique:scholarship_holders,email',
         ]);
 
-        if ($request->filled('user_id')) {
-            // Exige APENAS que o e-mail seja único na tabela de bolsistas (ignora a users)
-            $rules['email'] = 'required|email|unique:scholarship_holders,email';
-        } else {
-            // Se for criar um usuário novo do zero, o e-mail não pode existir na tabela users
-            $rules['email'] = 'required|email|unique:scholarship_holders,email|unique:users,email';
-        }
+        $validatedData = $request->validate($rules);
         // Cria um usuário para o bolsista (com senha padrão)
         // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
         DB::beginTransaction();
