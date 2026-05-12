@@ -243,6 +243,10 @@ Route::get('/courses/search', [CourseController::class, 'search'])->name('course
 
 Route::post('/admin/context/switch', [ContextController::class, 'switch'])->name('admin.context.switch')->middleware(['auth', 'role:admin|superadmin']);
 
+Route::get('/api/institutions/{id}/units', function ($id) {
+    return \App\Models\Unit::where('institution_id', $id)->get(['id', 'name']);
+});
+
 // Rotas Administrativas
 Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
 

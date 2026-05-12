@@ -44,10 +44,19 @@ class UserController extends Controller
      */
     public function create(): View
     {
-        $units = Unit::all();
+        $institutions = Institution::orderBy('name')->pluck('name', 'id');
+
+        $selectedInstitution = $institutions->count() === 1
+            ? $institutions->keys()->first()
+            : null;
+
+        $units = $selectedInstitution
+            ? Unit::where('institution_id', $selectedInstitution)->pluck('name', 'id')
+            : collect();
+
         $roles = Role::all();
 
-        return view('admin.users.create', compact('units', 'roles'));
+        return view('admin.users.create', compact('units', 'roles', 'institutions', 'selectedInstitution'));
     }
 
     /**
@@ -60,6 +69,8 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|string|exists:roles,name',
+            'institution_id' => 'required',
+            'unit_id' => 'required',
         ];
 
         // // Se não for admin ou coordenador geral, exige unit_id
@@ -88,7 +99,8 @@ class UserController extends Controller
             $user->notify(new \App\Notifications\UserCreatedNotification($validated['password']));
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
+        return redirect()->route('admin.scholarship_holders.create', ['user_id' => $user->id])
+            ->with('success', 'Usuário criado com sucesso! Agora complete os dados do bolsista.');
     }
 
     public function show(User $user): View

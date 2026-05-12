@@ -30,14 +30,17 @@ class ScholarshipHolderController extends Controller
         return $dataTable->render('admin.scholarship_holders.index');
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $unidades = Unit::all();
-        $users = User::all();
-        $institutions = Institution::all();
+        $userId = $request->get('user_id');
+
+        $user = User::findOrFail($userId);
+
+        $units = Unit::where('institution_id', $user->institution_id)->pluck('name', 'id');
+
         $roles = Role::pluck('name', 'id');
 
-        return view('admin.scholarship_holders.create', compact('unidades', 'users', 'institutions', 'roles'));
+        return view('admin.scholarship_holders.create', compact('units', 'user', 'roles'));
     }
 
     public function store(Request $request)
@@ -52,11 +55,11 @@ class ScholarshipHolderController extends Controller
             'end_date' => 'nullable|date',
             'position' => 'required|string|max:50',
             'phone' => 'nullable|string|max:15',
-            'institution_link' => 'nullable|url',
             'bank' => 'nullable|string',
             'agency' => 'nullable|string',
             'account' => 'nullable|string',
             'pix_key' => 'nullable|string',
+            'status' => 'required|in:active,inactive',
         ]);
 
         // Cria um usuário para o bolsista (com senha padrão)

@@ -45,7 +45,18 @@
                 <small class="form-text text-muted">Se marcar "Notificar usuário", esta senha será substituída por uma temporária.</small>
             </div>
         </div>
-        @if(Auth::user()->hasRole(['admin', 'coordenador_geral']))
+        <div class="form-group">
+            <label>Instituição</label>
+            <select name="institution_id" id="institution_id" class="form-control">
+                <option value="">Selecione...</option>
+                @foreach($institutions as $id => $name)
+                    <option value="{{ $id }}"
+                        {{ $selectedInstitution == $id ? 'selected' : '' }}>
+                        {{ $name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
                 <strong>Unidade:</strong>
@@ -59,7 +70,6 @@
                 </select>
             </div>
         </div>
-        @endif
         <div class="col-xs-12 col-sm-12 col-md-12">
             <x-role-selector
                 :selectedRoles="old('role') ? [old('role')] : []"
@@ -85,3 +95,24 @@
     </div>
 </form>
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('institution_id').addEventListener('change', function () {
+    fetch('/api/institutions/' + this.value + '/units')
+        .then(res => res.json())
+        .then(data => {
+            let unitSelect = document.getElementById('unit_id');
+            unitSelect.innerHTML = '<option value="">Selecione...</option>';
+
+            data.forEach(unit => {
+                unitSelect.innerHTML += `<option value="${unit.id}">${unit.name}</option>`;
+            });
+
+            if (data.length === 1) {
+                unitSelect.value = data[0].id;
+            }
+        });
+});
+</script>
+@endpush
