@@ -57,7 +57,7 @@ class ScholarshipHolderController extends Controller
     public function store(Request $request)
     {
         // 1. Validação
-        $validatedData = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'cpf' => 'required|string|unique:scholarship_holders,cpf|max:14',
             'email' => 'required|email|unique:scholarship_holders,email|unique:users,email',
@@ -72,7 +72,7 @@ class ScholarshipHolderController extends Controller
             'pix_key' => 'nullable|string',
             'status' => 'required|in:active,inactive',
             'email' => 'required|email|unique:scholarship_holders,email',
-        ]);
+        ];
 
         $validatedData = $request->validate($rules);
         // Cria um usuário para o bolsista (com senha padrão)
