@@ -102,7 +102,7 @@ class ScholarshipHolderController extends Controller
 
             // 3. Cria o Bolsista e o associa ao novo Usuário
             $scholarshipHolderData = array_merge($validatedData, [
-                'user_id' => $user->id,
+                'user_id' => $userId,
                 // O Model cuida da criptografia dos dados bancários
             ]);
 
