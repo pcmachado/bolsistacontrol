@@ -8,7 +8,7 @@
                 <div class="card-header">
                     <h3 class="card-title">Criar Configuração de Notificação</h3>
                 </div>
-                <form action="{{ route('notification-settings.store') }}" method="POST">
+                <form action="{{ route('admin.notification-settings.store') }}" method="POST">
                     @csrf
                     <div class="card-body">
                         <div class="row">
@@ -107,7 +107,7 @@
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">Salvar</button>
-                        <a href="{{ route('notification-settings.index') }}" class="btn btn-secondary">Cancelar</a>
+                        <a href="{{ route('admin.notification-settings.index') }}" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
             </div>

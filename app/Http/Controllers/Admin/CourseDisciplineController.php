@@ -17,9 +17,34 @@ class CourseDisciplineController extends Controller
         $course->load('disciplines');
         $disciplines = Discipline::all();
 
+        $disciplinesJson = $disciplines->map(function ($discipline) {
+
+            return [
+                'id' => $discipline->id,
+                'name' => $discipline->name,
+                'code' => $discipline->code,
+                'active' => $discipline->active,
+            ];
+
+        })->values();
+
+        $selectedDisciplinesJson = $course->disciplines
+            ->mapWithKeys(function ($discipline) {
+
+                return [
+                    $discipline->id => [
+                        'id' => $discipline->id,
+                        'name' => $discipline->name,
+                        'code' => $discipline->code,
+                        'active' => $discipline->active,
+                    ]
+                ];
+
+            });
+
         return view(
             'admin.courses.disciplines.index',
-            compact('course', 'disciplines')
+            compact('course', 'disciplines', 'disciplinesJson', 'selectedDisciplinesJson')
         );
     }
 

@@ -105,12 +105,12 @@ class AttendanceSubmissionDataTable extends BaseDataTable
             ->columns([
                 ['data' => 'project', 'title' => 'Projeto'],
                 ['data' => 'bolsista', 'title' => 'Bolsista'],
-                ['data' => 'period', 'title' => 'PerÃ­odo'],
+                ['data' => 'period', 'title' => 'Período'],
                 ['data' => 'records_count', 'title' => 'Registros'],
                 ['data' => 'status_label', 'title' => 'Status'],
                 [
                     'data' => 'actions',
-                    'title' => 'AÃ§Ãµes',
+                    'title' => 'Ações',
                     'orderable' => false,
                     'searchable' => false,
                 ],

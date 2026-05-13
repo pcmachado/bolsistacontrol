@@ -1,6 +1,16 @@
 @extends('layouts.pdf')
 
+@section('header-extra')
+<h3>BOLSA FORMACAO - PROGRAMA MULHERES MIL</h3>
+<h4>RELATORIO FINAL DE ATIVIDADES</h4>
+@endsection
+
 @section('content')
+@if(!empty($reportLayout['body_html']))
+    <div class="mb-3">
+        {!! $reportLayout['body_html'] !!}
+    </div>
+@endif
 
 <style>
     body {
@@ -62,9 +72,9 @@
             {{ $pivot->edital_portaria ?? '-' }}
         </td>
         <td>
-            <strong>Vigência:</strong>
+            <strong>Vigencia:</strong>
             {{ \Carbon\Carbon::parse($pivot->start_date)->format('d/m/Y') }}
-            até ___/___/____
+            ate ___/___/____
         </td>
     </tr>
 </table>
@@ -76,14 +86,14 @@
     @endfor
 </div>
 
-<h4>2. Resultados alcançados</h4>
+<h4>2. Resultados alcancados</h4>
 <div class="lined-box">
     @for($i = 0; $i < 5; $i++)
         <div class="line"></div>
     @endfor
 </div>
 
-<h4>3. Contribuições</h4>
+<h4>3. Contribuicoes</h4>
 <div class="lined-box">
     @for($i = 0; $i < 5; $i++)
         <div class="line"></div>
@@ -98,13 +108,12 @@
         </td>
         <td width="60%">
             ___________________________<br>
-            Coordenação
+            Coordenacao
         </td>
     </tr>
 </table>
 
 <p class="obs">
-    A entrega deste relatório deverá ocorrer no máximo 30 dias antes do último pagamento da bolsa.
+    A entrega deste relatorio devera ocorrer no maximo 30 dias antes do ultimo pagamento da bolsa.
 </p>
-
 @endsection

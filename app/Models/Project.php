@@ -17,11 +17,20 @@ class Project extends Model
         'name',
         'description',
         'institution_id',
+        'unit_id',
         'student_daily_rate',
         'wizard_step',
         'status',
         'start_date',
         'end_date',
+        'report_title',
+        'report_subtitle',
+        'report_logo_path',
+        'report_header_html',
+        'report_footer_html',
+        'document_template_id',
+        'monthly_report_template_id',
+        'final_report_template_id',
     ];
 
     protected $casts = [
@@ -44,6 +53,26 @@ class Project extends Model
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function documentTemplate(): BelongsTo
+    {
+        return $this->belongsTo(DocumentTemplate::class, 'document_template_id');
+    }
+
+    public function monthlyReportTemplate(): BelongsTo
+    {
+        return $this->belongsTo(DocumentTemplate::class, 'monthly_report_template_id');
+    }
+
+    public function finalReportTemplate(): BelongsTo
+    {
+        return $this->belongsTo(DocumentTemplate::class, 'final_report_template_id');
     }
 
     public function positions(): BelongsToMany
@@ -124,11 +153,12 @@ class Project extends Model
     public function hourlyRateForScholarshipHolder(ScholarshipHolder $holder): float
     {
         $pivot = $this->scholarshipHolders()->where('scholarship_holder_id', $holder->id)->first()?->pivot;
+
         if (! $pivot) {
             return 0;
         }
-        $positionId = $pivot->position_id;
 
+        $positionId = $pivot->position_id;
         $positionPivot = $this->positions()->where('position_id', $positionId)->first()?->pivot;
 
         return (float) ($positionPivot?->hourly_rate ?? 0);

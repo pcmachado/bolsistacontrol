@@ -16,7 +16,7 @@ class PositionSeeder extends Seeder
             ['name' => 'Bolsista', 'is_teacher' => false],
             ['name' => 'Supervisor', 'is_teacher' => false],
             ['name' => 'Apoio Administrativo', 'is_teacher' => false],
-            ['name' => 'Professor', 'is_teacher' => true], // 🔥 chave
+            ['name' => 'Professor', 'is_teacher' => true],
         ];
 
         foreach ($positions as $p) {

@@ -23,7 +23,7 @@
             @endif
 
             <div class="col-md-3">
-                <label for="filter-month" class="form-label">MÃªs</label>
+                <label for="filter-month" class="form-label">Mês</label>
                 <input
                     id="filter-month"
                     type="month"

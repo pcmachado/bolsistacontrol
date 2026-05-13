@@ -5,17 +5,30 @@ namespace App\Http\Controllers;
 use App\DataTables\PaymentDataTable;
 use App\Models\Payment;
 use App\Services\NotificationService;
+use App\Services\ScholarshipHolderService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MyPaymentController extends Controller
 {
-    public function myPayments(PaymentDataTable $dataTable)
-    {
+    public function myPayments(
+        Request $request,
+        PaymentDataTable $dataTable,
+        ScholarshipHolderService $scholarshipHolderService
+    ) {
+        $context = $scholarshipHolderService->attendanceContext(
+            Auth::user(),
+            $request->integer('project_id') ?: null
+        );
         $dataTable->mode = 'my';
 
-        return $dataTable->render('payments.my');
+        $filters = $request->only(['month']);
+        $filters['project_id'] = $context['activeProjectId'];
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('payments.my', $context);
     }
 
     public function confirm(Payment $payment)
@@ -105,14 +118,27 @@ class MyPaymentController extends Controller
         return hash_hmac('sha256', $base, config('app.key'));
     }
 
-    public function reportMy(Request $request)
+    public function reportMy(Request $request, ScholarshipHolderService $scholarshipHolderService)
     {
+        $context = $scholarshipHolderService->attendanceContext(
+            Auth::user(),
+            $request->integer('project_id') ?: null
+        );
+
+        $filters = $request->only(['month', 'year']);
+        $filters['project_id'] = $context['activeProjectId'];
+
         $user = Auth::user();
 
         $query = Payment::with(['scholarshipHolder.user', 'unit']);
 
         $query = app(\App\Services\VisibilityService::class)
             ->apply($query, $user, 'self');
+
+        // Aplicar filtro multiprojeto
+        if (! empty($filters['project_id'])) {
+            $query->where('project_id', $filters['project_id']);
+        }
 
         if ($request->filled('month')) {
             [$year, $month] = explode('-', $request->month);
@@ -130,11 +156,11 @@ class MyPaymentController extends Controller
         $isPdf = $request->boolean('pdf');
 
         if ($isPdf) {
-            $pdf = Pdf::loadView('payments.reports.my', compact('payments', 'total', 'isPdf'));
+            $pdf = Pdf::loadView('payments.reports.my', compact('payments', 'total', 'isPdf', 'context'));
 
             return $pdf->stream('relatorio_pagamentos.pdf');
         }
 
-        return view('payments.reports.my', compact('payments', 'total', 'isPdf'));
+        return view('payments.reports.my', compact('payments', 'total', 'isPdf', 'context'));
     }
 }

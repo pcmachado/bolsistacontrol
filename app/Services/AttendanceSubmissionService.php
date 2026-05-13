@@ -19,7 +19,7 @@ class AttendanceSubmissionService
         }
 
         if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
-            throw new \InvalidArgumentException('Formato de mÃªs invÃ¡lido.');
+            throw new \InvalidArgumentException('Formato de mês inválido.');
         }
 
         [$year, $month] = explode('-', $month);
@@ -37,7 +37,7 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Vincula automaticamente os registros do mÃªs Ã  submissÃ£o
+     * Vincula automaticamente os registros do mês à submissão
      */
     public function attachMonthlyRecords(AttendanceSubmission $submission): void
     {
@@ -52,16 +52,16 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Remove um registro da submissÃ£o (antes do envio)
+     * Remove um registro da submissão (antes do envio)
      */
     public function removeRecord(AttendanceSubmission $submission, AttendanceRecord $record): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_DRAFT) {
-            throw new \DomainException('SubmissÃ£o jÃ¡ enviada.');
+            throw new \DomainException('Submissão já enviada.');
         }
 
         if ($record->attendance_submission_id !== $submission->id) {
-            throw new \DomainException('Registro nÃ£o pertence a esta submissÃ£o.');
+            throw new \DomainException('Registro não pertence a esta submissão.');
         }
 
         $record->update([
@@ -70,18 +70,18 @@ class AttendanceSubmissionService
     }
 
     /**
-     * Envia a submissÃ£o para homologaÃ§Ã£o
+     * Envia a submissão para homologação
      */
     public function submit(AttendanceSubmission $submission): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_DRAFT) {
-            throw new \DomainException('A submissÃ£o nÃ£o estÃ¡ em rascunho.');
+            throw new \DomainException('A submissão não está em rascunho.');
         }
 
         $this->attachMonthlyRecords($submission);
 
         if ($submission->attendanceRecords()->count() === 0) {
-            throw new \DomainException('NÃ£o Ã© possÃ­vel enviar uma submissÃ£o vazia.');
+            throw new \DomainException('Não é possível enviar uma submissão vazia.');
         }
 
         $submission->recalculate();
@@ -99,8 +99,8 @@ class AttendanceSubmissionService
         $notificationService->sendEventNotification(
             'submission_submitted',
             [
-                'title' => 'Nova SubmissÃ£o de FrequÃªncia',
-                'message' => "O bolsista {$submission->scholarshipHolder->user->name} enviou uma submissÃ£o de frequÃªncia para {$submission->month}/{$submission->year}",
+                'title' => 'Nova Submissão de Frequência',
+                'message' => "O bolsista {$submission->scholarshipHolder->user->name} enviou uma submissão de frequência para {$submission->month}/{$submission->year}",
                 'level' => 'info',
                 'submission_id' => $submission->id,
                 'url' => route('attendance.submissions.show', $submission),
@@ -115,12 +115,12 @@ class AttendanceSubmissionService
     }
 
     /**
-     * AprovaÃ§Ã£o da submissÃ£o (coordenador)
+     * Aprovação da submissão (coordenador)
      */
     public function approve(AttendanceSubmission $submission, int $userId): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_SUBMITTED) {
-            throw new \DomainException('SubmissÃ£o nÃ£o estÃ¡ pendente.');
+            throw new \DomainException('Submissão não está pendente.');
         }
 
         $submission->update([
@@ -137,8 +137,8 @@ class AttendanceSubmissionService
         $notificationService->sendEventNotification(
             'submission_approved',
             [
-                'title' => 'SubmissÃ£o de FrequÃªncia Aprovada',
-                'message' => "Sua submissÃ£o de frequÃªncia para {$submission->month}/{$submission->year} foi aprovada",
+                'title' => 'Submissão de Frequência Aprovada',
+                'message' => "Sua submissão de frequência para {$submission->month}/{$submission->year} foi aprovada",
                 'level' => 'success',
                 'submission_id' => $submission->id,
                 'url' => route('my-attendance.submissions.show', $submission),
@@ -152,12 +152,12 @@ class AttendanceSubmissionService
     }
 
     /**
-     * RejeiÃ§Ã£o da submissÃ£o (coordenador)
+     * Rejeição da submissão (coordenador)
      */
     public function reject(AttendanceSubmission $submission, string $reason, int $userId): void
     {
         if ($submission->status !== AttendanceSubmission::STATUS_SUBMITTED) {
-            throw new \DomainException('SubmissÃ£o nÃ£o estÃ¡ pendente.');
+            throw new \DomainException('Submissão não está pendente.');
         }
 
         DB::transaction(function () use ($submission, $reason, $userId) {
@@ -177,8 +177,8 @@ class AttendanceSubmissionService
         $notificationService->sendEventNotification(
             'submission_rejected',
             [
-                'title' => 'SubmissÃ£o de FrequÃªncia Rejeitada',
-                'message' => "Sua submissÃ£o de frequÃªncia para {$submission->month}/{$submission->year} foi rejeitada. Motivo: {$reason}",
+                'title' => 'Submissão de Frequência Rejeitada',
+                'message' => "Sua submissão de frequência para {$submission->month}/{$submission->year} foi rejeitada. Motivo: {$reason}",
                 'level' => 'danger',
                 'submission_id' => $submission->id,
                 'url' => route('my-attendance.submissions.show', $submission),
@@ -266,10 +266,10 @@ class AttendanceSubmissionService
 
         if (! $project) {
             if ($projectId !== null) {
-                abort(403, 'Projeto invÃ¡lido para este bolsista.');
+                abort(403, 'Projeto inválido para este bolsista.');
             }
 
-            throw new \DomainException('Nenhum projeto vÃ¡lido vinculado ao bolsista.');
+            throw new \DomainException('Nenhum projeto válido vinculado ao bolsista.');
         }
 
         return (int) $project->id;

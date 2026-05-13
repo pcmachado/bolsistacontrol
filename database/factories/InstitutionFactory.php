@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\Institution;
 
 class InstitutionFactory extends Factory
 {
@@ -11,6 +10,7 @@ class InstitutionFactory extends Factory
     {
         return [
             'name' => $this->faker->company(),
+            'shortname' => strtoupper($this->faker->lexify('????')),
             'city' => $this->faker->city(),
             'state' => $this->faker->stateAbbr(),
             'address' => $this->faker->address(),

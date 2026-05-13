@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Role;
+use Spatie\Permission\Models\Role;
 use App\Models\RoleAuditLog;
 use Illuminate\Support\Facades\Auth;
 

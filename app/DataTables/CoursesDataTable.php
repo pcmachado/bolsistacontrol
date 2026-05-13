@@ -19,18 +19,43 @@ class CoursesDataTable extends BaseDataTable
                 return $course->classOfferings
                     ->pluck('unit.name')
                     ->unique()
-                    ->implode('<br>');
-            })
-            ->addColumn('projects', function ($course) {
-                return $course->classOfferings
-                    ->pluck('project.name')
-                    ->unique()
                     ->filter()
                     ->implode('<br>');
             })
-            ->addColumn('offerings_count', fn ($course) => $course->classOfferings->count())
-            ->addColumn('actions', fn ($course) => view('admin.courses.partials.actions', compact('course')))
-            ->rawColumns(['units', 'projects', 'actions'])
+
+            ->addColumn('projects', function ($course) {
+                $projectNames = $course->projects
+                    ->pluck('name')
+                    ->unique()
+                    ->filter();
+
+                if ($projectNames->isEmpty()) {
+                    $projectNames = $course->classOfferings
+                        ->pluck('project.name')
+                        ->unique()
+                        ->filter();
+                }
+
+                return $projectNames->implode('<br>');
+            })
+
+            ->addColumn('offerings_count', function ($course) {
+                return $course->class_offerings_count;
+            })
+
+            ->addColumn('actions', function ($course) {
+                return view(
+                    'admin.courses.partials.actions',
+                    compact('course')
+                );
+            })
+
+            ->rawColumns([
+                'units',
+                'projects',
+                'actions',
+            ])
+
             ->setRowId('id');
     }
 
@@ -38,12 +63,18 @@ class CoursesDataTable extends BaseDataTable
     {
         $user = Auth::user();
 
-        $query = $model->newQuery()->with('classOfferings.unit', 'classOfferings.project');
+        $query = $model->newQuery()
+            ->with([
+                'classOfferings.unit',
+                'classOfferings.project',
+                'projects',
+            ])
+            ->withCount('classOfferings');
 
         $query = app(VisibilityService::class)
             ->apply($query, $user, 'admin');
 
-        if (! empty($this->filters['unit_id'])) {
+        if (!empty($this->filters['unit_id'])) {
             $unitId = (int) $this->filters['unit_id'];
 
             $query->whereHas('classOfferings', function ($q) use ($unitId) {
@@ -51,11 +82,17 @@ class CoursesDataTable extends BaseDataTable
             });
         }
 
-        if (! empty($this->filters['project_id'])) {
+        if (!empty($this->filters['project_id'])) {
             $projectId = (int) $this->filters['project_id'];
 
-            $query->whereHas('classOfferings', function ($q) use ($projectId) {
-                $q->where('projects.id', $projectId);
+            $query->where(function ($query) use ($projectId) {
+                $query->whereHas('classOfferings', function ($q) use ($projectId) {
+                    $q->where('project_id', $projectId);
+                })
+
+                ->orWhereHas('projects', function ($q) use ($projectId) {
+                    $q->where('projects.id', $projectId);
+                });
             });
         }
 
@@ -71,35 +108,48 @@ class CoursesDataTable extends BaseDataTable
             ->orderBy(0)
             ->parameters($this->defaultParameters())
             ->buttons([
-                Button::make('excel')->className('btn btn-success rounded-0'),
-                Button::make('csv')->className('btn btn-info rounded-0'),
-                Button::make('pdf')->className('btn btn-warning rounded-0'),
-                Button::make('print')->className('btn btn-secondary rounded-0'),
+                Button::make('excel')
+                    ->className('btn btn-success rounded-0'),
+
+                Button::make('csv')
+                    ->className('btn btn-info rounded-0'),
+
+                Button::make('pdf')
+                    ->className('btn btn-warning rounded-0'),
+
+                Button::make('print')
+                    ->className('btn btn-secondary rounded-0'),
             ]);
     }
 
     protected function getColumns(): array
     {
         return [
-            Column::make('name')->title('Curso'),
+            Column::make('name')
+                ->title('Curso'),
+
             Column::make('capacity')
                 ->title('Capacidade')
                 ->addClass('text-center'),
+
             Column::computed('units')
                 ->title('Unidades')
                 ->orderable(false)
                 ->searchable(false)
                 ->addClass('text-start'),
+
             Column::computed('projects')
                 ->title('Projetos')
                 ->orderable(false)
                 ->searchable(false)
                 ->addClass('text-start'),
+
             Column::computed('offerings_count')
                 ->title('Turmas')
                 ->addClass('text-center'),
+
             Column::computed('actions')
-                ->title('Acoes')
+                ->title('Ações')
                 ->exportable(false)
                 ->printable(false)
                 ->width(160)

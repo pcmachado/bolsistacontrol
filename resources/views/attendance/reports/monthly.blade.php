@@ -1,19 +1,25 @@
 @extends('layouts.pdf')
 
-@section('title', 'RelatÃ³rio Mensal de FrequÃªncia')
+@section('title', 'Relatorio Mensal de Frequencia')
 
 @section('header-extra')
 <div style="margin-top: 5px;">
-    <h3>BOLSA FORMAÃ‡ÃƒO â€“ PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
+    <h3>BOLSA FORMACAO - PROGRAMA MULHERES MIL - IFRS {{ $submission->year }}</h3>
     <h4>REGISTRO DAS HORAS TRABALHADAS</h4>
     <h5>
-        Campus {{ $submission->scholarshipHolder->unit->name ?? 'â€”' }} â€“
+        Campus {{ $submission->scholarshipHolder->unit->name ?? '-' }} -
         {{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}
     </h5>
 </div>
 @endsection
 
 @section('content')
+@if(!empty($reportLayout['body_html']))
+    <div class="mb-3">
+        {!! $reportLayout['body_html'] !!}
+    </div>
+@endif
+
 <h5>1. Dados do bolsista</h5>
 
 <table>
@@ -23,19 +29,17 @@
     </tr>
     <tr>
         <td><strong>Projeto</strong></td>
-        <td>{{ $submission->project?->name ?? 'â€”' }}</td>
+        <td>{{ $submission->project?->name ?? '-' }}</td>
     </tr>
     <tr>
         <td><strong>CPF</strong></td>
         <td>{{ $submission->scholarshipHolder->cpf }}</td>
     </tr>
     <tr>
-        <td><strong>Carga horÃ¡ria prevista</strong></td>
+        <td><strong>Carga horaria prevista</strong></td>
         <td>
-            {{ $submission->project?->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder)
-                ? $submission->project->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder) * 4
-                : 'â€”'
-            }} horas mensais
+            {{ $submission->project?->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder) ? $submission->project->weeklyWorkloadForScholarshipHolder($submission->scholarshipHolder) * 4 : '-' }}
+            horas mensais
         </td>
     </tr>
 </table>
@@ -58,7 +62,7 @@
             <tr>
                 <td>{{ $record->date->format('d/m/Y') }}</td>
                 <td>{{ hoursToTime($record->hours) }}</td>
-                <td>{{ $record->description ?: 'â€”' }}</td>
+                <td>{{ $record->description ?: '-' }}</td>
             </tr>
         @empty
             <tr>
@@ -80,11 +84,11 @@
     <tr>
         <td>
             <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
-            CoordenaÃ§Ã£o Adjunta
+            Coordenacao Adjunta
         </td>
         <td>
             <div style="border-top:1px solid #000; width:80%; margin:0 auto;"></div>
-            CoordenaÃ§Ã£o Geral
+            Coordenacao Geral
         </td>
     </tr>
 </table>

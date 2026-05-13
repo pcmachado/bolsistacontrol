@@ -5,15 +5,14 @@ namespace App\DataTables;
 use App\Models\Payment;
 use App\Services\VisibilityService;
 use App\Support\Traits\PaymentFilters;
-use Yajra\DataTables\EloquentDataTable;
-use App\DataTables\BaseDataTable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\EloquentDataTable;
 
 class PaymentDataTable extends BaseDataTable
 {
     public string $mode = 'default';
-    
+
     protected array $filters = [];
 
     use PaymentFilters;
@@ -21,29 +20,24 @@ class PaymentDataTable extends BaseDataTable
     public function setFilters(array $filters): self
     {
         $this->filters = $filters;
+
         return $this;
     }
 
     public function dataTable($query)
     {
         return (new EloquentDataTable($query))
-            ->addColumn('scholarship_holder', fn ($payment) =>
-                $payment->scholarshipHolder?->user?->name ?? '-'
+            ->addColumn('scholarship_holder', fn ($payment) => $payment->scholarshipHolder?->user?->name ?? '-'
             )
-            ->addColumn('unit', fn ($payment) =>
-                $payment->unit?->name ?? '-'
+            ->addColumn('unit', fn ($payment) => $payment->unit?->name ?? '-'
             )
-            ->addColumn('period', fn ($payment) =>
-                str_pad($payment->month, 2, '0', STR_PAD_LEFT) . '/' . $payment->year
+            ->addColumn('period', fn ($payment) => str_pad($payment->month, 2, '0', STR_PAD_LEFT).'/'.$payment->year
             )
-            ->editColumn('amount', fn ($payment) =>
-                number_format($payment->amount, 2, ',', '.')
+            ->editColumn('amount', fn ($payment) => number_format($payment->amount, 2, ',', '.')
             )
-            ->addColumn('status_label', fn ($payment) =>
-                view('admin.payments.partials.status-badge', ['payment' => $payment])->render()
+            ->addColumn('status_label', fn ($payment) => view('admin.payments.partials.status-badge', ['payment' => $payment])->render()
             )
-            ->addColumn('actions', fn ($payment) =>
-                view('admin.payments.partials.actions', compact('payment'))->render()
+            ->addColumn('actions', fn ($payment) => view('admin.payments.partials.actions', compact('payment'))->render()
             )
             ->rawColumns(['status_label', 'actions']);
     }
@@ -64,6 +58,21 @@ class PaymentDataTable extends BaseDataTable
         $context = $this->mode === 'my' ? 'self' : 'admin';
 
         $query = app(VisibilityService::class)->apply($query, $user, $context);
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTROS MULTIPROJETO
+        |--------------------------------------------------------------------------
+        */
+
+        if (! empty($this->filters['project_id'])) {
+            $query->where('project_id', $this->filters['project_id']);
+        }
+
+        if (! empty($this->filters['month'])) {
+            [$year, $month] = explode('-', $this->filters['month']);
+            $query->where('year', $year)->where('month', $month);
+        }
 
         $query = $this->applyPaymentFilters($query, request());
 
@@ -90,13 +99,13 @@ class PaymentDataTable extends BaseDataTable
                 'data' => 'status_label',
                 'title' => 'Status',
                 'orderable' => false,
-                'searchable' => false
+                'searchable' => false,
             ],
             [
                 'data' => 'actions',
                 'title' => 'Ações',
                 'orderable' => false,
-                'searchable' => false
+                'searchable' => false,
             ],
         ];
     }
