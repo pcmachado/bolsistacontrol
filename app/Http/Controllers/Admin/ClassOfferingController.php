@@ -39,6 +39,7 @@ class ClassOfferingController extends Controller
             $project->id => $project->courses->map(fn ($course) => [
                 'id' => $course->id,
                 'name' => $course->name,
+                'capacity' => $course->capacity,
             ])->values(),
         ]);
 
@@ -77,6 +78,12 @@ class ClassOfferingController extends Controller
                 ]);
         }
 
+        if (empty($validated['capacity'])) {
+            $validated['capacity'] = $project->courses
+                ->firstWhere('id', (int) $validated['course_id'])
+                ?->capacity;
+        }
+
         $offering = ClassOffering::create($validated);
 
         return redirect()
@@ -94,6 +101,7 @@ class ClassOfferingController extends Controller
             $project->id => $project->courses->map(fn ($course) => [
                 'id' => $course->id,
                 'name' => $course->name,
+                'capacity' => $course->capacity,
             ])->values(),
         ]);
 

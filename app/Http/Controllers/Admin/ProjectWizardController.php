@@ -154,14 +154,13 @@ class ProjectWizardController extends Controller
         $this->ensureStep($project, 'step3');
 
         $filtered = collect($request->input('courses', []))
-            ->filter(fn ($c) =>
-                !empty($c['course_id']) &&
-                (
-                    isset($c['active']) ||
-                    !empty($c['semester']) ||
-                    !empty($c['year'])
-                )
-            )
+            ->filter(fn ($course) => ! empty($course['selected']) && ! empty($course['course_id']))
+            ->map(fn ($course) => [
+                'course_id' => $course['course_id'],
+                'active' => filter_var($course['active'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'semester' => $course['semester'] ?? null,
+                'year' => $course['year'] ?? null,
+            ])
             ->values()
             ->all();
 
@@ -170,26 +169,30 @@ class ProjectWizardController extends Controller
             [
                 'courses' => 'required|array|min:1',
                 'courses.*.course_id' => 'required|exists:courses,id',
-                'courses.*.active' => 'nullable|boolean',
-                'courses.*.semester' => 'nullable|string',
-                'courses.*.year' => 'nullable|integer',
+                'courses.*.active' => 'boolean',
+                'courses.*.semester' => 'nullable|string|max:50',
+                'courses.*.year' => 'nullable|integer|min:2000|max:2100',
+            ],
+            [
+                'courses.required' => 'Selecione ao menos um curso para avançar.',
+                'courses.min' => 'Selecione ao menos um curso para avançar.',
             ]
         )->validate();
 
         DB::transaction(function () use ($project, $validated) {
             $sync = collect($validated['courses'])
-                ->mapWithKeys(fn ($c) => [
-                    $c['course_id'] => [
-                        'active' => isset($c['active']) ? (bool)$c['active'] : true,
-                        'semester' => $c['semester'] ?? null,
-                        'year' => $c['year'] ?? null,
-                        'start_date' => $c['start_date'] ?? $project->start_date,
-                        'end_date' => $c['end_date'] ?? $project->end_date,
+                ->mapWithKeys(fn ($course) => [
+                    $course['course_id'] => [
+                        'active' => (bool) $course['active'],
+                        'semester' => $course['semester'] ?? null,
+                        'year' => $course['year'] ?? null,
+                        'start_date' => $project->start_date,
+                        'end_date' => $project->end_date,
                     ]
                 ])
                 ->toArray();
 
-            $project->courses()->syncWithoutDetaching($sync);
+            $project->courses()->sync($sync);
             $this->advance($project, 'step4');
         });
 

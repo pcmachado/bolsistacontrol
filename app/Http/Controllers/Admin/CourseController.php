@@ -51,6 +51,7 @@ class CourseController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'capacity' => 'nullable|integer|min:1',
         ];
 
         $validated = $request->validate($rules);
@@ -76,11 +77,13 @@ class CourseController extends Controller
 
     public function update(Request $request, Course $course): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'capacity' => 'nullable|integer|min:1',
         ]);
 
-        $course->update($request->all());
+        $course->update($validated);
 
         return redirect()->route('admin.courses.index')->with('success', 'Curso atualizado com sucesso!');
     }

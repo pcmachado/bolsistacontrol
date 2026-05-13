@@ -14,16 +14,11 @@ class CourseService
     /**
      * Cria um novo curso.
      *
-     * @param array $data Dados da função (name)
+     * @param array $data Dados do curso
      * @return Course
      */
     public function createCourse(array $data): Course
     {
-        $course = Course::create([
-            'name' => $data['name'],
-        ]);
-
-        return $course;
+        return Course::create($data);
     }
-    
 }

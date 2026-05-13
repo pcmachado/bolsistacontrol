@@ -2,48 +2,47 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\StudentRecord;
+use App\Models\StudentMonthRecord;
 use App\Models\StudentPayment;
-use Carbon\Carbon;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class StudentPaymentSeeder extends Seeder
 {
     public function run(): void
     {
-        $records = StudentRecord::with('student')->get();
+        $records = StudentMonthRecord::with('classOffering.project')->get();
+        $payer = User::role('admin')->first();
 
         foreach ($records as $record) {
-
-            $month = $record->created_at->month;
-            $year  = $record->created_at->year;
+            $isCurrentMonth = (int) $record->month === (int) now()->month
+                && (int) $record->year === (int) now()->year;
+            $amount = $record->attended_classes * ($record->classOffering->project?->student_daily_rate ?? 0);
 
             StudentPayment::updateOrCreate(
                 [
                     'student_id' => $record->student_id,
                     'class_offering_id' => $record->class_offering_id,
-                    'month' => $month,
-                    'year'  => $year,
+                    'month' => $record->month,
+                    'year' => $record->year,
                 ],
                 [
-                    'amount' => $record->total_amount,
-                    'status' => collect([
-                        'pending',
-                        'sent',
-                        'paid'
-                    ])->random(),
-
-                    'sent_at' => rand(0,1)
-                        ? now()->subDays(rand(1,10))
-                        : null,
-
-                    'paid_at' => rand(0,1)
-                        ? now()->subDays(rand(1,5))
-                        : null,
+                    'amount' => $amount,
+                    'status' => $isCurrentMonth ? StudentPayment::STATUS_SENT : StudentPayment::STATUS_PAID,
+                    'sent_at' => $isCurrentMonth
+                        ? now()->subDays(rand(1, min(10, now()->day)))
+                        : now()->setDate($record->year, $record->month, 1)->endOfMonth(),
+                    'paid_at' => $isCurrentMonth
+                        ? null
+                        : now()->setDate($record->year, $record->month, 1)->endOfMonth()->addDays(3),
+                    'paid_by' => $isCurrentMonth ? null : $payer?->id,
+                    'notes' => $isCurrentMonth
+                        ? 'Pagamento do mês atual mantido aberto para testes.'
+                        : 'Pagamento mensal fechado pelo seeder.',
                 ]
             );
         }
 
-        echo "✔ StudentPayments gerados com sucesso\n";
+        $this->command?->info('StudentPayments gerados com sucesso.');
     }
 }

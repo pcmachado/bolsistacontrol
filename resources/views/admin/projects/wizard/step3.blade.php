@@ -33,9 +33,11 @@
                     <tr>
                         <td>
                             <input type="checkbox"
+                                   name="courses[{{ $course->id }}][selected]"
+                                   value="1"
                                    class="form-check-input course-check"
                                    data-id="{{ $course->id }}"
-                                   {{ $pivot ? 'checked' : '' }}>
+                                   {{ old("courses.{$course->id}.selected", $pivot ? '1' : null) ? 'checked' : '' }}>
                         </td>
 
                         <td>{{ $course->name }}</td>
@@ -45,8 +47,8 @@
                                    name="courses[{{ $course->id }}][semester]"
                                    class="form-control form-control-sm semester-input"
                                    placeholder="Ex: 1º"
-                                   value="{{ $pivot->semester ?? '' }}"
-                                   {{ $pivot ? '' : 'disabled' }}>
+                                   value="{{ old("courses.{$course->id}.semester", $pivot->semester ?? '') }}"
+                                   {{ old("courses.{$course->id}.selected", $pivot ? '1' : null) ? '' : 'disabled' }}>
                         </td>
 
                         <td>
@@ -54,16 +56,22 @@
                                    name="courses[{{ $course->id }}][year]"
                                    class="form-control form-control-sm year-input"
                                    placeholder="2025"
-                                   value="{{ $pivot->year ?? date('Y') }}"
-                                   {{ $pivot ? '' : 'disabled' }}>
+                                   value="{{ old("courses.{$course->id}.year", $pivot->year ?? date('Y')) }}"
+                                   {{ old("courses.{$course->id}.selected", $pivot ? '1' : null) ? '' : 'disabled' }}>
                         </td>
 
                         <td class="text-center">
+                            <input type="hidden"
+                                   name="courses[{{ $course->id }}][active]"
+                                   value="0"
+                                   class="active-hidden"
+                                   {{ old("courses.{$course->id}.selected", $pivot ? '1' : null) ? '' : 'disabled' }}>
                             <input type="checkbox"
                                    name="courses[{{ $course->id }}][active]"
+                                   value="1"
                                    class="form-check-input active-input"
-                                   {{ ($pivot && $pivot->active) ? 'checked' : '' }}
-                                   {{ $pivot ? '' : 'disabled' }}>
+                                   {{ old("courses.{$course->id}.active", $pivot?->active ? '1' : null) ? 'checked' : '' }}
+                                   {{ old("courses.{$course->id}.selected", $pivot ? '1' : null) ? '' : 'disabled' }}>
                         </td>
 
                         <input type="hidden"
@@ -97,10 +105,14 @@ document.querySelectorAll('.course-check').forEach(cb => {
     cb.addEventListener('change', function () {
         const row = this.closest('tr');
 
-        row.querySelectorAll('.semester-input, .year-input, .active-input')
+        row.querySelectorAll('.semester-input, .year-input, .active-input, .active-hidden')
            .forEach(input => {
                input.disabled = !this.checked;
            });
+
+        if (this.checked) {
+            row.querySelector('.active-input').checked = true;
+        }
 
         if (!this.checked) {
             row.querySelectorAll('input').forEach(i => {
