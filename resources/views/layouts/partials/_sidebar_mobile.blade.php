@@ -89,6 +89,7 @@
                 <li class="nav-item"><x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.disciplines.index" icon="bi bi-journal-text" title="Disciplinas"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.class-offerings.index" icon="bi bi-collection" title="Turmas"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.funding-sources.index" icon="bi bi-piggy-bank" title="Formas de Fomento"/></li>
             </ul>
         @endhasanyrole
 

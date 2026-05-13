@@ -45,10 +45,33 @@
         @include('layouts.partials._navbar')
 
         @if(session('error'))
-            <div class="alert alert-danger">
+            <div class="alert alert-danger mb-0 rounded-0">
                 {{ session('error') }}
             </div>
         @endif
+
+        @if(session('warning'))
+            <div class="alert alert-warning mb-0 rounded-0">
+                {{ session('warning') }}
+            </div>
+        @endif
+
+        @auth
+            @if(! session('warning') && auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
+                <div class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-0 rounded-0">
+                    <div>
+                        <strong>Aviso:</strong> seu e-mail ainda não foi verificado. O acesso está liberado, mas confirme seu endereço quando possível.
+                    </div>
+
+                    <form method="POST" action="{{ route('verification.send') }}" class="m-0">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-dark">
+                            Reenviar verificação
+                        </button>
+                    </form>
+                </div>
+            @endif
+        @endauth
 
         {{-- SIDEBAR MOBILE --}}
         <div class="offcanvas offcanvas-start mobile-sidebar-offcanvas" id="sidebarOffcanvas">

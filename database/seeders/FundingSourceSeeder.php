@@ -2,18 +2,35 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\FundingSource;
+use Illuminate\Database\Seeder;
 
 class FundingSourceSeeder extends Seeder
 {
     public function run(): void
     {
-        //FundingSource::factory()->count(10)->create();
+        $sources = [
+            [
+                'name' => 'FAURGS',
+                'code' => 'FAURGS',
+                'type' => 'external',
+                'description' => 'Fundação de apoio para financiamento de projetos acadêmicos.',
+                'total_amount' => 100000,
+            ],
+            [
+                'name' => 'IFRS',
+                'code' => 'IFRS',
+                'type' => 'internal',
+                'description' => 'Recursos institucionais do IFRS.',
+                'total_amount' => 100000,
+            ],
+        ];
 
-        FundingSource::insert([
-            ['name' => 'FAURGS', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'IFRS', 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        foreach ($sources as $source) {
+            FundingSource::updateOrCreate(
+                ['name' => $source['name']],
+                $source + ['active' => true]
+            );
+        }
     }
 }

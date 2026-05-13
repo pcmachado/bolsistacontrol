@@ -154,14 +154,13 @@ class ProjectWizardController extends Controller
         $this->ensureStep($project, 'step3');
 
         $filtered = collect($request->input('courses', []))
-            ->filter(fn ($c) =>
-                !empty($c['course_id']) &&
-                (
-                    isset($c['active']) ||
-                    !empty($c['semester']) ||
-                    !empty($c['year'])
-                )
-            )
+            ->filter(fn ($course) => ! empty($course['selected']) && ! empty($course['course_id']))
+            ->map(fn ($course) => [
+                'course_id' => $course['course_id'],
+                'active' => filter_var($course['active'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'semester' => $course['semester'] ?? null,
+                'year' => $course['year'] ?? null,
+            ])
             ->values()
             ->all();
 
@@ -170,26 +169,30 @@ class ProjectWizardController extends Controller
             [
                 'courses' => 'required|array|min:1',
                 'courses.*.course_id' => 'required|exists:courses,id',
-                'courses.*.active' => 'nullable|boolean',
-                'courses.*.semester' => 'nullable|string',
-                'courses.*.year' => 'nullable|integer',
+                'courses.*.active' => 'boolean',
+                'courses.*.semester' => 'nullable|string|max:50',
+                'courses.*.year' => 'nullable|integer|min:2000|max:2100',
+            ],
+            [
+                'courses.required' => 'Selecione ao menos um curso para avançar.',
+                'courses.min' => 'Selecione ao menos um curso para avançar.',
             ]
         )->validate();
 
         DB::transaction(function () use ($project, $validated) {
             $sync = collect($validated['courses'])
-                ->mapWithKeys(fn ($c) => [
-                    $c['course_id'] => [
-                        'active' => isset($c['active']) ? (bool)$c['active'] : true,
-                        'semester' => $c['semester'] ?? null,
-                        'year' => $c['year'] ?? null,
-                        'start_date' => $c['start_date'] ?? $project->start_date,
-                        'end_date' => $c['end_date'] ?? $project->end_date,
+                ->mapWithKeys(fn ($course) => [
+                    $course['course_id'] => [
+                        'active' => (bool) $course['active'],
+                        'semester' => $course['semester'] ?? null,
+                        'year' => $course['year'] ?? null,
+                        'start_date' => $project->start_date,
+                        'end_date' => $project->end_date,
                     ]
                 ])
                 ->toArray();
 
-            $project->courses()->syncWithoutDetaching($sync);
+            $project->courses()->sync($sync);
             $this->advance($project, 'step4');
         });
 
@@ -275,7 +278,7 @@ class ProjectWizardController extends Controller
 
         return view('admin.projects.wizard.step5', [
             'project' => $project,
-            'fundingSources' => FundingSource::all(),
+            'fundingSources' => FundingSource::query()->where('active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -283,13 +286,12 @@ class ProjectWizardController extends Controller
     {
         $this->ensureStep($project, 'step5');
 
-        // 🔥 Filtra apenas fundings válidos
         $filtered = collect($request->input('fundings', []))
-            ->filter(fn ($f) =>
-                !empty($f['funding_source_id']) &&
-                isset($f['allocated_amount']) &&
-                $f['allocated_amount'] !== ''
-            )
+            ->filter(fn ($funding) => ! empty($funding['selected']) && ! empty($funding['funding_source_id']))
+            ->map(fn ($funding) => [
+                'funding_source_id' => $funding['funding_source_id'],
+                'allocated_amount' => $funding['allocated_amount'] ?? null,
+            ])
             ->values()
             ->all();
 
@@ -299,6 +301,10 @@ class ProjectWizardController extends Controller
                 'fundings' => 'required|array|min:1',
                 'fundings.*.funding_source_id' => 'required|exists:funding_sources,id',
                 'fundings.*.allocated_amount' => 'required|numeric|min:0',
+            ],
+            [
+                'fundings.required' => 'Selecione ao menos uma forma de fomento para avançar.',
+                'fundings.min' => 'Selecione ao menos uma forma de fomento para avançar.',
             ]
         )->validate();
 
@@ -315,7 +321,7 @@ class ProjectWizardController extends Controller
                 ])
                 ->toArray();
 
-            $project->fundingSources()->syncWithoutDetaching($sync);
+            $project->fundingSources()->sync($sync);
 
             // 🔥 Avança o wizard
             $this->advance($project, 'review');

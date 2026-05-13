@@ -31,7 +31,20 @@
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
                 <strong>Nome:</strong>
-                <input type="text" name="name" placeholder="Nome" class="form-control" value="{{ $course->name }}">
+                <input type="text" name="name" placeholder="Nome" class="form-control" value="{{ old('name', $course->name) }}">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12 mt-3">
+            <div class="form-group">
+                <strong>Capacidade de Alunos:</strong>
+                <input
+                    type="number"
+                    name="capacity"
+                    placeholder="Ex: 30"
+                    class="form-control"
+                    value="{{ old('capacity', $course->capacity) }}"
+                    min="1"
+                >
             </div>
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12 text-center">

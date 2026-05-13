@@ -25,6 +25,14 @@ class FundingSource extends Model
         'code',
     ];
 
+    protected $casts = [
+        'active' => 'boolean',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'total_amount' => 'float',
+        'used_amount' => 'float',
+    ];
+
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_funding_source')

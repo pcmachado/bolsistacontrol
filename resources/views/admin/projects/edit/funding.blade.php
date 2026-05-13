@@ -59,9 +59,9 @@
                                         {{ ($pivot && $pivot->status === 'active') ? 'selected' : '' }}>
                                         Ativo
                                     </option>
-                                    <option value="inactive"
-                                        {{ ($pivot && $pivot->status === 'inactive') ? 'selected' : '' }}>
-                                        Inativo
+                                    <option value="finished"
+                                        {{ ($pivot && $pivot->status === 'finished') ? 'selected' : '' }}>
+                                        Finalizado
                                     </option>
                                 </select>
                             </td>

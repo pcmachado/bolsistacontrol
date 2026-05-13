@@ -34,6 +34,7 @@ class CourseSeeder extends Seeder
                         'name' => $name,
                         'institution_id' => $institution->id,
                         'description' => "Curso de {$name} na instituição {$institution->name}",
+                        'capacity' => 30,
                     ]
                 );
             }

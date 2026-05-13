@@ -94,7 +94,7 @@
                     {{-- Capacidade --}}
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-semibold">Capacidade</label>
-                        <input type="number" name="capacity" class="form-control" placeholder="Ex: 30">
+                        <input type="number" id="capacity" name="capacity" class="form-control" placeholder="Ex: 30" value="{{ old('capacity') }}">
                     </div>
                 </div>
 
@@ -140,6 +140,7 @@
     const projectSelect = document.getElementById('project_id');
     const courseSelect = document.getElementById('course_id');
     const selectedCourse = @json(old('course_id'));
+    const capacityInput = document.getElementById('capacity');
 
     function reloadCourseOptions() {
         const projectId = projectSelect.value;
@@ -163,9 +164,26 @@
             }
             courseSelect.appendChild(option);
         }
+
+        fillCapacityFromSelectedCourse();
+    }
+
+    function fillCapacityFromSelectedCourse() {
+        if (capacityInput.value) {
+            return;
+        }
+
+        const projectId = projectSelect.value;
+        const selected = (projectCourses[projectId] || [])
+            .find(course => String(course.id) === String(courseSelect.value));
+
+        if (selected?.capacity) {
+            capacityInput.value = selected.capacity;
+        }
     }
 
     projectSelect.addEventListener('change', reloadCourseOptions);
+    courseSelect.addEventListener('change', fillCapacityFromSelectedCourse);
     reloadCourseOptions();
 </script>
 @endpush

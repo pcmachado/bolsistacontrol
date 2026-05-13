@@ -17,11 +17,16 @@ class Course extends Model
         'name',
         'description',
         'duration_hours',
+        'capacity',
         'prerequisites',
         'start_date',
         'end_date',
         'active',
         'institution_id',
+    ];
+
+    protected $casts = [
+        'capacity' => 'integer',
     ];
 
     public function institution(): BelongsTo

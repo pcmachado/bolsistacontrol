@@ -55,6 +55,17 @@
         </div>
     </div>
 
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <strong>Não foi possível avançar no wizard.</strong>
+            <ul class="mb-0 mt-2">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- Conteúdo do passo --}}
     <div class="card shadow-sm">
         <div class="card-body p-4">

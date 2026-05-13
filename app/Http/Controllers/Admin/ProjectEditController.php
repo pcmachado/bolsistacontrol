@@ -157,7 +157,7 @@ class ProjectEditController extends Controller
 
             $project->fundingSources()
                 ->whereNotIn('funding_source_id', $activeIds)
-                ->updateExistingPivot('status', 'inactive');
+                ->updateExistingPivot('status', 'finished');
         });
 
         return redirect()
