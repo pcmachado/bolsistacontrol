@@ -116,28 +116,49 @@ class PaymentDashboardService
                 |--------------------------------------------------------------------------
                 */
         $budgetQuery = ProjectFundingSource::query()
-            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
-            ->when($unitId, fn ($q) => $q->whereHas('project.classOfferings', fn ($sub) => $sub->where('unit_id', $unitId)
-            ));
+            ->leftJoin('funding_sources', 'funding_sources.id', '=', 'project_funding_source.funding_source_id')
+            ->whereNull('project_funding_source.deleted_at')
+            ->whereNull('funding_sources.deleted_at')
+            ->when($projectId, fn ($q) => $q->where('project_funding_source.project_id', $projectId))
+            ->when($unitId, function ($q) use ($unitId) {
+                $q->whereHas('project', function ($project) use ($unitId) {
+                    $project->where('unit_id', $unitId)
+                        ->orWhereHas('classOfferings', fn ($offerings) => $offerings->where('unit_id', $unitId));
+                });
+            });
 
         if ($user->isInstitutionScoped()) {
-            $budgetQuery->whereHas('project.classOfferings.unit', fn ($q) => $q->whereIn('institution_id', $user->activeInstitutionIds())
-            );
+            $institutionIds = $user->activeInstitutionIds();
+
+            $budgetQuery->whereHas('project', function ($project) use ($institutionIds) {
+                $project->whereIn('institution_id', $institutionIds)
+                    ->orWhereHas('classOfferings.unit', fn ($units) => $units->whereIn('institution_id', $institutionIds));
+            });
         } elseif ($user->isUnitScoped()) {
-            $budgetQuery->whereHas('project.classOfferings', fn ($q) => $q->whereIn('unit_id', $user->visibleUnitIds())
-            );
+            $unitIds = $user->visibleUnitIds();
+
+            $budgetQuery->whereHas('project', function ($project) use ($unitIds) {
+                $project->whereIn('unit_id', $unitIds)
+                    ->orWhereHas('classOfferings', fn ($offerings) => $offerings->whereIn('unit_id', $unitIds));
+            });
         }
 
-        $budgetAllocated = (float) (clone $budgetQuery)->sum('allocated_amount');
-        $budgetUsed = (float) (clone $budgetQuery)->sum('used_amount');
+        $allocatedExpression = 'COALESCE(project_funding_source.allocated_amount, funding_sources.total_amount, 0)';
+
+        $budgetAllocated = (float) (clone $budgetQuery)
+            ->selectRaw("SUM($allocatedExpression) as total")
+            ->value('total');
+        $budgetUsed = (float) (clone $budgetQuery)
+            ->selectRaw('SUM(COALESCE(project_funding_source.used_amount, 0)) as total')
+            ->value('total');
         $budgetAvailable = max($budgetAllocated - $budgetUsed, 0);
         $budgetCommitmentPercent = $budgetAllocated > 0
             ? min(100, round(($budgetUsed / $budgetAllocated) * 100, 1))
             : 0;
 
         $projectBudgetSummaries = (clone $budgetQuery)
-            ->selectRaw('project_id, SUM(COALESCE(allocated_amount, 0)) as allocated_total, SUM(COALESCE(used_amount, 0)) as used_total')
-            ->groupBy('project_id')
+            ->selectRaw("project_funding_source.project_id, SUM($allocatedExpression) as allocated_total, SUM(COALESCE(project_funding_source.used_amount, 0)) as used_total")
+            ->groupBy('project_funding_source.project_id')
             ->with('project')
             ->get()
             ->map(function ($row) {

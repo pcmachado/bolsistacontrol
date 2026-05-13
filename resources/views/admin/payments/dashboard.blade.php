@@ -306,7 +306,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h4 class="mb-1">Orçamento dos projetos</h4>
-                    <small class="text-muted">Leitura baseada em `allocated_amount` e `used_amount` da vinculação entre projeto e fonte pagadora.</small>
+                    <small class="text-muted">Leitura baseada no valor alocado do projeto; quando não houver valor alocado, usa o total da fonte pagadora.</small>
                 </div>
             </div>
 
