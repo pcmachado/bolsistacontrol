@@ -24,6 +24,12 @@ class Course extends Model
         'institution_id',
     ];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'active' => 'boolean',
+    ];
+
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);

@@ -22,11 +22,19 @@ class CoursesDataTable extends BaseDataTable
                     ->implode('<br>');
             })
             ->addColumn('projects', function ($course) {
-                return $course->classOfferings
-                    ->pluck('project.name')
+                $projectNames = $course->projects
+                    ->pluck('name')
                     ->unique()
-                    ->filter()
-                    ->implode('<br>');
+                    ->filter();
+
+                if ($projectNames->isEmpty()) {
+                    $projectNames = $course->classOfferings
+                        ->pluck('project.name')
+                        ->unique()
+                        ->filter();
+                }
+
+                return $projectNames->implode('<br>');
             })
             ->addColumn('offerings_count', fn ($course) => $course->classOfferings->count())
             ->addColumn('actions', fn ($course) => view('admin.courses.partials.actions', compact('course')))
@@ -38,7 +46,7 @@ class CoursesDataTable extends BaseDataTable
     {
         $user = Auth::user();
 
-        $query = $model->newQuery()->with('classOfferings.unit', 'classOfferings.project');
+        $query = $model->newQuery()->with('classOfferings.unit', 'classOfferings.project', 'projects');
 
         $query = app(VisibilityService::class)
             ->apply($query, $user, 'admin');
@@ -54,8 +62,12 @@ class CoursesDataTable extends BaseDataTable
         if (! empty($this->filters['project_id'])) {
             $projectId = (int) $this->filters['project_id'];
 
-            $query->whereHas('classOfferings', function ($q) use ($projectId) {
-                $q->where('projects.id', $projectId);
+            $query->where(function ($query) use ($projectId) {
+                $query->whereHas('classOfferings', function ($q) use ($projectId) {
+                    $q->where('project_id', $projectId);
+                })->orWhereHas('projects', function ($q) use ($projectId) {
+                    $q->where('projects.id', $projectId);
+                });
             });
         }
 
