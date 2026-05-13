@@ -6,6 +6,7 @@ use App\DataTables\UsersDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Institution;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,10 +45,19 @@ class UserController extends Controller
      */
     public function create(): View
     {
-        $units = Unit::all();
+        $institutions = Institution::orderBy('name')->pluck('name', 'id');
+
+        $selectedInstitution = $institutions->count() === 1
+            ? $institutions->keys()->first()
+            : null;
+
+        $units = $selectedInstitution
+            ? Unit::where('institution_id', $selectedInstitution)->pluck('name', 'id')
+            : collect();
+
         $roles = Role::all();
 
-        return view('admin.users.create', compact('units', 'roles'));
+        return view('admin.users.create', compact('units', 'roles', 'institutions', 'selectedInstitution'));
     }
 
     /**
@@ -60,18 +70,14 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|string|exists:roles,name',
+            'institution_id' => 'required',
+            'unit_id' => 'required',
         ];
 
-        // Se não for admin ou coordenador geral, exige unit_id
-        if (! Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
-            $rules['unit_id'] = 'required|exists:units,id';
-        } else {
-            $rules['unit_id'] = 'nullable|exists:units,id';
-        }
+        $rules['unit_id'] = 'nullable|exists:units,id';
 
         $validated = $request->validate($rules);
 
-        // Se o checkbox de notificar estiver marcado, gera senha temporária
         if ($request->has('notify_user')) {
             $temporaryPassword = $this->generateTemporaryPassword();
             $validated['password'] = $temporaryPassword;
@@ -80,15 +86,14 @@ class UserController extends Controller
             $notify = false;
         }
 
-        // Cria usuário via service
         $user = $this->userService->createUser($validated);
 
-        // Envia notificação se solicitado
         if ($notify) {
             $user->notify(new \App\Notifications\UserCreatedNotification($validated['password']));
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuário criado com sucesso!');
+        return redirect()->route('admin.scholarship_holders.create', ['user_id' => $user->id])
+            ->with('success', 'Usuário criado com sucesso! Agora complete os dados do bolsista.');
     }
 
     public function show(User $user): View
@@ -121,7 +126,7 @@ class UserController extends Controller
             'role' => 'required|string|exists:roles,name',
         ];
 
-        if (! Auth::user()->hasRole(['admin', 'coordenador-geral'])) {
+        if (! Auth::user()->hasRole(['admin', 'coordenador_geral'])) {
             $rules['unit_id'] = 'required|exists:units,id';
         } else {
             $rules['unit_id'] = 'nullable|exists:units,id';
@@ -153,6 +158,22 @@ class UserController extends Controller
      */
     private function generateTemporaryPassword(): string
     {
-        return Str::random(12); // Gera uma string aleatória de 12 caracteres
+        return Str::random(12);
+    }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('q');
+
+        if (!$term || strlen($term) < 2) {
+            return response()->json([]);
+        }
+
+        $users = \App\Models\User::where('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%")
+                    ->limit(10)
+                    ->get(['id', 'name', 'email']);
+
+        return response()->json($users);
     }
 }

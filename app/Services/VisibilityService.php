@@ -125,14 +125,22 @@ class VisibilityService
         }
 
         if ($model instanceof Course) {
-            return $query->whereHas('classOfferings.unit', function ($sub) use ($institutionIds) {
-                $sub->whereIn('institution_id', $institutionIds);
+            return $query->where(function ($sub) use ($institutionIds) {
+                $sub->whereIn('institution_id', $institutionIds)
+                    ->orWhereHas('classOfferings.unit', function ($nested) use ($institutionIds) {
+                        $nested->whereIn('institution_id', $institutionIds);
+                    });
             });
         }
 
         if ($model instanceof Discipline) {
-            return $query->whereHas('classOfferings.unit', function ($sub) use ($institutionIds) {
-                $sub->whereIn('institution_id', $institutionIds);
+            return $query->where(function ($sub) use ($institutionIds) {
+                $sub->whereHas('course', function ($nested) use ($institutionIds) {
+                    $nested->whereIn('institution_id', $institutionIds)
+                        ->orWhereHas('classOfferings.unit', function ($deep) use ($institutionIds) {
+                            $deep->whereIn('institution_id', $institutionIds);
+                        });
+                });
             });
         }
 

@@ -107,8 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/meu-dashboard', [DashboardController::class, 'index'])->name('holder.dashboard');
     Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
 
-    Route::post('/impersonate-stop', [AdminScholarshipHolderController::class, 'stop'])
-        ->name('admin.impersonate.stop');
+    Route::post('/impersonate-stop', [AdminScholarshipHolderController::class, 'stop'])->name('admin.impersonate.stop');
 
     // Módulo de Frequência para o Bolsista
     Route::prefix('attendance')->middleware('auth')->group(function () {
@@ -244,13 +243,21 @@ Route::get('/courses/search', [CourseController::class, 'search'])->name('course
 
 Route::post('/admin/context/switch', [ContextController::class, 'switch'])->name('admin.context.switch')->middleware(['auth', 'role:admin|superadmin']);
 
+Route::get('/api/institutions/{id}/units', function ($id) {
+    return \App\Models\Unit::where('institution_id', $id)->get(['id', 'name']);
+});
+
+Route::get('/api/users/search', [UserController::class, 'search']);
+
 // Rotas Administrativas
 Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::get('/scholarshipholders', [AdminScholarshipHolderController::class, 'index'])->name('scholarship_holders.impersonate');
-    Route::get('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'show'])->name('scholarship_holders.show');
-    Route::get('scholarship-holders/{holder}/edit', [AdminScholarshipHolderController::class, 'edit'])->name('scholarship_holders.edit');
-    Route::put('scholarship-holders/{holder}', [AdminScholarshipHolderController::class, 'update'])->name('scholarship_holders.update');
+    Route::prefix('impersonate/holders')->name('impersonate.holders.')->group(function () {
+        Route::get('/', [AdminScholarshipHolderController::class, 'index'])->name('index');
+        Route::get('{holder}', [AdminScholarshipHolderController::class, 'show'])->name('show');
+        Route::get('{holder}/edit', [AdminScholarshipHolderController::class, 'edit'])->name('edit');
+        Route::put('{holder}', [AdminScholarshipHolderController::class, 'update'])->name('update');
+    });
 
     // Impersonate
     Route::post('impersonate/{user}', [AdminScholarshipHolderController::class, 'start'])->name('impersonate');
@@ -456,6 +463,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
         Route::get('/', [ProjectEditController::class, 'index'])->name('index');
 
         Route::get('/general', [ProjectEditController::class, 'general'])->name('general');
+        Route::get('/positions', [ProjectEditController::class, 'positions'])->name('positions');
+        Route::put('/positions', [ProjectEditController::class, 'updatePositions'])->name('positions.update');
 
         Route::get('/scholars', [ProjectEditController::class, 'scholars'])->name('scholars');
         Route::post('/scholars', [ProjectEditController::class, 'storeScholar'])->name('scholars.store');

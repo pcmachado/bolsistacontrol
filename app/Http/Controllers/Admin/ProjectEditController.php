@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Project;
-use App\Models\Position;
-use App\Models\ScholarshipHolder;
-use App\Models\Course;
-use App\Models\FundingSource;
-use App\Http\Requests\UpdateProjectFundingRequest;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Http\Requests\UpdateProjectScholarsRequest;
 use App\Http\Requests\UpdateProjectCoursesRequest;
+use App\Http\Requests\UpdateProjectFundingRequest;
+use App\Http\Requests\UpdateProjectScholarsRequest;
+use App\Models\Course;
+use App\Models\DocumentTemplate;
+use App\Models\FundingSource;
+use App\Models\Institution;
+use App\Models\Position;
+use App\Models\Project;
+use App\Models\ScholarshipHolder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProjectEditController extends Controller
 {
@@ -23,21 +26,71 @@ class ProjectEditController extends Controller
 
     public function general(Project $project)
     {
-        return view('admin.projects.edit.general', compact('project'));
+        $user = Auth::user();
+        $institutions = Institution::query()
+            ->whereIn('id', $user->accessibleInstitutionIds())
+            ->orderBy('name')
+            ->get();
+        $templates = DocumentTemplate::query()
+            ->where('active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.projects.edit.general', compact('project', 'institutions', 'templates'));
+    }
+
+    public function positions(Project $project)
+    {
+        $project->load('positions');
+        $allPositions = Position::orderBy('name')->get();
+
+        return view('admin.projects.edit.positions', compact('project', 'allPositions'));
+    }
+
+    public function updatePositions(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'positions' => 'required|array|min:1',
+            'positions.*.id' => 'required|exists:positions,id',
+            'positions.*.hourly_rate' => 'required|numeric|min:0',
+        ]);
+
+        $sync = collect($validated['positions'])
+            ->filter(fn ($position) => isset($position['hourly_rate']) && $position['hourly_rate'] !== '')
+            ->mapWithKeys(fn ($position) => [
+                $position['id'] => ['hourly_rate' => $position['hourly_rate']],
+            ])
+            ->toArray();
+
+        $project->positions()->sync($sync);
+
+        return redirect()
+            ->route('admin.projects.edit.positions', $project)
+            ->with('success', 'Cargos atualizados com sucesso.');
     }
 
     public function courses(Project $project)
     {
         $project->load('courses');
         $courses = Course::all();
+
         return view('admin.projects.edit.courses', compact('project', 'courses'));
     }
 
     public function scholars(Project $project)
     {
-        $project->load('scholarshipHolders');
+        $project->load(['scholarshipHolders.user', 'positions']);
         $scholarshipHolders = ScholarshipHolder::with('user')->get();
-        $positions = Position::all();
+        $currentPositionIds = $project->scholarshipHolders
+            ->pluck('pivot.position_id')
+            ->filter()
+            ->unique()
+            ->values();
+        $positions = $project->positions
+            ->merge(Position::query()->whereIn('id', $currentPositionIds)->get())
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
 
         return view('admin.projects.edit.scholars', compact(
             'project',
@@ -60,17 +113,16 @@ class ProjectEditController extends Controller
     public function updateScholar(UpdateProjectScholarsRequest $request, Project $project)
     {
         DB::transaction(function () use ($project, $request) {
-
             $sync = collect($request->validated()['scholarships'])
                 ->mapWithKeys(fn ($s) => [
                     $s['scholarship_holder_id'] => [
-                        'position_id'     => $s['position_id'],
+                        'position_id' => $s['position_id'],
                         'weekly_workload' => $s['weekly_workload'],
-                        'status'          => $s['status'],
-                        'start_date'      => $s['start_date'] ?? $project->start_date,
-                        'end_date'        => $s['end_date'] ?? null,
+                        'status' => $s['status'],
+                        'start_date' => $s['start_date'] ?? $project->start_date,
+                        'end_date' => $s['end_date'] ?? null,
                         'edital_portaria' => $s['edital_portaria'] ?? null,
-                    ]
+                    ],
                 ])
                 ->toArray();
 
@@ -84,7 +136,7 @@ class ProjectEditController extends Controller
 
             foreach ($toDisable as $id) {
                 $project->scholarshipHolders()->updateExistingPivot($id, [
-                    'status' => 'inactive'
+                    'status' => 'inactive',
                 ]);
             }
         });
@@ -92,18 +144,20 @@ class ProjectEditController extends Controller
         return redirect()
             ->route('admin.projects.edit.scholars', $project)
             ->with('success', 'Bolsistas atualizados com sucesso.');
-    
-        DB::transaction(function () use ($project, $request) {
+    }
 
+    public function updateCourses(UpdateProjectCoursesRequest $request, Project $project)
+    {
+        DB::transaction(function () use ($project, $request) {
             $sync = collect($request->validated()['courses'])
                 ->mapWithKeys(fn ($c) => [
                     $c['course_id'] => [
-                        'active'     => (bool) $c['active'],
-                        'semester'   => $c['semester'] ?? null,
-                        'year'       => $c['year'] ?? null,
+                        'active' => (bool) $c['active'],
+                        'semester' => $c['semester'] ?? null,
+                        'year' => $c['year'] ?? null,
                         'start_date' => $project->start_date,
-                        'end_date'   => $project->end_date,
-                    ]
+                        'end_date' => $project->end_date,
+                    ],
                 ])
                 ->toArray();
 
@@ -111,9 +165,11 @@ class ProjectEditController extends Controller
 
             $activeIds = array_keys($sync);
 
-            $project->courses()
-                ->whereNotIn('course_id', $activeIds)
-                ->updateExistingPivot('active', false);
+            if (! empty($activeIds)) {
+                $project->courses()
+                    ->whereNotIn('course_id', $activeIds)
+                    ->updateExistingPivot('active', false);
+            }
         });
 
         return redirect()
@@ -137,27 +193,26 @@ class ProjectEditController extends Controller
         Project $project
     ) {
         DB::transaction(function () use ($project, $request) {
-
             $sync = collect($request->validated()['fundings'])
                 ->mapWithKeys(fn ($f) => [
                     $f['funding_source_id'] => [
-                        'allocated_amount'     => $f['allocated_amount'],
+                        'allocated_amount' => $f['allocated_amount'],
                         'start_date' => $f['start_date'] ?? $project->start_date,
-                        'end_date'   => $f['end_date'] ?? $project->end_date,
-                        'status'     => $f['status'] ?? 'active',
-                    ]
+                        'end_date' => $f['end_date'] ?? $project->end_date,
+                        'status' => $f['status'] ?? 'active',
+                    ],
                 ])
                 ->toArray();
 
-            // Atualiza / cria
             $project->fundingSources()->syncWithoutDetaching($sync);
 
-            // Desativa fontes removidas
             $activeIds = array_keys($sync);
 
-            $project->fundingSources()
-                ->whereNotIn('funding_source_id', $activeIds)
-                ->updateExistingPivot('status', 'inactive');
+            if (! empty($activeIds)) {
+                $project->fundingSources()
+                    ->whereNotIn('funding_source_id', $activeIds)
+                    ->updateExistingPivot('status', 'inactive');
+            }
         });
 
         return redirect()
@@ -176,9 +231,8 @@ class ProjectEditController extends Controller
             'edital_portaria' => 'nullable|string|max:255',
         ]);
 
-        // 🔥 evita duplicidade
         if ($project->scholarshipHolders()->where('scholarship_holder_id', $data['holder_id'])->exists()) {
-            return back()->with('error', 'Bolsista já vinculado ao projeto.');
+            return back()->with('error', 'Bolsista jÃ¡ vinculado ao projeto.');
         }
 
         $project->scholarshipHolders()->attach($data['holder_id'], [
@@ -196,7 +250,7 @@ class ProjectEditController extends Controller
     public function destroyScholar(Project $project, $holderId)
     {
         $project->scholarshipHolders()->updateExistingPivot($holderId, [
-            'status' => 'inactive'
+            'status' => 'inactive',
         ]);
 
         return back()->with('success', 'Bolsista desativado no projeto.');

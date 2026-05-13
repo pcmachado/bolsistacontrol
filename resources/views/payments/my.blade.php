@@ -7,10 +7,16 @@
 
     <h1 class="mb-4">Meus Pagamentos</h1>
 
+    {{-- NOVO: Abas de projeto --}}
+    @include('attendance.partials.project-tabs')
+
     {{-- ============================= --}}
     {{-- FILTROS --}}
     {{-- ============================= --}}
     <form method="GET" class="row g-2 mb-3 align-items-end">
+
+        {{-- NOVO: Campo hidden para project_id --}}
+        <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
 
         <div class="col-md-3">
             <label class="form-label">Competência</label>
@@ -26,14 +32,14 @@
         </div>
 
         <div class="col-md-2">
-            <a href="{{ route('payments.my') }}" class="btn btn-outline-secondary w-100">
+            <a href="{{ route('payments.my', ['project_id' => $activeProjectId]) }}" class="btn btn-outline-secondary w-100">
                 Limpar
             </a>
         </div>
 
         <div class="col-md-3">
             <a 
-                href="{{ route('payments.my.report', array_merge(request()->all(), ['pdf' => 1])) }}" 
+                href="{{ route('payments.my.report', array_merge(request()->all(), ['pdf' => 1, 'project_id' => $activeProjectId])) }}" 
                 target="_blank" 
                 class="btn btn-danger w-100">
                 📄 Gerar PDF

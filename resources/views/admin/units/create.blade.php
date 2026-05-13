@@ -34,6 +34,12 @@
         </div>
         <div class="col-xs-12 col-sm-12 col-md-12">
             <div class="form-group">
+                <strong>Sigla:</strong>
+                <input type="text" name="abbreviation" placeholder="Sigla" class="form-control">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
                 <strong>Endereço:</strong>
                 <input type="text" name="address" placeholder="Endereço" class="form-control">
             </div>
@@ -55,6 +61,37 @@
                 </select>
             </div>
         </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Telefone:</strong>
+                <input type="text" name="phone" placeholder="Telefone" class="form-control">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Página Web:</strong>
+                <input type="text" name="website" placeholder="Página Web" class="form-control">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Email:</strong>
+                <input type="email" name="email" placeholder="Email" class="form-control">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>CNPJ:</strong>
+                <input type="text" name="cnpj" placeholder="CNPJ" class="form-control">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Unidade Administrativa:</strong>
+                <input type="checkbox" name="is_administrative" value="1">
+            </div>
+        </div>
+    </div>
         <div class="col-xs-12 col-sm-12 col-md-12 text-center">
             <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Submit</button>
         </div>

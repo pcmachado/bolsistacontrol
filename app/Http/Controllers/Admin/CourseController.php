@@ -5,17 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\DataTables\CoursesDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Institution;
 use App\Models\Project;
 use App\Models\Unit;
+use App\Http\Requests\CourseRequest;
 use App\Services\CourseService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class CourseController extends Controller
 {
-    protected $courseService;
+    protected CourseService $courseService;
 
     public function __construct(CourseService $courseService)
     {
@@ -43,8 +44,7 @@ class CourseController extends Controller
 
     public function create(): View
     {
-        return view('admin.courses.create');
-    }
+        $user = Auth::user();
 
     public function store(Request $request)
     {
@@ -53,10 +53,20 @@ class CourseController extends Controller
             'description' => 'nullable|string|max:1000',
             'capacity' => 'nullable|integer|min:1',
         ];
+        $projects = Project::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleProjectIds())
+            ->orderBy('name')
+            ->get();
 
-        $validated = $request->validate($rules);
+        $institutions = Institution::orderBy('name')->get();
 
-        $course = $this->courseService->createCourse($validated);
+        return view('admin.courses.create', compact('projects', 'institutions'));
+    }
+
+    public function store(CourseRequest $request)
+    {
+        $course = $this->courseService->createCourse($request->validated());
 
         if ($request->ajax()) {
             return response()->json($course);
@@ -67,15 +77,27 @@ class CourseController extends Controller
 
     public function show(Course $course): View
     {
+        $course->load('projects', 'institution', 'disciplines');
+
         return view('admin.courses.show', compact('course'));
     }
 
     public function edit(Course $course): View
     {
-        return view('admin.courses.edit', compact('course'));
+        $user = Auth::user();
+
+        $projects = Project::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', $user->visibleProjectIds())
+            ->orderBy('name')
+            ->get();
+
+        $institutions = Institution::orderBy('name')->get();
+
+        return view('admin.courses.edit', compact('course', 'projects', 'institutions'));
     }
 
-    public function update(Request $request, Course $course): RedirectResponse
+    public function update(CourseRequest $request, Course $course): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -84,6 +106,7 @@ class CourseController extends Controller
         ]);
 
         $course->update($validated);
+        $this->courseService->updateCourse($course, $request->validated());
 
         return redirect()->route('admin.courses.index')->with('success', 'Curso atualizado com sucesso!');
     }

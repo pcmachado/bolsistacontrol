@@ -114,7 +114,7 @@
                     </div>
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">Salvar</button>
-                        <a href="{{ route('notification-settings.index') }}" class="btn btn-secondary">Cancelar</a>
+                        <a href="{{ route('admin.notification-settings.index') }}" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
             </div>

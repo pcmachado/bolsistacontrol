@@ -51,7 +51,7 @@
         </h6>
 
         <ul class="nav nav-pills flex-column mb-3">
-            <li><x-sidebar-item route="attendance.my" icon="bi bi-calendar-week" title="Registros de Frequência"/></li>
+            <li><x-sidebar-item route="attendance.my" icon="bi bi-calendar2-week" title="Registros de Frequência"/></li>
             <li><x-sidebar-item route="my-attendance.submissions.my" icon="bi bi-send-check" title="Submissões Mensais"/></li>
             <li><x-sidebar-item route="payments.my" icon="bi bi-wallet2" title="Meus Pagamentos"/></li>
         </ul>
@@ -84,19 +84,20 @@
             <ul class="nav nav-pills flex-column mb-3">
                 <li><x-sidebar-item route="attendance.submissions.index" icon="bi bi-calendar-week" title="Frequências"/></li>
                 <li><x-sidebar-item route="admin.homologations.index" icon="bi bi-check2-square" title="Homologações"/></li>
+                <li><x-sidebar-item route="admin.payments.index" icon="bi bi-cash-stack" title="Pagamentos" /></li>
                 {{-- <li><x-sidebar-item route="admin.homologations.pending" icon="bi bi-hourglass-split" title="Pendentes"/></li>
                 <li><x-sidebar-item route="admin.homologations.late" icon="bi bi-exclamation-circle" title="Atrasados"/></li> --}}
             </ul>
         @endif
 
-        @if(auth()->user()->hasAnyRole(['admin','coordenador_geral','coordenador_adjunto_geral','coordenador_adjunto']))
+        @if(auth()->user()->canAccessAdministrative())
             <h6 class="sidebar-section-title mt-4">
                 Gestão
             </h6>
             <ul class="nav nav-pills flex-column mb-3">
-                <li><x-sidebar-item route="admin.scholarship_holders.impersonate" icon="bi bi-people" title="Bolsistas" /></li>
-                <li><x-sidebar-item route="attendance.submissions.index" icon="bi bi-calendar-check" title="Frequências" /></li>
-                <li><x-sidebar-item route="admin.payments.index" icon="bi bi-cash-stack" title="Pagamentos" /></li>
+
+                <li><x-sidebar-item route="admin.impersonate.holders.index" icon="bi bi-people" title="Bolsistas" /></li>
+
             </ul>
         @endif
 
@@ -111,7 +112,7 @@
                 <li><x-sidebar-item route="admin.payments.dashboard" icon="bi bi-wallet2" title="Pagamentos (Bolsistas)"/></li>
                 <li><x-sidebar-item route="admin.payments.index" icon="bi bi-cash-stack" title="Gestão de Pagamentos"/></li>
                 <li><x-sidebar-item route="admin.student-payments.dashboard" icon="bi bi-graph-up-arrow" title="Financeiro (Alunos)"/></li>
-                <li><x-sidebar-item route="admin.student-payments.index" icon="bi bi-money" title="Pagamentos Alunos"/></li>
+                <li><x-sidebar-item route="admin.student-payments.index" icon="bi bi-cash-stack" title="Pagamentos Alunos"/></li>
                 <li><x-sidebar-item route="admin.payments.reports.monthly" icon="bi bi-calendar3" title="Fechamento Mensal"/></li>
                 <li><x-sidebar-item route="admin.financial-closures.index" icon="bi bi-lock" title="Fechamentos Financeiros"/></li>
             </ul>

@@ -19,7 +19,7 @@
         @can('submit', $row)
             <form method="POST" action="{{ route($submitRoute, $row) }}">
                 @csrf
-                <button class="btn btn-sm btn-warning" title="Enviar para homologaÃ§Ã£o">
+                <button class="btn btn-sm btn-warning" title="Enviar para homologação">
                     <i class="bi bi-send"></i>
                 </button>
             </form>

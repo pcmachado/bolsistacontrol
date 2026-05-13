@@ -1,20 +1,20 @@
 <div class="d-flex justify-content-center gap-2">
     {{-- Botão Visualizar --}}
-    <a href="{{ route('admin.scholarship_holders.show', $id) }}" 
-       class="btn btn-sm btn-info rounded-0" 
+    <a href="{{ route('admin.scholarship_holders.show', $id) }}"
+       class="btn btn-sm btn-info rounded-0"
        title="Visualizar">
         <i class="bi bi-eye"></i>
     </a>
     {{-- Botão Editar --}}
-    <a href="{{ route('admin.scholarship_holders.edit', $id) }}" 
-       class="btn btn-sm btn-primary rounded-0" 
+    <a href="{{ route('admin.scholarship_holders.edit', $id) }}"
+       class="btn btn-sm btn-primary rounded-0"
        title="Editar">
         <i class="bi bi-pencil-square"></i>
     </a>
 
     {{-- Botão Excluir --}}
-    <form action="{{ route('admin.scholarship_holders.destroy', $id) }}" method="POST" 
-          onsubmit="return confirm('Tem certeza que deseja excluir?');" 
+    <form action="{{ route('admin.scholarship_holders.destroy', $id) }}" method="POST"
+          onsubmit="return confirm('Tem certeza que deseja excluir?');"
           style="display:inline;">
         @csrf
         @method('DELETE')

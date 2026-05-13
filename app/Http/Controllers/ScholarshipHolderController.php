@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,19 +30,34 @@ class ScholarshipHolderController extends Controller
         return $dataTable->render('admin.scholarship_holders.index');
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $unidades = Unit::all();
-        $users = User::all();
-        $institutions = Institution::all();
+        $user = null;
+        $units = collect();
 
-        return view('admin.scholarship_holders.create', compact('unidades', 'users', 'institutions'));
+        // Se a tela foi aberta via redirecionamento com um ID de usuário:
+        if ($request->has('user_id')) {
+            $user = User::find($request->user_id);
+
+            if ($user && $user->institution_id) {
+                $units = Unit::where('institution_id', $user->institution_id)->pluck('name', 'id');
+            }
+        }
+
+        // Se for criar do zero, traz as unidades padrão
+        if ($units->isEmpty()) {
+            $units = Unit::pluck('name', 'id');
+        }
+
+        $roles = Role::pluck('name', 'id');
+
+        return view('admin.scholarship_holders.create', compact('units', 'user', 'roles'));
     }
 
     public function store(Request $request)
     {
         // 1. Validação
-        $validatedData = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'cpf' => 'required|string|unique:scholarship_holders,cpf|max:14',
             'email' => 'required|email|unique:scholarship_holders,email|unique:users,email',
@@ -50,34 +66,43 @@ class ScholarshipHolderController extends Controller
             'end_date' => 'nullable|date',
             'position' => 'required|string|max:50',
             'phone' => 'nullable|string|max:15',
-            'institution_link' => 'nullable|url',
             'bank' => 'nullable|string',
             'agency' => 'nullable|string',
             'account' => 'nullable|string',
             'pix_key' => 'nullable|string',
-        ]);
+            'status' => 'required|in:active,inactive',
+            'email' => 'required|email|unique:scholarship_holders,email',
+        ];
 
+        $validatedData = $request->validate($rules);
         // Cria um usuário para o bolsista (com senha padrão)
         // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
         DB::beginTransaction();
 
         try {
             // 2. Cria ou Encontra o Usuário
-            // Tenta encontrar um usuário pelo email (caso já exista uma conta)
-            $user = User::firstWhere('email', $validatedData['email']);
+            // Pega o ID do usuário do form (se veio pelo autocomplete)
+            $userId = $request->user_id;
 
-            if (! $user) {
-                // Cria um novo usuário, necessário para login.
-                $user = User::create([
-                    'name' => $validatedData['name'],
-                    'email' => $validatedData['email'],
-                    'password' => Hash::make(/* $validatedData['cpf'] */ 'password'), // Senha inicial é o CPF
-                ])->assignRole('bolsista');
+            // 2. Cria ou Encontra o Usuário
+            if (empty($userId)) {
+                $user = User::firstWhere('email', $validatedData['email']);
+
+                if (! $user) {
+                    // Cria um novo usuário
+                    $user = User::create([
+                        'name' => $validatedData['name'],
+                        'email' => $validatedData['email'],
+                        'password' => Hash::make(preg_replace('/[^0-9]/', '', $validatedData['cpf'])), // Senha inicial é o CPF sem pontos
+                    ])->assignRole('bolsista');
+                }
+
+                $userId = $user->id;
             }
 
             // 3. Cria o Bolsista e o associa ao novo Usuário
             $scholarshipHolderData = array_merge($validatedData, [
-                'user_id' => $user->id,
+                'user_id' => $userId,
                 // O Model cuida da criptografia dos dados bancários
             ]);
 

@@ -93,19 +93,19 @@
                             </td>
                             <td class="d-flex gap-1">
 
-                                <a href="{{ route('admin.scholarship_holders.show', $holder) }}"
+                                <a href="{{ route('admin.impersonate.holders.show', $holder) }}"
                                    class="btn btn-sm btn-outline-primary">
                                     👁
                                 </a>
 
-                                <a href="{{ route('admin.scholarship_holders.edit', $holder) }}"
+                                <a href="{{ route('admin.impersonate.holders.edit', $holder) }}"
                                    class="btn btn-sm btn-outline-warning">
                                     ✏️
                                 </a>
 
                                 {{-- 🔥 IMPERSONATE --}}
                                 <form method="POST"
-                                      action="{{ route('admin.impersonate', $holder->user) }}">
+                                      action="{{ route('admin.impersonate.holders.index', $holder->user) }}">
                                     @csrf
                                     <button class="btn btn-sm btn-outline-dark">
                                         🔐

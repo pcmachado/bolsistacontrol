@@ -27,6 +27,9 @@ class Course extends Model
 
     protected $casts = [
         'capacity' => 'integer',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'active' => 'boolean',
     ];
 
     public function institution(): BelongsTo

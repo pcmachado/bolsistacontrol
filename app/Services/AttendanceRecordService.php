@@ -19,11 +19,11 @@ class AttendanceRecordService
         if (! app(AttendanceSubmissionService::class)
             ->canCreateRecord($holder, $date->year, $date->month, $projectId)
         ) {
-            throw new DomainException('MÃªs jÃ¡ fechado para ediÃ§Ã£o.');
+            throw new DomainException('Mês já fechado para edição.');
         }
 
         if (FinancialClosure::isClosed($holder->unit_id, $date->month, $date->year)) {
-            throw new DomainException('PerÃ­odo financeiro fechado.');
+            throw new DomainException('Período financeiro fechado.');
         }
 
         app(AttendanceService::class)
@@ -44,7 +44,7 @@ class AttendanceRecordService
     public function update(AttendanceRecord $record, array $data): AttendanceRecord
     {
         if (! $record->isEditable()) {
-            throw new DomainException('Este registro nÃ£o pode ser alterado.');
+            throw new DomainException('Este registro não pode ser alterado.');
         }
 
         if (FinancialClosure::isClosed(
@@ -52,7 +52,7 @@ class AttendanceRecordService
             $record->date->month,
             $record->date->year
         )) {
-            throw new DomainException('PerÃ­odo financeiro fechado.');
+            throw new DomainException('Período financeiro fechado.');
         }
 
         $date = Carbon::parse($data['date']);
@@ -84,7 +84,7 @@ class AttendanceRecordService
     public function deleteAttendance(AttendanceRecord $record): void
     {
         if (! $record->isEditable()) {
-            throw new DomainException('Este registro nÃ£o pode ser removido.');
+            throw new DomainException('Este registro não pode ser removido.');
         }
 
         if (FinancialClosure::isClosed(
@@ -92,7 +92,7 @@ class AttendanceRecordService
             $record->date->month,
             $record->date->year
         )) {
-            throw new DomainException('PerÃ­odo financeiro fechado.');
+            throw new DomainException('Período financeiro fechado.');
         }
 
         $record->delete();
@@ -117,7 +117,7 @@ class AttendanceRecordService
             ->first();
 
         if (! $project) {
-            abort(403, 'Projeto invÃ¡lido para este bolsista.');
+            abort(403, 'Projeto inválido para este bolsista.');
         }
 
         return (int) $project->id;
