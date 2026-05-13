@@ -46,6 +46,13 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
+    public function store(Request $request)
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'capacity' => 'nullable|integer|min:1',
+        ];
         $projects = Project::query()
             ->withoutGlobalScopes()
             ->whereIn('id', $user->visibleProjectIds())
@@ -92,6 +99,13 @@ class CourseController extends Controller
 
     public function update(CourseRequest $request, Course $course): RedirectResponse
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'capacity' => 'nullable|integer|min:1',
+        ]);
+
+        $course->update($validated);
         $this->courseService->updateCourse($course, $request->validated());
 
         return redirect()->route('admin.courses.index')->with('success', 'Curso atualizado com sucesso!');

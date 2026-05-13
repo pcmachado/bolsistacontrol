@@ -10,6 +10,7 @@ class CourseFactory extends Factory
     {
         return [
             'name' => 'Curso de ' . $this->faker->jobTitle(),
+            'capacity' => $this->faker->numberBetween(20, 40),
         ];
     }
 }

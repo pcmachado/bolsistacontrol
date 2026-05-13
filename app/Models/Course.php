@@ -17,6 +17,7 @@ class Course extends Model
         'name',
         'description',
         'duration_hours',
+        'capacity',
         'prerequisites',
         'start_date',
         'end_date',
@@ -25,6 +26,7 @@ class Course extends Model
     ];
 
     protected $casts = [
+        'capacity' => 'integer',
         'start_date' => 'date',
         'end_date' => 'date',
         'active' => 'boolean',

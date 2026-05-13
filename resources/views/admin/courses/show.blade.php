@@ -81,5 +81,11 @@
             </div>
         </div>
     </div>
+    <div class="col-xs-12 col-sm-12 col-md-12 mt-3">
+        <div class="form-group">
+            <strong>Capacidade de Alunos:</strong>
+            {{ $course->capacity ?? 'Não informada' }}
+        </div>
+    </div>
 </div>
 @endsection

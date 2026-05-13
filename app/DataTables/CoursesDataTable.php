@@ -94,6 +94,9 @@ class CoursesDataTable extends BaseDataTable
     {
         return [
             Column::make('name')->title('Curso'),
+            Column::make('capacity')
+                ->title('Capacidade')
+                ->addClass('text-center'),
             Column::computed('units')
                 ->title('Unidades')
                 ->orderable(false)

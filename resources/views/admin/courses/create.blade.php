@@ -188,7 +188,27 @@
                     </div>
                 </div>
 
-                <div class="text-end mt-4">
+                {{-- Capacidade de alunos --}}
+                <div class="mb-4">
+                    <label for="capacity" class="form-label fw-semibold">Capacidade de Alunos</label>
+                    <input
+                        type="number"
+                        name="capacity"
+                        id="capacity"
+                        value="{{ old('capacity') }}"
+                        class="form-control @error('capacity') is-invalid @enderror"
+                        placeholder="Ex: 30"
+                        min="1"
+                    >
+                    <div class="form-text">Informe o número máximo de alunos previsto para o curso.</div>
+
+                    @error('capacity')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                {{-- Botão --}}
+                <div class="text-end">
                     <button type="submit" class="btn btn-primary px-4">
                         <i class="bi bi-check-lg me-2"></i> Salvar Curso
                     </button>
