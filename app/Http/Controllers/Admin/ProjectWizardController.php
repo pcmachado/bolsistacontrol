@@ -307,7 +307,7 @@ class ProjectWizardController extends Controller
 
         return view('admin.projects.wizard.step5', [
             'project' => $project,
-            'fundingSources' => FundingSource::all(),
+            'fundingSources' => FundingSource::query()->where('active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -316,10 +316,11 @@ class ProjectWizardController extends Controller
         $this->ensureStep($project, 'step5');
 
         $filtered = collect($request->input('fundings', []))
-            ->filter(fn ($funding) => ! empty($funding['funding_source_id']) &&
-                isset($funding['allocated_amount']) &&
-                $funding['allocated_amount'] !== ''
-            )
+            ->filter(fn ($funding) => ! empty($funding['selected']) && ! empty($funding['funding_source_id']))
+            ->map(fn ($funding) => [
+                'funding_source_id' => $funding['funding_source_id'],
+                'allocated_amount' => $funding['allocated_amount'] ?? null,
+            ])
             ->values()
             ->all();
 
@@ -329,6 +330,10 @@ class ProjectWizardController extends Controller
                 'fundings' => 'required|array|min:1',
                 'fundings.*.funding_source_id' => 'required|exists:funding_sources,id',
                 'fundings.*.allocated_amount' => 'required|numeric|min:0',
+            ],
+            [
+                'fundings.required' => 'Selecione ao menos uma forma de fomento para avançar.',
+                'fundings.min' => 'Selecione ao menos uma forma de fomento para avançar.',
             ]
         )->validate();
 
@@ -344,7 +349,9 @@ class ProjectWizardController extends Controller
                 ])
                 ->toArray();
 
-            $project->fundingSources()->syncWithoutDetaching($sync);
+            $project->fundingSources()->sync($sync);
+
+            // 🔥 Avança o wizard
             $this->advance($project, 'review');
         });
 

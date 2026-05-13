@@ -15,7 +15,7 @@ class UpdateProjectFundingRequest extends FormRequest
     {
         $filtered = collect($this->input('fundings', []))
             ->filter(fn ($f) =>
-                !empty($f['allocated_amount'])
+                isset($f['allocated_amount']) && $f['allocated_amount'] !== ''
             )
             ->values()
             ->all();
@@ -33,14 +33,14 @@ class UpdateProjectFundingRequest extends FormRequest
                 'required',
                 'exists:funding_sources,id',
             ],
-            'fundings.*.amount' => [
+            'fundings.*.allocated_amount' => [
                 'required',
                 'numeric',
                 'min:0',
             ],
             'fundings.*.status' => [
                 'nullable',
-                'in:active,inactive',
+                'in:active,finished',
             ],
         ];
     }

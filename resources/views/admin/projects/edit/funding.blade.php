@@ -13,6 +13,20 @@
             @include('admin.projects.edit._nav', ['active' => 'funding'])
         </div>
 
+                            <td>
+                                <select name="fundings[{{ $loop->index }}][status]"
+                                        class="form-select form-select-sm"
+                                        {{ $pivot ? '' : 'disabled' }}>
+                                    <option value="active"
+                                        {{ ($pivot && $pivot->status === 'active') ? 'selected' : '' }}>
+                                        Ativo
+                                    </option>
+                                    <option value="finished"
+                                        {{ ($pivot && $pivot->status === 'finished') ? 'selected' : '' }}>
+                                        Finalizado
+                                    </option>
+                                </select>
+                            </td>
         <div class="col-md-9">
             <form method="POST" action="{{ route('admin.projects.edit.funding.update', $project) }}">
                 @csrf

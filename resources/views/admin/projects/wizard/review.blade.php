@@ -142,7 +142,7 @@
                 @foreach($project->fundingSources as $source)
                     <tr>
                         <td>{{ $source->name }}</td>
-                        <td>{{ number_format($source->pivot->amount, 2, ',', '.') }}</td>
+                        <td>{{ number_format($source->pivot->allocated_amount, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </tbody>

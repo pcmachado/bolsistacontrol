@@ -1,32 +1,38 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Fonte de Recursos')
+@section('title', 'Forma de Fomento')
 
 @section('content')
 <div class="container-fluid">
-    <h1 class="mb-4">Editar Fonte de Recursos</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Forma de Fomento</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.funding-sources.edit', $fundingSource) }}" class="btn btn-primary">Editar</a>
+            <a href="{{ route('admin.funding-sources.index') }}" class="btn btn-outline-secondary">Voltar</a>
+        </div>
+    </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.funding-sources.update', $fundingSource) }}">
-                @csrf
-                @method('PUT')
+            <dl class="row mb-0">
+                <dt class="col-md-3">Nome</dt>
+                <dd class="col-md-9">{{ $fundingSource->name }}</dd>
 
-                <div class="mb-3">
-                    <label class="form-label">Nome</label>
-                    <input 
-                        type="text" 
-                        name="name" 
-                        value="{{ old('name', $fundingSource->name) }}" 
-                        class="form-control @error('name') is-invalid @enderror"
-                        placeholder="Digite o nome da fonte de recurso...">
-                    @error('name')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-                <button class="btn btn-primary">Salvar Alterações</button>
-                <a href="{{ route('admin.funding-sources.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-            </form>
+                <dt class="col-md-3">Código</dt>
+                <dd class="col-md-9">{{ $fundingSource->code ?? '-' }}</dd>
+
+                <dt class="col-md-3">Tipo</dt>
+                <dd class="col-md-9">{{ $fundingSource->type === 'internal' ? 'Interna' : 'Externa' }}</dd>
+
+                <dt class="col-md-3">Valor Total</dt>
+                <dd class="col-md-9">R$ {{ number_format($fundingSource->total_amount ?? 0, 2, ',', '.') }}</dd>
+
+                <dt class="col-md-3">Status</dt>
+                <dd class="col-md-9">{{ $fundingSource->active ? 'Ativa' : 'Inativa' }}</dd>
+
+                <dt class="col-md-3">Descrição</dt>
+                <dd class="col-md-9">{{ $fundingSource->description ?? '-' }}</dd>
+            </dl>
         </div>
     </div>
 </div>

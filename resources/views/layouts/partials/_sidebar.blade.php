@@ -115,6 +115,7 @@
                 <li><x-sidebar-item route="admin.student-payments.index" icon="bi bi-cash-stack" title="Pagamentos Alunos"/></li>
                 <li><x-sidebar-item route="admin.payments.reports.monthly" icon="bi bi-calendar3" title="Fechamento Mensal"/></li>
                 <li><x-sidebar-item route="admin.financial-closures.index" icon="bi bi-lock" title="Fechamentos Financeiros"/></li>
+                <li><x-sidebar-item route="admin.funding-sources.index" icon="bi bi-piggy-bank" title="Formas de Fomento"/></li>
             </ul>
         @endif
 
