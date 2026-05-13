@@ -23,6 +23,7 @@ class CourseRequest extends FormRequest
             'active' => ['boolean'],
             'institution_id' => ['nullable', 'exists:institutions,id'],
             'project_id' => ['required', 'exists:projects,id'],
+            'capacity' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

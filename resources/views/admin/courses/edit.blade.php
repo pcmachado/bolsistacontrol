@@ -14,7 +14,6 @@
             <i class="bi bi-arrow-left me-2"></i> Voltar
         </a>
     </div>
-@endif
 
 <form method="POST" action="{{ route('admin.courses.update', $course->id) }}">
     @csrf
@@ -39,6 +38,7 @@
                     min="1"
                 >
             </div>
+        </div>
 
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm">
