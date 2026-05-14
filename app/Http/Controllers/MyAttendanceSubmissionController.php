@@ -64,6 +64,35 @@ class MyAttendanceSubmissionController extends Controller
             ->with('success', 'Submissão criada com sucesso.');
     }
 
+    public function submitMonth(Request $request)
+    {
+        $request->validate([
+            'month' => ['required', 'date_format:Y-m'],
+            'project_id' => ['required', 'integer', 'exists:projects,id'],
+        ]);
+
+        $submission = $this->service->createFromMonth(
+            Auth::user(),
+            $request->month,
+            (int) $request->project_id
+        );
+
+        $this->authorize('submit', $submission);
+
+        try {
+            $this->service->submit($submission);
+        } catch (\DomainException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('attendance.my', [
+                'project_id' => $submission->project_id,
+                'month' => sprintf('%d-%02d', $submission->year, $submission->month),
+            ])
+            ->with('success', 'Frequência enviada para homologação. O mês ficará bloqueado para alterações até a homologação ou rejeição.');
+    }
+
     public function show(AttendanceSubmission $submission)
     {
         $submission = $this->service->findById($submission->id);

@@ -30,6 +30,20 @@
         </div>
     </div>
 
+    @if($limit > 0 && $total > $limit)
+        <div class="alert alert-warning">
+            <strong>Atenção:</strong> a carga horária registrada excede o limite mensal do projeto selecionado
+            ({{ number_format($limit, 1) }}h). O envio não será bloqueado, mas a coordenação poderá revisar essa diferença.
+        </div>
+    @endif
+
+    @if($limit > 0 && $total > 0 && $total < $limit && (! $submission || in_array($submission->status, ['draft', 'rejected'])))
+        <div class="alert alert-info">
+            <strong>Aviso:</strong> este mês está com menos horas que o limite previsto
+            ({{ number_format($total, 1) }}h de {{ number_format($limit, 1) }}h). Você ainda poderá enviar para homologação.
+        </div>
+    @endif
+
     @if($submission)
         @if($submission->status === 'rejected')
             <div class="alert alert-danger">
@@ -108,10 +122,24 @@
             </button>
         @endif
 
-        @if($submission && $submission->status === 'draft')
-            <a href="{{ route('my-attendance.submissions.show', $submission) }}" class="btn btn-success">
+        @if($activeProjectId && $total > 0 && (! $submission || in_array($submission->status, ['draft', 'rejected'])))
+            <form method="POST" action="{{ route('my-attendance.submissions.submit-month') }}" class="d-inline"
+                  @if($limit > 0 && $total < $limit)
+                      onsubmit="return confirm('Este mês possui menos horas que o limite previsto. Deseja enviar para homologação mesmo assim?')"
+                  @elseif($limit > 0 && $total > $limit)
+                      onsubmit="return confirm('Este mês excede o limite de horas previsto. Deseja enviar para homologação mesmo assim?')"
+                  @endif>
+                @csrf
+                <input type="hidden" name="month" value="{{ $month }}">
+                <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
+                <button type="submit" class="btn btn-success">
+                    Enviar mês para homologação
+                </button>
+            </form>
+        @elseif($activeProjectId && (! $submission || in_array($submission->status, ['draft', 'rejected'])))
+            <button class="btn btn-success" disabled>
                 Enviar mês para homologação
-            </a>
+            </button>
         @endif
     </div>
 

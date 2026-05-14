@@ -217,20 +217,34 @@ class AttendanceSubmissionService
     ): AttendanceSubmission {
         $projectId = $this->resolveProjectId($holder, $projectId);
 
-        return AttendanceSubmission::query()
+        $submission = AttendanceSubmission::query()
             ->where('scholarship_holder_id', $holder->id)
             ->where('project_id', $projectId)
             ->where('year', $year)
             ->where('month', $month)
-            ->firstOr(function () use ($holder, $year, $month, $projectId) {
-                return AttendanceSubmission::create([
-                    'scholarship_holder_id' => $holder->id,
-                    'project_id' => $projectId,
-                    'year' => $year,
-                    'month' => $month,
-                    'status' => AttendanceSubmission::STATUS_DRAFT,
-                ]);
-            });
+            ->first();
+
+        if (! $submission) {
+            return AttendanceSubmission::create([
+                'scholarship_holder_id' => $holder->id,
+                'project_id' => $projectId,
+                'year' => $year,
+                'month' => $month,
+                'status' => AttendanceSubmission::STATUS_DRAFT,
+            ]);
+        }
+
+        if ($submission->status === AttendanceSubmission::STATUS_REJECTED) {
+            $submission->update([
+                'status' => AttendanceSubmission::STATUS_DRAFT,
+                'submitted_at' => null,
+                'rejected_at' => null,
+                'rejected_reason' => null,
+                'approved_by' => null,
+            ]);
+        }
+
+        return $submission;
     }
 
     public function findById($id): AttendanceSubmission

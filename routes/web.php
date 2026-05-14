@@ -132,6 +132,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('my', [MyAttendanceSubmissionController::class, 'index'])->name('my-attendance.submissions.my');
             Route::post('my', [MyAttendanceSubmissionController::class, 'store'])->name('my-attendance.submissions.store');
+            Route::post('my/submit-month', [MyAttendanceSubmissionController::class, 'submitMonth'])->name('my-attendance.submissions.submit-month');
 
             Route::get('/{submission}', [AttendanceSubmissionController::class, 'show'])->name('attendance.submissions.show');
             Route::post('/{submission}/submit', [AttendanceSubmissionController::class, 'submit'])->name('attendance.submissions.submit');
