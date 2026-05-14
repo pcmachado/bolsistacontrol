@@ -10,43 +10,31 @@
     {{-- NOVO: Abas de projeto --}}
     @include('attendance.partials.project-tabs')
 
+    @php
+        $selectedMonth = request('month', now()->format('Y-m'));
+    @endphp
+
+    <x-month-navigation
+        route="payments.my"
+        :month="$selectedMonth"
+        :params="['project_id' => $activeProjectId]"
+    />
+
     {{-- ============================= --}}
-    {{-- FILTROS --}}
+    {{-- AÇÕES --}}
     {{-- ============================= --}}
-    <form method="GET" class="row g-2 mb-3 align-items-end">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a href="{{ route('payments.my', ['project_id' => $activeProjectId]) }}" class="btn btn-outline-secondary">
+            Limpar
+        </a>
 
-        {{-- NOVO: Campo hidden para project_id --}}
-        <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
-
-        <div class="col-md-3">
-            <label class="form-label">Competência</label>
-            <input 
-                type="month" 
-                name="month" 
-                value="{{ request('month', now()->format('Y-m')) }}" 
-                class="form-control">
-        </div>
-
-        <div class="col-md-2">
-            <button class="btn btn-primary w-100">Filtrar</button>
-        </div>
-
-        <div class="col-md-2">
-            <a href="{{ route('payments.my', ['project_id' => $activeProjectId]) }}" class="btn btn-outline-secondary w-100">
-                Limpar
-            </a>
-        </div>
-
-        <div class="col-md-3">
-            <a 
-                href="{{ route('payments.my.report', array_merge(request()->all(), ['pdf' => 1, 'project_id' => $activeProjectId])) }}" 
-                target="_blank" 
-                class="btn btn-danger w-100">
-                📄 Gerar PDF
-            </a>
-        </div>
-
-    </form>
+        <a
+            href="{{ route('payments.my.report', array_merge(request()->all(), ['month' => $selectedMonth, 'pdf' => 1, 'project_id' => $activeProjectId])) }}"
+            target="_blank"
+            class="btn btn-danger">
+            📄 Gerar PDF
+        </a>
+    </div>
 
     {{-- ============================= --}}
     {{-- INFO DO PERÍODO --}}
@@ -55,7 +43,7 @@
         <small class="text-muted">
             Exibindo dados de: 
             <strong>
-                {{ \Carbon\Carbon::parse(request('month', now()))->translatedFormat('F/Y') }}
+                {{ \Carbon\Carbon::createFromFormat('Y-m', $selectedMonth)->translatedFormat('F/Y') }}
             </strong>
         </small>
     </div>

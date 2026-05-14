@@ -7,29 +7,22 @@
 
     <h1 class="mb-4">Fechamento Financeiro</h1>
 
-    {{-- Filtros --}}
-    <form method="GET" class="row g-2 mb-4 align-items-end">
+    @php
+        $selectedMonth = request('month', $monthString);
+    @endphp
 
-        <div class="col-md-3">
-            <label class="form-label">Competência</label>
-            <input type="month"
-                   name="month"
-                   value="{{ request('month', $monthString) }}"
-                   class="form-control">
-        </div>
+    <x-month-navigation
+        route="admin.financial-closures.index"
+        :month="$selectedMonth"
+        :params="request()->except('month')"
+    />
 
-        <div class="col-md-3">
-            <button class="btn btn-primary w-100">Filtrar</button>
-        </div>
-
-        <div class="col-md-3">
-            <a href="{{ route('admin.financial-closures.preview', ['month' => request('month', $monthString)]) }}"
-               class="btn btn-outline-secondary w-100">
-                👁 Prévia
-            </a>
-        </div>
-
-    </form>
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{{ route('admin.financial-closures.preview', ['month' => $selectedMonth]) }}"
+           class="btn btn-outline-secondary">
+            👁 Prévia
+        </a>
+    </div>
 
     {{-- Tabela --}}
     <div class="card shadow-sm">

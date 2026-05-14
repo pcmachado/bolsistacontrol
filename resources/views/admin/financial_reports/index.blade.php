@@ -9,18 +9,23 @@
         <i class="bi bi-cash-stack"></i> Relatório Financeiro
     </h3>
 
+    @php
+        $selectedMonth = request('month', $filters['month'] ?? now()->format('Y-m'));
+    @endphp
+
+    <x-month-navigation
+        route="admin.financial-reports.index"
+        :month="$selectedMonth"
+        :params="request()->except('month')"
+    />
+
     {{-- ============================= --}}
     {{-- FILTROS --}}
     {{-- ============================= --}}
     <form method="GET" class="card p-3 shadow-sm mb-4">
         <div class="row g-3">
 
-            {{-- COMPETÊNCIA (MÊS/ANO UNIFICADO) --}}
-            <div class="col-md-3">
-                <label>Competência</label>
-                <input type="month" name="month" class="form-control"
-                       value="{{ request('month', now()->format('Y-m')) }}">
-            </div>
+            <input type="hidden" name="month" value="{{ $selectedMonth }}">
 
             {{-- PROJETO --}}
             <div class="col-md-3">
@@ -82,14 +87,14 @@
             </div>
 
             <div class="col-md-2 d-flex align-items-end">
-                <a href="{{ route('admin.financial-reports.pdf', request()->query()) }}"
+                <a href="{{ route('admin.financial-reports.pdf', array_merge(request()->query(), ['month' => $selectedMonth])) }}"
                    class="btn btn-danger w-100" target="_blank">
                     📄 PDF
                 </a>
             </div>
 
             <div class="col-md-2 d-flex align-items-end">
-                <a href="{{ route('admin.financial-reports.excel', request()->query()) }}"
+                <a href="{{ route('admin.financial-reports.excel', array_merge(request()->query(), ['month' => $selectedMonth])) }}"
                    class="btn btn-success w-100">
                     📊 Excel
                 </a>

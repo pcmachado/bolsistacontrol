@@ -201,31 +201,24 @@
                             <small class="text-muted">Navega apenas os dados mensais.</small>
                         </div>
 
-                        <div class="period-nav">
-                            <a href="{{ $canNavigatePrevPeriod ? route('dashboard', ['project_id' => $activeProjectId,'month' => $previousPeriod->format('Y-m'), 'year' => $selectedYear]) : '#' }}"
-                               class="btn btn-sm btn-outline-secondary {{ $canNavigatePrevPeriod ? '' : 'disabled' }}">
-                                <i class="bi bi-chevron-left"></i>
-                            </a>
-
-                            <span class="fw-semibold">{{ $periodLabel }}</span>
-
-                            <a href="{{ $canNavigateNextPeriod ? route('dashboard', ['project_id' => $activeProjectId,'month' => $nextPeriod->format('Y-m'), 'year' => $selectedYear]) : '#' }}"
-                               class="btn btn-sm btn-outline-secondary {{ $canNavigateNextPeriod ? '' : 'disabled' }}">
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </div>
+                        <x-month-navigation
+                            route="dashboard"
+                            :month="$monthInput"
+                            :params="['project_id' => $activeProjectId, 'year' => $selectedYear]"
+                            :min-month="$oldestPeriod->format('Y-m')"
+                            button-class="btn btn-sm btn-outline-secondary"
+                            title-class="h6 fw-semibold mb-0"
+                            class="period-nav mb-0"
+                        />
                     </div>
 
                     <form method="GET" class="row g-2 align-items-end">
                         <input type="hidden" name="year" value="{{ $selectedYear }}">
                         <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
-                        <div class="col-md-8">
-                            <label class="form-label">Competência</label>
-                            <input type="month" name="month" value="{{ $monthInput }}" class="form-control">
-                        </div>
+                        <input type="hidden" name="month" value="{{ $monthInput }}">
 
-                        <div class="col-md-4">
-                            <button class="btn btn-primary w-100">Aplicar</button>
+                        <div class="col-12">
+                            <button class="btn btn-primary w-100">Atualizar período</button>
                         </div>
                     </form>
                 </div>

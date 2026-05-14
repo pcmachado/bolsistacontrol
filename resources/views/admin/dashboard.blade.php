@@ -161,14 +161,16 @@
 
         <section class="card filter-card">
             <div class="card-body">
+                <x-month-navigation
+                    route="admin.dashboard"
+                    :month="$selectedMonthInput"
+                    :params="request()->except('month', 'start_date', 'end_date')"
+                />
+
                 <form method="GET" class="row g-3 align-items-end">
 
                     <input type="hidden" name="project_id" value="{{ $activeProjectId }}">
-
-                    <div class="col-md-2">
-                        <label class="form-label">Competência</label>
-                        <input type="month" name="month" value="{{ $selectedMonthInput }}" class="form-control">
-                    </div>
+                    <input type="hidden" name="month" value="{{ $selectedMonthInput }}">
 
                     <div class="col-md-3">
                         <label class="form-label">Data inicial</label>

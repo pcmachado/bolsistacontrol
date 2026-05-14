@@ -7,19 +7,21 @@
 
     <h1 class="mb-4">Pagamentos</h1>
 
+    @php
+        $selectedMonth = request('month', $monthString ?? now()->format('Y-m'));
+    @endphp
+
+    <x-month-navigation
+        route="admin.payments.index"
+        :month="$selectedMonth"
+        :params="request()->except('month')"
+    />
+
     {{-- ============================= --}}
     {{-- FILTROS --}}
     {{-- ============================= --}}
     <form method="GET" class="row g-2 mb-3 align-items-end">
-
-        <div class="col-md-2">
-            <label class="form-label">Competência</label>
-            <input 
-                type="month" 
-                name="month" 
-                value="{{ request('month', now()->format('Y-m')) }}" 
-                class="form-control">
-        </div>
+        <input type="hidden" name="month" value="{{ $selectedMonth }}">
 
         <div class="col-md-2">
             <label class="form-label">Unidade</label>
@@ -77,7 +79,7 @@
             <button class="btn btn-primary w-100">Filtrar</button>
         </div>
         <div class="col-md-2">
-            <a href="{{ route('admin.payments.reports.monthly', array_merge(request()->all(), ['pdf' => 1])) }}" target="_blank" class="btn btn-danger w-100">📄 PDF </a>
+            <a href="{{ route('admin.payments.reports.monthly', array_merge(request()->all(), ['month' => $selectedMonth, 'pdf' => 1])) }}" target="_blank" class="btn btn-danger w-100">📄 PDF </a>
         </div>
 
     </form>
