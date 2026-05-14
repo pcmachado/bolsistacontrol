@@ -21,7 +21,7 @@ class PaymentGenerationService
             return $existing;
         }
 
-        return DB::transaction(function () use ($submission) {
+        $payment = DB::transaction(function () use ($submission) {
 
             $holder = $submission->scholarshipHolder;
             $project = $submission->relationLoaded('project')
@@ -45,5 +45,26 @@ class PaymentGenerationService
                 'sent_at' => now(),
             ]);
         });
+
+        $payment->loadMissing(['scholarshipHolder.user', 'unit']);
+
+        app(NotificationService::class)->sendEventNotification(
+            'payment_sent_to_financial',
+            [
+                'title' => 'Pagamento enviado ao financeiro',
+                'message' => "O pagamento de {$payment->scholarshipHolder->user->name} para {$payment->periodLabel()} foi enviado para execução.",
+                'level' => 'warning',
+                'payment_id' => $payment->id,
+                'new_status' => Payment::STATUS_SENT,
+                'url' => route('admin.payments.show', $payment),
+                'scholarship_holder_name' => $payment->scholarshipHolder->user->name,
+                'period' => $payment->periodLabel(),
+                'amount' => number_format($payment->amount, 2, ',', '.'),
+            ],
+            $payment->project_id,
+            $payment->unit?->institution_id
+        );
+
+        return $payment;
     }
 }

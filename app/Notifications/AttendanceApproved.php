@@ -9,27 +9,24 @@ class AttendanceApproved extends Notification
 {
     use Queueable;
 
-    public $attendance;
+    public function __construct(protected array $data) {}
 
-    public function __construct($attendance)
-    {
-        $this->attendance = $attendance;
-    }
-
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return ['database'];
     }
 
-    public function toDatabase($notifiable)
+    public function toDatabase($notifiable): array
     {
         return [
-            'title' => 'Registro homologado',
-            'message' => 'Seu registro de frequência foi homologado com sucesso.',
-            'attendance_id' => $this->attendance->id,
-            'date' => $this->attendance->date->format('Y-m-d'),
-            'url' => route('attendance.index', ['project_id' => $this->attendance->project_id, 'month' => $this->attendance->date->format('Y-m')]),
-            'level' => 'success',
+            'title' => $this->data['title'] ?? 'Submissão de Frequência Aprovada',
+            'message' => $this->data['message'] ?? 'Sua submissão de frequência foi aprovada.',
+            'submission_id' => $this->data['submission_id'] ?? null,
+            'month' => $this->data['month'] ?? null,
+            'year' => $this->data['year'] ?? null,
+            'total_hours' => $this->data['total_hours'] ?? null,
+            'url' => $this->data['url'] ?? null,
+            'level' => $this->data['level'] ?? 'success',
         ];
     }
 }

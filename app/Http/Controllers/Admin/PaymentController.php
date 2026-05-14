@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Services\FinancialAuditService;
+use App\Services\NotificationService;
 use App\Services\PaymentService;
 use App\Support\Traits\PaymentFilters;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -120,7 +121,7 @@ class PaymentController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($data, $holder, $records, $amount) {
+        $payment = DB::transaction(function () use ($data, $holder, $records, $amount) {
 
             $payment = Payment::create([
                 'scholarship_holder_id' => $holder->id,
@@ -140,7 +141,28 @@ class PaymentController extends Controller
                 $payment->id,
                 ['amount' => $payment->amount]
             );
+
+            return $payment;
         });
+
+        $payment->loadMissing(['scholarshipHolder.user', 'unit']);
+
+        app(NotificationService::class)->sendEventNotification(
+            'payment_sent_to_financial',
+            [
+                'title' => 'Pagamento enviado ao financeiro',
+                'message' => "O pagamento de {$payment->scholarshipHolder->user->name} para {$payment->periodLabel()} foi enviado para execução.",
+                'level' => 'warning',
+                'payment_id' => $payment->id,
+                'new_status' => Payment::STATUS_SENT,
+                'url' => route('admin.payments.show', $payment),
+                'scholarship_holder_name' => $payment->scholarshipHolder->user->name,
+                'period' => $payment->periodLabel(),
+                'amount' => number_format($payment->amount, 2, ',', '.'),
+            ],
+            $payment->project_id,
+            $payment->unit?->institution_id
+        );
 
         return redirect()
             ->route('admin.payments.create')

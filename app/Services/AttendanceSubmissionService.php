@@ -108,6 +108,9 @@ class AttendanceSubmissionService
                 'month' => $submission->month,
                 'year' => $submission->year,
                 'total_hours' => $submission->total_hours,
+                'unit_id' => $submission->scholarshipHolder->unit_id,
+                'submitter_user_id' => $submission->scholarshipHolder->user_id,
+                'scholarship_holder_user_id' => $submission->scholarshipHolder->user_id,
             ],
             $submission->project_id,
             $submission->scholarshipHolder->unit->institution_id ?? null
@@ -145,6 +148,9 @@ class AttendanceSubmissionService
                 'month' => $submission->month,
                 'year' => $submission->year,
                 'total_hours' => $submission->total_hours,
+                'unit_id' => $submission->scholarshipHolder->unit_id,
+                'submitter_user_id' => $submission->scholarshipHolder->user_id,
+                'scholarship_holder_user_id' => $submission->scholarshipHolder->user_id,
             ],
             $submission->project_id,
             $submission->scholarshipHolder->unit->institution_id ?? null
@@ -185,6 +191,9 @@ class AttendanceSubmissionService
                 'month' => $submission->month,
                 'year' => $submission->year,
                 'reason' => $reason,
+                'unit_id' => $submission->scholarshipHolder->unit_id,
+                'submitter_user_id' => $submission->scholarshipHolder->user_id,
+                'scholarship_holder_user_id' => $submission->scholarshipHolder->user_id,
             ],
             $submission->project_id,
             $submission->scholarshipHolder->unit->institution_id ?? null

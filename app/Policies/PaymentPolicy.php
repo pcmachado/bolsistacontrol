@@ -33,7 +33,11 @@ class PaymentPolicy
             return true;
         }
 
-        if ($user->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'financeiro'])) {
+        if ($user->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            return $user->activeInstitutionIds()->contains($payment->unit?->institution_id);
+        }
+
+        if ($user->hasRole('financeiro')) {
             return $payment->unit_id === $user->unit_id;
         }
 
@@ -53,7 +57,7 @@ class PaymentPolicy
      */
     public function markAsPaid(User $user, Payment $payment): bool
     {
-        if (!$user->hasAnyRole(['admin', 'financeiro', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
+        if (! $user->hasAnyRole(['admin', 'financeiro', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
             return false;
         }
 
@@ -61,7 +65,7 @@ class PaymentPolicy
             return false;
         }
 
-        return !FinancialClosure::isClosed(
+        return ! FinancialClosure::isClosed(
             $payment->unit_id,
             $payment->month,
             $payment->year

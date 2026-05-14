@@ -61,7 +61,7 @@ class MyPaymentController extends Controller
                 'payment_id' => $payment->id,
                 'old_status' => $oldStatus,
                 'new_status' => Payment::STATUS_CONFIRMED,
-                'url' => route('payments.show', $payment),
+                'url' => route('admin.payments.show', $payment),
                 'scholarship_holder_name' => $payment->scholarshipHolder->user->name,
                 'period' => $payment->periodLabel(),
                 'amount' => number_format($payment->amount, 2, ',', '.'),

@@ -14,11 +14,18 @@ class NotificationSettingSeeder extends Seeder
     {
         $settings = [
             [
+                'event_type' => 'payment_sent_to_financial',
+                'notification_type' => 'database',
+                'recipients' => [
+                    ['type' => 'financial_coordinator'],
+                ],
+                'enabled' => true,
+            ],
+            [
                 'event_type' => 'payment_status_changed',
                 'notification_type' => 'database',
                 'recipients' => [
-                    ['type' => 'role', 'value' => 'coordinator'],
-                    ['type' => 'role', 'value' => 'admin'],
+                    ['type' => 'financial_coordinator'],
                 ],
                 'enabled' => true,
             ],
@@ -26,8 +33,8 @@ class NotificationSettingSeeder extends Seeder
                 'event_type' => 'submission_submitted',
                 'notification_type' => 'database',
                 'recipients' => [
-                    ['type' => 'role', 'value' => 'coordinator'],
-                    ['type' => 'role', 'value' => 'admin'],
+                    ['type' => 'unit_coordinator'],
+                    ['type' => 'administrative_general_coordinator'],
                 ],
                 'enabled' => true,
             ],
@@ -35,7 +42,7 @@ class NotificationSettingSeeder extends Seeder
                 'event_type' => 'submission_approved',
                 'notification_type' => 'database',
                 'recipients' => [
-                    ['type' => 'project_coordinator'],
+                    ['type' => 'submission_owner'],
                 ],
                 'enabled' => true,
             ],
@@ -43,7 +50,7 @@ class NotificationSettingSeeder extends Seeder
                 'event_type' => 'submission_rejected',
                 'notification_type' => 'database',
                 'recipients' => [
-                    ['type' => 'project_coordinator'],
+                    ['type' => 'submission_owner'],
                 ],
                 'enabled' => true,
             ],

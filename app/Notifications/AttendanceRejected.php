@@ -9,26 +9,24 @@ class AttendanceRejected extends Notification
 {
     use Queueable;
 
-    public $attendance;
-    public function __construct($attendance)
-    {
-        $this->attendance = $attendance;
-    }
+    public function __construct(protected array $data) {}
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return ['database'];
     }
 
-    public function toDatabase($notifiable)
+    public function toDatabase($notifiable): array
     {
         return [
-            'title' => 'Registro rejeitado',
-            'message' => 'Seu registro de frequência foi rejeitado. Motivo: ' . $this->attendance->rejected_reason,
-            'attendance_id' => $this->attendance->id,
-            'date' => $this->attendance->date->format('Y-m-d'),
-            'url' => route('attendance.index', ['project_id' => $this->attendance->project_id, 'month' => $this->attendance->date->format('Y-m')]),
-            'level' => 'error',
+            'title' => $this->data['title'] ?? 'Submissão de Frequência Rejeitada',
+            'message' => $this->data['message'] ?? 'Sua submissão de frequência foi rejeitada.',
+            'submission_id' => $this->data['submission_id'] ?? null,
+            'month' => $this->data['month'] ?? null,
+            'year' => $this->data['year'] ?? null,
+            'reason' => $this->data['reason'] ?? null,
+            'url' => $this->data['url'] ?? null,
+            'level' => $this->data['level'] ?? 'danger',
         ];
     }
 }
