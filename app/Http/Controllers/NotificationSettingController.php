@@ -219,6 +219,7 @@ class NotificationSettingController extends Controller
     {
         return [
             'payment_status_changed' => 'Mudança de Status de Pagamento',
+            'payment_sent_to_financial' => 'Pagamento Enviado ao Financeiro',
             'submission_submitted' => 'Submissão de Frequência Enviada',
             'submission_approved' => 'Submissão de Frequência Aprovada',
             'submission_rejected' => 'Submissão de Frequência Rejeitada',
