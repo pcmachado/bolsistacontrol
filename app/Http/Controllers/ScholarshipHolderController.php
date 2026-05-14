@@ -71,7 +71,6 @@ class ScholarshipHolderController extends Controller
             'account' => 'nullable|string',
             'pix_key' => 'nullable|string',
             'status' => 'required|in:active,inactive',
-            'email' => 'required|email|unique:scholarship_holders,email',
         ];
 
         $validatedData = $request->validate($rules);
@@ -127,10 +126,21 @@ class ScholarshipHolderController extends Controller
      */
     public function edit(ScholarshipHolder $scholarshipHolder): View
     {
-        $unidades = Unit::all();
-        $unidadeAtual = $scholarshipHolder->units()->first();
+        $loggedUserInstId = auth()->user()->institution_id;
 
-        return view('admin.scholarship_holders.edit', compact('bolsista', 'unidades', 'unidadeAtual'));
+        $bolsistaInstId = $scholarshipHolder->user->institution_id ?? null;
+
+        $user = $scholarshipHolder->user;
+
+        $institutionsIds = array_filter([$loggedUserInstId, $bolsistaInstId]);
+
+        $units = Unit::where('institution_id', $institutionsIds)->pluck('name', 'id');
+
+        $unitActive = $scholarshipHolder->unit;
+
+        $roles = Role::all();
+
+        return view('admin.scholarship_holders.edit', compact('scholarshipHolder', 'units', 'unitActive', 'user', 'roles'));
     }
 
     public function show(ScholarshipHolder $scholarshipHolder): View
@@ -143,19 +153,19 @@ class ScholarshipHolderController extends Controller
     /**
      * Atualiza um bolsista no banco de dados.
      */
-    public function update(Request $request, ScholarshipHolder $bolsista): RedirectResponse
+    public function update(Request $request, ScholarshipHolder $scholarshipHolder): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'cpf' => ['required', 'string', Rule::unique('scholarship_holders')->ignore($bolsista->id)],
-            'email' => ['required', 'email', Rule::unique('scholarship_holders')->ignore($bolsista->id)],
+            'cpf' => ['required', 'string', Rule::unique('scholarship_holders')->ignore($scholarshipHolder->id)],
+            'email' => ['required', 'email', Rule::unique('scholarship_holders')->ignore($scholarshipHolder->id)],
             // ... outras validações
         ]);
 
-        $bolsista->update($request->all());
+        $scholarshipHolder->update($request->all());
 
         // Atualiza a unidade e carga horária se necessário
-        $bolsista->units()->sync([$request->unidade_id => ['monthly_workload' => $request->carga_horaria]]);
+        $scholarshipHolder->units()->sync([$request->unidade_id => ['monthly_workload' => $request->carga_horaria]]);
 
         return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista atualizado com sucesso!');
     }
@@ -163,11 +173,11 @@ class ScholarshipHolderController extends Controller
     /**
      * Remove um bolsista do banco de dados.
      */
-    public function destroy(ScholarshipHolder $bolsista): RedirectResponse
+    public function destroy(ScholarshipHolder $scholarshipHolder): RedirectResponse
     {
         // Deleta o usuário associado para evitar dados órfãos
-        $bolsista->user()->delete();
-        $bolsista->delete();
+        $scholarshipHolder->user()->delete();
+        $scholarshipHolder->delete();
 
         return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista removido com sucesso!');
     }

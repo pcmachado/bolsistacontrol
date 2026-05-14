@@ -63,10 +63,10 @@
                 <label for="unit" class="form-label"> <strong>Unidade</strong></label>
                 <select name="unit_id" id="unit" class="form-select select2" >
                     <option value="">Selecione</option>
-                    @foreach($units as $unit)
-                        <option value="{{ $unit->id }}"
-                            {{ (old('unit_id', $user->unit_id ?? '') == $unit->id) ? 'selected' : '' }}>
-                            {{ $unit->name }}
+                    @foreach($units as $id => $name)
+                        <option value="{{ $id }}"
+                            {{ (old('unit_id', $scholarshipHolder->unit_id ?? '') == $id) ? 'selected' : '' }}>
+                            {{ $name }}
                         </option>
                     @endforeach
                 </select>
