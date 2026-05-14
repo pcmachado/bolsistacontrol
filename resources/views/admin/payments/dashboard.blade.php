@@ -125,13 +125,16 @@
 
         <section class="card filter-card">
             <div class="card-body">
-                <form method="GET" action="{{ route('admin.payments.dashboard') }}" class="row g-3 align-items-end">
-                    <div class="col-md-2">
-                        <label class="form-label">Competência</label>
-                        <input type="month" name="month" value="{{ $monthInput }}" class="form-control">
-                    </div>
+                <x-month-navigation
+                    route="admin.payments.dashboard"
+                    :month="$monthInput"
+                    :params="request()->except('month')"
+                />
 
-                    <div class="col-md-3">
+                <form method="GET" action="{{ route('admin.payments.dashboard') }}" class="row g-3 align-items-end">
+                    <input type="hidden" name="month" value="{{ $monthInput }}">
+
+                    <div class="col-md-4">
                         <label class="form-label">Projeto</label>
                         <select name="project_id" class="form-select">
                             <option value="">Todos</option>
@@ -143,7 +146,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Unidade</label>
                         <select name="unit_id" class="form-select">
                             <option value="">Todas</option>
