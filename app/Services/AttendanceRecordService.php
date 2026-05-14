@@ -26,9 +26,6 @@ class AttendanceRecordService
             throw new DomainException('Período financeiro fechado.');
         }
 
-        app(AttendanceService::class)
-            ->validateMonthlyLimit($holder, $date->year, $date->month, $hours, null, $projectId);
-
         return AttendanceRecord::create([
             'scholarship_holder_id' => $holder->id,
             'date' => $date,
@@ -58,16 +55,6 @@ class AttendanceRecordService
         $date = Carbon::parse($data['date']);
         $hours = $this->calculateHours($data['start_time'], $data['end_time']);
         $projectId = $this->resolveProjectId($record->scholarshipHolder, $data['project_id'] ?? null);
-
-        app(AttendanceService::class)
-            ->validateMonthlyLimit(
-                $record->scholarshipHolder,
-                $date->year,
-                $date->month,
-                $hours,
-                $record->id,
-                $projectId
-            );
 
         $record->update([
             'date' => $date,
