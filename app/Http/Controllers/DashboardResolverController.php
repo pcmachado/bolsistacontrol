@@ -21,11 +21,11 @@ class DashboardResolverController extends Controller
         $user = Auth::user();
 
         if ($user->hasRole('superadmin')) {
-            return redirect()->route('superadmin.dashboard');
+            return redirect()->route('superadmin.dashboard', request()->query());
         }
 
         if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.dashboard', request()->query());
         }
 
         // if ($user->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto'])) {
@@ -36,6 +36,6 @@ class DashboardResolverController extends Controller
         //     return redirect()->route('teacher.dashboard');
         // }
 
-        return redirect()->route('holder.dashboard');
+        return redirect()->route('holder.dashboard', request()->query());
     }
 }
