@@ -110,11 +110,6 @@
                             disabled
                         >
 
-                        <input
-                            type="hidden"
-                            name="institution_id"
-                            value="{{ $institution->id }}"
-                        >
                     </div>
 
                     <div class="col-md-12">

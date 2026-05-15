@@ -3,30 +3,16 @@
 namespace App\Services;
 
 use App\Models\Unit;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class UnitService
 {
     /**
-     * Cria um novo usuário e atribui um papel.
+     * Cria uma nova unidade.
      *
-     * @param array $data Dados do usuário (name, email, password, role)
-     * @return Unit
+     * @param array $data Dados da unidade
      */
     public function createUnit(array $data): Unit
     {
-        $unit = Unit::create([
-            'name' => $data['name'],
-            'city' => $data['city'],
-            'address' => $data['address'],
-            'institution_id' => $data['institution_id'] ?? null,
-        ]);
-
-        return $unit;
+        return Unit::create($data);
     }
-    
 }
