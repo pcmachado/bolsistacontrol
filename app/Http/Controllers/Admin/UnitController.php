@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use App\Services\UnitService;
 use App\DataTables\UnitsDataTable;
+use Illuminate\Support\Facades\Auth;
 
 class UnitController extends Controller
 {
@@ -27,8 +28,8 @@ class UnitController extends Controller
 
     public function create(): View
     {
-        $institutions = institution::all();
-        return view('admin.units.create', compact('institutions'));
+        $institution = Auth::user()->institution;
+        return view('admin.units.create', compact('institution'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -56,8 +57,9 @@ class UnitController extends Controller
 
     public function edit(Unit $unit): View
     {
-        $institutions = institution::all();
-        return view('admin.units.edit', compact('unit', 'institutions'));
+        $institution = Auth::user()->institution;
+
+        return view('admin.units.edit', compact('unit', 'institution'));
     }
 
     public function update(Request $request, Unit $unit): RedirectResponse
@@ -66,6 +68,7 @@ class UnitController extends Controller
             'name' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'address' => 'required|string|max:255',
+            'institution_id' => 'nullable|exists:institutions,id',
         ]);
 
         $unit->update($request->all());

@@ -23,6 +23,7 @@ class UnitService
             'name' => $data['name'],
             'city' => $data['city'],
             'address' => $data['address'],
+            'institution_id' => $data['institution_id'] ?? null,
         ]);
 
         return $unit;
