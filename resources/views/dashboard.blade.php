@@ -202,7 +202,7 @@
                         </div>
 
                         <x-month-navigation
-                            route="dashboard"
+                            route="holder.dashboard"
                             :month="$monthInput"
                             :params="['project_id' => $activeProjectId, 'year' => $selectedYear]"
                             :min-month="$oldestPeriod->format('Y-m')"
@@ -233,14 +233,14 @@
                         </div>
 
                         <div class="period-nav">
-                            <a href="{{ $canNavigatePrevYear ? route('dashboard', ['project_id' => $activeProjectId,'month' => $monthInput, 'year' => $selectedYear - 1]) : '#' }}"
+                            <a href="{{ $canNavigatePrevYear ? route('holder.dashboard', ['project_id' => $activeProjectId,'month' => $monthInput, 'year' => $selectedYear - 1]) : '#' }}"
                                class="btn btn-sm btn-outline-secondary {{ $canNavigatePrevYear ? '' : 'disabled' }}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
 
                             <span class="fw-semibold">{{ $selectedYear }}</span>
 
-                            <a href="{{ $canNavigateNextYear ? route('dashboard', ['project_id' => $activeProjectId,'month' => $monthInput, 'year' => $selectedYear + 1]) : '#' }}"
+                            <a href="{{ $canNavigateNextYear ? route('holder.dashboard', ['project_id' => $activeProjectId,'month' => $monthInput, 'year' => $selectedYear + 1]) : '#' }}"
                                class="btn btn-sm btn-outline-secondary {{ $canNavigateNextYear ? '' : 'disabled' }}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
@@ -762,6 +762,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 const params = new URLSearchParams(window.location.search);
 
                 params.set('project_id', projectId);
+
+                if (month) {
+                    params.set('month', month);
+                }
+
+                if (year) {
+                    params.set('year', year);
+                }
 
                 history.replaceState(
                     {},
