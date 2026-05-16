@@ -485,7 +485,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
         Route::get('/', [DocumentTemplateController::class, 'index'])->name('index');
         Route::get('{template}/edit', [DocumentTemplateController::class, 'edit'])->name('edit');
         Route::put('{template}', [DocumentTemplateController::class, 'update'])->name('update');
-        Route::post('preview', [DocumentTemplateController::class, 'preview'])->name('preview');
+        Route::post('{template}/preview', [DocumentTemplateController::class, 'preview'])->name('preview');
     });
 
     Route::prefix('financial-reports')->name('financial-reports.')->group(function () {
