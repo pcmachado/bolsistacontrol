@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Arr;
 use App\Models\DocumentTemplate;
 use App\Models\Payment;
-use Illuminate\Support\Facades\View;
 use PDF;
 
 class ReceiptService
@@ -34,15 +32,9 @@ class ReceiptService
             '{{ logo_url }}' => asset('storage/logo.png'),
         ];
 
-        $html = str_replace(
-            array_keys($data),
-            array_values($data),
-            $template->header_html .
-            $template->body_html .
-            $template->footer_html
-        );
+        $html = $template->renderHtml($data);
 
-        return \PDF::loadHTML($html)->download(
+        return PDF::loadHTML($html)->download(
             "recibo_pagamento_{$payment->id}.pdf"
         );
     }
