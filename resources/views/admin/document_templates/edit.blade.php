@@ -24,3 +24,10 @@
 </div>
 
 @endsection
+
+@push('scripts')
+
+{{-- TinyMCE --}}
+@include('components.tinymce')
+
+@endpush

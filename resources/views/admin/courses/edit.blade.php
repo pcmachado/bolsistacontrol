@@ -165,7 +165,7 @@
                             name="description"
                             id="description"
                             rows="4"
-                            class="form-control @error('description') is-invalid @enderror"
+                            class="form-control tox-tinymce @error('description') is-invalid @enderror"
                         >{{ old('description', $course->description) }}</textarea>
                         @error('description')
                             <span class="invalid-feedback">{{ $message }}</span>
@@ -216,3 +216,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    @include('components.tinymce')
+@endpush

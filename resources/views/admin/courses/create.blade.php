@@ -145,7 +145,7 @@
                             name="description"
                             id="description"
                             rows="4"
-                            class="form-control @error('description') is-invalid @enderror"
+                            class="form-control tinymce @error('description') is-invalid @enderror"
                             placeholder="Descreva o curso"
                         >{{ old('description') }}</textarea>
                         @error('description')
@@ -159,7 +159,7 @@
                             name="prerequisites"
                             id="prerequisites"
                             rows="3"
-                            class="form-control @error('prerequisites') is-invalid @enderror"
+                            class="form-control tinymce @error('prerequisites') is-invalid @enderror"
                             placeholder="Liste pré-requisitos, se houver"
                         >{{ old('prerequisites') }}</textarea>
                         @error('prerequisites')
@@ -237,3 +237,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    @include('components.tinymce')
+@endpush

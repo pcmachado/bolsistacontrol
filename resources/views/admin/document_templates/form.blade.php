@@ -51,7 +51,7 @@
                         <textarea
                             name="description"
                             rows="2"
-                            class="form-control"
+                            class="form-control tinymce"
                         >{{ old('description', $template->description ?? '') }}</textarea>
                     </div>
 
@@ -373,19 +373,6 @@
 </div>
 
 @push('scripts')
-
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js"></script>
-
-<script>
-
-tinymce.init({
-    selector: '.tinymce',
-    height: 320,
-    menubar: false,
-    plugins: 'lists link table code image',
-    toolbar:
-        'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | table link | code',
-});
 
 document.querySelectorAll('.token-btn').forEach(button => {
 

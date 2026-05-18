@@ -29,12 +29,6 @@ import 'alpinejs';
 // === Funções personalizadas ===
 import { handleAjaxForm } from './modal-ajax';
 
-// === TinyMCE ===
-import tinymce from 'tinymce';
-import 'tinymce/themes/silver';
-import 'tinymce/icons/default';
-import 'tinymce/models/dom';
-
 // === Inicializações globais (executa após DOM carregado) ===
 document.addEventListener('DOMContentLoaded', async () => {
     //console.log('Bootstrap:', typeof bootstrap);
@@ -59,21 +53,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.body.classList.contains('page-admin-homologations-index')) {
         await import('./homologations');
     }
-});
-
-window.addEventListener('DOMContentLoaded', () => {
-    const editors = document.querySelectorAll('textarea[data-editor="tinymce"]');
-
-    if (!editors.length) return;
-
-    tinymce.init({
-        selector: '#sgb-tinymce', // ID do seu campo
-        license_key: 'gpl',        // Necessário nas versões mais novas para uso local
-        base_url: '/js/tinymce',   // Caminho onde o Vite copiou os arquivos
-        suffix: '.min',
-        height: 300,
-        menubar: false,
-        plugins: 'lists link',
-        toolbar: 'bold italic | bullist numlist | link',
-    });
 });
