@@ -76,20 +76,28 @@ class DocumentTemplateController extends Controller
             ->with('success', 'Template atualizado com sucesso.');
     }
 
-    public function preview(Request $request, DocumentTemplate $template)
+    public function preview(Request $request)
     {
         $data = $request->validate([
+
             'title' => 'nullable|string|max:255',
             'subtitle' => 'nullable|string|max:255',
+
             'header_html' => 'nullable|string',
             'body_html' => 'required|string',
             'footer_html' => 'nullable|string',
+
         ]);
 
+        $template = new DocumentTemplate();
+
         $html = str_replace(
+
             array_keys($template->defaultPreviewTokens()),
             array_values($template->defaultPreviewTokens()),
+
             $template->composeHtml($data)
+
         );
 
         $pdf = Pdf::loadView(
@@ -98,5 +106,22 @@ class DocumentTemplateController extends Controller
         );
 
         return $pdf->stream('preview.pdf');
+    }
+
+    public function create()
+    {
+        return view('admin.document_templates.create', [
+            'institutions' => Institution::orderBy('name')->get(),
+            'units' => Unit::orderBy('name')->get(),
+            'template' => new DocumentTemplate(),
+        ]);
+    }
+
+    public function show(DocumentTemplate $template)
+    {
+        return view(
+            'admin.document_templates.show',
+            compact('template')
+        );
     }
 }

@@ -483,9 +483,13 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
 
     Route::prefix('document-templates')->name('document-templates.')->group(function () {
         Route::get('/', [DocumentTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [DocumentTemplateController::class, 'create'])->name('create');
+        Route::post('/', [DocumentTemplateController::class, 'store'])->name('store');
+        Route::post('/preview', [DocumentTemplateController::class, 'preview'])->name('preview');
+
         Route::get('{template}/edit', [DocumentTemplateController::class, 'edit'])->name('edit');
         Route::put('{template}', [DocumentTemplateController::class, 'update'])->name('update');
-        Route::post('{template}/preview', [DocumentTemplateController::class, 'preview'])->name('preview');
+        Route::get('/{template}', [DocumentTemplateController::class, 'show'])->name('show');
     });
 
     Route::prefix('financial-reports')->name('financial-reports.')->group(function () {
