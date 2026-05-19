@@ -92,8 +92,24 @@ class UserController extends Controller
             $user->notify(new \App\Notifications\UserCreatedNotification($validated['password']));
         }
 
-        return redirect()->route('admin.scholarship_holders.create', ['user_id' => $user->id])
-            ->with('success', 'Usuário criado com sucesso! Agora complete os dados do bolsista.');
+        if (! $user->scholarshipHolder()->exists()) {
+            return redirect()->route('admin.scholarship_holders.create', ['user_id' => $user->id])
+                ->with('success', 'Usuário criado com sucesso! Agora complete os dados do bolsista.');
+        }
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Usuário criado com sucesso!');
+    }
+
+    public function resendVerification(User $user): RedirectResponse
+    {
+        if ($user->hasVerifiedEmail()) {
+            return back()->with('info', 'Este usuário já possui e-mail verificado.');
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return back()->with('success', 'E-mail de verificação reenviado com sucesso.');
     }
 
     public function show(User $user): View
