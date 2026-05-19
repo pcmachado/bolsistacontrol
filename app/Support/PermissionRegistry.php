@@ -53,6 +53,7 @@ class PermissionRegistry
                 'attendance.delete.own' => 'Excluir frequência própria',
                 'attendance.submit' => 'Enviar frequência',
                 'attendance.homologate' => 'Homologar frequência',
+                'attendance.homologate.proreitoria' => 'Homologar frequência como pró-reitoria',
                 'attendance.reject' => 'Rejeitar frequência',
                 'attendance.view.unit' => 'Visualizar frequência da unidade',
                 'attendance.view.institution' => 'Visualizar frequência da instituição',
@@ -67,6 +68,7 @@ class PermissionRegistry
                 'payment.view.institution' => 'Visualizar pagamentos da instituição',
                 'payment.confirm.own' => 'Confirmar pagamento próprio',
                 'payment.download.receipt' => 'Baixar recibo',
+                'payment.execute.special' => 'Executar pagamentos com autorização especial',
             ],
             'Financeiro' => [
                 'financial.view' => 'Visualizar financeiro',

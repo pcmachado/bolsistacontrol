@@ -57,7 +57,10 @@ class PaymentPolicy
      */
     public function markAsPaid(User $user, Payment $payment): bool
     {
-        if (! $user->hasAnyRole(['admin', 'financeiro', 'coordenador_geral', 'coordenador_adjunto_geral'])) {
+        $canExecute = $user->hasAnyRole(['admin', 'financeiro', 'coordenador_geral'])
+            || ($user->hasRole('coordenador_adjunto_geral') && $user->can('payment.execute.special'));
+
+        if (! $canExecute) {
             return false;
         }
 
