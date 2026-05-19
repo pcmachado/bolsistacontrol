@@ -1,102 +1,121 @@
 @extends('layouts.app')
 
+@section('title', 'Editar Bolsista')
+
 @section('content')
-<div class="row">
-    <div class="col-lg-12 margin-tb">
-        <div class="pull-left">
-            <h2>Editar Usuário</h2>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-dark">Editar Bolsista</h1>
+        <a href="{{ route('admin.scholarship_holders.index') }}" class="btn btn-secondary shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Voltar
+        </a>
+    </div>
+
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <strong><i class="bi bi-exclamation-triangle-fill me-2"></i> Erro!</strong> Há problemas com os dados inseridos.
+            <ul class="mb-0 mt-2">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <div class="pull-right">
-            <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.users.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
+    @endif
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ route('admin.scholarship_holders.update', $scholarshipHolder) }}">
+                @csrf
+                @method('PUT')
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label fw-bold">Nome Completo <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="name" value="{{ old('name', $scholarshipHolder->name) }}" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="email" class="form-label fw-bold">E-mail <span class="text-danger">*</span></label>
+                        <input type="email" name="email" id="email" value="{{ old('email', $scholarshipHolder->email) }}" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="cpf" class="form-label fw-bold">CPF <span class="text-danger">*</span></label>
+                        <input type="text" name="cpf" id="cpf" value="{{ old('cpf', $scholarshipHolder->cpf) }}" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label fw-bold">Telefone / WhatsApp</label>
+                        <input type="text" name="phone" id="phone" value="{{ old('phone', $scholarshipHolder->phone) }}" class="form-control">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="unit_id" class="form-label fw-bold">Unidade de Atuação <span class="text-danger">*</span></label>
+                        <select name="unit_id" id="unit_id" class="form-select" required>
+                            <option value="">Selecione uma unidade...</option>
+                            @foreach($units as $id => $name)
+                                <option value="{{ $id }}" {{ old('unit_id', $scholarshipHolder->unit_id) == $id ? 'selected' : '' }}>
+                                    {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="status" class="form-label fw-bold">Status <span class="text-danger">*</span></label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="active" {{ old('status', $scholarshipHolder->status) == 'active' ? 'selected' : '' }}>Ativo</option>
+                            <option value="inactive" {{ old('status', $scholarshipHolder->status) == 'inactive' ? 'selected' : '' }}>Inativo</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label fw-bold">Data de Início <span class="text-danger">*</span></label>
+                        <input type="date" name="start_date" id="start_date" value="{{ old('start_date', optional($scholarshipHolder->start_date)->format('Y-m-d') ?? $scholarshipHolder->start_date) }}" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label fw-bold">Data de Término</label>
+                        <input type="date" name="end_date" id="end_date" value="{{ old('end_date', optional($scholarshipHolder->end_date)->format('Y-m-d') ?? $scholarshipHolder->end_date) }}" class="form-control">
+                    </div>
+
+                    <div class="col-12 mt-3">
+                        <h5 class="border-bottom pb-2 mb-0 text-primary">
+                            <i class="bi bi-bank me-2"></i>Dados Bancários (Opcional)
+                        </h5>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="bank" class="form-label fw-bold">Banco</label>
+                        <input type="text" name="bank" id="bank" value="{{ old('bank', $scholarshipHolder->bank) }}" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="agency" class="form-label fw-bold">Agência</label>
+                        <input type="text" name="agency" id="agency" value="{{ old('agency', $scholarshipHolder->agency) }}" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="account" class="form-label fw-bold">Conta</label>
+                        <input type="text" name="account" id="account" value="{{ old('account', $scholarshipHolder->account) }}" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="pix_key" class="form-label fw-bold">Chave PIX</label>
+                        <input type="text" name="pix_key" id="pix_key" value="{{ old('pix_key', $scholarshipHolder->pix_key) }}" class="form-control">
+                    </div>
+
+                    <div class="col-12 text-end mt-4">
+                        <hr class="mb-4">
+                        <a href="{{ route('admin.scholarship_holders.index') }}" class="btn btn-light border shadow-sm me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary shadow-sm">
+                            <i class="bi bi-save me-1"></i> Salvar alterações
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-
-@if (count($errors) > 0)
-    <div class="alert alert-danger">
-      <strong>Whoops!</strong> Ocorreu um problema com sua entrada.<br><br>
-      <ul>
-         @foreach ($errors->all() as $error)
-           <li>{{ $error }}</li>
-         @endforeach
-      </ul>
-    </div>
-@endif
-
-<form method="POST" action="{{ route('admin.users.update', $user->id) }}">
-    @csrf
-    @method('PUT')
-
-    <div class="row">
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Nome:</strong>
-                <input type="text" name="name" placeholder="Nome" class="form-control" value="{{ $user->name }}">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Email:</strong>
-                <input type="email" name="email" placeholder="Email" class="form-control" value="{{ $user->email }}">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="mb-3">
-                <label for="role" class="form-label"><strong>Papel</strong></label>
-                <select name="role" class="form-select" required>
-                    <option value="">Selecione uma função</option>
-                    @foreach($roles as $role)
-                        <option value="{{ $role->name }}"
-                            {{ old('role', $user->getRoleNames()->first() ?? '') == $role->name ? 'selected' : '' }}>
-                            {{ ucfirst($role->name) }}
-                        </option>
-                    @endforeach
-                </select>
-
-                @error('role')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="mb-3">
-                <label for="unit" class="form-label"> <strong>Unidade</strong></label>
-                <select name="unit_id" id="unit" class="form-select select2" >
-                    <option value="">Selecione</option>
-                    @foreach($units as $id => $name)
-                        <option value="{{ $id }}"
-                            {{ (old('unit_id', $scholarshipHolder->unit_id ?? '') == $id) ? 'selected' : '' }}>
-                            {{ $name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Senha:</strong>
-                <input type="password" name="password" placeholder="Senha" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12">
-            <div class="form-group">
-                <strong>Confirmar Senha:</strong>
-                <input type="password" name="confirm-password" placeholder="Confirmar Senha" class="form-control">
-            </div>
-        </div>
-        <div class="col-xs-12 col-sm-12 col-md-12 text-center">
-            <button type="submit" class="btn btn-primary btn-sm mt-2 mb-3"><i class="fa-solid fa-floppy-disk"></i> Salvar alterações</button>
-        </div>
-    </div>
-</form>
-
 @endsection
-<script>
-$(document).ready(function() {
-    $('#unit').select2({
-        placeholder: "Selecione uma unidade",
-        allowClear: true,
-        width: '100%'
-    });
-});
-</script>

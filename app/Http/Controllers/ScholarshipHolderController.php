@@ -155,17 +155,35 @@ class ScholarshipHolderController extends Controller
      */
     public function update(Request $request, ScholarshipHolder $scholarshipHolder): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'cpf' => ['required', 'string', Rule::unique('scholarship_holders')->ignore($scholarshipHolder->id)],
-            'email' => ['required', 'email', Rule::unique('scholarship_holders')->ignore($scholarshipHolder->id)],
-            // ... outras validações
+            'cpf' => ['required', 'string', 'max:14', Rule::unique('scholarship_holders')->ignore($scholarshipHolder->id)],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('scholarship_holders')->ignore($scholarshipHolder->id),
+                Rule::unique('users', 'email')->ignore($scholarshipHolder->user_id),
+            ],
+            'unit_id' => 'required|exists:units,id',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date',
+            'phone' => 'nullable|string|max:15',
+            'bank' => 'nullable|string',
+            'agency' => 'nullable|string',
+            'account' => 'nullable|string',
+            'pix_key' => 'nullable|string',
+            'status' => 'required|in:active,inactive',
         ]);
 
-        $scholarshipHolder->update($request->all());
+        $scholarshipHolder->update($validated);
 
-        // Atualiza a unidade e carga horária se necessário
-        $scholarshipHolder->units()->sync([$request->unidade_id => ['monthly_workload' => $request->carga_horaria]]);
+        if ($scholarshipHolder->user) {
+            $scholarshipHolder->user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'unit_id' => $validated['unit_id'],
+            ]);
+        }
 
         return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista atualizado com sucesso!');
     }

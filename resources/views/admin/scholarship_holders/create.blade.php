@@ -31,6 +31,17 @@
             <i class="bi bi-person-check-fill fs-4 me-3"></i>
             <div>
                 <strong>Atenção:</strong> Criando cadastro de bolsista vinculado ao usuário <strong>{{ $user->name }}</strong>.
+                @if(is_null($user->email_verified_at))
+                    <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-warning text-dark">E-mail não verificado</span>
+                        <form method="POST" action="{{ route('admin.users.resend-verification', $user) }}" class="m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-envelope"></i> Reenviar verificação de e-mail
+                            </button>
+                        </form>
+                    </div>
+                @endif
             </div>
         </div>
     @endif

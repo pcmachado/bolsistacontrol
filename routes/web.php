@@ -312,6 +312,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
 
     Route::resource('assignments', AssignmentController::class);
     Route::resource('roles', RoleController::class);
+    Route::post('users/{user}/resend-verification', [UserController::class, 'resendVerification'])->name('users.resend-verification');
     Route::resource('users', UserController::class);
     Route::resource('units', UnitController::class);
     Route::resource('positions', PositionController::class);
