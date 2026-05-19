@@ -45,14 +45,30 @@ class AttendanceSubmissionPolicy
 
     protected function canReview(User $user, AttendanceSubmission $submission): bool
     {
-        if (! $user->hasAnyRole([
+        $canHomologateByRole = $user->hasAnyRole([
             'superadmin',
             'admin',
             'coordenador_geral',
             'coordenador_adjunto_geral',
             'coordenador_adjunto',
-        ])) {
+        ]);
+
+        $canHomologateByPermission = $user->can('attendance.homologate.proreitoria');
+
+        if (! $canHomologateByRole && ! $canHomologateByPermission) {
             return false;
+        }
+
+        if ($user->id === $submission->scholarshipHolder?->user_id) {
+            return false;
+        }
+
+        if ($user->hasRole('coordenador_adjunto')) {
+            $holderUser = $submission->scholarshipHolder?->user;
+
+            if ($holderUser && ! $holderUser->hasRole('bolsista')) {
+                return false;
+            }
         }
 
         return app(VisibilityService::class)
@@ -60,3 +76,4 @@ class AttendanceSubmissionPolicy
             ->exists();
     }
 }
+
