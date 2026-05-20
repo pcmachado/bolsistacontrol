@@ -10,4 +10,11 @@ class SystemRelease extends Model
         'version',
         'release_notes',
     ];
+
+    public static function normalizeVersion(string $version): string
+    {
+        $version = trim(strtolower($version));
+
+        return 'v' . ltrim($version, 'v');
+    }
 }

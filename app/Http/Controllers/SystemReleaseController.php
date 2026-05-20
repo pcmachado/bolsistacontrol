@@ -26,6 +26,12 @@ class SystemReleaseController extends Controller
             'release_notes' => 'required|string',
         ]);
 
+        $validated['version'] = SystemRelease::normalizeVersion($validated['version']);
+        $validated['release_notes'] = strip_tags(
+            $validated['release_notes'],
+            '<p><br><ul><ol><li><strong><b><em><i><u><a><h4><h5><h6><code>'
+        );
+
         SystemRelease::create($validated);
 
         return redirect()->route('admin.system_releases.index')
@@ -43,6 +49,12 @@ class SystemReleaseController extends Controller
             'version' => 'required|string|unique:system_releases,version,' . $systemRelease->id,
             'release_notes' => 'required|string',
         ]);
+
+        $validated['version'] = SystemRelease::normalizeVersion($validated['version']);
+        $validated['release_notes'] = strip_tags(
+            $validated['release_notes'],
+            '<p><br><ul><ol><li><strong><b><em><i><u><a><h4><h5><h6><code>'
+        );
 
         $systemRelease->update($validated);
 

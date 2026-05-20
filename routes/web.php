@@ -107,8 +107,14 @@ Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/user/mark-version-seen', function (\Illuminate\Http\Request $request) {
+        $validated = $request->validate([
+            'version' => 'required|string|max:50',
+        ]);
+
         if (auth()->check()) {
-            auth()->user()->update(['last_seen_version' => $request->version]);
+            auth()->user()->update([
+                'last_seen_version' => \App\Models\SystemRelease::normalizeVersion($validated['version']),
+            ]);
         }
         return response()->json(['success' => true]);
     })->name('user.mark_version_seen');
