@@ -89,6 +89,41 @@
         $next = $current->copy()->addMonth()->format('Y-m');
         $disablePrev = $prev < $oldestMonth;
         $disableNext = $next > $currentMonth->format('Y-m');
+        $bulkCandidates = collect();
+        $bulkSummaryMessage = '';
+
+        if (($projects ?? collect())->count() > 1) {
+            $attendanceService = app(\App\Services\AttendanceService::class);
+
+            $bulkCandidates = $projects->map(function ($project) use ($attendanceService, $holder, $year, $monthNumber) {
+                $totalByProject = $attendanceService->getMonthlyTotal($holder, $year, $monthNumber, $project->id);
+                $limitByProject = $attendanceService->getMonthlyLimit($holder, $project->id);
+                $submissionByProject = \App\Models\AttendanceSubmission::query()
+                    ->where('scholarship_holder_id', $holder->id)
+                    ->where('project_id', $project->id)
+                    ->where('year', $year)
+                    ->where('month', $monthNumber)
+                    ->latest('id')
+                    ->first();
+
+                $canSubmit = $totalByProject > 0 && (! $submissionByProject || in_array($submissionByProject->status, ['draft', 'rejected']));
+
+                return [
+                    'name' => $project->name,
+                    'total' => $totalByProject,
+                    'limit' => $limitByProject,
+                    'can_submit' => $canSubmit,
+                ];
+            })->filter(fn ($item) => $item['can_submit'])->values();
+
+            if ($bulkCandidates->isNotEmpty()) {
+                $summaryLines = $bulkCandidates->map(function ($item) {
+                    return "- {$item['name']}: {$item['total']}h".($item['limit'] > 0 ? " (limite {$item['limit']}h)" : '');
+                })->implode("\\n");
+
+                $bulkSummaryMessage = "Você está prestes a enviar as frequências do mês para {$bulkCandidates->count()} projeto(s):\\n\\n{$summaryLines}\\n\\nDeseja submeter agora?";
+            }
+        }
     @endphp
 
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -140,6 +175,17 @@
             <button class="btn btn-success" disabled>
                 Enviar mês para homologação
             </button>
+        @endif
+
+        @if(($projects ?? collect())->count() > 1 && $bulkCandidates->isNotEmpty())
+            <form method="POST" action="{{ route('my-attendance.submissions.submit-all-month') }}" class="d-inline"
+                  onsubmit="return confirm(@js($bulkSummaryMessage))">
+                @csrf
+                <input type="hidden" name="month" value="{{ $month }}">
+                <button type="submit" class="btn btn-outline-success">
+                    Enviar todos os projetos
+                </button>
+            </form>
         @endif
     </div>
 
