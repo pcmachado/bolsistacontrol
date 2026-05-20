@@ -18,6 +18,8 @@ class MonthlyConsolidatedReportController extends Controller
         $user = Auth::user();
         $holder = $user->scholarshipHolder;
 
+        $isPdf = $request->boolean('pdf');
+
         abort_if(! $holder, 403);
 
         $monthInput = $request->input('month', now()->format('Y-m'));
@@ -88,18 +90,18 @@ class MonthlyConsolidatedReportController extends Controller
                     'year' => $period->year,
                     'month' => $period->month,
                 ],
-                $request->boolean('pdf')
+                $isPdf
             ),
         ];
 
-        if ($request->boolean('pdf')) {
-            $pdf = Pdf::loadView('attendance.reports.monthly_consolidated_pdf', $viewData);
+        if ($isPdf) {
+            $pdf = Pdf::loadView('attendance.reports.monthly_consolidated_pdf', $viewData, ['isPdf' => true]);
 
             return $request->boolean('download')
                 ? $pdf->download("relatorio_consolidado_{$period->format('m_Y')}.pdf")
                 : $pdf->stream("relatorio_consolidado_{$period->format('m_Y')}.pdf");
         }
 
-        return view('attendance.reports.monthly_consolidated', $viewData);
+        return view('attendance.reports.monthly_consolidated', $viewData, ['isPdf' => $isPdf]);
     }
 }
