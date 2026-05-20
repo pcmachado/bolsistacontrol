@@ -94,9 +94,36 @@
 
         {{-- FOOTER --}}
         <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
-            2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - v1.0
+            2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - Versão: 
+            <a href="#" class="text-decoration-none fw-bold text-primary" data-bs-toggle="modal" data-bs-target="#releaseNotesModal">
+                {{ $currentVersion }}
+            </a>
         </footer>
 
+    </div>
+</div>
+
+<div class="modal fade" id="releaseNotesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Novidades da Versão {{ $currentVersion }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                @if($release)
+                    {!! $release->release_notes !!}
+                @else
+                    <div class="text-center text-muted my-4">
+                        <i class="bi bi-journal-x fs-1 opacity-50"></i>
+                        <p class="mt-2 mb-0">Nenhuma nota detalhada para esta versão.</p>
+                    </div>
+                @endif
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendi</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -126,6 +153,31 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const versionModalEl = document.getElementById('releaseNotesModal');
+    
+    if (versionModalEl) {
+        // Se a variável $showModal for true, exibe automaticamente
+        @if($showModal ?? false)
+            const versionModal = new bootstrap.Modal(versionModalEl);
+            versionModal.show();
+        @endif
+
+        // Dispara o AJAX silencioso quando o usuário fechar o modal
+        versionModalEl.addEventListener('hidden.bs.modal', function () {
+            fetch('{{ route("user.mark_version_seen") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ version: '{{ $currentVersion }}' })
+            }).catch(error => console.error('Erro ao registrar visualização da versão:', error));
+        });
+    }
 });
 </script>
 

@@ -65,6 +65,7 @@ use App\Http\Controllers\ScholarshipHolderController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SystemReleaseController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -104,6 +105,13 @@ Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])-
 Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('payments.verify');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::post('/user/mark-version-seen', function (\Illuminate\Http\Request $request) {
+        if (auth()->check()) {
+            auth()->user()->update(['last_seen_version' => $request->version]);
+        }
+        return response()->json(['success' => true]);
+    })->name('user.mark_version_seen');
 
     Route::get('/meu-dashboard', [DashboardController::class, 'index'])->name('holder.dashboard');
     Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
@@ -333,6 +341,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
     Route::resource('funding-sources', FundingSourceController::class);
     Route::resource('projects', ProjectController::class);
     // Route::resource('assignments', AssignmentController::class);
+    // CRUD de Versões do Sistema
+    Route::resource('system_releases', SystemReleaseController::class);
 
     Route::resource('disciplines', DisciplineController::class);
 

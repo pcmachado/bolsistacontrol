@@ -224,3 +224,7 @@ ENABLE_XDEBUG=true docker compose up -d --build --force-recreate
 **3. Permissão Negada (Storage/Cache)**
 
 * Rode: `docker compose exec app_bolsista chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache`
+
+# Adicionar ao script de deploy
+# Extrai a última tag e salva no arquivo na raiz do projeto local
+git describe --tags --abbrev=0 > version.txt

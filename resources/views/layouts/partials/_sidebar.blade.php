@@ -157,6 +157,7 @@
                 <li><x-sidebar-item route="admin.notification-settings.index" icon="bi bi-gear" title="Config. Notificações"/></li>
                 <li><x-sidebar-item route="admin.document-templates.index" icon="bi bi-file-earmark-richtext" title="Modelos"/></li>
                 {{-- <li><x-sidebar-item route="admin.settings" icon="bi bi-gear" title="Configurações"/></li> --}}
+                <li><x-sidebar-item route="admin.system_releases.index" icon="bi bi-code-slash" title="Versões do Sistema"/></li>
             </ul>
         @endif
 

@@ -7,6 +7,8 @@ use Faker\Factory as FakerFactory;
 use Faker\Generator as FakerGenerator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use App\Models\SystemRelease;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +41,23 @@ class AppServiceProvider extends ServiceProvider
                     'navNotifications' => $user->notifications()->latest()->limit(5)->get(),
                 ]);
             }
+        });
+
+        View::composer('layouts.app', function ($view) {
+            // 1. Lê a versão do arquivo txt (gerado pelo deploy). Se não existir, usa v1.0.0
+            $versionFile = base_path('version.txt');
+            $currentVersion = File::exists($versionFile) ? trim(File::get($versionFile)) : 'v1.0.0';
+
+            // 2. Busca as notas no banco
+            $release = SystemRelease::where('version', $currentVersion)->first();
+
+            // 3. Define se o modal abre automático
+            $showModal = false;
+            if (Auth::check() && Auth::user()->last_seen_version !== $currentVersion) {
+                $showModal = true;
+            }
+
+            $view->with(compact('currentVersion', 'release', 'showModal'));
         });
     }
 }
