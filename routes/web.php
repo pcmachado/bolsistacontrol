@@ -54,6 +54,7 @@ use App\Http\Controllers\FinalActivityReportController;
 use App\Http\Controllers\MyAttendanceRecordController;
 use App\Http\Controllers\MyAttendanceSubmissionController;
 use App\Http\Controllers\MyPaymentController;
+use App\Http\Controllers\MonthlyConsolidatedReportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NotificationSettingController;
 use App\Http\Controllers\PaymentReceiptController;
@@ -164,6 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/monthly/{submission}', [AttendanceReportController::class, 'monthly'])->name('attendance.reports.monthly');
             Route::get('/monthly/{submission}/blank', [AttendanceReportController::class, 'monthlyBlank'])->name('attendance.reports.monthly.blank');
             Route::get('/monthly/{submission}/pdf', [AttendanceReportController::class, 'monthlyPdf'])->name('attendance.reports.monthly.pdf');
+            Route::get('/monthly-consolidated', [MonthlyConsolidatedReportController::class, 'index'])->name('attendance.reports.monthly-consolidated');
 
             Route::prefix('final')->group(function () {
                 Route::get('/', [FinalActivityReportController::class, 'index'])->name('attendance.reports.final.index');

@@ -54,6 +54,43 @@ class ScholarshipHolderDashboardService
             ->take(5)
             ->get();
 
+
+        $monthlyRecordsByProject = AttendanceRecord::query()
+            ->selectRaw('project_id, COUNT(*) as records_count, COUNT(DISTINCT date) as worked_days_count, COALESCE(SUM(hours), 0) as hours_total')
+            ->where('scholarship_holder_id', $holder->id)
+            ->whereYear('date', $selectedPeriod->year)
+            ->whereMonth('date', $selectedPeriod->month)
+            ->groupBy('project_id')
+            ->get()
+            ->keyBy('project_id');
+
+        $monthlyFrequencyByProject = $projects->map(function ($project) use ($monthlyRecordsByProject, $holder) {
+            $projectMetrics = $monthlyRecordsByProject->get($project->id);
+            $monthlyLimit = (float) $this->attendanceService->getMonthlyLimit($holder, (int) $project->id);
+            $hoursTotal = (float) ($projectMetrics->hours_total ?? 0);
+
+            return [
+                'project_id' => (int) $project->id,
+                'project_name' => (string) $project->name,
+                'records_count' => (int) ($projectMetrics->records_count ?? 0),
+                'worked_days_count' => (int) ($projectMetrics->worked_days_count ?? 0),
+                'hours_total' => $hoursTotal,
+                'monthly_limit' => $monthlyLimit,
+                'completion_percent' => $monthlyLimit > 0
+                    ? min(100, round(($hoursTotal / $monthlyLimit) * 100, 1))
+                    : 0,
+            ];
+        })->values();
+
+        $monthlyFrequencySummary = [
+            'records_count' => (int) $monthlyFrequencyByProject->sum('records_count'),
+            'worked_days_count' => (int) $monthlyFrequencyByProject->sum('worked_days_count'),
+            'hours_total' => (float) $monthlyFrequencyByProject->sum('hours_total'),
+            'monthly_limit' => (float) $monthlyFrequencyByProject->sum('monthly_limit'),
+        ];
+        $monthlyFrequencySummary['completion_percent'] = $monthlyFrequencySummary['monthly_limit'] > 0
+            ? min(100, round(($monthlyFrequencySummary['hours_total'] / $monthlyFrequencySummary['monthly_limit']) * 100, 1))
+            : 0;
         $periodRecordsQuery = AttendanceRecord::query()
             ->where('scholarship_holder_id', $holder->id)
             ->when($activeProjectId, fn ($q) => $q->where('project_id', $activeProjectId))
@@ -211,6 +248,8 @@ class ScholarshipHolderDashboardService
             'paymentCounts' => $paymentCounts,
             'notificacoesPendentes' => $notificacoesPendentes,
             'recentNotifications' => $recentNotifications,
+            'monthlyFrequencyByProject' => $monthlyFrequencyByProject,
+            'monthlyFrequencySummary' => $monthlyFrequencySummary,
         ];
     }
 
