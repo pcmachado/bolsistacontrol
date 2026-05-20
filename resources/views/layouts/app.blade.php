@@ -14,6 +14,10 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -94,7 +98,7 @@
 
         {{-- FOOTER --}}
         <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
-            2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - Versão: 
+            2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - Versão:
             <a href="#" class="text-decoration-none fw-bold text-primary" data-bs-toggle="modal" data-bs-target="#releaseNotesModal">
                 {{ $currentVersion }}
             </a>
@@ -157,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener('DOMContentLoaded', function () {
     const versionModalEl = document.getElementById('releaseNotesModal');
-    
+
     if (versionModalEl) {
         // Se a variável $showModal for true, exibe automaticamente
         @if($showModal ?? false)
