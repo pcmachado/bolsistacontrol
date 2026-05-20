@@ -47,14 +47,14 @@ class AppServiceProvider extends ServiceProvider
             // 1. Lê a versão do arquivo txt (gerado pelo deploy). Se não existir, usa v1.0.0
             $versionFile = base_path('version.txt');
             $currentVersion = File::exists($versionFile) ? trim(File::get($versionFile)) : 'v1.0.0';
-            $normalizedCurrentVersion = ltrim(strtolower($currentVersion), 'v');
 
-            // 2. Busca as notas no banco, aceitando versão com/sem prefixo "v"
+            // Cria as duas variações possíveis para buscar no banco (ex: "v1.0.0" e "1.0.0")
+            $versionWithV = 'v' . ltrim(strtolower($currentVersion), 'v');
+            $versionWithoutV = ltrim(strtolower($currentVersion), 'v');
+
+            // 2. Busca no banco aceitando qualquer uma das duas formas de forma segura
             $release = SystemRelease::query()
-                ->where(function ($query) use ($currentVersion, $normalizedCurrentVersion) {
-                    $query->where('version', $currentVersion)
-                        ->orWhereRaw("LOWER(TRIM(LEADING 'v' FROM version)) = ?", [$normalizedCurrentVersion]);
-                })
+                ->whereIn('version', [$versionWithV, $versionWithoutV])
                 ->latest('created_at')
                 ->first();
 
