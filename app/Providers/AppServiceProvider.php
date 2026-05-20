@@ -47,9 +47,16 @@ class AppServiceProvider extends ServiceProvider
             // 1. Lê a versão do arquivo txt (gerado pelo deploy). Se não existir, usa v1.0.0
             $versionFile = base_path('version.txt');
             $currentVersion = File::exists($versionFile) ? trim(File::get($versionFile)) : 'v1.0.0';
+            $normalizedCurrentVersion = ltrim(strtolower($currentVersion), 'v');
 
-            // 2. Busca as notas no banco
-            $release = SystemRelease::where('version', $currentVersion)->first();
+            // 2. Busca as notas no banco, aceitando versão com/sem prefixo "v"
+            $release = SystemRelease::query()
+                ->where(function ($query) use ($currentVersion, $normalizedCurrentVersion) {
+                    $query->where('version', $currentVersion)
+                        ->orWhereRaw('LOWER(TRIM(LEADING "v" FROM version)) = ?', [$normalizedCurrentVersion]);
+                })
+                ->latest('created_at')
+                ->first();
 
             // 3. Define se o modal abre automático
             $showModal = false;

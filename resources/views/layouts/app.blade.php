@@ -112,7 +112,7 @@
             </div>
             <div class="modal-body p-4">
                 @if($release)
-                    {!! $release->release_notes !!}
+                    {!! html_entity_decode($release->release_notes, ENT_QUOTES | ENT_HTML5, 'UTF-8') !!}
                 @else
                     <div class="text-center text-muted my-4">
                         <i class="bi bi-journal-x fs-1 opacity-50"></i>
