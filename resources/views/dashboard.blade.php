@@ -353,7 +353,7 @@
                             <div>
                                 <div class="text-muted small mb-2">Horas acumuladas</div>
                                 <div class="value" id="recordsHours">{{ number_format($recordsHours, 1, ',', '.') }}h</div>
-                                <small class="text-muted">de {{ number_format($monthlyLimit, 1, ',', '.') }}h previstas</small>
+                                <small class="text-muted">de {{ number_format($monthlyLimit, 1, ',', '.') }}h previstas no projeto</small>
                             </div>
                             <span class="icon tone-success">
                                 <i class="bi bi-stopwatch"></i>
@@ -362,6 +362,22 @@
 
                         <div class="progress mt-3" style="height: 8px;">
                             <div class="progress-bar bg-success" style="width: {{ $completionPercent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="card summary-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="text-muted small mb-2">Horas totais no mês (todos projetos)</div>
+                                <div class="value" id="allProjectsHoursTotal">{{ number_format($monthlyFrequencySummary['hours_total'] ?? 0, 1, ',', '.') }}h</div>
+                                <small class="text-muted">de {{ number_format($monthlyFrequencySummary['monthly_limit'] ?? 0, 1, ',', '.') }}h previstas no total</small>
+                            </div>
+                            <span class="icon tone-info">
+                                <i class="bi bi-diagram-3"></i>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -415,6 +431,54 @@
                 </div>
             </div>
         </section>
+
+        <section>
+            <div class="section-title">
+                <div>
+                    <h4 class="mb-1">Frequência mensal consolidada</h4>
+                    <small class="text-muted">Visão de {{ $periodLabel }} com todos os projetos do bolsista e somatórios geral.</small>
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Projeto</th>
+                                    <th class="text-end">Registros</th>
+                                    <th class="text-end">Dias</th>
+                                    <th class="text-end">Horas</th>
+                                    <th class="text-end">Previsto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($monthlyFrequencyByProject as $projectFrequency)
+                                    <tr>
+                                        <td>{{ $projectFrequency['project_name'] }}</td>
+                                        <td class="text-end">{{ $projectFrequency['records_count'] }}</td>
+                                        <td class="text-end">{{ $projectFrequency['worked_days_count'] }}</td>
+                                        <td class="text-end">{{ number_format($projectFrequency['hours_total'], 1, ',', '.') }}h</td>
+                                        <td class="text-end">{{ number_format($projectFrequency['monthly_limit'], 1, ',', '.') }}h</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr class="fw-bold table-light">
+                                    <td>Total geral</td>
+                                    <td class="text-end">{{ $monthlyFrequencySummary['records_count'] }}</td>
+                                    <td class="text-end">{{ $monthlyFrequencySummary['worked_days_count'] }}</td>
+                                    <td class="text-end">{{ number_format($monthlyFrequencySummary['hours_total'], 1, ',', '.') }}h</td>
+                                    <td class="text-end">{{ number_format($monthlyFrequencySummary['monthly_limit'], 1, ',', '.') }}h</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
 
         <section>
             <div class="section-title">
@@ -700,6 +764,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 document.getElementById('recordsHours').innerText =
                     Number(data.recordsHours ?? 0)
+                        .toLocaleString('pt-BR') + 'h';
+
+
+                document.getElementById('allProjectsHoursTotal').innerText =
+                    Number(data.allProjectsHoursTotal ?? 0)
                         .toLocaleString('pt-BR') + 'h';
 
                 document.getElementById('estimatedValue').innerText =

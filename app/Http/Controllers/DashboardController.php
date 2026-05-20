@@ -40,6 +40,9 @@ class DashboardController extends Controller
         return response()->json([
 
             'general' => [
+                'allProjectsHoursTotal' => $dashboard['monthlyFrequencySummary']['hours_total'] ?? 0,
+                'allProjectsMonthlyLimit' => $dashboard['monthlyFrequencySummary']['monthly_limit'] ?? 0,
+                'allProjectsCompletionPercent' => $dashboard['monthlyFrequencySummary']['completion_percent'] ?? 0,
                 'recordsCount' => $dashboard['recordsCount'],
                 'recordsHours' => $dashboard['recordsHours'],
                 'workedDaysCount' => $dashboard['workedDaysCount'],

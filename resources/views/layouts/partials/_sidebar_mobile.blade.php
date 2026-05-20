@@ -62,6 +62,7 @@
             <ul class="nav nav-pills flex-column mb-3">
                 <li class="nav-item"><x-sidebar-item route="attendance.reports.index" icon="bi bi-file-earmark-text" title="Relatório Mensal"/></li>
                 <li class="nav-item"><x-sidebar-item route="attendance.reports.final.create" icon="bi bi-file-earmark-person" title="Relatório Final"/></li>
+                <li class="nav-item"><x-sidebar-item route="attendance.reports.monthly-consolidated" icon="bi bi-table" title="Consolidado Mensal"/></li>
             </ul>
         @endhasanyrole
 
