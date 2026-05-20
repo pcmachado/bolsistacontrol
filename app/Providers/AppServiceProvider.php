@@ -49,18 +49,22 @@ class AppServiceProvider extends ServiceProvider
             $currentVersion = File::exists($versionFile) ? trim(File::get($versionFile)) : 'v1.0.0';
 
             // Cria as duas variações possíveis para buscar no banco (ex: "v1.0.0" e "1.0.0")
-            $versionWithV = 'v' . ltrim(strtolower($currentVersion), 'v');
-            $versionWithoutV = ltrim(strtolower($currentVersion), 'v');
+            $normalizedVersion = SystemRelease::normalizeVersion($currentVersion);
+            $versionWithoutV = ltrim($normalizedVersion, 'v');
 
             // 2. Busca no banco aceitando qualquer uma das duas formas de forma segura
             $release = SystemRelease::query()
-                ->whereIn('version', [$versionWithV, $versionWithoutV])
+                ->whereIn('version', [$normalizedVersion, $versionWithoutV])
                 ->latest('created_at')
                 ->first();
 
             // 3. Define se o modal abre automático
             $showModal = false;
-            if (Auth::check() && Auth::user()->last_seen_version !== $currentVersion) {
+            $userSeenVersion = Auth::check() && Auth::user()->last_seen_version
+                ? SystemRelease::normalizeVersion(Auth::user()->last_seen_version)
+                : null;
+
+            if (Auth::check() && $userSeenVersion !== $normalizedVersion) {
                 $showModal = true;
             }
 

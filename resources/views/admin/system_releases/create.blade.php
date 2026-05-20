@@ -17,6 +17,9 @@
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Versão (Ex: v1.0.5) <span class="text-danger">*</span></label>
                         <input type="text" name="version" class="form-control" required value="{{ old('version') }}" placeholder="Deve ser igual à tag do Git">
+                        @error('version')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
                     
                     <div class="col-12">
