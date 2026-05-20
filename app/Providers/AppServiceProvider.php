@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
             $release = SystemRelease::query()
                 ->where(function ($query) use ($currentVersion, $normalizedCurrentVersion) {
                     $query->where('version', $currentVersion)
-                        ->orWhereRaw('LOWER(TRIM(LEADING "v" FROM version)) = ?', [$normalizedCurrentVersion]);
+                        ->orWhereRaw("LOWER(TRIM(LEADING 'v' FROM version)) = ?", [$normalizedCurrentVersion]);
                 })
                 ->latest('created_at')
                 ->first();
