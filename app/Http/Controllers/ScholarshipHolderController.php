@@ -60,7 +60,7 @@ class ScholarshipHolderController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'cpf' => 'required|string|unique:scholarship_holders,cpf|max:14',
-            'email' => 'required|email|unique:scholarship_holders,email|unique:users,email',
+            'email' => 'required|email|unique:scholarship_holders,email',
             'unit_id' => 'required|exists:units,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date',
@@ -73,6 +73,10 @@ class ScholarshipHolderController extends Controller
             'status' => 'required|in:active,inactive',
         ];
 
+        if (!$request->filled('user_id')) {
+            $rules['email'][] = 'unique:users,email';
+        }
+
         $validatedData = $request->validate($rules);
         // Cria um usuário para o bolsista (com senha padrão)
         // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
@@ -84,7 +88,11 @@ class ScholarshipHolderController extends Controller
             $userId = $request->user_id;
 
             // 2. Cria ou Encontra o Usuário
-            if (empty($userId)) {
+            if (!empty($userId)) {
+                $user = User::findOrFail($userId);
+
+                $validatedData['email'] = $user->email; // Garante que o email do usuário seja usado
+            } else {
                 $user = User::firstWhere('email', $validatedData['email']);
 
                 if (! $user) {
@@ -92,8 +100,12 @@ class ScholarshipHolderController extends Controller
                     $user = User::create([
                         'name' => $validatedData['name'],
                         'email' => $validatedData['email'],
-                        'password' => Hash::make(preg_replace('/[^0-9]/', '', $validatedData['cpf'])), // Senha inicial é o CPF sem pontos
-                    ])->assignRole('bolsista');
+                        'password' => Hash::make(
+                            preg_replace('/[^0-9]/', '', $validatedData['cpf'])
+                        ),
+                    ]);
+
+                    $user->assignRole('bolsista');
                 }
 
                 $userId = $user->id;
