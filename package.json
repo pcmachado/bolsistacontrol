@@ -9,7 +9,7 @@
         "build:prod": "cross-env VITE_BASE_URL=/ProBolsas/build/ vite build"
     },
     "devDependencies": {
-        "@popperjs/core": "^2.11.6",
+        "@popperjs/core": "^2.11.8",
         "alpinejs": "^3.4.2",
         "autoprefixer": "^10.4.2",
         "axios": "^1.11.0",

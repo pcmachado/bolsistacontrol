@@ -5,6 +5,9 @@
 import jQuery from 'jquery';
 window.$ = window.jQuery = jQuery;
 
+import * as Popper from '@popperjs/core';
+window.Popper = Popper;
+
 // === Bootstrap (módulo único) ===
 import * as bootstrap from 'bootstrap';
 window.bootstrap = bootstrap;
