@@ -39,4 +39,15 @@ return [
         'api_key' => env('TINYMCE_API_KEY'),
     ],
 
+    'ifrs_login' => [
+        'enabled' => env('IFRS_LOGIN_ENABLED', false),
+        'client_id' => env('IFRS_LOGIN_CLIENT_ID'),
+        'client_secret' => env('IFRS_LOGIN_CLIENT_SECRET'),
+        'redirect' => env('IFRS_LOGIN_REDIRECT_URI', env('APP_URL').'/login/ifrs/callback'),
+        'authorize_url' => env('IFRS_LOGIN_AUTHORIZE_URL'),
+        'token_url' => env('IFRS_LOGIN_TOKEN_URL'),
+        'userinfo_url' => env('IFRS_LOGIN_USERINFO_URL'),
+        'scopes' => env('IFRS_LOGIN_SCOPES', 'openid profile email'),
+    ],
+
 ];
