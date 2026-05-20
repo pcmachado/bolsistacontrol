@@ -6,6 +6,7 @@ use App\DataTables\AttendanceSubmissionDataTable;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSubmission;
 use App\Services\AttendanceDashboardService;
+use App\Services\AttendanceService;
 use App\Services\AttendanceSubmissionService;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ class MyAttendanceSubmissionController extends Controller
 {
     public function __construct(
         protected AttendanceSubmissionService $service,
-        protected ScholarshipHolderService $scholarshipHolderService
+        protected ScholarshipHolderService $scholarshipHolderService,
+        protected AttendanceService $attendanceService
     ) {
         $this->middleware('auth');
     }
@@ -91,6 +93,61 @@ class MyAttendanceSubmissionController extends Controller
                 'month' => sprintf('%d-%02d', $submission->year, $submission->month),
             ])
             ->with('success', 'Frequência enviada para homologação. O mês ficará bloqueado para alterações até a homologação ou rejeição.');
+    }
+
+    public function submitAllMonth(Request $request)
+    {
+        $request->validate([
+            'month' => ['required', 'date_format:Y-m'],
+        ]);
+
+        [$year, $month] = explode('-', $request->month);
+        $year = (int) $year;
+        $month = (int) $month;
+
+        $context = $this->scholarshipHolderService->attendanceContext(Auth::user());
+        $holder = $context['holder'];
+
+        $submitted = 0;
+        $skipped = [];
+
+        foreach ($context['projects'] as $project) {
+            $total = $this->attendanceService->getMonthlyTotal($holder, $year, $month, $project->id);
+
+            if ($total <= 0) {
+                $skipped[] = "{$project->name} (sem registros no mês)";
+                continue;
+            }
+
+            $submission = $this->service->createFromMonth(Auth::user(), $request->month, (int) $project->id);
+
+            if (! in_array($submission->status, ['draft', 'rejected'], true)) {
+                $skipped[] = "{$project->name} (já enviada/homologada)";
+                continue;
+            }
+
+            $this->authorize('submit', $submission);
+
+            try {
+                $this->service->submit($submission);
+                $submitted++;
+            } catch (\DomainException $exception) {
+                $skipped[] = "{$project->name} ({$exception->getMessage()})";
+            }
+        }
+
+        if ($submitted === 0) {
+            return back()->with('error', 'Nenhuma frequência foi enviada. '.(count($skipped) ? 'Motivos: '.implode('; ', $skipped) : ''));
+        }
+
+        $message = "{$submitted} submissão(ões) enviada(s) para homologação.";
+        if (count($skipped)) {
+            $message .= ' Projetos ignorados: '.implode('; ', $skipped).'.';
+        }
+
+        return redirect()
+            ->route('attendance.my', ['month' => $request->month])
+            ->with('success', $message);
     }
 
     public function show(AttendanceSubmission $submission)
