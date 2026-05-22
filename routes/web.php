@@ -63,6 +63,7 @@ use App\Http\Controllers\ReceiptVerificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScholarshipHolderController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\Auth\IFRSAuthController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SystemReleaseController;
@@ -103,6 +104,12 @@ Route::get('/manual/{doc?}', function (?string $doc = null) {
 // Receipt Verification
 Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])->name('payments.verify.form');
 Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('payments.verify');
+
+Route::prefix('oauth/login/ifrs')->group(function () {
+
+    Route::get('/redirect', [IFRSAuthController::class,'redirect'])->name('oauth.ifrs.redirect');
+    Route::get('/callback', [IFRSAuthController::class,'callback'])->name('oauth.ifrs.callback');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
 

@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos'),
+    'name' => env('APP_NAME', 'ProBolsas - Sistema de Gestão Integrada de Bolsistas, Frequências e Pagamentos'),
 
     /*
     |--------------------------------------------------------------------------

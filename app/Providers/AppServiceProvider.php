@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        View::composer('layouts.app', function ($view) {
+        View::composer(['layouts.app', 'layouts.guest'], function ($view) {
             // 1. Lê a versão do arquivo txt (gerado pelo deploy). Se não existir, usa v1.0.0
             $versionFile = base_path('version.txt');
             $currentVersion = File::exists($versionFile) ? trim(File::get($versionFile)) : 'v1.0.0';

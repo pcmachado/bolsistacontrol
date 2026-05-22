@@ -46,7 +46,7 @@
 
         <div class="footer">
             <p>Este é um e-mail automático. Não responda.</p>
-            <p>&copy; 2026 ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos</p>
+            <p>&copy; 2026 ProBolsas - Sistema de Gestão Integrada de Bolsistas, Frequências e Pagamentos</p>
         </div>
     </div>
 </body>

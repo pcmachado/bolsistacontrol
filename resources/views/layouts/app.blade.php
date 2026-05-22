@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', config('app.name', 'ProBolsas - Portal de Gestão de Bolsas'))</title>
+    <title>@yield('title', config('app.name', 'ProBolsas - Portal de Gestão Administrativa de Bolsas'))</title>
 
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -94,7 +94,7 @@
 
         {{-- FOOTER --}}
         <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
-            2026 — ProBolsas - Sistema de Gestão de Bolsas, Frequência e Pagamentos Acadêmicos - Versão:
+            2026 — ProBolsas - Sistema Administrativa Gestão de Bolsas, Frequências e Pagamentos -
             <a href="#" class="text-decoration-none fw-bold text-primary" data-bs-toggle="modal" data-bs-target="#releaseNotesModal">
                 {{ $currentVersion }}
             </a>
