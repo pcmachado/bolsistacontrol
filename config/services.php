@@ -40,14 +40,14 @@ return [
     ],
 
     'ifrs_login' => [
-        'enabled' => env('IFRS_LOGIN_ENABLED', false),
-        'client_id' => env('IFRS_LOGIN_CLIENT_ID'),
-        'client_secret' => env('IFRS_LOGIN_CLIENT_SECRET'),
-        'redirect' => env('IFRS_LOGIN_REDIRECT_URI', env('APP_URL').'/login/ifrs/callback'),
-        'authorize_url' => env('IFRS_LOGIN_AUTHORIZE_URL'),
-        'token_url' => env('IFRS_LOGIN_TOKEN_URL'),
-        'userinfo_url' => env('IFRS_LOGIN_USERINFO_URL'),
-        'scopes' => env('IFRS_LOGIN_SCOPES', 'openid profile email'),
+        'enabled' => env('IFRS_LOGIN_ENABLED', env('IFRS_CLIENT_ID') && env('IFRS_CLIENT_SECRET')),
+        'client_id' => env('IFRS_LOGIN_CLIENT_ID', env('IFRS_CLIENT_ID')),
+        'client_secret' => env('IFRS_LOGIN_CLIENT_SECRET', env('IFRS_CLIENT_SECRET')),
+        'redirect' => env('IFRS_LOGIN_REDIRECT_URI', env('IFRS_REDIRECT_URI', env('APP_URL').'/login/ifrs/callback')),
+        'authorize_url' => env('IFRS_LOGIN_AUTHORIZE_URL', rtrim((string) env('IFRS_BASE_URL', ''), '/').'/oauth/authorize'),
+        'token_url' => env('IFRS_LOGIN_TOKEN_URL', rtrim((string) env('IFRS_BASE_URL', ''), '/').'/oauth/token'),
+        'userinfo_url' => env('IFRS_LOGIN_USERINFO_URL', rtrim((string) env('IFRS_BASE_URL', ''), '/').'/oauth/userinfo'),
+        'scopes' => env('IFRS_LOGIN_SCOPES', env('IFRS_SCOPES', 'openid profile email')),
     ],
 
 ];
