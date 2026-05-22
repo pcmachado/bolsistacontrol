@@ -64,7 +64,7 @@ class AppServiceProvider extends ServiceProvider
                 ? SystemRelease::normalizeVersion(Auth::user()->last_seen_version)
                 : null;
 
-            if (Auth::check() && $userSeenVersion !== $normalizedVersion) {
+            if (Auth::check() && $release && $userSeenVersion !== $normalizedVersion) {
                 $showModal = true;
             }
 

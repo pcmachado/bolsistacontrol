@@ -22,12 +22,6 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
-    Route::get('login/ifrs', [AuthenticatedSessionController::class, 'redirectToIfrs'])
-        ->name('login.ifrs');
-
-    Route::get('login/ifrs/callback', [AuthenticatedSessionController::class, 'handleIfrsCallback'])
-        ->name('login.ifrs.callback');
-
     Route::get('forgot-password', [ForgotPasswordController::class, 'create'])
         ->name('password.request');
 

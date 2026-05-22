@@ -3,20 +3,59 @@
 namespace App\Http\Controllers;
 
 use App\Models\SystemRelease;
+use App\Services\Release\GitReleaseService;
+use App\Services\Release\ReleaseParserService;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class SystemReleaseController extends Controller
 {
     public function index()
     {
-        // Lista as versões mais recentes primeiro
-        $releases = SystemRelease::orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.system_releases.index', compact('releases'));
+        $releases = SystemRelease::orderBy(
+            'created_at',
+            'desc'
+        )->paginate(10);
+
+        $currentVersion = trim(
+            shell_exec('git describe --tags --abbrev=0')
+        );
+
+        if (!$currentVersion) {
+
+            $currentVersion = SystemRelease::latest()
+                ->value('version');
+        }
+
+        $currentVersion ??= 'dev';
+
+        return view(
+            'admin.system_releases.index',
+            compact(
+                'releases',
+                'currentVersion'
+            )
+        );
     }
 
     public function create()
     {
         return view('admin.system_releases.create');
+    }
+
+    public function importFromGit(GitReleaseService $git, ReleaseParserService $parser)
+    {
+        try {
+            $release = $git->importRelease($parser);
+        } catch (RuntimeException $exception) {
+            return redirect()
+                ->route('admin.system_releases.index')
+                ->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.system_releases.index')
+            ->with('success', "Versão {$release->version} importada do Git com sucesso.");
     }
 
     public function store(Request $request)
@@ -31,6 +70,8 @@ class SystemReleaseController extends Controller
             $validated['release_notes'],
             '<p><br><ul><ol><li><strong><b><em><i><u><a><h4><h5><h6><code>'
         );
+        $validated['is_automatic'] = false;
+        $validated['released_at'] = now();
 
         SystemRelease::create($validated);
 
@@ -55,6 +96,7 @@ class SystemReleaseController extends Controller
             $validated['release_notes'],
             '<p><br><ul><ol><li><strong><b><em><i><u><a><h4><h5><h6><code>'
         );
+        $validated['is_automatic'] = false;
 
         $systemRelease->update($validated);
 

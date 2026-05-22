@@ -12,9 +12,28 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('system_releases', function (Blueprint $table) {
+
             $table->id();
-            $table->string('version')->unique(); // Unique version number ex: v1.0.1
-            $table->text('release_notes'); // HTML content for release notes
+
+            $table->string('version')->unique();
+
+            $table->string('git_tag')->nullable();
+
+            $table->string('git_hash')->nullable();
+
+            $table->text('release_notes');
+
+            $table->json('changes')->nullable();
+
+            $table->boolean('is_visible')
+                ->default(true);
+
+            $table->boolean('is_automatic')
+                ->default(false);
+
+            $table->timestamp('released_at')
+                ->nullable();
+
             $table->timestamps();
         });
     }

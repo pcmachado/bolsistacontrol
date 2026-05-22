@@ -44,26 +44,6 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    public function redirectToIfrs(Request $request): RedirectResponse
-    {
-        $config = config('services.ifrs_login');
-
-        abort_unless(($config['enabled'] ?? false) && filled($config['authorize_url']), 404);
-
-        $state = Str::random(40);
-        $request->session()->put('ifrs_oauth_state', $state);
-
-        $query = http_build_query([
-            'client_id' => $config['client_id'],
-            'redirect_uri' => $config['redirect'],
-            'response_type' => 'code',
-            'scope' => $config['scopes'],
-            'state' => $state,
-        ]);
-
-        return redirect()->away($config['authorize_url'].'?'.$query);
-    }
-
     public function handleIfrsCallback(Request $request): RedirectResponse
     {
         $config = config('services.ifrs_login');

@@ -105,10 +105,10 @@ Route::get('/manual/{doc?}', function (?string $doc = null) {
 Route::get('/verificar-recibo', [ReceiptVerificationController::class, 'form'])->name('payments.verify.form');
 Route::post('/verificar-recibo', [ReceiptVerificationController::class, 'verify'])->name('payments.verify');
 
-Route::prefix('oauth/login/ifrs')->group(function () {
+Route::prefix('login/ifrs')->group(function () {
 
-    Route::get('/redirect', [IFRSAuthController::class,'redirect'])->name('oauth.ifrs.redirect');
-    Route::get('/callback', [IFRSAuthController::class,'callback'])->name('oauth.ifrs.callback');
+    Route::get('/redirect', [IFRSAuthController::class,'redirect'])->name('login.ifrs.redirect');
+    Route::get('/callback', [IFRSAuthController::class,'callback'])->name('login.ifrs.callback');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -355,7 +355,9 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
     Route::resource('projects', ProjectController::class);
     // Route::resource('assignments', AssignmentController::class);
     // CRUD de Versões do Sistema
-    Route::resource('system_releases', SystemReleaseController::class);
+    Route::post('system_releases/import-from-git', [SystemReleaseController::class, 'importFromGit'])
+        ->name('system_releases.import-git');
+    Route::resource('system_releases', SystemReleaseController::class)->except(['show']);
 
     Route::resource('disciplines', DisciplineController::class);
 

@@ -247,7 +247,7 @@
 
                     </form>
 
-                    @if(config('services.ifrs_login.enabled'))
+                    @if(config('services.ifrs.enabled'))
 
                         <div class="text-center mb-3">
 
@@ -262,7 +262,7 @@
                         <div class="d-grid">
 
                             <a
-                                href="{{ route('login.ifrs') }}"
+                                href="{{ route('login.ifrs.redirect') }}"
                                 class="btn btn-ifrs btn-lg rounded-pill"
                             >
                                 Entrar com Conta IFRS
