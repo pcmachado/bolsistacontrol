@@ -60,7 +60,7 @@ class ScholarshipHolderController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'cpf' => 'required|string|unique:scholarship_holders,cpf|max:14',
-            'email' => 'required|email|unique:scholarship_holders,email',
+            'email' => ['required', 'email', 'unique:scholarship_holders,email'],
             'unit_id' => 'required|exists:units,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date',
