@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,7 +33,29 @@ return Application::configure(basePath: dirname(__DIR__))
                 $request->fullUrl()
             );
         });
+    })
+    ->withExceptions(function ($exceptions) {
+
+        $exceptions->render(function (
+            TokenMismatchException $e,
+            $request
+        ) {
+
+            if ($request->expectsJson()) {
+
+                return response()->json([
+                    'message' => 'Sua sessão expirou. Atualize a página e tente novamente.'
+                ], 419);
+            }
+
+            return redirect()
+                ->back()
+                ->withInput(
+                    $request->except('password')
+                )
+                ->withErrors([
+                    'session' =>
+                        'Sua sessão expirou ou foi atualizada em outro acesso. Por favor, tente novamente.'
+                ]);
+        });
     })->create();
-    //->withExceptions(function (Exceptions $exceptions): void {
-        //
-    //})->create();

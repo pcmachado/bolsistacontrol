@@ -250,8 +250,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/auth.php';
 
-// Auth::routes();
-
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [DashboardResolverController::class, 'index'])->name('dashboard');
