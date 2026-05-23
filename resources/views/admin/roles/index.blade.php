@@ -3,25 +3,27 @@
 @section('title', 'Gerenciar Perfis de Acesso (Funções)')
 
 @section('content')
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-dark">Gerenciamento de Perfis de Acesso</h1>
-        
+<div class="container-fluid">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2 mb-3">
+        <h1 class="mb-0 text-black">Gerenciamento de Perfis de Acesso</h1>
+
         @can('create', Spatie\Permission\Models\Role::class)
-            <a href="{{ route('admin.roles.create') }}" class="btn btn-primary shadow-sm rounded-3">
+            <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-2"></i> Criar Nova Função
             </a>
         @endcan
     </div>
 
-    <!-- Tabela de Roles -->
-    <div class="card shadow-lg">
-        <div class="card-header bg-white fw-bold h5 text-dark">
-            Funções Cadastradas (Visíveis para seu Nível)
+    <div class="card mb-3 shadow-sm text-body">
+        <div class="card-body">
+            <p class="mb-0 text-muted">Funções cadastradas visíveis para o seu nível de acesso.</p>
         </div>
+    </div>
+
+    <div class="card shadow-sm rounded-4 border-0 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle table-striped w-100 mb-0">
                     <thead class="table-light">
                         <tr>
                             <th scope="col" style="width: 20%;">Nome da Função</th>
@@ -41,7 +43,7 @@
                                         <span class="badge bg-warning text-dark ms-2">Coordenação</span>
                                     @endif
                                 </td>
-                                
+
                                 <td>
                                     @if ($role->permissions->isEmpty())
                                         <span class="text-muted fst-italic small">
@@ -54,8 +56,8 @@
                                                     $totalPermissions = \Spatie\Permission\Models\Permission::count() ?: 1;
                                                     $percentage = min(100, round(($role->permissions->count() / $totalPermissions) * 100));
                                                 @endphp
-                                                <div class="progress-bar bg-success" role="progressbar" 
-                                                     style="width: {{ $percentage }}%;" 
+                                                <div class="progress-bar bg-success" role="progressbar"
+                                                     style="width: {{ $percentage }}%;"
                                                      aria-valuenow="{{ $percentage }}" aria-valuemin="0" aria-valuemax="100">
                                                     <small class="text-white">{{ $role->permissions->count() }}</small>
                                                 </div>
@@ -83,15 +85,13 @@
                                         </div>
                                     @endif
                                 </td>
-                                
+
                                 <td>
                                     <div class="btn-group" role="group">
-                                        {{-- Visualizar --}}
                                         <a href="{{ route('admin.roles.show', $role->id) }}" class="btn btn-sm btn-info text-white" title="Visualizar">
                                             <i class="bi bi-eye-fill"></i>
                                         </a>
 
-                                        {{-- Editar: A Policy (role hierarchy) determina se aparece --}}
                                         @can('update', $role)
                                             <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-sm btn-warning" title="Editar">
                                                 <i class="bi bi-pencil-fill"></i>
@@ -102,7 +102,6 @@
                                             </button>
                                         @endcan
 
-                                        {{-- Excluir --}}
                                         @can('delete', $role)
                                             <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" class="d-inline">
                                                 @csrf
@@ -122,7 +121,7 @@
                 </table>
             </div>
         </div>
-        
+
         @if ($roles instanceof \Illuminate\Pagination\LengthAwarePaginator)
             <div class="card-footer bg-white pt-3 pb-0 border-top">
                 {!! $roles->links('pagination::bootstrap-5') !!}
