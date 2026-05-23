@@ -337,8 +337,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canAccessFinancial(): bool
     {
-        return $this->hasAnyRole(['superadmin', 'admin'])
-            || $this->hasRole('coordenador_geral')
+        return $this->hasRole('coordenador_geral')
             || $this->hasRole('coordenador_adjunto_geral');
     }
 
@@ -362,5 +361,17 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole('coordenador_adjunto')
             || $this->hasRole('coordenador_adjunto_geral')
             || $this->hasRole('coordenador_geral');
+    }
+
+    public function canAccessMy(): bool
+    {
+        return $this->hasAnyRole([
+            'coordenador_geral',
+            'coordenador_adjunto_geral',
+            'coordenador_adjunto',
+            'supervisor',
+            'apoio_administrativo',
+            'orientador',
+        ]) || $this->isBolsista();
     }
 }

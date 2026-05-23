@@ -34,6 +34,7 @@
     {{-- MENU --}}
     <div class="sidebar-content flex-grow-1 overflow-auto">
 
+        @if (auth()->user()->canAccessMy())
         {{-- VISÃO GERAL --}}
         <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2">
             Visão Geral
@@ -65,6 +66,7 @@
             <li><x-sidebar-item route="attendance.reports.final.index" icon="bi bi-file-earmark-person" title="Relatório Final"/></li>
             <li><x-sidebar-item route="attendance.reports.monthly-consolidated" icon="bi bi-table" title="Consolidado Mensal"/></li>
         </ul>
+        @endif
 
         @if(auth()->user()->canAccessTeacher())
         <h6 class="sidebar-section-title mt-4">
@@ -128,7 +130,7 @@
 
             <ul class="nav nav-pills flex-column mb-3">
                 <li><x-sidebar-item route="admin.dashboard.academic" icon="bi bi-bar-chart" title="Dashboard Acadêmico"/></li>
-                <li><x-sidebar-item route="admin.dashboard.risk" icon="bi bi-exclamation-triangle"
+                <li><x-sidebar-item route="admin.dashboard.risk" icon="bi bi-exclamation-triangle" title="Alunos em risco" /></li>
                 <li><x-sidebar-item route="admin.academic-reports.class-sessions.global" icon="bi bi-file-earmark-bar-graph" title="Rel. de Aulas"/></li>
                 <li><x-sidebar-item route="admin.projects.index" icon="bi bi-kanban" title="Projetos"/></li>
                 <li><x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/></li>
@@ -145,17 +147,23 @@
 
             <ul class="nav nav-pills flex-column mb-3">
                 <li><x-sidebar-item route="admin.dashboard" icon="bi bi-speedometer2" title="Dashboard"/></li>
-                <li><x-sidebar-item route="admin.units.index" icon="bi bi-building" title="Unidades"/></li>
                 <li><x-sidebar-item route="admin.positions.index" icon="bi bi-briefcase" title="Cargos"/></li>
                 <li><x-sidebar-item route="admin.scholarship_holders.index" icon="bi bi-people" title="Bolsistas"/></li>
                 <li><x-sidebar-item route="admin.users.index" icon="bi bi-person-gear" title="Usuários"/></li>
-                <li><x-sidebar-item route="admin.roles.index" icon="bi bi-key" title="Funções"/></li>
-                <li><x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissões"/></li>
-                <li><x-sidebar-item route="admin.institutions.index" icon="bi bi-bank" title="Instituições"/></li>
                 <li><x-sidebar-item route="admin.settings.alerts" icon="bi bi-bell" title="Alertas"/></li>
                 <li><x-sidebar-item route="admin.email-templates.index" icon="bi bi-envelope-paper" title="Templates de Email"/></li>
                 <li><x-sidebar-item route="admin.notification-settings.index" icon="bi bi-gear" title="Config. Notificações"/></li>
                 <li><x-sidebar-item route="admin.document-templates.index" icon="bi bi-file-earmark-richtext" title="Modelos"/></li>
+            </ul>
+        @endif
+
+        @if (auth()->user()->isAdmin())
+            
+            <ul class="nav nav-pills flex-column mb-3">
+                <li><x-sidebar-item route="admin.units.index" icon="bi bi-building" title="Unidades"/></li>
+                <li><x-sidebar-item route="admin.roles.index" icon="bi bi-key" title="Funções"/></li>
+                <li><x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissões"/></li>
+                <li><x-sidebar-item route="admin.institutions.index" icon="bi bi-bank" title="Instituições"/></li>
                 {{-- <li><x-sidebar-item route="admin.settings" icon="bi bi-gear" title="Configurações"/></li> --}}
                 <li><x-sidebar-item route="admin.system_releases.index" icon="bi bi-code-slash" title="Versões do Sistema"/></li>
             </ul>

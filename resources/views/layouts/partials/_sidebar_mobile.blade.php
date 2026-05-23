@@ -35,6 +35,7 @@
     {{-- MENU --}}
     <div class="sidebar-content flex-grow-1 overflow-auto mt-2">
 
+        @if (auth()->user()->canAccessMy())
         {{-- VISÃO GERAL --}}
         <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2">
             Visão Geral
@@ -46,7 +47,6 @@
         </ul>
 
         {{-- ÁREA DO BOLSISTA --}}
-        @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral|bolsista')
             <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
                 Minha Área
             </h6>
@@ -64,7 +64,17 @@
                 <li class="nav-item"><x-sidebar-item route="attendance.reports.final.create" icon="bi bi-file-earmark-person" title="Relatório Final"/></li>
                 <li class="nav-item"><x-sidebar-item route="attendance.reports.monthly-consolidated" icon="bi bi-table" title="Consolidado Mensal"/></li>
             </ul>
-        @endhasanyrole
+        @endif
+
+        @if(auth()->user()->canAccessTeacher())
+            <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
+                Professor
+            </h6>
+            <ul class="nav nav-pills flex-column mb-3">
+                <li class="nav-item"><x-sidebar-item route="teacher.dashboard" icon="bi bi-easel2" title="Meu Dashboard"/></li>
+                <li class="nav-item"><x-sidebar-item route="teacher.classes" icon="bi bi-journal-check" title="Minhas Turmas"/></li>
+            </ul>
+        @endif
 
         {{-- COORDENAÇÃO --}}
         @hasanyrole('coordenador_adjunto|coordenador_adjunto_geral|coordenador_geral')
@@ -75,10 +85,25 @@
                 <li class="nav-item"><x-sidebar-item route="attendance.submissions.index" icon="bi bi-calendar-week" title="Frequências"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.homologations.index" icon="bi bi-check2-square" title="Homologações"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.payments.dashboard" icon="bi bi-graph-up" title="Financeiro"/></li>
-                <li class="nav-item"><x-sidebar-item route="admin.student-payments.dashboard" icon="bi bi-graph-up-arrow" title="Financeiro Alunos"/></li>
-                <li class="nav-item"><x-sidebar-item route="admin.student-payments.index" icon="bi bi-cash-stack" title="Pagamentos Alunos"/></li>
             </ul>
         @endhasanyrole
+
+        @if(auth()->user()->canAccessFinancial())
+            <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
+                Financeiro
+            </h6>
+
+            <ul class="nav nav-pills flex-column mb-3">
+                <li class="nav-item"><x-sidebar-item route="admin.financial-reports.index" icon="bi bi-graph-up" title="Relatórios Financeiros"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.payments.dashboard" icon="bi bi-wallet2" title="Pagamentos (Bolsistas)"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.payments.index" icon="bi bi-cash-stack" title="Gestão de Pagamentos"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.student-payments.dashboard" icon="bi bi-graph-up-arrow" title="Financeiro (Alunos)"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.student-payments.index" icon="bi bi-cash-stack" title="Pagamentos Alunos"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.payments.reports.monthly" icon="bi bi-calendar3" title="Fechamento Mensal"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.financial-closures.index" icon="bi bi-lock" title="Fechamentos Financeiros"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.funding-sources.index" icon="bi bi-piggy-bank" title="Formas de Fomento"/></li>
+            </ul>
+        @endif
 
         {{-- ACADÊMICO --}}
         @hasanyrole('admin|coordenador_geral|coordenador_adjunto_geral')
@@ -86,34 +111,43 @@
                 Acadêmico
             </h6>
             <ul class="nav nav-pills flex-column mb-3">
+                <li class="nav-item"><x-sidebar-item route="admin.dashboard.academic" icon="bi bi-bar-chart" title="Dashboard Acadêmico"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.dashboard.risk" icon="bi bi-exclamation-triangle" title="Alunos em risco" /></li>
+                <li class="nav-item"><x-sidebar-item route="admin.academic-reports.class-sessions.global" icon="bi bi-file-earmark-bar-graph" title="Rel. de Aulas"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.projects.index" icon="bi bi-kanban" title="Projetos"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.disciplines.index" icon="bi bi-journal-text" title="Disciplinas"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.class-offerings.index" icon="bi bi-collection" title="Turmas"/></li>
-                <li class="nav-item"><x-sidebar-item route="admin.funding-sources.index" icon="bi bi-piggy-bank" title="Formas de Fomento"/></li>
             </ul>
         @endhasanyrole
 
         {{-- ADMINISTRAÇÃO --}}
-        @hasanyrole('admin|coordenador_geral')
+        @if(auth()->user()->canAccessAdministrative())
             <h6 class="sidebar-section-title text-uppercase small fw-bold text-body-secondary px-2 mt-3">
                 Administração
             </h6>
-            <ul class="nav nav-pills flex-column">
-                <li class="nav-item"><x-sidebar-item route="admin.dashboard" icon="bi bi-speedometer" title="Dashboard Admin"/></li>
-                <li class="nav-item"><x-sidebar-item route="admin.units.index" icon="bi bi-building" title="Unidades"/></li>
+
+            <ul class="nav nav-pills flex-column mb-3">
+                <li class="nav-item"><x-sidebar-item route="admin.dashboard" icon="bi bi-speedometer2" title="Dashboard"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.positions.index" icon="bi bi-briefcase" title="Cargos"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.scholarship_holders.index" icon="bi bi-people" title="Bolsistas"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.users.index" icon="bi bi-person-gear" title="Usuários"/></li>
-                <li class="nav-item"><x-sidebar-item route="admin.roles.index" icon="bi bi-key" title="Funções"/></li>
-                <li class="nav-item"><x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissões"/></li>
-                <li class="nav-item"><x-sidebar-item route="admin.institutions.index" icon="bi bi-bank" title="Instituições"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.settings.alerts" icon="bi bi-bell" title="Alertas"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.email-templates.index" icon="bi bi-envelope-paper" title="Templates de Email"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.notification-settings.index" icon="bi bi-gear" title="Config. Notificações"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.document-templates.index" icon="bi bi-file-earmark-richtext" title="Modelos"/></li>
+            </ul>
+        @endif
+
+        @if (auth()->user()->isAdmin())
+            <ul class="nav nav-pills flex-column mb-3">
+                <li class="nav-item"><x-sidebar-item route="admin.units.index" icon="bi bi-building" title="Unidades"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.roles.index" icon="bi bi-key" title="Funções"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.permissions.index" icon="bi bi-shield-lock" title="Permissões"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.institutions.index" icon="bi bi-bank" title="Instituições"/></li>
                 {{-- <li class="nav-item"><x-sidebar-item route="admin.settings" icon="bi bi-gear" title="Configurações"/></li> --}}
                 <li class="nav-item"><x-sidebar-item route="admin.system_releases.index" icon="bi bi-code-slash" title="Versões do Sistema"/></li>
             </ul>
-        @endhasanyrole
+        @endif
     </div>
 </div>
