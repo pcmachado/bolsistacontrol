@@ -105,7 +105,7 @@
 
                                 {{-- 🔥 IMPERSONATE --}}
                                 <form method="POST"
-                                      action="{{ route('admin.impersonate.holders.index', $holder->user) }}">
+                                      action="{{ route('admin.impersonate', $holder->user) }}">
                                     @csrf
                                     <button class="btn btn-sm btn-outline-dark">
                                         🔐

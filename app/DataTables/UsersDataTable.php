@@ -13,34 +13,41 @@ class UsersDataTable extends BaseDataTable
     {
         return (new EloquentDataTable($query))
             ->setRowId('id')
-            ->addColumn('roles', fn ($user) => $user->getRoleNames()->first() ?? 'N/A')
+            ->addColumn('roles', function ($user) {
+                $role = $user->getRoleNames()->first();
+
+                if (! $role) {
+                    return '<span class="text-muted">Sem papel</span>';
+                }
+
+                return '<span class="badge bg-primary-subtle text-primary-emphasis">'.$role.'</span>';
+            })
             ->editColumn('created_at', fn ($user) => formatDate($user->created_at))
             ->editColumn('updated_at', fn ($user) => formatDate($user->updated_at))
             ->addColumn('unit', fn ($user) => $user->unit->name ?? 'N/A')
             ->addColumn('actions', fn ($user) => view('admin.users.partials.actions', compact('user')))
-            ->rawColumns(['actions']);
+            ->rawColumns(['actions', 'roles']);
     }
 
     public function query(User $model)
     {
         $query = $model->newQuery()->with(['roles', 'unit']);
 
-        // Aplicar filtro de instituição automaticamente
         $query = $this->applyInstitutionFilter($query);
 
-        // Aplicar filtros customizados
-        $query = $this->applyCustomFilters($query, [
+        return $this->applyCustomFilters($query, [
             'filter_name',
             'filter_unit',
             'filter_role',
         ]);
-
-        return $query;
     }
 
     protected function applyFilterNameFilter($query, $value)
     {
-        return $query->where('name', 'like', "%{$value}%");
+        return $query->where(function ($scoped) use ($value) {
+            $scoped->where('name', 'like', "%{$value}%")
+                ->orWhere('email', 'like', "%{$value}%");
+        });
     }
 
     protected function applyFilterUnitFilter($query, $value)
@@ -61,9 +68,11 @@ class UsersDataTable extends BaseDataTable
             ->setTableId('users-table')
             ->columns($this->getColumns())
             ->minifiedAjax(request()->fullUrl())
-            ->dom('Bfrtip')
+            ->dom('Brtip')
             ->orderBy(0, 'asc')
-            ->parameters($this->defaultParameters())
+            ->parameters(array_merge($this->defaultParameters(), [
+                'pageLength' => (int) request('page_length', 25),
+            ]))
             ->buttons([
                 Button::make('excel')->className('btn btn-success rounded-0')->text('Excel'),
                 Button::make('csv')->className('btn btn-info rounded-0')->text('CSV'),
@@ -75,10 +84,9 @@ class UsersDataTable extends BaseDataTable
     protected function getColumns(): array
     {
         return [
-            Column::make('id'),
             Column::make('name')->title('Nome'),
             Column::make('email')->title('E-mail'),
-            Column::make('roles')->title('Papel')->orderable(false)->searchable(false),
+            Column::make('roles')->title('Cargo / Papel')->orderable(false)->searchable(false),
             Column::make('unit')->title('Unidade')->orderable(false)->searchable(false),
             Column::make('created_at')->title('Criado Em'),
             Column::make('updated_at')->title('Atualizado Em'),

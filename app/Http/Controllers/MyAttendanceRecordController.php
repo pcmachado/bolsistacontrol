@@ -69,7 +69,8 @@ class MyAttendanceRecordController extends Controller
         return $dataTable
             ->setFilters($filters)
             ->render('attendance.my', [
-                ...$context,
+                'holder' => $holder,
+                'activeProjectId' => $activeProjectId,
                 'month' => $monthString,
                 'year' => $year,
                 'monthNumber' => $monthNumber,

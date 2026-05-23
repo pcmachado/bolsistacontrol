@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\DataTables\ScholarshipHoldersDataTable;
-use App\Models\Institution;
+use App\Models\Position;
 use App\Models\ScholarshipHolder;
 use App\Models\Unit;
 use App\Models\User;
-use Spatie\Permission\Models\Role;
 use App\Services\ScholarshipHolderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class ScholarshipHolderController extends Controller
 {
@@ -27,7 +27,30 @@ class ScholarshipHolderController extends Controller
 
     public function index(ScholarshipHoldersDataTable $dataTable)
     {
-        return $dataTable->render('admin.scholarship_holders.index');
+        $currentUser = auth()->user();
+        $filters = request()->only([
+            'filter_name',
+            'filter_unit',
+            'filter_position',
+        ]);
+
+        $unitsQuery = Unit::query()->orderBy('name');
+
+        if ($currentUser?->isUnitScoped()) {
+            $unitsQuery->whereIn('id', $currentUser->visibleUnitIds());
+        } elseif ($currentUser && ! $currentUser->hasRole('superadmin') && $currentUser->activeInstitutionIds()->isNotEmpty()) {
+            $unitsQuery->whereIn('institution_id', $currentUser->activeInstitutionIds());
+        }
+
+        $units = $unitsQuery->pluck('name', 'id');
+
+        $positions = Position::query()
+            ->orderBy('name')
+            ->pluck('name', 'id');
+
+        return $dataTable
+            ->setFilters($filters)
+            ->render('admin.scholarship_holders.index', compact('units', 'positions'));
     }
 
     public function create(Request $request): View
@@ -73,30 +96,25 @@ class ScholarshipHolderController extends Controller
             'status' => 'required|in:active,inactive',
         ];
 
-        if (!$request->filled('user_id')) {
+        if (! $request->filled('user_id')) {
             $rules['email'][] = 'unique:users,email';
         }
 
         $validatedData = $request->validate($rules);
-        // Cria um usuário para o bolsista (com senha padrão)
-        // Inicia a transação para garantir que ambos, Usuário e Bolsista, sejam criados ou nenhum seja.
         DB::beginTransaction();
 
         try {
-            // 2. Cria ou Encontra o Usuário
             // Pega o ID do usuário do form (se veio pelo autocomplete)
             $userId = $request->user_id;
 
-            // 2. Cria ou Encontra o Usuário
-            if (!empty($userId)) {
+            if (! empty($userId)) {
                 $user = User::findOrFail($userId);
 
-                $validatedData['email'] = $user->email; // Garante que o email do usuário seja usado
+                $validatedData['email'] = $user->email;
             } else {
                 $user = User::firstWhere('email', $validatedData['email']);
 
                 if (! $user) {
-                    // Cria um novo usuário
                     $user = User::create([
                         'name' => $validatedData['name'],
                         'email' => $validatedData['email'],
@@ -111,24 +129,18 @@ class ScholarshipHolderController extends Controller
                 $userId = $user->id;
             }
 
-            // 3. Cria o Bolsista e o associa ao novo Usuário
             $scholarshipHolderData = array_merge($validatedData, [
                 'user_id' => $userId,
-                // O Model cuida da criptografia dos dados bancários
             ]);
 
-            $scholarshipHolder = $this->scholarshipHolderService->create($scholarshipHolderData);
+            $this->scholarshipHolderService->create($scholarshipHolderData);
 
-            // Confirma a transação
             DB::commit();
 
             return redirect()->route('admin.scholarship_holders.index')->with('success', 'Bolsista e Usuário associado cadastrados com sucesso!');
-
         } catch (\Exception $e) {
-            // Reverte a transação em caso de erro
             DB::rollBack();
 
-            // Log do erro ($e->getMessage())
             return back()->withInput()->with('error', 'Erro ao cadastrar bolsista e usuário: '.$e->getMessage());
         }
     }
@@ -157,7 +169,7 @@ class ScholarshipHolderController extends Controller
 
     public function show(ScholarshipHolder $scholarshipHolder): View
     {
-        $scholarshipHolder->load('unit', 'user');
+        $scholarshipHolder->load('unit', 'user', 'projects.positions');
 
         return view('admin.scholarship_holders.show', compact('scholarshipHolder'));
     }
@@ -219,27 +231,33 @@ class ScholarshipHolderController extends Controller
         $query = ScholarshipHolder::query()
             ->with('user');
 
-        // 🔒 visibilidade institucional
         $query = app(\App\Services\VisibilityService::class)
             ->apply($query, auth()->user(), 'admin');
 
-        // 🔎 busca
         if ($term) {
-            $query->whereHas('user', function ($q) use ($term) {
-                $q->where('name', 'like', "%{$term}%")
-                    ->orWhere('email', 'like', "%{$term}%");
-            })->orWhere('cpf', 'like', "%{$term}%");
+            $query->where(function ($searchQuery) use ($term) {
+                $searchQuery->whereHas('user', function ($q) use ($term) {
+                    $q->where('name', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%");
+                })->orWhere('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%")
+                    ->orWhere('cpf', 'like', "%{$term}%");
+            });
+        }
+
+        if (! $request->boolean('include_inactive')) {
+            $query->where('status', 'active');
         }
 
         $holders = $query
-            ->where('status', 'active')
+            ->orderBy('name')
             ->limit(20)
             ->get();
 
         return response()->json([
             'results' => $holders->map(fn ($holder) => [
                 'id' => $holder->id,
-                'text' => $holder->user->name,
+                'text' => $holder->user->name ?? $holder->name,
             ]),
         ]);
     }

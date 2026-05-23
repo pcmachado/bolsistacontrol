@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\DataTables\UsersDataTable;
 use App\Http\Controllers\Controller;
+use App\Models\Institution;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\Institution;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,15 +29,30 @@ class UserController extends Controller
      */
     public function index(UsersDataTable $dataTable)
     {
+        $currentUser = auth()->user();
         $filters = request()->only([
             'filter_name',
             'filter_unit',
             'filter_role',
         ]);
 
+        $unitsQuery = Unit::query()->orderBy('name');
+
+        if ($currentUser?->isUnitScoped()) {
+            $unitsQuery->whereIn('id', $currentUser->visibleUnitIds());
+        } elseif ($currentUser && ! $currentUser->hasRole('superadmin') && $currentUser->activeInstitutionIds()->isNotEmpty()) {
+            $unitsQuery->whereIn('institution_id', $currentUser->activeInstitutionIds());
+        }
+
+        $units = $unitsQuery->pluck('name', 'id');
+
+        $roles = Role::query()
+            ->orderBy('name')
+            ->pluck('name', 'name');
+
         return $dataTable
             ->setFilters($filters)
-            ->render('admin.users.index');
+            ->render('admin.users.index', compact('units', 'roles'));
     }
 
     /**
@@ -181,14 +196,41 @@ class UserController extends Controller
     {
         $term = $request->get('q');
 
-        if (!$term || strlen($term) < 2) {
+        if (! auth()->check() || ! $term || strlen($term) < 2) {
             return response()->json([]);
         }
 
-        $users = \App\Models\User::where('name', 'like', "%{$term}%")
-                    ->orWhere('email', 'like', "%{$term}%")
-                    ->limit(10)
-                    ->get(['id', 'name', 'email']);
+        $users = User::query()
+            ->with('unit')
+            ->when(! auth()->user()->hasRole('superadmin'), function ($query) {
+                $institutionIds = auth()->user()->activeInstitutionIds();
+                $unitIds = auth()->user()->visibleUnitIds();
+
+                if ($institutionIds->isEmpty() && $unitIds->isEmpty()) {
+                    return $query->whereRaw('1 = 0');
+                }
+
+                $query->where(function ($scoped) use ($institutionIds, $unitIds) {
+                    if ($institutionIds->isNotEmpty()) {
+                        $scoped->whereIn('institution_id', $institutionIds);
+                    }
+
+                    if ($unitIds->isNotEmpty()) {
+                        if ($institutionIds->isNotEmpty()) {
+                            $scoped->orWhereIn('unit_id', $unitIds);
+                        } else {
+                            $scoped->whereIn('unit_id', $unitIds);
+                        }
+                    }
+                });
+            })
+            ->where(function ($query) use ($term) {
+                $query->where('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%");
+            })
+            ->orderBy('name')
+            ->limit(10)
+            ->get(['id', 'name', 'email', 'unit_id']);
 
         return response()->json($users);
     }

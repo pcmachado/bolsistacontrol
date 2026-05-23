@@ -259,8 +259,12 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, 'search'])->name('scholarshipholders.search');
-Route::get('/admin/scholarship-holders/search', [ScholarshipHolderController::class, 'search'])->name('admin.scholarship-holders.search');
+Route::get('/scholarship_holders/search', [ScholarshipHolderController::class, 'search'])
+    ->middleware(['auth', 'verified'])
+    ->name('scholarshipholders.search');
+Route::get('/admin/scholarship-holders/search', [ScholarshipHolderController::class, 'search'])
+    ->middleware(['auth', 'verified'])
+    ->name('admin.scholarship-holders.search');
 
 Route::get('/courses/search', [CourseController::class, 'search'])->name('courses.search');
 
@@ -270,7 +274,8 @@ Route::get('/api/institutions/{id}/units', function ($id) {
     return \App\Models\Unit::where('institution_id', $id)->get(['id', 'name']);
 });
 
-Route::get('/api/users/search', [UserController::class, 'search']);
+Route::get('/api/users/search', [UserController::class, 'search'])
+    ->middleware(['auth', 'verified']);
 
 // Rotas Administrativas
 Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coordenador_geral|coordenador_adjunto_geral|coordenador_adjunto'])->prefix('admin')->name('admin.')->group(function () {

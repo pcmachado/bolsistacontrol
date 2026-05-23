@@ -4,7 +4,7 @@
 <div class="container">
     <h4 class="mb-3">👁 Detalhes do Bolsista</h4>
         <div class="pull-right">
-            <a class="btn btn-primary" href="{{ route('admin.users.index') }}"> Voltar</a>
+            <a class="btn btn-primary" href="{{ route('admin.scholarship_holders.index') }}"> Voltar</a>
         </div>
     <div class="card">
         <div class="card-body">

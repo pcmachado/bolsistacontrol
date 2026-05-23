@@ -225,6 +225,396 @@ ENABLE_XDEBUG=true docker compose up -d --build --force-recreate
 
 * Rode: `docker compose exec app_bolsista chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache`
 
+# Padrão de Commits — ProBolsas
+
+## Objetivo
+
+Este documento define o padrão oficial de commits utilizados no projeto ProBolsas.
+
+O objetivo é:
+
+* manter histórico organizado
+* facilitar geração automática de changelog
+* automatizar release notes
+* melhorar auditoria técnica
+* permitir versionamento semântico
+* facilitar rastreabilidade das alterações
+
+---
+
+# Estrutura Oficial do Commit
+
+Formato padrão:
+
+```bash
+<tipo>: <descrição>
+```
+
+Exemplo:
+
+```bash
+feat: adiciona login institucional IFRS
+```
+
+---
+
+# Tipos Oficiais de Commit
+
+## feat
+
+Nova funcionalidade.
+
+### Exemplos
+
+```bash
+feat: adiciona login institucional IFRS
+feat: implementa fechamento financeiro mensal
+feat: adiciona exportação de pagamentos em PDF
+```
+
+---
+
+## fix
+
+Correção de bugs.
+
+### Exemplos
+
+```bash
+fix: corrige cálculo de carga horária mensal
+fix: resolve erro csrf no login
+fix: ajusta filtro de projetos no dashboard
+```
+
+---
+
+## refactor
+
+Refatoração sem alteração funcional.
+
+### Exemplos
+
+```bash
+refactor: reorganiza service de pagamentos
+refactor: simplifica regras de frequência
+```
+
+---
+
+## perf
+
+Melhoria de performance.
+
+### Exemplos
+
+```bash
+perf: otimiza consulta de pagamentos
+perf: reduz queries na tela de bolsistas
+```
+
+---
+
+## style
+
+Alterações visuais ou de formatação sem impacto funcional.
+
+### Exemplos
+
+```bash
+style: melhora layout da tela de login
+style: ajusta responsividade do dashboard
+```
+
+---
+
+## docs
+
+Alterações em documentação.
+
+### Exemplos
+
+```bash
+docs: adiciona manual de permissões financeiras
+docs: atualiza configuração docker
+```
+
+---
+
+## test
+
+Criação ou ajuste de testes.
+
+### Exemplos
+
+```bash
+test: adiciona testes para fechamento financeiro
+test: corrige testes de autenticação oauth
+```
+
+---
+
+## chore
+
+Tarefas administrativas, dependências e manutenção.
+
+### Exemplos
+
+```bash
+chore: atualiza dependências laravel
+chore: limpa configurações antigas do oauth
+```
+
+---
+
+## security
+
+Correções ou melhorias de segurança.
+
+### Exemplos
+
+```bash
+security: reforça validação csrf
+security: bloqueia acesso sem permissão financeira
+```
+
+---
+
+# Boas Práticas
+
+## Regras recomendadas
+
+✅ usar frases curtas
+✅ utilizar verbos no presente
+✅ descrever apenas uma alteração principal
+✅ manter commits pequenos e objetivos
+✅ evitar commits genéricos
+
+---
+
+# Exemplos NÃO recomendados
+
+```bash
+update
+ajustes
+mudanças
+fixes
+corrigindo coisas
+```
+
+---
+
+# Exemplos recomendados
+
+```bash
+fix: corrige geração de recibo
+feat: adiciona auditoria de permissões
+style: melhora tela de verificação de recibo
+```
+
+---
+
+# Commits Compostos
+
+Quando necessário:
+
+```bash
+feat(financeiro): adiciona fechamento mensal
+fix(oauth): corrige callback IFRS
+style(attendance): melhora tela de frequência
+```
+
+---
+
+# Versionamento Semântico
+
+O projeto utiliza Semantic Versioning.
+
+Formato:
+
+```text
+vMAJOR.MINOR.PATCH
+```
+
+---
+
+# Exemplos
+
+## Correções
+
+```text
+v1.0.1
+```
+
+---
+
+## Novas funcionalidades
+
+```text
+v1.1.0
+```
+
+---
+
+## Grandes mudanças
+
+```text
+v2.0.0
+```
+
+---
+
+# Fluxo Oficial de Release
+
+## 1. Realizar alterações
+
+```bash
+git add .
+```
+
+---
+
+## 2. Criar commit padronizado
+
+```bash
+git commit -m "feat: adiciona login IFRS"
+```
+
+---
+
+## 3. Criar tag
+
+```bash
+git tag -a v1.0.1 -m "Release login IFRS"
+```
+
+---
+
+## 4. Enviar alterações
+
+```bash
+git push origin main --tags
+```
+
+---
+
+# Comandos Úteis
+
+## Listar tags
+
+```bash
+git tag
+```
+
+---
+
+## Excluir tag local
+
+```bash
+git tag -d v1.0.1
+```
+
+---
+
+## Excluir tag remota
+
+```bash
+git push origin --delete v1.0.1
+```
+
+---
+
+## Ver última versão
+
+```bash
+git describe --tags --abbrev=0
+```
+
+---
+
+## Listar commits desde a última tag
+
+```bash
+git log $(git describe --tags --abbrev=0)..HEAD --oneline
+```
+
+---
+
+# Automação de Release Notes
+
+O sistema ProBolsas pode utilizar os commits padronizados para:
+
+* gerar changelog automático
+* criar release notes
+* alimentar modal de novidades
+* rastrear alterações por versão
+* automatizar documentação técnica
+
+---
+
+# Convenções Específicas do Projeto
+
+## Financeiro
+
+```bash
+feat(financeiro): adiciona homologação mensal
+fix(financeiro): corrige cálculo de bolsa
+```
+
+---
+
+## Frequência
+
+```bash
+feat(attendance): adiciona envio em lote
+fix(attendance): corrige limite mensal
+```
+
+---
+
+## OAuth / IFRS
+
+```bash
+feat(oauth): adiciona login institucional
+fix(oauth): corrige callback ifrs
+security(oauth): valida state da sessão
+```
+
+---
+
+## Bolsistas
+
+```bash
+feat(bolsistas): adiciona permissões especiais
+fix(bolsistas): corrige vínculo de usuário
+```
+
+---
+
+# Recomendação Final
+
+Todo commit deve:
+
+* representar uma alteração clara
+* possuir descrição objetiva
+* seguir os tipos padronizados
+* facilitar auditoria futura
+* contribuir para geração automática de releases
+
+---
+
+# Referências
+
+## Conventional Commits
+
+[https://www.conventionalcommits.org/](https://www.conventionalcommits.org/)
+
+---
+
+## Semantic Versioning
+
+[https://semver.org/](https://semver.org/)
+
+
 # Adicionar ao script de deploy
 # Extrai a última tag e salva no arquivo na raiz do projeto local
 git describe --tags --abbrev=0 > version.txt
