@@ -72,9 +72,9 @@
         </div>
     </div>
 
-    <div class="card shadow-sm rounded-4 border-0 overflow-hidden">
-        <div class="table-responsive">
-                {!! $dataTable->table(['class' => 'table table-hover align-middle table-striped w-100 mb-0'], true) !!}
+    <div class="card shadow-sm">
+        <div class="card-body">
+                {!! $dataTable->table(['class' => 'table table-hover align-middle table-striped'], true) !!}
             </div>
     </div>
 </div>

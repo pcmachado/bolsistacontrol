@@ -5,7 +5,7 @@
         {{-- STEP 1 (edição especial) --}}
         @if($model->wizard_step === 'step1')
             <a href="{{ route('admin.projects.edit.step1', $model) }}"
-            class="btn btn-sm btn-warning rounded-0"
+            class="btn btn-sm btn-warning"
             title="Continuar cadastro">
                 <i class="bi bi-caret-right"></i>
             </a>
@@ -13,7 +13,7 @@
         {{-- REVIEW --}}
         @elseif($model->wizard_step === 'review')
             <a href="{{ route('admin.projects.review', $model) }}"
-            class="btn btn-sm btn-warning rounded-0"
+            class="btn btn-sm btn-warning"
             title="Revisar projeto">
                 <i class="bi bi-clipboard-check"></i>
             </a>
@@ -21,7 +21,7 @@
         {{-- DEMAIS STEPS --}}
         @else
             <a href="{{ route('admin.projects.create.' . $model->wizard_step, $model) }}"
-            class="btn btn-sm btn-warning rounded-0"
+            class="btn btn-sm btn-warning"
             title="Continuar cadastro">
                 <i class="bi bi-caret-right"></i>
             </a>
@@ -29,7 +29,7 @@
 
     @else
         <a href="{{ route('admin.projects.show', $model) }}"
-        class="btn btn-sm btn-outline-secondary rounded-0"
+        class="btn btn-sm btn-outline-secondary"
         title="Visualizar projeto">
             <i class="bi bi-eye"></i>
         </a>
@@ -37,7 +37,7 @@
 
     {{-- Botão Editar --}}
     <a href="{{ route('admin.projects.edit.index', $id) }}" 
-       class="btn btn-sm btn-primary rounded-0" 
+       class="btn btn-sm btn-primary" 
        title="Editar">
         <i class="bi bi-pencil-square"></i>
     </a>
@@ -48,7 +48,7 @@
           style="display:inline;">
         @csrf
         @method('DELETE')
-        <button type="submit" class="btn btn-sm btn-danger rounded-0" title="Excluir">
+        <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
             <i class="bi bi-trash"></i>
         </button>
     </form>

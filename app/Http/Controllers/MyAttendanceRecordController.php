@@ -31,6 +31,10 @@ class MyAttendanceRecordController extends Controller
         $holder = $context['holder'];
         $activeProjectId = $context['activeProjectId'];
 
+        $projects = $holder->projects;
+
+        $activeProject = $projects->firstWhere('id', $activeProjectId);
+
         $monthString = $request->get('month', now()->format('Y-m'));
         [$year, $monthNumber] = explode('-', $monthString);
 
@@ -70,6 +74,8 @@ class MyAttendanceRecordController extends Controller
             ->setFilters($filters)
             ->render('attendance.my', [
                 'holder' => $holder,
+                'projects' => $projects,
+                'activeProject' => $activeProject,
                 'activeProjectId' => $activeProjectId,
                 'month' => $monthString,
                 'year' => $year,

@@ -126,16 +126,15 @@ class ScholarshipHoldersDataTable extends BaseDataTable
             ->setTableId('scholarship_holders-table')
             ->columns($this->getColumns())
             ->minifiedAjax(request()->fullUrl())
-            ->dom('Brtip')
             ->orderBy(0, 'asc')
             ->parameters(array_merge($this->defaultParameters(), [
                 'pageLength' => (int) request('page_length', 25),
             ]))
             ->buttons([
-                Button::make('excel')->className('btn btn-success rounded-0')->text('Excel'),
-                Button::make('csv')->className('btn btn-info rounded-0')->text('CSV'),
-                Button::make('pdf')->className('btn btn-warning rounded-0')->text('PDF'),
-                Button::make('print')->className('btn btn-secondary rounded-0')->text('Imprimir'),
+                Button::make('excel')->className('btn btn-success')->text('Excel'),
+                Button::make('csv')->className('btn btn-info')->text('CSV'),
+                Button::make('pdf')->className('btn btn-warning')->text('PDF'),
+                Button::make('print')->className('btn btn-secondary')->text('Imprimir'),
             ]);
     }
 

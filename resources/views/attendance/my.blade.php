@@ -92,6 +92,10 @@
         $bulkCandidates = collect();
         $bulkSummaryMessage = '';
 
+        $year = $current->year;
+        $monthNumber = $current->month;
+        $currentHolder = $holder ?? auth()->user()->scholarshipHolder;
+
         if (($projects ?? collect())->count() > 1) {
             $attendanceService = app(\App\Services\AttendanceService::class);
 

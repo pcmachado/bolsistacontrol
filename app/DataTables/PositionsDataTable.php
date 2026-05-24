@@ -19,7 +19,7 @@ class PositionsDataTable extends BaseDataTable
             ->addColumn('updated_at', function ($unit) {
                 return formatDate($unit->updated_at);
             })
-            ->addColumn('actions', 'admin.positions.partials.actions') // Usando uma view para as ações
+            ->addColumn('actions', 'admin.positions.partials.actions')
             ->rawColumns(['actions']);
     }
 
@@ -34,14 +34,13 @@ class PositionsDataTable extends BaseDataTable
             ->setTableId('positions-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->dom('Bfrtip')
             ->orderBy(0, 'asc')
             ->parameters($this->defaultParameters())
             ->buttons([
-                Button::make('excel')->className('btn btn-success rounded-0')->text('📊 Excel'),
-                Button::make('csv')->className('btn btn-info rounded-0')->text('📝 CSV'),
-                Button::make('pdf')->className('btn btn-warning rounded-0')->text('📄 PDF'),
-                Button::make('print')->className('btn btn-secondary rounded-0')->text('🖨️ Imprimir'),
+                Button::make('excel')->className('btn btn-success')->text('📊 Excel'),
+                Button::make('csv')->className('btn btn-info')->text('📝 CSV'),
+                Button::make('pdf')->className('btn btn-warning')->text('📄 PDF'),
+                Button::make('print')->className('btn btn-secondary')->text('🖨️ Imprimir'),
             ]);
     }
 

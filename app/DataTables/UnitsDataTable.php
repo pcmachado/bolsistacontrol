@@ -34,14 +34,13 @@ class UnitsDataTable extends BaseDataTable
             ->setTableId('units-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->dom('Bfrtip')
             ->orderBy(0, 'asc')
             ->parameters($this->defaultParameters())
             ->buttons([
-                Button::make('excel')->className('btn btn-success rounded-0')->text('📊 Excel'),
-                Button::make('csv')->className('btn btn-info rounded-0')->text('📝 CSV'),
-                Button::make('pdf')->className('btn btn-warning rounded-0')->text('📄 PDF'),
-                Button::make('print')->className('btn btn-secondary rounded-0')->text('🖨️ Imprimir'),
+                Button::make('excel')->className('btn btn-success')->text('📊 Excel'),
+                Button::make('csv')->className('btn btn-info')->text('📝 CSV'),
+                Button::make('pdf')->className('btn btn-warning')->text('📄 PDF'),
+                Button::make('print')->className('btn btn-secondary')->text('🖨️ Imprimir'),
             ]);
     }
 

@@ -64,41 +64,38 @@ class ProjectsDataTable extends BaseDataTable
             ->setTableId('projects-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->dom('Bfrtip')
             ->orderBy(0, 'asc')
-            ->parameters($this->defaultParameters())
-            ->buttons([
-                Button::make('excel')->className('btn btn-success rounded-0')->text('Excel'),
-                Button::make('csv')->className('btn btn-info rounded-0')->text('CSV'),
-                Button::make('pdf')->className('btn btn-warning rounded-0')->text('PDF'),
-                Button::make('print')->className('btn btn-secondary rounded-0')->text('Imprimir'),
-            ]);
+            ->parameters($this->defaultParameters());
     }
 
     protected function getColumns(): array
     {
         return [
-            Column::make('id'),
-            Column::make('name')->title('Nome'),
-            Column::make('description')->title('Descricao'),
-            Column::computed('institution')
-                ->title('Instituicao')
-                ->orderable(false)
-                ->searchable(false),
-            Column::computed('units')
-                ->title('Unidades')
-                ->orderable(false)
-                ->searchable(false),
-            Column::make('start_date')->title('Data de Inicio'),
-            Column::make('end_date')->title('Data de Termino'),
-            Column::make('created_at')->title('Criado Em'),
-            Column::make('updated_at')->title('Atualizado Em'),
-            Column::computed('actions')
-                ->exportable(false)
-                ->printable(false)
-                ->width(120)
-                ->addClass('text-center')
-                ->title('Acoes'),
+            ['data' => 'id', 'title' => 'ID'],
+            ['data' => 'name', 'title' => 'Nome'],
+            ['data' => 'description', 'title' => 'Descrição'],
+            [
+                'data' => 'institution',
+                'title' => 'Instituição',
+                'orderable' => true,
+                'searchable' => true
+            ],
+            [
+                'data' => 'units',
+                'title' => 'Unidades',
+                'orderable' => false,
+                'searchable' => false
+            ],
+            ['data' => 'start_date', 'title' => 'Data Início'],
+            ['data' => 'end_date', 'title' => 'Data Término'],
+            ['data' => 'created_at', 'title' => 'Criado em'],
+            ['data' => 'updated_at', 'title' => 'Atualizado em'],
+            [
+                'data' => 'actions',
+                'title' => 'Ações',
+                'orderable' => false,
+                'searchable' => false
+            ],
         ];
     }
 

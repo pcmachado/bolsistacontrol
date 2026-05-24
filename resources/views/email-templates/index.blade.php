@@ -13,8 +13,8 @@
                         </a>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
+                <div class="card shadow-sm">
+                    <div class="card-body">
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
