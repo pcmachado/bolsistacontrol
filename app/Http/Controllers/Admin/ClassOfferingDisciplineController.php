@@ -32,7 +32,6 @@ class ClassOfferingDisciplineController extends Controller
         $validated = $request->validate([
             'discipline_id' => ['required', 'integer', 'exists:disciplines,id'],
             'teacher_id'    => ['nullable', 'integer', 'exists:users,id'],
-            'workload'      => ['required', 'integer', 'min:1'],
             'schedule'      => ['nullable', 'string', 'max:255'],
             'room'          => ['nullable', 'string', 'max:255'],
         ]);
@@ -41,6 +40,10 @@ class ClassOfferingDisciplineController extends Controller
             ->disciplines()
             ->where('disciplines.id', $validated['discipline_id'])
             ->exists();
+
+
+        $discipline = Discipline::query()->findOrFail($validated['discipline_id']);
+        $validated['workload'] = max(1, (int) ($discipline->workload ?? 1));
 
         if (! $isCourseDiscipline) {
             return back()

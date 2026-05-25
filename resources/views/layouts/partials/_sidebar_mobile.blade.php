@@ -118,6 +118,7 @@
                 <li class="nav-item"><x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.disciplines.index" icon="bi bi-journal-text" title="Disciplinas"/></li>
                 <li class="nav-item"><x-sidebar-item route="admin.class-offerings.index" icon="bi bi-collection" title="Turmas"/></li>
+                <li class="nav-item"><x-sidebar-item route="admin.teachers.index" icon="bi bi-person-video3" title="Professores"/></li>
             </ul>
         @endhasanyrole
 
