@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceSubmission;
 use App\Models\ClassOffering;
 use App\Models\StudentRecord;
+use App\Models\Student;
+use App\Models\StudentDisciplineMonthRecord;
 use App\Services\ClassOfferingSubmissionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -15,10 +17,16 @@ class ClassOfferingStudentController extends Controller
 {
     public function list(ClassOffering $class, ClassOfferingStudentDataTable $dataTable)
     {
+        $unitStudents = Student::query()
+            ->whereHas('classOfferings', fn ($query) => $query->where('unit_id', $class->unit_id))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return $dataTable
             ->forClass($class->id)
             ->render('admin.class-offerings.students.list', [
                 'class' => $class,
+                'unitStudents' => $unitStudents,
             ]);
     }
 
@@ -67,6 +75,7 @@ class ClassOfferingStudentController extends Controller
 
         $rate = $class->project->student_daily_rate ?? 0;
 
+
         $submission = $class->submissions()
             ->where('month', $month)
             ->where('year', $year)
@@ -112,7 +121,9 @@ class ClassOfferingStudentController extends Controller
             'canGoPrev',
             'canGoNext',
             'monthsData',
-            'canSubmitCurrentMonth'
+            'canSubmitCurrentMonth',
+            'disciplines',
+            'disciplineRecords'
         ));
     }
 
@@ -127,6 +138,7 @@ class ClassOfferingStudentController extends Controller
             $justified = (int) ($row['justified_absences'] ?? 0);
 
             $rate = $class->project->student_daily_rate ?? 0;
+
 
             $record = StudentRecord::updateOrCreate(
                 [
@@ -146,7 +158,56 @@ class ClassOfferingStudentController extends Controller
             $record->save();
         }
 
+        foreach ($request->input('discipline_records', []) as $disciplineId => $studentsRows) {
+            foreach ($studentsRows as $studentId => $row) {
+                $record = StudentDisciplineMonthRecord::updateOrCreate(
+                    [
+                        'student_id' => $studentId,
+                        'class_offering_id' => $class->id,
+                        'discipline_id' => (int) $disciplineId,
+                        'month' => (int) $request->input('month', now()->month),
+                        'year' => (int) $request->input('year', now()->year),
+                    ],
+                    [
+                        'total_classes' => (int) ($row['total_classes'] ?? 0),
+                        'absences' => (int) ($row['absences'] ?? 0),
+                        'justified_absences' => (int) ($row['justified_absences'] ?? 0),
+                    ]
+                );
+
+                $record->calculate();
+                $record->save();
+            }
+        }
+
         return back()->with('success', 'Lançamentos salvos com sucesso.');
+    }
+
+
+    public function addStudent(Request $request, ClassOffering $class)
+    {
+        $validated = $request->validate([
+            'student_id' => ['required', 'exists:students,id'],
+        ]);
+
+        $student = Student::findOrFail($validated['student_id']);
+
+        $belongsToUnit = $student->classOfferings()->where('unit_id', $class->unit_id)->exists();
+
+        if (! $belongsToUnit) {
+            return back()->with('error', 'O aluno selecionado não está vinculado à unidade da turma.');
+        }
+
+        $class->students()->syncWithoutDetaching([$student->id]);
+
+        return back()->with('success', 'Aluno adicionado na turma com sucesso.');
+    }
+
+    public function removeStudent(ClassOffering $class, Student $student)
+    {
+        $class->students()->detach($student->id);
+
+        return back()->with('success', 'Aluno removido da turma.');
     }
 
     public function submit(Request $request, ClassOffering $class)

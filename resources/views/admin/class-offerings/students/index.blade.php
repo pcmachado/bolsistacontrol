@@ -104,7 +104,9 @@
         Justificadas (não impactam)
     </div>
 
-    <form method="POST">
+    <form method="POST" action="{{ route('admin.class.students.save', $class) }}">
+        <input type="hidden" name="month" value="{{ $month }}">
+        <input type="hidden" name="year" value="{{ $year }}">
         @csrf
 
         <div class="card shadow-sm">
@@ -226,13 +228,41 @@
             </div>
         </div>
 
+
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header bg-white fw-bold">Frequência por disciplina ({{ sprintf('%02d/%04d', $month, $year) }})</div>
+            <div class="card-body">
+                @foreach($disciplines as $discipline)
+                    <h6 class="mt-3">{{ $discipline->name }}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle">
+                            <thead><tr><th>Aluno</th><th>Total aulas</th><th>Faltas</th><th>Justificadas</th><th>Presenças</th></tr></thead>
+                            <tbody>
+                            @foreach($students as $student)
+                                @php($dr = $disciplineRecords[$discipline->id][$student->id] ?? null)
+                                <tr>
+                                    <td>{{ $student->name }}</td>
+                                    <td><input type="number" class="form-control form-control-sm" name="discipline_records[{{ $discipline->id }}][{{ $student->id }}][total_classes]" value="{{ $dr->total_classes ?? 0 }}"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="discipline_records[{{ $discipline->id }}][{{ $student->id }}][absences]" value="{{ $dr->absences ?? 0 }}"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="discipline_records[{{ $discipline->id }}][{{ $student->id }}][justified_absences]" value="{{ $dr->justified_absences ?? 0 }}"></td>
+                                    <td>{{ $dr->attended_classes ?? 0 }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn btn-success">💾 Salvar Lançamentos</button>
+        </div>
+
     </form>
 
     <div class="d-flex justify-content-between mt-3">
 
-        <button class="btn btn-success">
-            💾 Salvar Lançamentos
-        </button>
 
         @if($submission?->status === 'draft')
 
@@ -246,6 +276,7 @@
                         Enviar mês
                     </button>
                 </form>
+
             @else
                 <button class="btn btn-secondary" disabled>
                     🔒 Envie o mês anterior primeiro
