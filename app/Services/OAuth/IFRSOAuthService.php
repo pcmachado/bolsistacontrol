@@ -3,6 +3,7 @@
 namespace App\Services\OAuth;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class IFRSOAuthService
@@ -49,6 +50,10 @@ class IFRSOAuthService
         );
 
         if ($response->failed()) {
+            Log::error('Erro ao obter token OAuth IFRS', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
             throw new \Exception(
                 'Erro ao obter token OAuth IFRS.'
             );
