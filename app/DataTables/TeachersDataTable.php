@@ -25,7 +25,19 @@ class TeachersDataTable extends BaseDataTable
             ->addColumn('unit', fn ($t) => $t->unit->name ?? '-')
 
             ->addColumn('disciplines_count', function ($t) {
-                return $t->teachingAssignments->count();
+                return $t->classOfferingDisciplines->count();
+            })
+            ->addColumn('total_workload', function ($t) {
+                return (int) $t->classOfferingDisciplines->sum('workload');
+            })
+            ->addColumn('disciplines', function ($t) {
+                $labels = $t->classOfferingDisciplines
+                    ->map(fn ($assignment) => $assignment->discipline?->name)
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                return $labels->isEmpty() ? '-' : $labels->implode(', ');
             })
 
             ->addColumn('actions', function ($t) {
@@ -39,7 +51,7 @@ class TeachersDataTable extends BaseDataTable
     public function query(User $model)
     {
         $query = $model->role('professor')
-            ->with(['unit', 'teachingAssignments.discipline', 'teachingAssignments.classOffering']);
+            ->with(['unit', 'classOfferingDisciplines.discipline', 'classOfferingDisciplines.classOffering']);
 
         // FILTROS
         if ($unit = ($this->filters['filter_unit'] ?? null)) {
@@ -47,13 +59,13 @@ class TeachersDataTable extends BaseDataTable
         }
 
         if ($course = ($this->filters['filter_course'] ?? null)) {
-            $query->whereHas('teachingAssignments.discipline', function ($q) use ($course) {
+            $query->whereHas('classOfferingDisciplines.discipline', function ($q) use ($course) {
                 $q->where('course_id', $course);
             });
         }
 
         if ($offering = ($this->filters['filter_offering'] ?? null)) {
-            $query->whereHas('teachingAssignments.classOffering', function ($q) use ($offering) {
+            $query->whereHas('classOfferingDisciplines.classOffering', function ($q) use ($offering) {
                 $q->where('id', $offering);
             });
         }
@@ -92,6 +104,15 @@ class TeachersDataTable extends BaseDataTable
             Column::computed('disciplines_count')
                 ->title('Disciplinas Ativas')
                 ->addClass('text-center'),
+
+            Column::computed('total_workload')
+                ->title('Carga Horária Total')
+                ->addClass('text-center'),
+
+            Column::computed('disciplines')
+                ->title('Disciplinas')
+                ->orderable(false)
+                ->searchable(false),
 
             Column::computed('actions')
                 ->title('Ações')

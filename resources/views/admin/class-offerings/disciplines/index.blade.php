@@ -41,7 +41,7 @@
                         <select name="discipline_id" class="form-select @error('discipline_id') is-invalid @enderror" required>
                             <option value="">Selecione...</option>
                             @foreach($disciplines as $disc)
-                                <option value="{{ $disc->id }}" @selected(old('discipline_id') == $disc->id)>{{ $disc->name }}</option>
+                                <option value="{{ $disc->id }}" data-workload="{{ (int) ($disc->workload ?? 0) }}" @selected(old('discipline_id') == $disc->id)>{{ $disc->name }}</option>
                             @endforeach
                         </select>
                         @error('discipline_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -59,9 +59,9 @@
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label">Carga horária</label>
-                        <input type="number" min="1" name="workload" class="form-control @error('workload') is-invalid @enderror" value="{{ old('workload', 40) }}" required>
-                        @error('workload') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label">Carga horária da disciplina</label>
+                        <input type="number" min="1" name="workload" id="discipline_workload" class="form-control" value="{{ old('workload') }}" readonly>
+                        <small class="text-muted">Definida automaticamente pela disciplina selecionada.</small>
                     </div>
 
                     <div class="col-md-3">
@@ -102,3 +102,21 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    (() => {
+        const select = document.querySelector('select[name="discipline_id"]');
+        const workload = document.getElementById('discipline_workload');
+
+        const syncWorkload = () => {
+            const option = select?.selectedOptions?.[0];
+            const value = Number(option?.dataset?.workload || 0);
+            workload.value = value > 0 ? value : '';
+        };
+
+        select?.addEventListener('change', syncWorkload);
+        syncWorkload();
+    })();
+</script>
+@endpush

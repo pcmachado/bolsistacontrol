@@ -136,6 +136,7 @@
                 <li><x-sidebar-item route="admin.courses.index" icon="bi bi-mortarboard" title="Cursos"/></li>
                 <li><x-sidebar-item route="admin.disciplines.index" icon="bi bi-journal-text" title="Disciplinas"/></li>
                 <li><x-sidebar-item route="admin.class-offerings.index" icon="bi bi-collection" title="Turmas"/></li>
+                <li><x-sidebar-item route="admin.teachers.index" icon="bi bi-person-video3" title="Professores"/></li>
             </ul>
         @endif
 
