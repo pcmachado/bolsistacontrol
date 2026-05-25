@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassOffering;
+use App\Models\ClassOfferingDiscipline;
 use App\Models\Discipline;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -29,32 +30,63 @@ class ClassOfferingDisciplineController extends Controller
     public function store(Request $request, ClassOffering $offering)
     {
         $validated = $request->validate([
-            'disciplines' => ['nullable', 'array'],
-
-            'disciplines.*.teacher_id' => ['nullable', 'exists:users,id'],
-            'disciplines.*.workload'   => ['required', 'integer', 'min:1'],
-            'disciplines.*.schedule'   => ['nullable', 'string', 'max:255'],
-            'disciplines.*.room'       => ['nullable', 'string', 'max:255'],
+            'discipline_id' => ['required', 'integer', 'exists:disciplines,id'],
+            'teacher_id'    => ['nullable', 'integer', 'exists:users,id'],
+            'workload'      => ['required', 'integer', 'min:1'],
+            'schedule'      => ['nullable', 'string', 'max:255'],
+            'room'          => ['nullable', 'string', 'max:255'],
         ]);
 
+        $isCourseDiscipline = $offering->course
+            ->disciplines()
+            ->where('disciplines.id', $validated['discipline_id'])
+            ->exists();
+
+        if (! $isCourseDiscipline) {
+            return back()
+                ->withInput()
+                ->withErrors(['discipline_id' => 'A disciplina selecionada nao pertence ao curso desta turma.']);
+        }
+
         DB::transaction(function () use ($offering, $validated) {
-            $syncData = [];
-
-            foreach ($validated['disciplines'] ?? [] as $disciplineId => $data) {
-                $syncData[$disciplineId] = [
-                    'teacher_id' => $data['teacher_id'] ?? null,
-                    'workload'   => $data['workload'],
-                    'schedule'   => $data['schedule'] ?? null,
-                    'room'       => $data['room'] ?? null,
-                ];
-            }
-
-            // sincroniza estado final da tela
-            $offering->disciplines()->sync($syncData);
+            $offering->disciplines()->syncWithoutDetaching([
+                $validated['discipline_id'] => [
+                    'teacher_id' => $validated['teacher_id'] ?? null,
+                    'workload'   => $validated['workload'],
+                    'schedule'   => $validated['schedule'] ?? null,
+                    'room'       => $validated['room'] ?? null,
+                ],
+            ]);
         });
 
         return redirect()
             ->route('admin.class-offerings.disciplines.index', $offering)
-            ->with('success', 'Disciplinas da turma atualizadas com sucesso.');
+            ->with('success', 'Disciplina vinculada/atualizada com sucesso.');
+    }
+
+    public function update(Request $request, ClassOfferingDiscipline $pivot)
+    {
+        $validated = $request->validate([
+            'teacher_id' => ['nullable', 'integer', 'exists:users,id'],
+            'workload'   => ['nullable', 'integer', 'min:1'],
+            'schedule'   => ['nullable', 'string', 'max:255'],
+            'room'       => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $pivot->update($validated);
+
+        return redirect()
+            ->route('admin.class-offerings.disciplines.index', $pivot->class_offering_id)
+            ->with('success', 'Disciplina da turma atualizada com sucesso.');
+    }
+
+    public function destroy(ClassOfferingDiscipline $pivot)
+    {
+        $offeringId = $pivot->class_offering_id;
+        $pivot->delete();
+
+        return redirect()
+            ->route('admin.class-offerings.disciplines.index', $offeringId)
+            ->with('success', 'Disciplina removida da turma com sucesso.');
     }
 }

@@ -14,6 +14,11 @@
                 <i class="bi bi-arrow-left me-2"></i> Voltar
             </a>
 
+            <a href="{{ route('class.students.index', $offering->id) }}"
+               class="btn btn-primary px-3 me-2">
+                <i class="bi bi-people me-2"></i> Alunos da Turma
+            </a>
+
             {{-- Botão para gerenciar disciplinas da turma --}}
             <a href="{{ route('admin.class-offerings.disciplines.index', $offering->id) }}"
                class="btn btn-info px-3">
