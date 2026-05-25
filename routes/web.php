@@ -413,6 +413,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
         Route::get('{class}/students/list', [ClassOfferingStudentController::class, 'list'])->name('class.students.list');
         Route::get('{class}/students', [ClassOfferingStudentController::class, 'index'])->name('class.students.index');
         Route::post('{class}/students', [ClassOfferingStudentController::class, 'save'])->name('class.students.save');
+        Route::post('{class}/students/add', [ClassOfferingStudentController::class, 'addStudent'])->name('class.students.add');
+        Route::delete('{class}/students/{student}', [ClassOfferingStudentController::class, 'removeStudent'])->name('class.students.remove');
         Route::post('{class}/students/submit', [ClassOfferingStudentController::class, 'submit'])->name('class.students.submit');
     });
 

@@ -22,7 +22,7 @@ class ClassOfferingStudentDataTable extends BaseDataTable
         return (new EloquentDataTable($query))
             ->addColumn('payment', fn($s) => strtoupper($s->payment_type))
             ->addColumn('actions', function ($s) {
-                return view('students.partials.actions', compact('s'));
+                return view('admin.class-offerings.students.partials.actions', ['student' => $s, 'classId' => $this->classId]);
             })
             ->rawColumns(['actions']);
     }
