@@ -87,8 +87,8 @@ class ClassOfferingController extends Controller
         $offering = ClassOffering::create($validated);
 
         return redirect()
-            ->route('admin.class-offerings.index')
-            ->with('success', 'Turma criada com sucesso!');
+            ->route('admin.class-offerings.edit', $offering)
+            ->with('success', 'Turma criada com sucesso! Agora vincule disciplinas, professor e alunos para liberar o lancamento de faltas.');
     }
 
     public function edit(ClassOffering $classOffering)
