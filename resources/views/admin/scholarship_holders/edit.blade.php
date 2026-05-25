@@ -71,6 +71,18 @@
                     </div>
 
                     <div class="col-md-4">
+                        <label for="role" class="form-label fw-bold">Função <span class="text-danger">*</span></label>
+                        <select name="role" id="role" class="form-select" required>
+                            <option value="">Selecione a função</option>
+                            @foreach($roles as $id => $name)
+                                <option value="{{ $id }}" {{ old('role', $scholarshipHolder->role) == $id ? 'selected' : '' }}>
+                                    {{ ucfirst($name) }}
+                                </option>
+                            @endforeach
+                        </select>  
+                    </div>
+
+                    <div class="col-md-4">
                         <label for="start_date" class="form-label fw-bold">Data de Início <span class="text-danger">*</span></label>
                         <input type="date" name="start_date" id="start_date" value="{{ old('start_date', optional($scholarshipHolder->start_date)->format('Y-m-d') ?? $scholarshipHolder->start_date) }}" class="form-control" required>
                     </div>

@@ -162,7 +162,7 @@ class ScholarshipHolderController extends Controller
 
         $unitActive = $scholarshipHolder->unit;
 
-        $roles = Role::all();
+        $roles = Role::whereNotIn('name', ['superAdmin','admin'])->pluck('name', 'id');
 
         return view('admin.scholarship_holders.edit', compact('scholarshipHolder', 'units', 'unitActive', 'user', 'roles'));
     }
