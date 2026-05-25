@@ -76,7 +76,7 @@ class TeachersDataTable extends BaseDataTable
     public function html()
     {
         return $this->builder()
-            ->setTableId('teachers-table')
+            ->setTableId('scholarship_holders-table')
             ->columns($this->getColumns())
             ->minifiedAjax(request()->fullUrl())
             ->dom('Bfrtip')
