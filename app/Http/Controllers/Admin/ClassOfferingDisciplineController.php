@@ -23,7 +23,21 @@ class ClassOfferingDisciplineController extends Controller
         return view('admin.class-offerings.disciplines.index', [
             'offering'    => $offering,
             'disciplines' => $offering->course->disciplines,
-            'teachers'    => User::role('professor')->orderBy('name')->get(),
+            'teachers'    => User::query()
+                ->where(function ($teacherQuery) {
+                    $teacherQuery->role('professor')
+                        ->orWhereHas('scholarshipHolder', function ($holderQuery) {
+                            $holderQuery->whereExists(function ($subQuery) {
+                                $subQuery->select(DB::raw(1))
+                                    ->from('project_scholarship_holder as psh')
+                                    ->join('positions as p', 'p.id', '=', 'psh.position_id')
+                                    ->whereColumn('psh.scholarship_holder_id', 'scholarship_holders.id')
+                                    ->where('p.is_teacher', true);
+                            });
+                        });
+                })
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
