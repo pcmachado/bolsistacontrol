@@ -234,8 +234,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{payment}/receipt', [MyPaymentController::class, 'receipt'])->name('receipt');
     });
 
-    Route::resource('students', StudentController::class);
-
     // Rotas para Professores
     Route::prefix('teacher')->name('teacher.')->group(function () {
         Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
@@ -366,6 +364,7 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
 
     Route::resource('supervisors', SupervisorAssignmentController::class);
     Route::resource('teachers', TeacherController::class);
+    Route::resource('students', StudentController::class);
 
     // 1. Recurso Principal (CRUD padrão)
     Route::resource('class-offerings', ClassOfferingController::class);

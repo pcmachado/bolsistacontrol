@@ -1,14 +1,14 @@
-{{-- resources/views/students/partials/actions.blade.php --}}
+{{-- resources/views/admin/students/partials/actions.blade.php --}}
 
 <div class="btn-group btn-group-sm">
 
-    <a href="{{ route('students.edit', $s) }}"
+    <a href="{{ route('admin.students.edit', $s) }}"
        class="btn btn-outline-warning">
         <i class="bi bi-pencil"></i>
     </a>
 
     <form method="POST"
-          action="{{ route('students.destroy', $s) }}"
+          action="{{ route('admin.students.destroy', $s) }}"
           onsubmit="return confirm('Excluir aluno?')">
         @csrf
         @method('DELETE')

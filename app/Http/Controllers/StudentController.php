@@ -15,7 +15,7 @@ class StudentController extends Controller
 
         return $dataTable
             ->setFilters($filters)
-            ->render('students.index', [
+            ->render('admin.students.index', [
                 'classes' => ClassOffering::orderBy('name')->get(),
                 'classId' => $filters['class_offering_id'] ?? null,
             ]);
@@ -25,7 +25,7 @@ class StudentController extends Controller
     {
         $classes = ClassOffering::orderBy('name')->get();
 
-        return view('students.create', compact('classes'));
+        return view('admin.students.create', compact('classes'));
     }
 
     public function store(Request $request)
@@ -45,7 +45,7 @@ class StudentController extends Controller
         Student::create($data);
 
         return redirect()
-            ->route('students.index')
+            ->route('admin.students.index')
             ->with('success', 'Aluno cadastrado com sucesso.');
     }
 
@@ -53,7 +53,7 @@ class StudentController extends Controller
     {
         $classes = ClassOffering::orderBy('name')->get();
 
-        return view('students.edit', compact('student','classes'));
+        return view('admin.students.edit', compact('student','classes'));
     }
 
     public function update(Request $request, Student $student)
@@ -73,7 +73,7 @@ class StudentController extends Controller
         $student->update($data);
 
         return redirect()
-            ->route('students.index')
+            ->route('admin.students.index')
             ->with('success', 'Aluno atualizado.');
     }
 

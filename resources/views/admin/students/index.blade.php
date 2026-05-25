@@ -7,7 +7,7 @@
 
     <div class="d-flex justify-content-between mb-3">
         <h3>Alunos</h3>
-        <a href="{{ route('students.create') }}" class="btn btn-primary">
+        <a href="{{ route('admin.students.create') }}" class="btn btn-primary">
             ➕ Novo aluno
         </a>
     </div>

@@ -5,10 +5,10 @@
 
     <h3>Novo aluno</h3>
 
-    <form method="POST" action="{{ route('students.store') }}">
+    <form method="POST" action="{{ route('admin.students.store') }}">
         @csrf
 
-        @include('students._form')
+        @include('admin.students._form')
 
         <button class="btn btn-primary mt-3">
             Salvar
