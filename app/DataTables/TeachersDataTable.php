@@ -3,6 +3,7 @@
 namespace App\DataTables;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
@@ -50,8 +51,21 @@ class TeachersDataTable extends BaseDataTable
 
     public function query(User $model)
     {
-        $query = $model->role('professor')
+        $query = $model->newQuery()
             ->with(['unit', 'classOfferingDisciplines.discipline', 'classOfferingDisciplines.classOffering']);
+
+        $query->where(function ($teacherQuery) {
+            $teacherQuery->role('professor')
+                ->orWhereHas('scholarshipHolder', function ($holderQuery) {
+                    $holderQuery->whereExists(function ($subQuery) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('project_scholarship_holder as psh')
+                            ->join('positions as p', 'p.id', '=', 'psh.position_id')
+                            ->whereColumn('psh.scholarship_holder_id', 'scholarship_holders.id')
+                            ->where('p.is_teacher', true);
+                    });
+                });
+        });
 
         // FILTROS
         if ($unit = ($this->filters['filter_unit'] ?? null)) {
