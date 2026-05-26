@@ -52,16 +52,21 @@ class TeachersDataTable extends BaseDataTable
     public function query(User $model)
     {
         $query = $model->newQuery()
+            ->select('users.*')
             ->with(['unit', 'classOfferingDisciplines.discipline', 'classOfferingDisciplines.classOffering']);
 
         $query->where(function ($teacherQuery) {
-            $teacherQuery->role('professor')
+
+            $teacherQuery
+                ->whereHas('roles', function ($roleQuery) {
+                    $roleQuery->where('name', 'professor');
+                })
                 ->orWhereHas('scholarshipHolder', function ($holderQuery) {
                     $holderQuery->whereExists(function ($subQuery) {
                         $subQuery->select(DB::raw(1))
                             ->from('project_scholarship_holder as psh')
-                            ->join('positions as p', 'p.id', '=', 'psh.position_id')
-                            ->whereColumn('psh.scholarship_holder_id', 'scholarship_holders.id')
+                            ->join('positions as p','p.id','=','psh.position_id')
+                            ->whereColumn('psh.scholarship_holder_id','scholarship_holders.id')
                             ->where('p.is_teacher', true);
                     });
                 });
