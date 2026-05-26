@@ -49,46 +49,22 @@ class TeachersDataTable extends BaseDataTable
             ->setRowId('id');
     }
 
-    public function query(User $model)
+    public function query(ScholarshipHolder $model)
     {
         $query = $model->newQuery()
-            ->select('users.*')
-            ->with(['unit', 'classOfferingDisciplines.discipline', 'classOfferingDisciplines.classOffering']);
 
-        $query->where(function ($teacherQuery) {
+            ->with(['user','unit','projects',])
+            ->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('project_scholarship_holder as psh')
+                    ->join('positions as p','p.id','=','psh.position_id')
+                    ->whereColumn('psh.scholarship_holder_id','scholarship_holders.id')
+                    ->where('p.is_teacher', true);
+            });
 
-            $teacherQuery
-                ->whereHas('roles', function ($roleQuery) {
-                    $roleQuery->where('name', 'professor');
-                })
-                ->orWhereHas('scholarshipHolder', function ($holderQuery) {
-                    $holderQuery->whereExists(function ($subQuery) {
-                        $subQuery->select(DB::raw(1))
-                            ->from('project_scholarship_holder as psh')
-                            ->join('positions as p','p.id','=','psh.position_id')
-                            ->whereColumn('psh.scholarship_holder_id','scholarship_holders.id')
-                            ->where('p.is_teacher', true);
-                    });
-                });
-        });
-
-        // FILTROS
         if ($unit = ($this->filters['filter_unit'] ?? null)) {
             $query->where('unit_id', $unit);
         }
-
-        if ($course = ($this->filters['filter_course'] ?? null)) {
-            $query->whereHas('classOfferingDisciplines.discipline', function ($q) use ($course) {
-                $q->where('course_id', $course);
-            });
-        }
-
-        if ($offering = ($this->filters['filter_offering'] ?? null)) {
-            $query->whereHas('classOfferingDisciplines.classOffering', function ($q) use ($offering) {
-                $q->where('id', $offering);
-            });
-        }
-
         return $query;
     }
 
