@@ -28,7 +28,7 @@ class ClassOfferingsDataTable extends BaseDataTable
             ->addColumn('unit', fn ($row) => $row->unit?->name ?? '-')
             ->addColumn('project', fn ($row) => $row->project?->name ?? '-')
             ->addColumn('disciplines_count', fn ($row) => $row->disciplines_count ?? 0)
-            ->addColumn('students_count', fn ($row) => $row->scholarship_holders_count ?? 0)
+            ->addColumn('teachers_count', fn ($row) => $row->teachers_count ?? 0)
             ->editColumn('status', function ($row) {
                 return match ($row->status) {
                     'planned' => '<span class="badge bg-secondary">Planejado</span>',
@@ -49,7 +49,7 @@ class ClassOfferingsDataTable extends BaseDataTable
 
         $query = $model->newQuery()
             ->with(['course', 'unit', 'project'])
-            ->withCount(['disciplines', 'scholarshipHolders']);
+            ->withCount(['disciplines', 'teachers']);
 
         $query = app(VisibilityService::class)
             ->apply($query, $user, 'admin');
@@ -76,10 +76,6 @@ class ClassOfferingsDataTable extends BaseDataTable
 
         if ($semester = ($this->filters['filter_semester'] ?? null)) {
             $query->where('semester', 'like', "%$semester%");
-        }
-
-        if ($minStudents = ($this->filters['filter_min_students'] ?? null)) {
-            $query->has('scholarshipHolders', '>=', (int) $minStudents);
         }
 
         return $query;
@@ -109,7 +105,7 @@ class ClassOfferingsDataTable extends BaseDataTable
             Column::computed('unit')->title('Unidade'),
             Column::computed('project')->title('Projeto'),
             Column::computed('disciplines_count')->title('Disciplinas')->addClass('text-center'),
-            Column::computed('students_count')->title('Bolsistas')->addClass('text-center'),
+            Column::computed('teachers_count')->title('Professores')->addClass('text-center'),
             Column::computed('status')->title('Status'),
             Column::computed('actions')
                 ->title('Acoes')

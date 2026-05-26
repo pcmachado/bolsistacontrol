@@ -73,11 +73,6 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label">Min. Bolsistas</label>
-                    <input id="filter_min_students" name="filter_min_students" type="number" class="form-control" value="{{ request('filter_min_students') }}">
-                </div>
-
-                <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">Filtrar</button>
                 </div>
 

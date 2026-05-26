@@ -28,8 +28,8 @@ class StudentDataTable extends BaseDataTable
 
     public function query(Student $model)
     {
-        $query = $model->newQuery()
-            ->with('classOfferings');
+        $query = $model->newQuery();
+            // ->with('classOfferings');
 
         if (!empty($this->filters['class_offering_id'])) {
             $query->whereHas('classOfferings', function($q) {
