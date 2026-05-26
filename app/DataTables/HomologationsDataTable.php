@@ -125,7 +125,7 @@ class HomologationsDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('homologations-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
+            ->minifiedAjax(route('admin.homologations.index'))
             ->orderBy(6, 'desc')
             ->parameters($this->defaultParameters());
     }

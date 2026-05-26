@@ -53,7 +53,7 @@ class DisciplinesDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('disciplines-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
+            ->minifiedAjax(route('admin.disciplines.index'))
             ->orderBy(0, 'asc')
             ->parameters($this->defaultParameters())
             ->buttons([

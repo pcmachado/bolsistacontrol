@@ -125,7 +125,7 @@ class ScholarshipHoldersDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('scholarship_holders-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
+            ->minifiedAjax(route('admin.scholarship_holders.index'))
             ->orderBy(0, 'asc')
             ->parameters(array_merge($this->defaultParameters(), [
                 'pageLength' => (int) request('page_length', 25),
