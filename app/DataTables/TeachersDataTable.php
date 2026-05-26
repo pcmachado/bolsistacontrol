@@ -92,8 +92,7 @@ class TeachersDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('scholarship_holders-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
-            ->dom('Bfrtip')
+            ->minifiedAjax(route('admin.teachers.index'))
             ->orderBy(0)
             ->parameters($this->defaultParameters())
             ->buttons([

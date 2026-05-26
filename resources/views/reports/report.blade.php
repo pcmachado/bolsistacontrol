@@ -18,12 +18,12 @@
 
     {{-- Botões de exportação --}}
     <div class="col-md-3 align-self-end d-flex gap-2">
-        <button type="submit" formaction="{{ route('admin.reports.export_pdf') }}" 
+        <button type="submit" formaction="{{ route('admin.reports.export_pdf') }}"
                 formmethod="GET" name="export" value="pdf" class="btn btn-danger">
             <i class="bi bi-file-earmark-pdf"></i> PDF
         </button>
 
-        <button type="submit" formaction="{{ route('admin.reports.export_excel') }}" 
+        <button type="submit" formaction="{{ route('admin.reports.export_excel') }}"
                 formmethod="GET" name="export" value="excel" class="btn btn-success">
             <i class="bi bi-file-earmark-excel"></i> Excel
         </button>
@@ -62,7 +62,6 @@
 <script>
     jQuery(document).ready(function($) {
         $('#reportTable').DataTable({
-            dom: 'Bfrtip',
             buttons: ['excel', 'pdf', 'print']
         });
     });

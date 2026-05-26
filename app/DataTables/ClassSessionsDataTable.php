@@ -96,8 +96,7 @@ class ClassSessionsDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('class-sessions-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
-            ->dom('Bfrtip')
+            ->minifiedAjax(route('admin.class-offerings.sessions.index', $this->offering->id))
             ->orderBy(0)
             ->parameters($this->defaultParameters())
             ->buttons([

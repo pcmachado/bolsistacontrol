@@ -66,8 +66,7 @@ class SupervisorsDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('supervisors-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
-            ->dom('Bfrtip')
+            ->minifiedAjax(route('admin.supervisors.index'))
             ->orderBy(0)
             ->parameters($this->defaultParameters())
             ->buttons([

@@ -90,7 +90,7 @@ class ClassOfferingsDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('class-offerings-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
+            ->minifiedAjax(route('admin.class-offerings.index'))
             ->orderBy(0, 'asc')
             ->parameters($this->defaultParameters())
             ->buttons([

@@ -65,7 +65,6 @@ class ClassOfferingScholarshipHoldersDataTable extends BaseDataTable
             ->minifiedAjax()
             ->orderBy(0)
             ->parameters($this->defaultParameters())
-            ->dom('Bfrtip')
             ->buttons([
                 'excel', 'csv', 'pdf', 'print'
             ]);

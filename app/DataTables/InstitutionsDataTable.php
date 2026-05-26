@@ -29,7 +29,6 @@ class InstitutionsDataTable extends BaseDataTable
             ->setTableId('institutions-table')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            ->dom('Bfrtip')
             ->orderBy(0, 'asc')
             ->parameters($this->defaultParameters());
     }

@@ -67,7 +67,7 @@ class UsersDataTable extends BaseDataTable
         return $this->builder()
             ->setTableId('users-table')
             ->columns($this->getColumns())
-            ->minifiedAjax(request()->fullUrl())
+            ->minifiedAjax(route('admin.users.index'))
             ->orderBy(0, 'asc')
             ->parameters(array_merge($this->defaultParameters(), [
                 'pageLength' => (int) request('page_length', 25),
