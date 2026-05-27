@@ -18,7 +18,9 @@ class ClassOfferingDiscipline extends Model
         'class_offering_id',
         'discipline_id',
         'teacher_id',
+        'teacher_scholarship_holder_id',
         'workload',
+        'planned_total_hours',
         'schedule',
         'room',
     ];
@@ -37,4 +39,10 @@ class ClassOfferingDiscipline extends Model
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
+
+    public function teacherScholarshipHolder(): BelongsTo
+    {
+        return $this->belongsTo(ScholarshipHolder::class, 'teacher_scholarship_holder_id');
+    }
 }
+
