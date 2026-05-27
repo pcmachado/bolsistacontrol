@@ -38,7 +38,7 @@ class ScholarshipHolder extends Model
     }
 
     public function getBankAttribute($value): ?string {
-        return Crypt::decryptString($value);
+        return $value ? Crypt::decryptString($value) : null;
     }
 
     public function setAgencyAttribute($value): void {
@@ -46,7 +46,7 @@ class ScholarshipHolder extends Model
     }
 
     public function getAgencyAttribute($value): ?string {
-        return Crypt::decryptString($value);
+        return $value ? Crypt::decryptString($value) : null;
     }
 
     public function setAccountAttribute($value): void {
@@ -54,7 +54,7 @@ class ScholarshipHolder extends Model
     }
 
     public function getPixKeyAttribute($value): ?string {
-        return Crypt::decryptString($value);
+        return $value ? Crypt::decryptString($value) : null;
     }
 
     public function setPixKeyAttribute($value): void {
@@ -62,7 +62,17 @@ class ScholarshipHolder extends Model
     }   
     
     public function getAccountAttribute($value): ?string {
-        return Crypt::decryptString($value);
+        return $value ? Crypt::decryptString($value) : null;
+    }
+
+    public function getNameAttribute(): ?string
+    {
+        return $this->user?->name;
+    }
+
+    public function getEmailAttribute(): ?string
+    {
+        return $this->user?->email;
     }
 
     // Relacionamento: um bolsista pertence a um usuário (para autenticação)
@@ -87,7 +97,7 @@ class ScholarshipHolder extends Model
         return $this->hasMany(AttendanceSubmission::class);
     }
 
-    public function position(): BelongsTo
+    public function position()
     {
         return $this->belongsTo(Position::class);
     }
@@ -122,6 +132,14 @@ class ScholarshipHolder extends Model
     public function payments(): MorphMany
     {
         return $this->morphMany(Payment::class, 'payable');
+    }
+
+    public function classOfferingDisciplines(): HasMany
+    {
+        return $this->hasMany(
+            ClassOfferingDiscipline::class,
+            'teacher_id'
+        );
     }
 
     public function isOrientador(): bool

@@ -12,18 +12,24 @@ class TeacherDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $teacher = Auth::user();
+        $user = Auth::user();
+
+        $teacher = $user->scholarshipHolder;
 
         abort_unless(
-            $teacher->canAccessTeacher(),
+            $user->canAccessTeacher(),
             403,
             'Este usuário não possui acesso como professor.'
         );
 
         // IDs das turmas onde o usuário é professor
-        $classIds = $teacher->assignments()
-            ->where('assignment_type', \App\Models\Assignment::TYPE_PROFESSOR)
-            ->pluck('class_offering_id');
+        $classIds = \App\Models\ClassOfferingDiscipline::query()
+            ->where(
+                'teacher_id',
+                $teacher->id
+            )
+            ->pluck('class_offering_id')
+            ->unique();
 
         // Query base
         $sessions = ClassSession::query()
@@ -98,11 +104,12 @@ class TeacherDashboardController extends Controller
             'hoursByMonth' => $hoursByMonth,
             'hoursByDiscipline' => $hoursByDiscipline,
             'hoursByOffering' => $hoursByOffering,
-            'units' => $teacher->assignments()
-                ->pluck('unit_id')
-                ->filter()
-                ->unique()
-                ->map(fn ($id) => \App\Models\Unit::find($id)),
+            'units' => \App\Models\Unit::query()
+                ->whereIn(
+                    'id',
+                    $classes->pluck('unit_id')->unique()
+                )
+                ->get(),
             'courses' => \App\Models\Course::all(),
             'classes' => $classes,
         ]);

@@ -30,11 +30,17 @@ return new class extends Migration
 
         Schema::table('student_discipline_month_records', function (Blueprint $table) {
             if (! Schema::hasColumn('student_discipline_month_records', 'class_offering_discipline_id')) {
-                $table->foreignId('class_offering_discipline_id')
-                    ->nullable()
-                    ->after('class_offering_id')
-                    ->constrained('class_offering_disciplines')
-                    ->nullOnDelete();
+                $table->unsignedBigInteger(
+                    'class_offering_discipline_id'
+                )->nullable();
+
+                $table->foreign(
+                    'class_offering_discipline_id',
+                    'fk_sdmr_cod'
+                )
+                ->references('id')
+                ->on('class_offering_disciplines')
+                ->nullOnDelete();
             }
 
             if (! Schema::hasColumn('student_discipline_month_records', 'classes_in_month')) {

@@ -49,7 +49,10 @@ class ClassOfferingsDataTable extends BaseDataTable
 
         $query = $model->newQuery()
             ->with(['course', 'unit', 'project'])
-            ->withCount(['disciplines', 'teachers']);
+            ->withCount([
+                'classOfferingDisciplines as disciplines_count',
+                'teachers as teachers_count',
+            ]);
 
         $query = app(VisibilityService::class)
             ->apply($query, $user, 'admin');

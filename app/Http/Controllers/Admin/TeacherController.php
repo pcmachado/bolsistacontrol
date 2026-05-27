@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassOffering;
-use App\Models\User;
+use App\Models\ScholarshipHolder;
 use App\DataTables\TeachersDataTable;
 use App\Services\VisibilityService;
 use Illuminate\Support\Facades\Auth;
@@ -47,7 +47,7 @@ class TeacherController extends Controller
 
         $validated['password'] = bcrypt($validated['password']);
 
-        $user = User::create($validated);
+        $user = ScholarshipHolder::create($validated);
 
         $user->assignRole('professor');
 
@@ -55,12 +55,12 @@ class TeacherController extends Controller
             ->with('success', 'Professor cadastrado com sucesso!');
     }
 
-    public function edit(User $teacher)
+    public function edit(ScholarshipHolder $teacher)
     {
         return view('admin.teachers.edit', compact('teacher'));
     }
 
-    public function update(Request $request, User $teacher)
+    public function update(Request $request, ScholarshipHolder $teacher)
     {
         $validated = $request->validate([
             'name'     => 'required|max:255',
@@ -80,7 +80,7 @@ class TeacherController extends Controller
             ->with('success', 'Professor atualizado com sucesso!');
     }
 
-    public function destroy(User $teacher)
+    public function destroy(ScholarshipHolder $teacher)
     {
         $teacher->delete();
 

@@ -48,7 +48,7 @@ class ClassOffering extends Model
     public function disciplines(): BelongsToMany
     {
         return $this->belongsToMany(Discipline::class, 'class_offering_disciplines')
-            ->withPivot(['id', 'teacher_id', 'teacher_scholarship_holder_id', 'workload', 'planned_total_hours', 'schedule', 'room'])
+            ->withPivot(['id', 'teacher_id', 'workload', 'planned_total_hours', 'schedule', 'room'])
             ->withTimestamps();
     }
 
@@ -87,6 +87,38 @@ class ClassOffering extends Model
     public function monthRecords(): HasMany
     {
         return $this->hasMany(StudentMonthRecord::class);
+    }
+
+    public function classOfferingDisciplines(): HasMany
+    {
+        return $this->hasMany(
+            ClassOfferingDiscipline::class
+        );
+    }
+
+    public function teachers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ScholarshipHolder::class,
+            'class_offering_disciplines',
+            'class_offering_id',
+            'teacher_id'
+        )
+        ->wherePivotNotNull('teacher_id')
+        ->distinct();
+    }
+
+    public function getTeachersCountAttribute(): int
+    {
+        return $this->teachers()
+            ->distinct()
+            ->count();
+    }
+
+    public function getDisciplinesCountAttribute(): int
+    {
+        return $this->classOfferingDisciplines()
+            ->count();
     }
 
 }
