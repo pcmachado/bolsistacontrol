@@ -266,7 +266,8 @@
                                         $total += $abs;
                                         $totalJ += $jus;
 
-                                        $locked = ($submissions[$month]->status ?? null) !== 'draft';
+                                        $status = $submissions[$month]->status ?? null;
+                                        $locked = in_array($status, ['submitted', 'approved']);
 
                                         $load = $monthlyLoads[$month] ?? 0;
 

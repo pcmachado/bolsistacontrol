@@ -25,6 +25,28 @@
         @endif
     @endforeach
 
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Professores com disciplina vinculada</div>
+                <div class="fs-3 fw-bold">{{ $recordedTeachers }}</div>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Lançamentos de frequência já registrados</div>
+                <div class="fs-3 fw-bold">{{ (int) ($recordsSummary->total_records ?? 0) }}</div>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="text-muted small">Valor projetado para pagamento (R$)</div>
+                <div class="fs-3 fw-bold">{{ number_format((float) ($recordsSummary->projected_total ?? 0), 2, ',', '.') }}</div>
+            </div></div>
+        </div>
+    </div>
+
     {{-- Vínculo --}}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white fw-semibold">
@@ -100,6 +122,25 @@
             ])
         </div>
     </div>
+
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-exclamation-triangle me-2"></i> Disciplinas sem professor vinculado
+        </div>
+        <div class="card-body">
+            @if($pendingTeachers->isEmpty())
+                <div class="alert alert-success mb-0">Todas as disciplinas da turma já possuem professor vinculado.</div>
+            @else
+                <ul class="mb-0">
+                    @foreach($pendingTeachers as $pending)
+                        <li>{{ $pending->discipline->name }}</li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    </div>
+
 </div>
 @endsection
 

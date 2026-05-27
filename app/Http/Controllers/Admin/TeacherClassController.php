@@ -15,6 +15,7 @@ class TeacherClassController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $holderId = $user->scholarshipHolder?->id;
 
         $search = $request->string('search')->trim();
         $courseId = $request->integer('course_id');
@@ -22,8 +23,8 @@ class TeacherClassController extends Controller
         $disciplineId = $request->integer('discipline_id');
 
         $baseQuery = ClassOffering::query()
-            ->whereHas('disciplines', function ($query) use ($user) {
-                $query->where('teacher_id', $user->id);
+            ->whereHas('disciplines', function ($query) use ($holderId) {
+                $query->where('teacher_id', $holderId);
             });
 
         $search = $request->input('search');
@@ -40,21 +41,21 @@ class TeacherClassController extends Controller
             })
             ->when($courseId, fn ($query, $courseId) => $query->where('course_id', $courseId))
             ->when($projectId, fn ($query, $projectId) => $query->where('project_id', $projectId))
-            ->when($disciplineId, fn ($query, $disciplineId) => $query->whereHas('disciplines', function ($query) use ($disciplineId, $user) {
+            ->when($disciplineId, fn ($query, $disciplineId) => $query->whereHas('disciplines', function ($query) use ($disciplineId, $holderId) {
                 $query->where('id', $disciplineId)
-                    ->where('teacher_id', $user->id);
+                    ->where('teacher_id', $holderId);
             }))
             ->with([
                 'course',
                 'project',
                 'unit',
-                'disciplines' => fn ($query) => $query->where('teacher_id', $user->id),
+                'disciplines' => fn ($query) => $query->where('teacher_id', $holderId),
             ])
             ->get();
 
         $availableClasses = ClassOffering::query()
-            ->whereHas('disciplines', fn ($query) => $query->where('teacher_id', $user->id))
-            ->with(['course', 'project', 'disciplines' => fn ($query) => $query->where('teacher_id', $user->id)])
+            ->whereHas('disciplines', fn ($query) => $query->where('teacher_id', $holderId))
+            ->with(['course', 'project', 'disciplines' => fn ($query) => $query->where('teacher_id', $holderId)])
             ->get();
 
         $courses = $availableClasses
@@ -94,6 +95,7 @@ class TeacherClassController extends Controller
     public function show(Request $request, ClassOffering $offering)
     {
         $user = Auth::user();
+        $holderId = $user->scholarshipHolder?->id;
 
         if (! $user->isProfessorInOffering($offering)) {
             abort(403, 'Sem acesso a esta turma.');
@@ -103,7 +105,7 @@ class TeacherClassController extends Controller
         $selectedDisciplineId = $request->integer('discipline_id');
 
         $disciplines = $offering->disciplines()
-            ->where('teacher_id', $user->id)
+            ->where('teacher_id', $holderId)
             ->get();
 
         if (! $selectedDisciplineId || ! $disciplines->contains('id', $selectedDisciplineId)) {
@@ -204,6 +206,15 @@ class TeacherClassController extends Controller
                 }
 
                 [$year, $monthNumber] = explode('-', $month);
+
+                $submissionStatus = $offering->submissions()
+                    ->where('month', (int) $monthNumber)
+                    ->where('year', (int) $year)
+                    ->value('status');
+
+                if (in_array($submissionStatus, ['submitted', 'approved'], true)) {
+                    continue;
+                }
 
                 $record = StudentDisciplineMonthRecord::updateOrCreate(
                     [
