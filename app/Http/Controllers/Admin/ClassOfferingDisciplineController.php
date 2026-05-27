@@ -7,6 +7,7 @@ use App\Models\ClassOffering;
 use App\Models\ClassOfferingDiscipline;
 use App\Models\Discipline;
 use App\Models\ScholarshipHolder;
+use App\Models\StudentRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,22 @@ class ClassOfferingDisciplineController extends Controller
             'disciplines',
             'course.disciplines',
         ]);
+
+        $pendingTeachers = $offering->classOfferingDisciplines()
+            ->with(['discipline:id,name', 'teacher.user'])
+            ->get()
+            ->filter(fn ($item) => ! $item->teacher_id)
+            ->values();
+
+        $recordedTeachers = $offering->classOfferingDisciplines()
+            ->whereNotNull('teacher_id')
+            ->distinct('teacher_id')
+            ->count('teacher_id');
+
+        $recordsSummary = StudentRecord::query()
+            ->where('class_offering_id', $offering->id)
+            ->selectRaw('COUNT(*) as total_records, COALESCE(SUM(total_amount),0) as projected_total')
+            ->first();
 
         return view(
             'admin.class-offerings.disciplines.index',
@@ -62,6 +79,10 @@ class ClassOfferingDisciplineController extends Controller
                     ->orderBy('name')
 
                     ->get(),
+
+                'pendingTeachers' => $pendingTeachers,
+                'recordedTeachers' => $recordedTeachers,
+                'recordsSummary' => $recordsSummary,
             ]
         );
     }
