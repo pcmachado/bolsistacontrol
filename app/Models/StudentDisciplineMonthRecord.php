@@ -10,12 +10,15 @@ class StudentDisciplineMonthRecord extends Model
         'student_id',
         'class_offering_id',
         'discipline_id',
+        'class_offering_discipline_id',
         'month',
         'year',
         'total_classes',
+        'classes_in_month',
         'absences',
         'justified_absences',
         'attended_classes',
+        'presences',
     ];
 
     public function student()
@@ -31,6 +34,11 @@ class StudentDisciplineMonthRecord extends Model
     public function classOffering()
     {
         return $this->belongsTo(ClassOffering::class);
+    }
+
+    public function classOfferingDiscipline()
+    {
+        return $this->belongsTo(ClassOfferingDiscipline::class);
     }
 
     public function calculate(): void

@@ -14,6 +14,12 @@ class StudentMonthRecord extends Model
         'year',
         'absences',
         'attended_classes',
+        'total_classes',
+        'total_absences',
+        'total_justified_absences',
+        'total_presences',
+        'estimated_payment_amount',
+        'status',
     ];
 
     public function student(): BelongsTo
