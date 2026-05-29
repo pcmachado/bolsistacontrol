@@ -122,159 +122,74 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /*
     |--------------------------------------------------------------------------
-    | CONTEXTO (NOVA LÓGICA)
+    | CONTEXTO INSTITUCIONAL SIMPLES
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Retorna o ID institucional correto
-     */
     public function resolvedInstitutionId(): ?int
     {
-        return $this->activeInstitutionId()
-            ?? $this->institution_id
-            ?? $this->unit?->institution_id
-            ?? $this->scholarshipHolder?->unit?->institution_id;
-    }
-
-    public function activeInstitutionId(): ?int
-    {
-        $selectedId = session('admin_institution_context')
-            ?? session('institution_id');
-
-        if ($selectedId && $this->canAccessInstitution((int) $selectedId)) {
-            return (int) $selectedId;
+        if ($this->institution_id) {
+            return $this->institution_id;
         }
 
-        return $this->institution_id
-            ?? $this->unit?->institution_id
-            ?? $this->scholarshipHolder?->unit?->institution_id
-            ?? $this->accessibleInstitutionIds()->first();
+        if ($this->unit_id) {
+            return Unit::query()
+                ->withoutGlobalScopes()
+                ->whereKey($this->unit_id)
+                ->value('institution_id');
+        }
+
+        if ($this->scholarshipHolder?->unit_id) {
+            return Unit::query()
+                ->withoutGlobalScopes()
+                ->whereKey($this->scholarshipHolder->unit_id)
+                ->value('institution_id');
+        }
+
+        return null;
     }
 
     public function accessibleInstitutionIds(): Collection
     {
-        $linkedIds = $this->relationLoaded('institutions')
-            ? $this->institutions->pluck('id')
-            : $this->institutions()->pluck('institutions.id');
-
-        if ($linkedIds->isNotEmpty()) {
-            return $linkedIds->filter()->unique()->values();
-        }
-
-        $fallbackIds = collect([
-            $this->institution_id,
-            $this->unit?->institution_id,
-            $this->scholarshipHolder?->unit?->institution_id,
-        ])->filter()->unique()->values();
-
-        if ($fallbackIds->isNotEmpty()) {
-            return $fallbackIds;
-        }
-
-        if ($this->hasRole('superadmin')) {
-            return Institution::query()->pluck('id');
-        }
-
-        return collect();
-    }
-
-    public function activeInstitutionIds(): Collection
-    {
-        $activeId = $this->activeInstitutionId();
-
-        if ($activeId) {
-            return collect([$activeId]);
-        }
-
-        return $this->accessibleInstitutionIds();
+        return collect([$this->resolvedInstitutionId()])
+            ->filter()
+            ->unique()
+            ->values();
     }
 
     public function visibleUnitIds(): Collection
     {
-        if ($this->isUnitScoped()) {
-            return collect([
-                $this->unit_id,
-                $this->scholarshipHolder?->unit_id,
-                $this->assignments()
-                    ->where('active', true)
-                    ->whereNotNull('unit_id')
-                    ->value('unit_id'),
-            ])->filter()->unique()->values();
+        if ($this->unit_id) {
+            return collect([$this->unit_id]);
         }
 
-        if ($this->isInstitutionScoped()) {
-            $institutionIds = $this->activeInstitutionIds();
-
-            if ($institutionIds->isEmpty()) {
-                return collect();
-            }
-
-            return Unit::query()
-                ->withoutGlobalScopes()
-                ->whereIn('institution_id', $institutionIds)
-                ->pluck('id');
+        if ($this->scholarshipHolder?->unit_id) {
+            return collect([$this->scholarshipHolder->unit_id]);
         }
 
-        $assignmentUnitIds = $this->assignments()
-            ->where('active', true)
-            ->whereNotNull('unit_id')
-            ->pluck('unit_id')
-            ->unique()
-            ->values();
+        $institutionId = $this->resolvedInstitutionId();
 
-        if ($assignmentUnitIds->isNotEmpty()) {
-            return $assignmentUnitIds;
+        if (! $institutionId) {
+            return collect();
         }
 
-        return collect([$this->unit_id])->filter()->values();
+        return Unit::query()
+            ->withoutGlobalScopes()
+            ->where('institution_id', $institutionId)
+            ->pluck('id');
     }
 
     public function visibleProjectIds(): Collection
     {
-        $assignedProjectIds = $this->assignments()
-            ->where('active', true)
-            ->whereNotNull('project_id')
-            ->pluck('project_id')
-            ->unique()
-            ->values();
+        $institutionId = $this->resolvedInstitutionId();
 
-        if ($assignedProjectIds->isNotEmpty()) {
-            return $assignedProjectIds;
-        }
-
-        if ($this->isInstitutionScoped()) {
-            $institutionIds = $this->activeInstitutionIds();
-
-            if ($institutionIds->isEmpty()) {
-                return collect();
-            }
-
-            return Project::query()
-                ->withoutGlobalScopes()
-                ->whereIn('institution_id', $institutionIds)
-                ->pluck('id');
-        }
-
-        $unitIds = $this->visibleUnitIds();
-
-        if ($unitIds->isEmpty()) {
+        if (! $institutionId) {
             return collect();
         }
 
         return Project::query()
-            ->withoutGlobalScopes()
-            ->whereHas('classOfferings', function ($query) use ($unitIds) {
-                $query->whereIn('unit_id', $unitIds);
-            })
-            ->pluck('projects.id')
-            ->unique()
-            ->values();
-    }
-
-    public function canAccessInstitution(int $institutionId): bool
-    {
-        return $this->accessibleInstitutionIds()->contains($institutionId);
+            ->where('institution_id', $institutionId)
+            ->pluck('id');
     }
 
     public function isInstitutionScoped(): bool
@@ -303,6 +218,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return Unit::query()->whereIn('id', $this->visibleUnitIds());
     }
 
+    public function activeInstitutionId(): ?int
+    {
+        return $this->resolvedInstitutionId();
+    }
+
+    public function activeInstitutionIds(): Collection
+    {
+        return $this->accessibleInstitutionIds();
+    }
+
+    public function canAccessInstitution(int $institutionId): bool
+    {
+        return $this->accessibleInstitutionIds()->contains($institutionId);
+    }
+
     /**
      * Verifica se o usuário está vinculado a uma turma (qualquer papel)
      */
@@ -322,8 +252,12 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isProfessorInOffering(ClassOffering $offering): bool
     {
-        return $offering->disciplines()
-            ->where('teacher_id', $this->id)
+        if (! $this->scholarshipHolder) {
+            return false;
+        }
+
+        return $offering->classOfferingDisciplines()
+            ->where('teacher_id', $this->scholarshipHolder->id)
             ->exists();
     }
 
@@ -355,9 +289,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function canAccessTeacher(): bool
     {
-        return $this->assignments()
-            ->where('assignment_type', Assignment::TYPE_PROFESSOR)
-            ->where('active', true)
+        if (! $this->scholarshipHolder) {
+            return false;
+        }
+
+        return ProjectScholarshipHolder::query()
+            ->where('scholarship_holder_id', $this->scholarshipHolder->id)
+            ->whereHas('position', fn ($q) => $q->where('is_teacher', true))
             ->exists();
     }
 

@@ -1,9 +1,9 @@
-<a href="{{ route('teachers.edit', $t->id) }}"
+<a href="{{ route('admin.teachers.edit', $t->id) }}"
    class="btn btn-sm btn-warning">
     <i class="bi bi-pencil"></i>
 </a>
 
-<form action="{{ route('teachers.destroy', $t->id) }}"
+<form action="{{ route('admin.teachers.destroy', $t->id) }}"
       method="POST" class="d-inline">
     @csrf @method('DELETE')
     <button class="btn btn-sm btn-danger"

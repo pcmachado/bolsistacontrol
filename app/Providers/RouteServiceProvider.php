@@ -28,22 +28,29 @@ class RouteServiceProvider extends ServiceProvider
     {
         $user = Auth::user();
 
+        if (! $user) {
+            return route('login', absolute: false);
+        }
+
+        if ($user->hasRole('superadmin')) {
+            return route('superadmin.dashboard', absolute: false);
+        }
+
         if ($user->hasAnyRole([
             'admin',
-            'superadmin',
             'coordenador_geral',
             'coordenador_adjunto_geral',
             'coordenador_adjunto',
         ])) {
-            return route('admin.dashboard');
+            return route('admin.dashboard', absolute: false);
         }
 
         if ($user->hasRole('professor')) {
-            return route('teacher.dashboard');
+            return route('teacher.dashboard', absolute: false);
         }
 
         if ($user->scholarshipHolder !== null) {
-            return route('holder.dashboard');
+            return route('holder.dashboard', absolute: false);
         }
 
         return '/'; // fallback

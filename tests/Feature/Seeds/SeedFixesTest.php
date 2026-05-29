@@ -74,6 +74,25 @@ class SeedFixesTest extends TestCase
             ->assertRedirect(route('admin.dashboard'));
     }
 
+    public function test_superadmin_can_start_impersonation_without_losing_origin(): void
+    {
+        Role::create(['name' => 'superadmin']);
+        Role::create(['name' => 'bolsista']);
+
+        $admin = User::factory()->create(['email' => 'superadmin@example.com']);
+        $admin->assignRole('superadmin');
+
+        $student = User::factory()->create(['email' => 'student-start@example.com']);
+        $student->assignRole('bolsista');
+
+        $this->actingAs($admin)
+            ->post(route('admin.impersonate', $student))
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('impersonated_by', $admin->id);
+
+        $this->assertAuthenticatedAs($student);
+    }
+
     public function test_receipt_verification_page_is_public(): void
     {
         $this->get(route('payments.verify.form'))

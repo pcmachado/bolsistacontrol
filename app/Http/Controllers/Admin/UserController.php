@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use App\Support\RoleAccess;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -139,8 +140,20 @@ class UserController extends Controller
      */
     public function edit(User $user): View
     {
-        $units = Unit::all();
-        $roles = Role::all();
+        $this->authorize('update', $user);
+
+        $currentUser = Auth::user();
+        $unitsQuery = Unit::query()->orderBy('name');
+
+        if (! $currentUser->hasRole('superadmin') && $currentUser->activeInstitutionIds()->isNotEmpty()) {
+            $unitsQuery->whereIn('institution_id', $currentUser->activeInstitutionIds());
+        }
+
+        $units = $unitsQuery->get();
+        $roles = Role::query()
+            ->whereIn('name', RoleAccess::assignableRoleNames($currentUser))
+            ->orderBy('name')
+            ->get();
         $userRoles = $user->roles->pluck('name')->toArray();
 
         return view('admin.users.edit', compact('user', 'units', 'roles', 'userRoles'));
@@ -151,6 +164,8 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
+        $this->authorize('update', $user);
+
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
@@ -168,6 +183,10 @@ class UserController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        if (! RoleAccess::canAssignRole(Auth::user(), $validated['role'])) {
+            abort(403, 'VocÃª nÃ£o pode atribuir este papel.');
+        }
 
         $this->userService->updateUser($user, $validated);
 

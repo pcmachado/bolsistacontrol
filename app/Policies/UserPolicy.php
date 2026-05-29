@@ -57,6 +57,10 @@ class UserPolicy
             return true;
         }
 
+        if (! $this->sameInstitutionScope($logged, $target)) {
+            return false;
+        }
+
         // coordenador geral pode alterar adjunto + demais
         if ($logged->hasRole('coordenador_geral')) {
             return ! $target->hasRole('coordenador_geral')
@@ -65,6 +69,13 @@ class UserPolicy
         }
 
         // adjunto só altera usuários comuns
+        if ($logged->hasRole('coordenador_adjunto_geral')) {
+            return ! $target->hasRole('coordenador_adjunto_geral')
+                && ! $target->hasRole('coordenador_geral')
+                && ! $target->hasRole('admin')
+                && ! $target->hasRole('superadmin');
+        }
+
         if ($logged->hasRole('coordenador_adjunto')) {
             return ! $target->hasRole('coordenador_adjunto_geral')
                 && ! $target->hasRole('coordenador_adjunto')
@@ -83,6 +94,19 @@ class UserPolicy
     public function deleteUser(User $logged, User $target)
     {
         return $this->update($logged, $target);
+    }
+
+    protected function sameInstitutionScope(User $logged, User $target): bool
+    {
+        $targetInstitutionId = $target->institution_id
+            ?? $target->unit?->institution_id
+            ?? $target->scholarshipHolder?->unit?->institution_id;
+
+        if (! $targetInstitutionId) {
+            return false;
+        }
+
+        return $logged->activeInstitutionIds()->contains($targetInstitutionId);
     }
 
     /**

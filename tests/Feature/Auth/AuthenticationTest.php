@@ -3,7 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Models\SystemSetting;
+use App\Models\ScholarshipHolder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -30,8 +33,46 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
+    public function test_dashboard_resolver_sends_roles_to_their_home_surfaces(): void
+    {
+        foreach (['superadmin', 'admin', 'professor', 'bolsista'] as $role) {
+            Role::create(['name' => $role]);
+        }
+
+        $superadmin = User::factory()->create();
+        $superadmin->assignRole('superadmin');
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $professor = User::factory()->create();
+        $professor->assignRole('professor');
+
+        $bolsista = User::factory()->create();
+        $bolsista->assignRole('bolsista');
+        ScholarshipHolder::factory()->create(['user_id' => $bolsista->id]);
+
+        $this->actingAs($superadmin)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('superadmin.dashboard', absolute: false));
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('admin.dashboard', absolute: false));
+
+        $this->actingAs($professor)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('teacher.dashboard', absolute: false));
+
+        $this->actingAs($bolsista)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('holder.dashboard', absolute: false));
+    }
+
     public function test_unverified_users_can_authenticate_and_receive_warning(): void
     {
+        SystemSetting::set('email_verification_enabled', true);
+
         $user = User::factory()->unverified()->create();
 
         $response = $this->post('/login', [

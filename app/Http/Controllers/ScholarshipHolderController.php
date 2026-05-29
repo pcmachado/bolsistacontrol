@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use App\Support\RoleAccess;
+use Illuminate\Support\Arr;
 use Spatie\Permission\Models\Role;
 
 class ScholarshipHolderController extends Controller
@@ -150,19 +152,26 @@ class ScholarshipHolderController extends Controller
      */
     public function edit(ScholarshipHolder $scholarshipHolder): View
     {
-        $loggedUserInstId = auth()->user()->institution_id;
+        $this->authorize('update', $scholarshipHolder);
 
-        $bolsistaInstId = $scholarshipHolder->user->institution_id ?? null;
+        $currentUser = auth()->user();
+
+        $unitsQuery = Unit::query()->orderBy('name');
+        if (! $currentUser->hasRole('superadmin') && $currentUser->activeInstitutionIds()->isNotEmpty()) {
+            $unitsQuery->whereIn('institution_id', $currentUser->activeInstitutionIds());
+        }
 
         $user = $scholarshipHolder->user;
-
-        $institutionsIds = array_filter([$loggedUserInstId, $bolsistaInstId]);
-
-        $units = Unit::where('institution_id', $institutionsIds)->pluck('name', 'id');
-
+        $units = $unitsQuery->pluck('name', 'id');
         $unitActive = $scholarshipHolder->unit;
+        $roles = Role::query()
+            ->whereIn('name', RoleAccess::assignableRoleNames($currentUser))
+            ->orderBy('name')
+            ->pluck('name', 'name');
 
-        $roles = Role::whereNotIn('name', ['superAdmin','admin'])->pluck('name', 'id');
+        $scholarshipHolder->loadMissing([
+            'projects' => fn ($projectQuery) => $projectQuery->with('positions'),
+        ]);
 
         return view('admin.scholarship_holders.edit', compact('scholarshipHolder', 'units', 'unitActive', 'user', 'roles'));
     }
@@ -179,6 +188,8 @@ class ScholarshipHolderController extends Controller
      */
     public function update(Request $request, ScholarshipHolder $scholarshipHolder): RedirectResponse
     {
+        $this->authorize('update', $scholarshipHolder);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'cpf' => ['required', 'string', 'max:14', Rule::unique('scholarship_holders')->ignore($scholarshipHolder->id)],
@@ -197,15 +208,45 @@ class ScholarshipHolderController extends Controller
             'account' => 'nullable|string',
             'pix_key' => 'nullable|string',
             'status' => 'required|in:active,inactive',
+            'role' => 'required|string|exists:roles,name',
+            'positions_by_project' => 'nullable|array',
+            'positions_by_project.*' => 'nullable|integer|exists:positions,id',
         ]);
 
-        $scholarshipHolder->update($validated);
+        if (! RoleAccess::canAssignRole(auth()->user(), $validated['role'])) {
+            abort(403, 'VocÃª nÃ£o pode atribuir este papel.');
+        }
+
+        $scholarshipHolder->update(Arr::except($validated, [
+            'role',
+            'positions_by_project',
+        ]));
 
         if ($scholarshipHolder->user) {
             $scholarshipHolder->user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'unit_id' => $validated['unit_id'],
+            ]);
+
+            $scholarshipHolder->user->syncRoles([$validated['role']]);
+        }
+
+        $scholarshipHolder->loadMissing('projects.positions');
+
+        foreach ($validated['positions_by_project'] ?? [] as $projectId => $positionId) {
+            if (! $positionId) {
+                continue;
+            }
+
+            $project = $scholarshipHolder->projects->firstWhere('id', (int) $projectId);
+
+            if (! $project || ! $project->positions->contains('id', (int) $positionId)) {
+                abort(422, 'Cargo invÃ¡lido para o projeto informado.');
+            }
+
+            $scholarshipHolder->projects()->updateExistingPivot($project->id, [
+                'position_id' => $positionId,
             ]);
         }
 

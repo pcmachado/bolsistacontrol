@@ -5,6 +5,7 @@
             <th>Professor</th>
             <th>Carga Horária</th>
             <th>Horário</th>
+            <th>Horas/dia</th>
             <th>Sala</th>
             <th class="text-end">Ações</th>
         </tr>
@@ -57,6 +58,18 @@
 
                         <input type="text" name="schedule" class="form-control"
                                value="{{ $pivot->schedule }}" onchange="this.form.submit()">
+                    </form>
+                </td>
+
+                {{-- Horas por dia --}}
+                <td>
+                    <form method="POST"
+                          action="{{ route('admin.class-offerings.disciplines.update', $pivot->id) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <input type="number" name="hours_per_day" class="form-control"
+                               value="{{ $pivot->hours_per_day }}" min="0.25" max="24" step="0.25" onchange="this.form.submit()">
                     </form>
                 </td>
 

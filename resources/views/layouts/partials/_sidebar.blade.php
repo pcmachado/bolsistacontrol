@@ -75,6 +75,8 @@
             <ul class="nav nav-pills flex-column mb-3">
                 <li><x-sidebar-item route="teacher.dashboard" icon="bi bi-easel2" title="Meu Dashboard"/></li>
                 <li><x-sidebar-item route="teacher.classes" icon="bi bi-journal-check" title="Minhas Turmas"/></li>
+                <li><x-sidebar-item route="teacher.courses" icon="bi bi-mortarboard" title="Meus Cursos"/></li>
+                <li><x-sidebar-item route="teacher.disciplines" icon="bi bi-journal-text" title="Minhas Disciplinas"/></li>
             </ul>
         @endif
 

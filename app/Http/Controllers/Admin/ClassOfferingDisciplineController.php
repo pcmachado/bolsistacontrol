@@ -117,6 +117,13 @@ class ClassOfferingDisciplineController extends Controller
                 'string',
                 'max:255',
             ],
+
+            'hours_per_day' => [
+                'required',
+                'numeric',
+                'min:0.25',
+                'max:24',
+            ],
         ]);
 
         $isCourseDiscipline = $offering
@@ -148,6 +155,8 @@ class ClassOfferingDisciplineController extends Controller
             (int) ($discipline->workload ?? 1)
         );
 
+        $validated['planned_total_hours'] = $validated['workload'];
+
         DB::transaction(function () use (
             $offering,
             $validated
@@ -165,6 +174,12 @@ class ClassOfferingDisciplineController extends Controller
 
                         'workload' =>
                             $validated['workload'],
+
+                        'planned_total_hours' =>
+                            $validated['planned_total_hours'],
+
+                        'hours_per_day' =>
+                            $validated['hours_per_day'],
 
                         'schedule' =>
                             $validated['schedule']
@@ -218,7 +233,18 @@ class ClassOfferingDisciplineController extends Controller
                 'string',
                 'max:255',
             ],
+
+            'hours_per_day' => [
+                'nullable',
+                'numeric',
+                'min:0.25',
+                'max:24',
+            ],
         ]);
+
+        if (array_key_exists('workload', $validated)) {
+            $validated['planned_total_hours'] = $validated['workload'];
+        }
 
         $pivot->update($validated);
 

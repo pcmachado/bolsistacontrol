@@ -13,6 +13,47 @@
                         </a>
                     </div>
                 </div>
+                <div class="card border-0 shadow-sm mb-4">
+
+                    <div class="card-header bg-light">
+                        <strong>Autenticação e Segurança</strong>
+                    </div>
+
+                    <div class="card-body">
+                        <form method="POST"
+                            action="{{ route('admin.system-settings.email-verification') }}">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="form-check form-switch">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="enabled"
+                                    value="1"
+                                    id="emailVerificationEnabled"
+
+                                    {{ \App\Models\SystemSetting::enabled(
+                                        'email_verification_enabled',
+                                        false
+                                    ) ? 'checked' : '' }}
+                                >
+                                <label class="form-check-label" for="emailVerificationEnabled">
+                                    Exigir verificação de e-mail para acesso ao sistema
+                                </label>
+                            </div>
+
+                            <div class="small text-muted mt-2">
+                                Quando habilitado, usuários locais precisarão confirmar
+                                o endereço de e-mail antes de acessar recursos protegidos.
+                            </div>
+
+                            <button class="btn btn-primary btn-sm mt-3">
+                                Salvar Configuração
+                            </button>
+                        </form>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">

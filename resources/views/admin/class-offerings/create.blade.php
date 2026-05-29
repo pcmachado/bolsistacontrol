@@ -80,21 +80,36 @@
 
                 <div class="row">
                     {{-- Semestre --}}
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label fw-semibold">Semestre</label>
-                        <input type="text" name="semester" class="form-control" placeholder="Ex: 2025/1">
+                        <input type="text" name="semester" class="form-control" placeholder="Ex: 2025/1" value="{{ old('semester') }}">
                     </div>
 
                     {{-- Ano --}}
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label fw-semibold">Ano</label>
-                        <input type="number" name="year" class="form-control" placeholder="Ex: 2025">
+                        <input type="number" name="year" class="form-control" placeholder="Ex: 2025" value="{{ old('year') }}">
                     </div>
 
                     {{-- Capacidade --}}
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label fw-semibold">Capacidade</label>
                         <input type="number" id="capacity" name="capacity" class="form-control" placeholder="Ex: 30" value="{{ old('capacity') }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-semibold">Horas aula por dia</label>
+                        <input
+                            type="number"
+                            name="hours_per_day"
+                            class="form-control @error('hours_per_day') is-invalid @enderror"
+                            placeholder="Ex: 4"
+                            min="0.25"
+                            max="24"
+                            step="0.25"
+                            value="{{ old('hours_per_day') }}"
+                        >
+                        @error('hours_per_day') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 

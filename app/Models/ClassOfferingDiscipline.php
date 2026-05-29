@@ -20,6 +20,7 @@ class ClassOfferingDiscipline extends Model
         'teacher_id',
         'workload',
         'planned_total_hours',
+        'hours_per_day',
         'schedule',
         'room',
     ];
@@ -44,4 +45,3 @@ class ClassOfferingDiscipline extends Model
         return $this->belongsTo(ScholarshipHolder::class, 'teacher_scholarship_holder_id');
     }
 }
-

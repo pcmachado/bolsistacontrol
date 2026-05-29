@@ -38,12 +38,14 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\StudentPaymentController;
 use App\Http\Controllers\Admin\SuperAdminDashboardController;
 use App\Http\Controllers\Admin\SupervisorAssignmentController;
+use App\Http\Controllers\Admin\TeacherAcademicController;
 use App\Http\Controllers\Admin\TeacherClassController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\TeacherDashboardController;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\Admin\UnitDashboardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SystemSettingsController;
 use App\Http\Controllers\AttendanceRecordController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\AttendanceSubmissionController;
@@ -238,10 +240,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('teacher')->name('teacher.')->group(function () {
         Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
         Route::get('/classes', [TeacherClassController::class, 'index'])->name('classes');
+        Route::get('/courses', [TeacherAcademicController::class, 'courses'])->name('courses');
+        Route::get('/disciplines', [TeacherAcademicController::class, 'disciplines'])->name('disciplines');
 
         Route::get('/classes/{offering}', [TeacherClassController::class, 'show'])->name('classes.show');
         Route::post('/classes/{offering}/monthly-save', [TeacherClassController::class, 'storeMonthly'])->name('classes.monthly.save');
-        Route::post('/classes/{offering}/{month}/close', [TeacherClassController::class, 'closeMonth'])->name('classes.monthly.close');
+        Route::post('/classes/{offering}/month/close', [TeacherClassController::class, 'closeMonth'])->name('classes.monthly.close');
     });
 
 });
@@ -284,6 +288,8 @@ Route::middleware(['auth', 'verified', 'role_or_permission:superadmin|admin|coor
         Route::get('{holder}/edit', [AdminScholarshipHolderController::class, 'edit'])->name('edit');
         Route::put('{holder}', [AdminScholarshipHolderController::class, 'update'])->name('update');
     });
+
+    Route::put('/system-settings/email-verification',[SystemSettingsController::class,'updateEmailVerification'])->name('system-settings.email-verification');
 
     // Impersonate
     Route::post('impersonate/{user}', [AdminScholarshipHolderController::class, 'start'])->name('impersonate');

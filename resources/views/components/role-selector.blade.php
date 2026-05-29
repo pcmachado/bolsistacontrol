@@ -1,4 +1,4 @@
-{{-- Componente para seleção de roles com hierarquia --}}
+{{-- Componente para selecao de roles com hierarquia --}}
 @props([
     'selectedRoles' => [],
     'user' => null,
@@ -8,38 +8,38 @@
 ])
 
 @php
-    $hierarchy = [
-        'superadmin' => ['name' => 'Super Administrador', 'weight' => 100, 'color' => 'danger', 'description' => 'Acesso total ao sistema'],
-        'admin' => ['name' => 'Administrador', 'weight' => 90, 'color' => 'warning', 'description' => 'Gerenciamento administrativo'],
-        'coordenador_geral' => ['name' => 'Coordenador Geral', 'weight' => 70, 'color' => 'info', 'description' => 'Coordenação geral institucional'],
-        'coordenador_adjunto_geral' => ['name' => 'Coordenador Adjunto Geral', 'weight' => 60, 'color' => 'primary', 'description' => 'Suporte à coordenação geral'],
-        'coordenador_adjunto' => ['name' => 'Coordenador Adjunto', 'weight' => 30, 'color' => 'secondary', 'description' => 'Coordenação adjunta'],
-        'bolsista' => ['name' => 'Bolsista', 'weight' => 10, 'color' => 'success', 'description' => 'Usuário bolsista'],
+    $currentUser = $user ?? auth()->user();
+    $templates = \App\Support\PermissionRegistry::roleTemplates();
+    $assignableRoleNames = $currentUser
+        ? \App\Support\RoleAccess::assignableRoleNames($currentUser)
+        : collect();
+
+    $colors = [
+        'superadmin' => 'danger',
+        'admin' => 'warning',
+        'coordenador_geral' => 'info',
+        'coordenador_adjunto_geral' => 'primary',
+        'coordenador_adjunto' => 'secondary',
+        'professor' => 'primary',
+        'apoio_administrativo' => 'info',
+        'supervisor' => 'secondary',
+        'orientador' => 'secondary',
+        'bolsista' => 'success',
     ];
 
-    $currentUser = $user ?? auth()->user();
-    $maxWeight = 0;
-
-    if ($currentUser) {
-        foreach ($currentUser->roles as $role) {
-            $maxWeight = max($maxWeight, $hierarchy[$role->name]['weight'] ?? 0);
-        }
-    }
-
-    // Filtrar roles que o usuário pode atribuir (peso menor ou igual)
-    $availableRoles = collect($hierarchy)->filter(function ($config) use ($maxWeight, $currentUser) {
-        // Superadmin pode tudo
-        if ($currentUser && $currentUser->hasRole('superadmin')) {
-            return true;
-        }
-        // Outros usuários só podem atribuir roles de peso menor ou igual
-        return $config['weight'] <= $maxWeight;
-    });
+    $availableRoles = collect($templates)
+        ->only($assignableRoleNames)
+        ->map(fn ($config, $roleKey) => [
+            'name' => $config['label'],
+            'weight' => $config['level'],
+            'color' => $colors[$roleKey] ?? 'secondary',
+            'description' => $config['label'],
+        ]);
 @endphp
 
 <div class="form-group">
     <label for="roles-selector" class="form-label">
-        <strong>{{ $multiple ? 'Funções' : 'Função' }}</strong>
+        <strong>{{ $multiple ? 'Funcoes' : 'Funcao' }}</strong>
         @if($required)
             <span class="text-danger">*</span>
         @endif
@@ -50,7 +50,7 @@
             name="{{ $name }}[]"
             id="roles-selector"
             class="form-control"
-            {{ $multiple ? 'multiple' : '' }}
+            multiple
             {{ $required ? 'required' : '' }}
             style="min-height: 120px;"
         >
@@ -73,7 +73,7 @@
             class="form-control"
             {{ $required ? 'required' : '' }}
         >
-            <option value="">Selecione uma função</option>
+            <option value="">Selecione uma funcao</option>
             @foreach($availableRoles as $roleKey => $config)
                 <option
                     value="{{ $roleKey }}"
@@ -89,9 +89,9 @@
 
     <small class="form-text text-muted">
         @if($multiple)
-            Selecione uma ou mais funções. Cada função tem um nível de permissão diferente.
+            Selecione uma ou mais funcoes. Cada funcao tem um nivel de permissao diferente.
         @else
-            Selecione a função principal do usuário.
+            Selecione a funcao principal do usuario.
         @endif
     </small>
 
@@ -110,8 +110,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     const roleSelector = document.getElementById('roles-selector');
 
+    if (! roleSelector) {
+        return;
+    }
+
     @if($multiple)
-        // Para select múltiplo, mostrar descrição da role selecionada
         roleSelector.addEventListener('change', function() {
             const selectedOptions = Array.from(this.selectedOptions);
             const infoDiv = document.getElementById('selected-roles-info');
@@ -119,25 +122,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (selectedOptions.length > 0) {
                 const lastSelected = selectedOptions[selectedOptions.length - 1];
-                const description = lastSelected.getAttribute('data-description');
-                descriptionSpan.textContent = description;
+                descriptionSpan.textContent = lastSelected.getAttribute('data-description');
                 infoDiv.style.display = 'block';
             } else {
                 infoDiv.style.display = 'none';
             }
         });
     @else
-        // Para select simples, mostrar descrição ao selecionar
         roleSelector.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const description = selectedOption.getAttribute('data-description');
-
-            if (description && this.value) {
-                // Criar ou atualizar tooltip
-                this.title = description;
-            } else {
-                this.title = '';
-            }
+            this.title = description && this.value ? description : '';
         });
     @endif
 });

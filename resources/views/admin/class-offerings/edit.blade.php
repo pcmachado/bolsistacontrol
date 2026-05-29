@@ -14,7 +14,7 @@
                 <i class="bi bi-arrow-left me-2"></i> Voltar
             </a>
 
-            <a href="{{ route('class.students.index', $offering->id) }}"
+            <a href="{{ route('admin.class.students.index', $offering->id) }}"
                class="btn btn-primary px-3 me-2">
                 <i class="bi bi-people me-2"></i> Alunos da Turma
             </a>
@@ -93,22 +93,36 @@
 
                 {{-- Linha de campos --}}
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label fw-semibold">Semestre</label>
                         <input type="text" name="semester" class="form-control"
-                               value="{{ $offering->semester }}">
+                               value="{{ old('semester', $offering->semester) }}">
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label fw-semibold">Ano</label>
                         <input type="number" name="year" class="form-control"
-                               value="{{ $offering->year }}">
+                               value="{{ old('year', $offering->year) }}">
                     </div>
 
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label class="form-label fw-semibold">Capacidade</label>
                         <input type="number" name="capacity" class="form-control"
-                               value="{{ $offering->capacity }}">
+                               value="{{ old('capacity', $offering->capacity) }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label fw-semibold">Horas aula por dia</label>
+                        <input
+                            type="number"
+                            name="hours_per_day"
+                            class="form-control @error('hours_per_day') is-invalid @enderror"
+                            min="0.25"
+                            max="24"
+                            step="0.25"
+                            value="{{ old('hours_per_day', $offering->hours_per_day) }}"
+                        >
+                        @error('hours_per_day') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 

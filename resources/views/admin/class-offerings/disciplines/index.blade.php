@@ -69,6 +69,12 @@
                         @error('discipline_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                    <div class="col-md-2">
+                        <label class="form-label">Horas aula por dia</label>
+                        <input type="number" min="0.25" max="24" step="0.25" name="hours_per_day" class="form-control @error('hours_per_day') is-invalid @enderror" value="{{ old('hours_per_day', $offering->hours_per_day) }}" required>
+                        @error('hours_per_day') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Professor (opcional)</label>
                         <select name="teacher_id" class="form-select @error('teacher_id') is-invalid @enderror">

@@ -24,21 +24,7 @@ class StudentRecordService
                 ->where('class_offering_id', $offering->id)
                 ->get();
 
-            $loadService = app(ClassLoadService::class);
-
-            $total = 0;
-
-            foreach ($months as $record) {
-
-                $load = $loadService->getMonthlyLoad(
-                    $offering->id,
-                    $record->discipline_id,
-                    $record->month,
-                    $record->year
-                );
-
-                $total += $load;
-            }
+            $total = $months->sum('total_classes');
 
             $absences = $months->sum('absences');
 

@@ -75,12 +75,41 @@
                         <select name="role" id="role" class="form-select" required>
                             <option value="">Selecione a função</option>
                             @foreach($roles as $id => $name)
-                                <option value="{{ $id }}" {{ old('role', $scholarshipHolder->role) == $id ? 'selected' : '' }}>
+                                <option value="{{ $id }}" {{ old('role', $user?->roles->pluck('name')->first()) == $id ? 'selected' : '' }}>
                                     {{ ucfirst($name) }}
                                 </option>
                             @endforeach
                         </select>  
                     </div>
+
+                    @if($scholarshipHolder->projects->isNotEmpty())
+                        <div class="col-12 mt-3">
+                            <h5 class="border-bottom pb-2 mb-0 text-primary">
+                                <i class="bi bi-briefcase me-2"></i>Cargos por Projeto
+                            </h5>
+                        </div>
+
+                        @foreach($scholarshipHolder->projects as $project)
+                            <div class="col-md-6">
+                                <label for="project_position_{{ $project->id }}" class="form-label fw-bold">
+                                    {{ $project->name }}
+                                </label>
+                                <select
+                                    name="positions_by_project[{{ $project->id }}]"
+                                    id="project_position_{{ $project->id }}"
+                                    class="form-select">
+                                    <option value="">Selecione o cargo...</option>
+                                    @foreach($project->positions as $position)
+                                        <option
+                                            value="{{ $position->id }}"
+                                            {{ old("positions_by_project.{$project->id}", $project->pivot->position_id) == $position->id ? 'selected' : '' }}>
+                                            {{ $position->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endforeach
+                    @endif
 
                     <div class="col-md-4">
                         <label for="start_date" class="form-label fw-bold">Data de Início <span class="text-danger">*</span></label>

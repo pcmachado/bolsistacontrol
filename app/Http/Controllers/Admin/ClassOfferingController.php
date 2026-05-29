@@ -63,6 +63,7 @@ class ClassOfferingController extends Controller
             'start_date' => 'nullable|date',
             'end_date'   => 'nullable|date|after_or_equal:start_date',
             'capacity'   => 'nullable|integer|min:1',
+            'hours_per_day' => 'nullable|numeric|min:0.25|max:24',
             'status'     => 'required|string',
         ]);
 
@@ -126,6 +127,7 @@ class ClassOfferingController extends Controller
             'start_date' => 'nullable|date',
             'end_date'   => 'nullable|date|after_or_equal:start_date',
             'capacity'   => 'nullable|integer|min:1',
+            'hours_per_day' => 'nullable|numeric|min:0.25|max:24',
             'status'     => 'required|string',
         ]);
 

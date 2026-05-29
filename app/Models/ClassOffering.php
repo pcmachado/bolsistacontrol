@@ -48,7 +48,7 @@ class ClassOffering extends Model
     public function disciplines(): BelongsToMany
     {
         return $this->belongsToMany(Discipline::class, 'class_offering_disciplines')
-            ->withPivot(['id', 'teacher_id', 'workload', 'planned_total_hours', 'schedule', 'room'])
+            ->withPivot(['id', 'teacher_id', 'workload', 'planned_total_hours', 'hours_per_day', 'schedule', 'room'])
             ->withTimestamps();
     }
 

@@ -12,7 +12,7 @@ class ScholarshipHolderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->canAccessAdministrative();
     }
 
     /**
@@ -45,7 +45,26 @@ class ScholarshipHolderPolicy
      */
     public function update(User $user, ScholarshipHolder $scholarshipHolder): bool
     {
-        return false;
+        if ($user->hasRole('superadmin')) {
+            return true;
+        }
+
+        $holderInstitutionId = $scholarshipHolder->unit?->institution_id
+            ?? $scholarshipHolder->user?->institution_id;
+
+        if (! $holderInstitutionId || ! $user->activeInstitutionIds()->contains($holderInstitutionId)) {
+            return false;
+        }
+
+        if ($scholarshipHolder->user) {
+            return $user->can('update', $scholarshipHolder->user);
+        }
+
+        return $user->hasAnyRole([
+            'admin',
+            'coordenador_geral',
+            'coordenador_adjunto_geral',
+        ]);
     }
 
     /**

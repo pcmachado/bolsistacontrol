@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
+use App\Providers\RouteServiceProvider;
 
 class DashboardResolverController extends Controller
 {
@@ -18,24 +18,9 @@ class DashboardResolverController extends Controller
 
     public function index()
     {
-        $user = Auth::user();
+        $query = request()->getQueryString();
+        $target = RouteServiceProvider::home();
 
-        if ($user->hasRole('superadmin')) {
-            return redirect()->route('superadmin.dashboard', request()->query());
-        }
-
-        if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard', request()->query());
-        }
-
-        // if ($user->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral', 'coordenador_adjunto'])) {
-        //     return redirect()->route('admin.dashboard'); // operacional
-        // }
-
-        // if ($user->hasRole('professor')) {
-        //     return redirect()->route('teacher.dashboard');
-        // }
-
-        return redirect()->route('holder.dashboard', request()->query());
+        return redirect()->to($query ? $target.'?'.$query : $target);
     }
 }

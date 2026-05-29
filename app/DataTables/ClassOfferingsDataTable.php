@@ -27,6 +27,9 @@ class ClassOfferingsDataTable extends BaseDataTable
             ->addColumn('course', fn ($row) => $row->course?->name ?? '-')
             ->addColumn('unit', fn ($row) => $row->unit?->name ?? '-')
             ->addColumn('project', fn ($row) => $row->project?->name ?? '-')
+            ->addColumn('hours_per_day', fn ($row) => $row->hours_per_day
+                ? number_format((float) $row->hours_per_day, 2, ',', '.').'h'
+                : '-')
             ->addColumn('disciplines_count', fn ($row) => $row->disciplines_count ?? 0)
             ->addColumn('teachers_count', fn ($row) => $row->teachers_count ?? 0)
             ->editColumn('status', function ($row) {
@@ -107,6 +110,7 @@ class ClassOfferingsDataTable extends BaseDataTable
             Column::computed('course')->title('Curso'),
             Column::computed('unit')->title('Unidade'),
             Column::computed('project')->title('Projeto'),
+            Column::computed('hours_per_day')->title('Horas/dia')->addClass('text-center'),
             Column::computed('disciplines_count')->title('Disciplinas')->addClass('text-center'),
             Column::computed('teachers_count')->title('Professores')->addClass('text-center'),
             Column::computed('status')->title('Status'),

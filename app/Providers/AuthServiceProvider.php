@@ -9,6 +9,7 @@ use App\Models\FinalActivityReport;
 use App\Models\NotificationSetting;
 use App\Models\Payment;
 use App\Models\Project;
+use App\Models\ScholarshipHolder;
 use App\Models\User;
 use App\Policies\AttendanceRecordPolicy;
 use App\Policies\AttendanceSubmissionPolicy;
@@ -17,6 +18,7 @@ use App\Policies\FinalActivityReportPolicy;
 use App\Policies\NotificationSettingPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\ProjectPolicy;
+use App\Policies\ScholarshipHolderPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -32,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
         AttendanceRecord::class => AttendanceRecordPolicy::class,
         AttendanceSubmission::class => AttendanceSubmissionPolicy::class,
         Project::class => ProjectPolicy::class,
+        ScholarshipHolder::class => ScholarshipHolderPolicy::class,
         User::class => UserPolicy::class,
         Payment::class => PaymentPolicy::class,
         FinalActivityReport::class => FinalActivityReportPolicy::class,

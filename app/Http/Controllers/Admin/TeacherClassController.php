@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassOffering;
+use App\Models\ClassOfferingDiscipline;
+use App\Models\ClassOfferingSubmission;
 use App\Models\StudentDisciplineMonthRecord;
 use App\Services\ClassLoadService;
-use App\Services\ClassOfferingSubmissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -92,100 +93,243 @@ class TeacherClassController extends Controller
         ));
     }
 
-    public function show(Request $request, ClassOffering $offering)
-    {
+    public function show(
+    Request $request,
+    ClassOffering $offering
+    ) {
+
         $user = Auth::user();
-        $holderId = $user->scholarshipHolder?->id;
+
+        $holderId = $user
+            ->scholarshipHolder?->id;
 
         if (! $user->isProfessorInOffering($offering)) {
+
             abort(403, 'Sem acesso a esta turma.');
         }
 
-        $studentName = $request->string('student_name')->trim();
-        $selectedDisciplineId = $request->integer('discipline_id');
+        /*
+        |--------------------------------------------------------------------------
+        | Disciplina
+        |--------------------------------------------------------------------------
+        */
 
-        $disciplines = $offering->disciplines()
+        $disciplines = $offering
+            ->disciplines()
             ->where('teacher_id', $holderId)
             ->get();
 
-        if (! $selectedDisciplineId || ! $disciplines->contains('id', $selectedDisciplineId)) {
-            $selectedDisciplineId = $disciplines->first()?->id;
-        }
-
-        $selectedDiscipline = $disciplines->firstWhere('id', $selectedDisciplineId);
-
-        $students = $offering->students()
-            ->when(! empty($studentName), fn ($query) => $query->where('name', 'like', "%{$studentName}%"))
-            ->get();
-
-        $months = [];
-        $period = \Carbon\CarbonPeriod::create(
-            $offering->start_date,
-            '1 month',
-            $offering->end_date
+        $selectedDisciplineId = $request->integer(
+            'discipline_id'
         );
 
-        foreach ($period as $date) {
-            $months[] = $date->format('Y-m');
+        if (
+            ! $selectedDisciplineId
+            || ! $disciplines->contains(
+                'id',
+                $selectedDisciplineId
+            )
+        ) {
+
+            $selectedDisciplineId = $disciplines
+                ->first()?->id;
         }
 
-        $monthRecords = [];
-        $studentRecords = $offering->studentRecords->keyBy('student_id');
-        $records = StudentDisciplineMonthRecord::where('class_offering_id', $offering->id)
-            ->where('discipline_id', $selectedDisciplineId)
+        $selectedDiscipline = $disciplines
+            ->firstWhere(
+                'id',
+                $selectedDisciplineId
+            );
+
+        $selectedOfferingDiscipline = $selectedDiscipline?->pivot?->id
+            ? ClassOfferingDiscipline::query()
+                ->with(['classOffering', 'discipline'])
+                ->find($selectedDiscipline->pivot->id)
+            : null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Navegação mensal
+        |--------------------------------------------------------------------------
+        */
+
+        $startMonth = \Carbon\Carbon::parse(
+            $offering->start_date
+        )->startOfMonth();
+
+        $endMonth = $offering->end_date
+            ? \Carbon\Carbon::parse(
+                $offering->end_date
+            )->startOfMonth()
+            : now()->startOfMonth();
+
+        $requestedMonth = $request->get(
+            'month',
+            $startMonth->format('Y-m')
+        );
+
+        $currentMonth = \Carbon\Carbon::createFromFormat(
+            'Y-m',
+            $requestedMonth
+        )->startOfMonth();
+
+        if ($currentMonth->lt($startMonth)) {
+
+            $currentMonth = $startMonth;
+        }
+
+        if ($currentMonth->gt($endMonth)) {
+
+            $currentMonth = $endMonth;
+        }
+
+        $prevMonth = $currentMonth
+            ->copy()
+            ->subMonth();
+
+        $nextMonth = $currentMonth
+            ->copy()
+            ->addMonth();
+
+        $canGoPrev = $prevMonth->gte(
+            $startMonth
+        );
+
+        $canGoNext = $nextMonth->lte(
+            $endMonth
+        );
+
+        $monthKey = $currentMonth->format('Y-m');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Alunos
+        |--------------------------------------------------------------------------
+        */
+
+        $studentName = $request
+            ->string('student_name')
+            ->trim();
+
+        $students = $offering
+            ->students()
+            ->when(
+                ! empty($studentName),
+                fn ($query) =>
+                    $query->where(
+                        'name',
+                        'like',
+                        "%{$studentName}%"
+                    )
+            )
             ->get();
 
-        foreach ($records as $r) {
-            $key = $r->year.'-'.str_pad($r->month, 2, '0', STR_PAD_LEFT);
-            $monthRecords[$r->student_id][$key] = $r;
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | Registros mensais
+        |--------------------------------------------------------------------------
+        */
 
-        $submissions = $offering->submissions
-            ->keyBy(fn ($s) => $s->year.'-'.str_pad($s->month, 2, '0', STR_PAD_LEFT));
+        [$year, $monthNumber] = explode(
+            '-',
+            $monthKey
+        );
 
-        $totalMonths = count($months);
-        $done = $offering->submissions()->where('status', 'approved')->count();
-        $progress = $totalMonths > 0 ? round(($done / $totalMonths) * 100) : 0;
+        $records = StudentDisciplineMonthRecord::query()
 
-        $disciplineProgress = [];
-        foreach ($disciplines as $discipline) {
-            $total = $discipline->pivot->workload ?? 0;
-            $done = rand(0, $total);
-            $disciplineProgress[$discipline->id] = $total > 0 ? round(($done / $total) * 100) : 0;
-        }
+            ->where(
+                'class_offering_id',
+                $offering->id
+            )
 
-        $loadService = app(ClassLoadService::class);
+            ->where(
+                'discipline_id',
+                $selectedDisciplineId
+            )
 
-        $monthlyLoads = [];
+            ->where(
+                'month',
+                (int) $monthNumber
+            )
 
-        foreach ($months as $month) {
+            ->where(
+                'year',
+                (int) $year
+            )
 
-            [$year, $monthNumber] = explode('-', $month);
+            ->get()
 
-            $monthlyLoads[$month] = $selectedDiscipline
-                ? $loadService->getMonthlyLoad(
-                    $offering->id,
-                    $selectedDiscipline->id,
-                    (int) $monthNumber,
-                    (int) $year
-                )
-                : 0;
-        }
+            ->keyBy('student_id');
 
-        return view('teacher.classes.show', compact(
-            'offering',
-            'students',
-            'months',
-            'monthRecords',
-            'submissions',
-            'progress',
-            'studentRecords',
-            'disciplineProgress',
-            'disciplines',
-            'selectedDiscipline',
-            'studentName',
-            'monthlyLoads',
-        ));
+        /*
+        |--------------------------------------------------------------------------
+        | Situação do mês
+        |--------------------------------------------------------------------------
+        */
+
+        $submission = $offering
+            ->submissions()
+
+            ->where(
+                'month',
+                (int) $monthNumber
+            )
+
+            ->where(
+                'year',
+                (int) $year
+            )
+
+            ->first();
+
+        $loadService = app(
+            ClassLoadService::class
+        );
+
+        $monthlyPlanning = $selectedOfferingDiscipline
+            ? $loadService->getMonthlyPlanning(
+                $offering,
+                $selectedOfferingDiscipline,
+                (int) $monthNumber,
+                (int) $year
+            )
+            : [
+                'hours_per_day' => 0,
+                'planned_total_hours' => 0,
+                'planned_class_days' => 0,
+                'monthly_planned_hours' => 0,
+                'monthly_class_days' => 0,
+            ];
+
+        $monthlyLoad = $monthlyPlanning['monthly_planned_hours'];
+        $monthlyClassDays = $monthlyPlanning['monthly_class_days'];
+        $hoursPerDay = $monthlyPlanning['hours_per_day'];
+        $plannedTotalHours = $monthlyPlanning['planned_total_hours'];
+        $plannedClassDays = $monthlyPlanning['planned_class_days'];
+
+        return view(
+            'teacher.classes.show',
+            compact(
+                'offering',
+                'disciplines',
+                'selectedDiscipline',
+                'students',
+                'records',
+                'submission',
+                'monthlyLoad',
+                'monthlyClassDays',
+                'hoursPerDay',
+                'plannedTotalHours',
+                'plannedClassDays',
+                'monthKey',
+                'currentMonth',
+                'prevMonth',
+                'nextMonth',
+                'canGoPrev',
+                'canGoNext',
+                'studentName'
+            )
+        );
     }
 
     public function storeMonthly(Request $request, ClassOffering $offering)
@@ -196,6 +340,10 @@ class TeacherClassController extends Controller
         ]);
 
         $disciplineId = $request->input('discipline_id');
+        $selectedOfferingDiscipline = ClassOfferingDiscipline::query()
+            ->where('class_offering_id', $offering->id)
+            ->where('discipline_id', $disciplineId)
+            ->firstOrFail();
 
         foreach ($request->input('records', []) as $studentId => $months) {
 
@@ -206,6 +354,14 @@ class TeacherClassController extends Controller
                 }
 
                 [$year, $monthNumber] = explode('-', $month);
+                $monthlyPlanning = app(
+                    ClassLoadService::class
+                )->getMonthlyPlanning(
+                    $offering,
+                    $selectedOfferingDiscipline,
+                    (int) $monthNumber,
+                    (int) $year
+                );
 
                 $submissionStatus = $offering->submissions()
                     ->where('month', (int) $monthNumber)
@@ -225,7 +381,16 @@ class TeacherClassController extends Controller
                         'year' => (int) $year,
                     ],
                     [
-                        'total_classes' => (int) ($row['total'] ?? 0),
+                        'class_offering_discipline_id' => $selectedOfferingDiscipline->id,
+                        'total_classes' => (int) (
+                            $row['total']
+                            ?? $monthlyPlanning['monthly_class_days']
+                            ?? 0
+                        ),
+                        'classes_in_month' => (int) (
+                            $monthlyPlanning['monthly_class_days']
+                            ?? 0
+                        ),
                         'absences' => (int) ($row['absences'] ?? 0),
                         'justified_absences' => (int) ($row['justified'] ?? 0),
                     ]
@@ -239,17 +404,99 @@ class TeacherClassController extends Controller
         return back()->with('success', 'Frequência por disciplina salva com sucesso.');
     }
 
-    public function closeMonth(ClassOffering $offering, string $month)
-    {
-        if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
-            abort(404);
+    public function closeMonth(Request $request, ClassOffering $offering) {
+
+        $user = Auth::user();
+
+        abort_unless(
+            $user->isProfessorInOffering($offering),
+            403
+        );
+
+        $validated = $request->validate([
+
+            'discipline_id' => [
+                'required',
+                'exists:disciplines,id',
+            ],
+
+            'month' => [
+                'required',
+                'date_format:Y-m',
+            ],
+
+        ]);
+
+        [$year, $month] = explode(
+            '-',
+            $validated['month']
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Verifica se já existe submissão
+        |--------------------------------------------------------------------------
+        */
+
+        $submission = ClassOfferingSubmission::query()
+
+            ->firstOrCreate(
+
+                [
+                    'class_offering_id' => $offering->id,
+
+                    'discipline_id' =>
+                        $validated['discipline_id'],
+
+                    'month' => (int) $month,
+
+                    'year' => (int) $year,
+                ],
+
+                [
+                    'submitted_by' => $user->id,
+
+                    'status' => 'submitted',
+
+                    'submitted_at' => now(),
+                ]
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Se já existia aberta
+        |--------------------------------------------------------------------------
+        */
+
+        if ($submission->status === 'draft') {
+
+            $submission->update([
+
+                'status' => 'submitted',
+
+                'submitted_by' => $user->id,
+
+                'submitted_at' => now(),
+            ]);
         }
 
-        [$year, $monthNumber] = explode('-', $month);
+        return redirect()
 
-        app(ClassOfferingSubmissionService::class)
-            ->createTeacherSubmission($offering, (int) $monthNumber, (int) $year);
+            ->route(
+                'teacher.classes.show',
+                [
+                    $offering,
+                    'discipline_id' =>
+                        $validated['discipline_id'],
 
-        return back()->with('success', 'Frequência mensal enviada para homologação.');
+                    'month' =>
+                        $validated['month'],
+                ]
+            )
+
+            ->with(
+                'success',
+                'Mês fechado e enviado com sucesso.'
+            );
     }
 }
