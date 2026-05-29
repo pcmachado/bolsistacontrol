@@ -1,4 +1,16 @@
 <div class="row g-3">
+    @if ($errors->any())
+        <div class="col-12">
+            <div class="alert alert-danger mb-0">
+                <div class="fw-semibold">Não foi possível salvar o aluno.</div>
+                <ul class="mb-0 mt-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
 
     <div class="col-md-6">
         <label>Nome</label>
@@ -8,26 +20,45 @@
 
     <div class="col-md-6">
         <label>Turma</label>
+        @php
+            $currentClassId = old(
+                'class_offering_id',
+                $selectedClasses[0] ?? null
+            );
+        @endphp
         <select name="class_offering_id" class="form-select">
+            <option value="">Selecione</option>
             @foreach($classes as $c)
                 <option value="{{ $c->id }}"
-                    @selected(old('class_offering_id', $student->class_offering_id ?? '') == $c->id)>
+                    @selected((string) $currentClassId === (string) $c->id)>
                     {{ $c->name ?? 'Turma '.$c->id }}
                 </option>
             @endforeach
         </select>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label>CPF</label>
         <input type="text" name="cpf" class="form-control"
                value="{{ old('cpf', $student->cpf ?? '') }}">
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label>Passaporte</label>
         <input type="text" name="passport" class="form-control"
                value="{{ old('passport', $student->passport ?? '') }}">
+    </div>
+
+    <div class="col-md-3">
+        <label>E-mail</label>
+        <input type="email" name="email" class="form-control"
+               value="{{ old('email', $student->email ?? '') }}">
+    </div>
+
+    <div class="col-md-3">
+        <label>Telefone</label>
+        <input type="text" name="phone" class="form-control"
+               value="{{ old('phone', $student->phone ?? '') }}">
     </div>
 
     <div class="col-md-4">

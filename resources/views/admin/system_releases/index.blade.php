@@ -10,7 +10,7 @@
         <div class="d-flex gap-2">
             <form action="{{ route('admin.system_releases.import-git') }}" method="POST" onsubmit="return confirm('Importar ou atualizar a versão atual com base no Git?');">
                 @csrf
-                <button type="submit" class="btn btn-outline-primary shadow-sm">
+                <button type="submit" class="btn btn-outline-primary shadow-sm" @disabled(! $gitAvailable)>
                     <i class="bi bi-arrow-repeat me-1"></i> Importar do Git
                 </button>
             </form>
@@ -28,10 +28,20 @@
         </div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="alert alert-info border-0 shadow-sm">
-        <div class="fw-semibold mb-1">Importação automática de release</div>
+        <div class="fw-semibold mb-1">Controle de versão da aplicação</div>
         <div class="small mb-0">
-            O botão usa a versão atual do sistema (<strong>{{ $currentVersion ?? 'dev' }}</strong>), lê o histórico do Git e gera as notas automaticamente.
+            A versão atual do sistema é <strong>{{ $currentVersion ?? 'dev' }}</strong>
+            <span class="text-muted">(origem: {{ $currentVersionSource ?? 'local' }})</span>.
+            Quando o Git está disponível, o botão lê o histórico e gera as notas automaticamente.
+            Em produção Docker sem repositório Git, use <code>version.txt</code> na raiz da aplicação ou <code>APP_VERSION</code> no ambiente e cadastre as notas pela opção manual.
             O modal aparece uma única vez por usuário e depois continua acessível pelo link do rodapé.
         </div>
     </div>

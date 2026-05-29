@@ -17,6 +17,8 @@ return [
 
     'name' => env('APP_NAME', 'ProBolsas - Sistema de Gestão Integrada de Bolsistas, Frequências e Pagamentos'),
 
+    'version' => env('APP_VERSION'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

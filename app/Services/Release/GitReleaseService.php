@@ -68,8 +68,29 @@ class GitReleaseService
             return trim(File::get($versionFile));
         }
 
+        if (config('app.version')) {
+            return (string) config('app.version');
+        }
+
         return $this->latestTag()
             ?? ('build-' . ($this->currentHash() ?: 'local'));
+    }
+
+    public function currentVersionSource(): string
+    {
+        if (File::exists(base_path('version.txt'))) {
+            return 'version.txt';
+        }
+
+        if (config('app.version')) {
+            return 'APP_VERSION';
+        }
+
+        if ($this->latestTag()) {
+            return 'Git';
+        }
+
+        return 'local';
     }
 
     public function latestTag(): ?string

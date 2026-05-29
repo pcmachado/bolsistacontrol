@@ -10,30 +10,26 @@ use RuntimeException;
 
 class SystemReleaseController extends Controller
 {
-    public function index()
+    public function index(GitReleaseService $git)
     {
         $releases = SystemRelease::orderBy(
             'created_at',
             'desc'
         )->paginate(10);
 
-        $currentVersion = trim(
-            shell_exec('git describe --tags --abbrev=0')
-        );
-
-        if (!$currentVersion) {
-
-            $currentVersion = SystemRelease::latest()
-                ->value('version');
-        }
-
-        $currentVersion ??= 'dev';
+        $currentVersion = $git->currentVersion()
+            ?: SystemRelease::latest()->value('version')
+            ?: 'dev';
+        $currentVersionSource = $git->currentVersionSource();
+        $gitAvailable = $git->isAvailable();
 
         return view(
             'admin.system_releases.index',
             compact(
                 'releases',
-                'currentVersion'
+                'currentVersion',
+                'currentVersionSource',
+                'gitAvailable'
             )
         );
     }

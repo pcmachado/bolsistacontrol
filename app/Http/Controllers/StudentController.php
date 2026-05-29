@@ -52,6 +52,8 @@ class StudentController extends Controller
         Request $request
     ): RedirectResponse {
 
+        $this->normalizeClassOfferingSelection($request);
+
         $data = $request->validate([
 
             'class_offering_ids' => [
@@ -80,6 +82,18 @@ class StudentController extends Controller
                 'nullable',
                 'string',
                 'max:20',
+            ],
+
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+            ],
+
+            'phone' => [
+                'nullable',
+                'string',
+                'max:30',
             ],
 
             'payment_type' => [
@@ -161,6 +175,8 @@ class StudentController extends Controller
         Student $student
     ): RedirectResponse {
 
+        $this->normalizeClassOfferingSelection($request);
+
         $data = $request->validate([
 
             'class_offering_ids' => [
@@ -189,6 +205,18 @@ class StudentController extends Controller
                 'nullable',
                 'string',
                 'max:20',
+            ],
+
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+            ],
+
+            'phone' => [
+                'nullable',
+                'string',
+                'max:30',
             ],
 
             'payment_type' => [
@@ -263,5 +291,19 @@ class StudentController extends Controller
             'success',
             'Aluno removido.'
         );
+    }
+
+    private function normalizeClassOfferingSelection(Request $request): void
+    {
+        if (
+            ! $request->has('class_offering_ids')
+            && $request->filled('class_offering_id')
+        ) {
+            $request->merge([
+                'class_offering_ids' => [
+                    $request->input('class_offering_id'),
+                ],
+            ]);
+        }
     }
 }

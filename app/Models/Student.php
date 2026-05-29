@@ -23,6 +23,10 @@ class Student extends Model
 
         'passport',
 
+        'email',
+
+        'phone',
+
         'payment_type',
 
         'pix_key',

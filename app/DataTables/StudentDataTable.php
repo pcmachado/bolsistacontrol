@@ -47,6 +47,8 @@ class StudentDataTable extends BaseDataTable
             ->minifiedAjax()
             ->columns([
                 ['data' => 'name', 'title' => 'Nome'],
+                ['data' => 'email', 'title' => 'E-mail'],
+                ['data' => 'phone', 'title' => 'Telefone'],
                 ['data' => 'class', 'title' => 'Turma'],
                 ['data' => 'payment', 'title' => 'Pagamento'],
                 [
