@@ -12,6 +12,14 @@
        title="Editar">
         <i class="bi bi-pencil-square"></i>
     </a>
+
+    @if(! $user->scholarshipHolder)
+        <a href="{{ route('admin.scholarship_holders.create', ['user_id' => $user->id]) }}"
+           class="btn btn-sm btn-success"
+           title="Adicionar bolsista">
+            <i class="bi bi-person-plus"></i>
+        </a>
+    @endif
     @endcan
 
     {{-- Botão Excluir --}}

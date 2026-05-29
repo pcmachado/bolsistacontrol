@@ -39,7 +39,10 @@ class CoordinatorUserManagementTest extends TestCase
 
         $this->actingAs($coordinator)
             ->get(route('admin.users.edit', $target))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Adicionar Bolsista')
+            ->assertSee('Reenviar notifica')
+            ->assertSee(route('admin.scholarship_holders.create', ['user_id' => $target->id]), false);
 
         $this->actingAs($coordinator)
             ->put(route('admin.users.update', $target), [
@@ -112,6 +115,12 @@ class CoordinatorUserManagementTest extends TestCase
         $this->actingAs($coordinator)
             ->get(route('admin.scholarship_holders.edit', $holder))
             ->assertOk();
+
+        $this->actingAs($coordinator)
+            ->get(route('admin.users.edit', $holderUser))
+            ->assertOk()
+            ->assertSee('Editar Bolsista')
+            ->assertDontSee('Adicionar Bolsista');
 
         $this->actingAs($coordinator)
             ->put(route('admin.scholarship_holders.update', $holder), [

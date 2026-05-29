@@ -8,8 +8,28 @@
         </div>
         <div class="pull-right">
             <a class="btn btn-primary btn-sm mb-2" href="{{ route('admin.users.index') }}"><i class="fa fa-arrow-left"></i> Voltar</a>
+            @if(! $user->scholarshipHolder)
+                <a class="btn btn-success btn-sm mb-2" href="{{ route('admin.scholarship_holders.create', ['user_id' => $user->id]) }}">
+                    <i class="bi bi-person-plus"></i> Adicionar Bolsista
+                </a>
+            @endif
         </div>
     </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <form method="POST" action="{{ route('admin.users.resend-verification', $user) }}" class="m-0">
+        @csrf
+        <button type="submit" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-envelope"></i> Reenviar notificação por e-mail
+        </button>
+    </form>
+
+    @if($user->scholarshipHolder)
+        <a class="btn btn-outline-success btn-sm" href="{{ route('admin.scholarship_holders.edit', $user->scholarshipHolder) }}">
+            <i class="bi bi-person-check"></i> Editar Bolsista
+        </a>
+    @endif
 </div>
 
 @if (count($errors) > 0)

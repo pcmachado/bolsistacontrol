@@ -31,7 +31,7 @@ class UsersDataTable extends BaseDataTable
 
     public function query(User $model)
     {
-        $query = $model->newQuery()->with(['roles', 'unit']);
+        $query = $model->newQuery()->with(['roles', 'unit', 'scholarshipHolder']);
 
         $query = $this->applyInstitutionFilter($query);
 
