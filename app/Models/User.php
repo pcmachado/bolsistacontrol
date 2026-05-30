@@ -159,6 +159,19 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function visibleUnitIds(): Collection
     {
+        if ($this->hasAnyRole(['coordenador_geral', 'coordenador_adjunto_geral'])) {
+            $institutionIds = $this->accessibleInstitutionIds();
+
+            if ($institutionIds->isEmpty()) {
+                return collect();
+            }
+
+            return Unit::query()
+                ->withoutGlobalScopes()
+                ->whereIn('institution_id', $institutionIds)
+                ->pluck('id');
+        }
+
         if ($this->unit_id) {
             return collect([$this->unit_id]);
         }
