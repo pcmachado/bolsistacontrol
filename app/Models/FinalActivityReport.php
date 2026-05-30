@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasStatusPresentation;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\ScholarshipHolder;
 use App\Models\Project;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FinalActivityReport extends Model
 {
-    use SoftDeletes;
+    use HasStatusPresentation, SoftDeletes;
 
     protected $fillable = [
         'scholarship_holder_id',

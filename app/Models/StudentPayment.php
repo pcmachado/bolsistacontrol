@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasStatusPresentation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use function Symfony\Component\Clock\now;
 
 class StudentPayment extends Model
 {
-    use SoftDeletes;
+    use HasStatusPresentation, SoftDeletes;
 
     protected $fillable = [
         'student_id',
@@ -88,6 +89,16 @@ class StudentPayment extends Model
         }
 
         return Carbon::parse($this  ->sent_at)->diffInDays(now()) >= 10;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return status_label($this->computed_status);
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return status_color($this->computed_status);
     }
 
     public function getComputedStatusAttribute(): string

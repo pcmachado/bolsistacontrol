@@ -20,15 +20,8 @@
             <p><strong>Período:</strong> {{ $payment->month }}/{{ $payment->year }}</p>
             <p><strong>Valor:</strong> R$ {{ number_format($payment->amount, 2, ',', '.') }}</p>
             <p><strong>Status:</strong>
-                @php
-                    $statusColors = [
-                        'sent_to_payment' => 'warning',
-                        'paid' => 'success',
-                        'confirmed' => 'primary',
-                    ];
-                @endphp
-                <span class="badge bg-{{ $statusColors[$payment->status] ?? 'secondary' }}">
-                    {{ ucfirst(str_replace('_',' ', $payment->status)) }}
+                <span class="badge bg-{{ $payment->status_color }}">
+                    {{ $payment->status_label }}
                 </span>
             </p>
 

@@ -15,8 +15,8 @@
     </td>
 
     <td>
-        <span class="badge bg-secondary">
-            {{ ucfirst($record->status) }}
+        <span class="badge bg-{{ status_color($record->status) }}">
+            {{ status_label($record->status) }}
         </span>
     </td>
 </tr>

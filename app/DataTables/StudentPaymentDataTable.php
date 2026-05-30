@@ -26,14 +26,9 @@ class StudentPaymentDataTable extends BaseDataTable
             ->addColumn('class', fn($p) => $p->classOffering->name)
             ->addColumn('period', fn($p) => sprintf('%02d/%s', $p->month, $p->year))
             ->addColumn('amount', fn($p) => 'R$ ' . number_format($p->amount, 2, ',', '.'))
-            ->addColumn('status', function ($p) {
-                return match ($p->computed_status) {
-                    'pending' => '<span class="badge bg-secondary">Pendente</span>',
-                    'sent'    => '<span class="badge bg-warning">Enviado</span>',
-                    'paid'    => '<span class="badge bg-success">Pago</span>',
-                    default   => '-',
-                };
-            })
+            ->addColumn('status', fn ($p) =>
+                '<span class="badge bg-' . $p->status_color . '">' . e($p->status_label) . '</span>'
+            )
             ->addColumn('actions', function ($p) {
                 return view('admin.student-payments.partials.actions', compact('p'));
             })

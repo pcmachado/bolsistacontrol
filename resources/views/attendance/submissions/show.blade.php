@@ -24,17 +24,8 @@
         </div>
 
         <div>
-            @php
-                $statusColors = [
-                    'draft' => 'secondary',
-                    'submitted' => 'warning',
-                    'approved' => 'success',
-                    'rejected' => 'danger',
-                ];
-            @endphp
-
-            <span class="badge bg-{{ $statusColors[$submission->status] ?? 'info' }} fs-6">
-                {{ ucfirst($submission->status) }}
+            <span class="badge bg-{{ $submission->status_color }} fs-6">
+                {{ $submission->status_label }}
             </span>
         </div>
     </div>

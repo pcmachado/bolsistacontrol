@@ -102,7 +102,7 @@
         <h4 class="mt-4">Totais por Status</h4>
         <ul>
             @foreach($totals['byStatus'] as $status => $total)
-                <li>{{ ucfirst($status) }}:
+                <li>{{ status_label($status) }}:
                     <strong>R$ {{ number_format($total,2,',','.') }}</strong>
                 </li>
             @endforeach

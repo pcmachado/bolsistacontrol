@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasStatusPresentation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ScholarshipHolder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasStatusPresentation, SoftDeletes;
 
     protected $fillable = [
         'name',
