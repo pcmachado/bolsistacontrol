@@ -76,7 +76,7 @@
 
     {{-- Footer --}}
     <footer class="footer-probolsas py-3 text-center text-muted small">
-        {{ date('Y') }} — ProBolsas · Gestão Integrada de Bolsistas, Frequências e Pagamentos · {{ $currentVersion }}
+        {{ date('Y') }} — ProBolsas - Sistema Administrativo de Gestão de Bolsas, Frequências e Pagamentos · {{ $currentVersion }}
     </footer>
 
     @stack('scripts')

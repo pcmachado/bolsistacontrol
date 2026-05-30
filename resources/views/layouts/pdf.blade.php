@@ -197,7 +197,7 @@
         <div>Gerado em {{ now()->format('d/m/Y H:i') }}</div>
     @endif
 
-    <div>2026 - ProBolsas - Sistema de Gestão Integrada de Bolsistas, Frequências e Pagamentos - {{ $currentVersion }}</div>
+    <div>2026 - ProBolsas - Sistema Administrativo de Gestão de Bolsas, Frequências e Pagamentos - {{ $currentVersion }}</div>
 </footer>
 
 @if($isPdf ?? false)

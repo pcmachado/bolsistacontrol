@@ -104,7 +104,7 @@
 
         {{-- FOOTER --}}
         <footer id="app-footer" class="bg-white border-top py-3 text-center text-muted small">
-            2026 — ProBolsas - Sistema Administrativa Gestão de Bolsas, Frequências e Pagamentos -
+            2026 — ProBolsas - Sistema Administrativo de Gestão de Bolsas, Frequências e Pagamentos -
             <a href="#" class="text-decoration-none fw-bold text-primary" data-bs-toggle="modal" data-bs-target="#releaseNotesModal">
                 {{ $currentVersion }}
             </a>
