@@ -35,6 +35,39 @@ if (! function_exists('is_financial_closed')) {
     }
 }
 
+if (! function_exists('status_label')) {
+    function status_label(?string $status): string
+    {
+        if (blank($status)) {
+            return '-';
+        }
+
+        $key = 'status.'.$status;
+        $label = __($key);
+
+        if ($label !== $key) {
+            return $label;
+        }
+
+        return str($status)->replace('_', ' ')->title()->toString();
+    }
+}
+
+if (! function_exists('status_color')) {
+    function status_color(?string $status): string
+    {
+        return match ($status) {
+            'active', 'approved', 'completed', 'confirmed', 'finished', 'paid' => 'success',
+            'draft', 'inactive', 'pending', 'planned' => 'secondary',
+            'late', 'sent', 'sent_to_finance', 'sent_to_payment', 'submitted' => 'warning',
+            'cancelled', 'canceled', 'dropped', 'failed', 'rejected' => 'danger',
+            'archived', 'closed' => 'dark',
+            'enrolled', 'ongoing', 'open', 'reopened' => 'info',
+            default => 'light',
+        };
+    }
+}
+
 if (! function_exists('hoursToTime')) {
     function hoursToTime($value)
     {

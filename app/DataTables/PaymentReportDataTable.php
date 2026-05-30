@@ -42,18 +42,9 @@ class PaymentReportDataTable extends BaseDataTable
             ->addColumn('amount', fn($payment) =>
                 number_format($payment->amount, 2, ',', '.')
             )
-            ->addColumn('status_badge', function ($payment) {
-
-                $colors = [
-                    'sent_to_payment' => 'warning',
-                    'paid'            => 'primary',
-                    'confirmed'       => 'success',
-                ];
-
-                return '<span class="badge bg-' . ($colors[$payment->status] ?? 'secondary') . '">'
-                    . ucfirst(str_replace('_', ' ', $payment->status))
-                    . '</span>';
-            })
+            ->addColumn('status_badge', fn ($payment) =>
+                '<span class="badge bg-' . $payment->status_color . '">' . e($payment->status_label) . '</span>'
+            )
             ->addColumn('actions', function ($payment) {
                 return view('admin.payments.partials.actions', compact('payment'));
             })

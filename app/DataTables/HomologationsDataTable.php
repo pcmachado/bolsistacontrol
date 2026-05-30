@@ -37,14 +37,9 @@ class HomologationsDataTable extends BaseDataTable
                 sprintf('%02d/%d', $submission->month, $submission->year)
             )
             ->editColumn('records_count', fn ($submission) => (int) $submission->records_count)
-            ->addColumn('status_label', function ($submission) {
-                return match ($submission->status) {
-                    AttendanceSubmission::STATUS_SUBMITTED => '<span class="badge bg-info">Enviado</span>',
-                    AttendanceSubmission::STATUS_APPROVED => '<span class="badge bg-success">Homologado</span>',
-                    AttendanceSubmission::STATUS_REJECTED => '<span class="badge bg-danger">Rejeitado</span>',
-                    default => ucfirst((string) $submission->status),
-                };
-            })
+            ->addColumn('status_label', fn ($submission) =>
+                '<span class="badge bg-'.$submission->status_color.'">'.e($submission->status_label).'</span>'
+            )
             ->editColumn('submitted_at', fn ($submission) =>
                 $submission->submitted_at?->format('d/m/Y H:i') ?? '-'
             )

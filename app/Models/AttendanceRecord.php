@@ -80,13 +80,12 @@ class AttendanceRecord extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->computed_status) {
-            AttendanceSubmission::STATUS_DRAFT => 'Em edição',
-            AttendanceSubmission::STATUS_SUBMITTED => 'Enviado',
-            AttendanceSubmission::STATUS_APPROVED => 'Homologado',
-            AttendanceSubmission::STATUS_REJECTED => 'Rejeitado',
-            default => '-',
-        };
+        return status_label($this->computed_status);
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return status_color($this->computed_status);
     }
 
     /*
