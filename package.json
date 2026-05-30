@@ -3,10 +3,10 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build && git describe --tags --abbrev=0 --always > version.txt 2>/dev/null || echo 'v1.0.1' > version.txt",
+        "build": "vite build && (git describe --tags --abbrev=0 --always > version.txt 2>/dev/null || echo 'v1.0.2' > version.txt)",
         "dev": "vite",
-        "build:dev8e": "vite build && git describe --tags --abbrev=0 --always > version.txt 2>/dev/null || echo 'v1.0.1' > version.txt",
-        "build:prod": "cross-env VITE_BASE_URL=/ProBolsas/build/ vite build && git describe --tags --abbrev=0 --always > version.txt 2>/dev/null || echo 'v1.0.1' > version.txt"
+        "build:dev8e": "vite build && (git describe --tags --abbrev=0 --always > version.txt 2>/dev/null || echo 'v1.0.2' > version.txt)",
+        "build:prod": "cross-env VITE_BASE_URL=/ProBolsas/build/ vite build && (git describe --tags --abbrev=0 --always > version.txt 2>/dev/null || echo 'v1.0.2' > version.txt)"
     },
     "devDependencies": {
         "@popperjs/core": "^2.11.8",
