@@ -27,11 +27,11 @@ abstract class BaseAttendanceDataTable extends BaseDataTable
             ->addColumn('project', fn ($record) => $record->project?->name ?? '-')
             ->addColumn('date', fn ($record) => $record->date->format('d/m/Y'))
             ->addColumn('hours', fn ($record) => number_format($record->hours, 2))
-            ->addColumn('status', fn ($record) => $record->status_label)
+            ->addColumn('status', fn ($record) => $record->status_badge)
             ->addColumn('actions', fn ($record) =>
                 view('attendance.partials.actions', compact('record'))
             )
-            ->rawColumns(['actions']);
+            ->rawColumns(['status', 'actions']);
     }
 
     protected function getColumns(): array

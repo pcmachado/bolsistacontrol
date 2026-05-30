@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\AttendanceSubmission;
 
 class AttendanceRecord extends Model
 {
@@ -80,7 +81,22 @@ class AttendanceRecord extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return status_label($this->computed_status);
+        return match ($this->computed_status) {
+            AttendanceSubmission::STATUS_DRAFT => 'Rascunho',
+            AttendanceSubmission::STATUS_SUBMITTED => 'Enviado',
+            AttendanceSubmission::STATUS_APPROVED => 'Aprovado',
+            AttendanceSubmission::STATUS_REJECTED => 'Rejeitado',
+            default => ucfirst($this->computed_status),
+        };
+    }
+
+    public function getStatusBadgeAttribute(): string
+    {
+        return sprintf(
+            '<span class="badge bg-%s">%s</span>',
+            $this->status_color,
+            $this->status_label
+        );
     }
 
     public function getStatusColorAttribute(): string

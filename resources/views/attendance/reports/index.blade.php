@@ -27,12 +27,8 @@
                             <td>{{ $submission->project?->name ?? '-' }}</td>
                             <td>{{ str_pad($submission->month, 2, '0', STR_PAD_LEFT) }}/{{ $submission->year }}</td>
                             <td>
-                                <span class="badge bg-{{ match($submission->status) {
-                                    'approved' => 'success',
-                                    'submitted' => 'warning',
-                                    default => 'secondary'
-                                } }}">
-                                    {{ ucfirst($submission->status) }}
+                                <span class="badge bg-{{ $submission->status_color }}">
+                                    {{ $submission->status_label }}
                                 </span>
                             </td>
                             <td class="text-end">
